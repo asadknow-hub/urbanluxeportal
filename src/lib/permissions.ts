@@ -123,6 +123,9 @@ export function canAccessRoute(role: UserRole | null | undefined, path: string):
   if (path.startsWith("/approvals")) {
     return can(role, "approvals_approve") || can(role, "approvals_request");
   }
+  if (path.startsWith("/team")) {
+    return role === "admin" || role === "manager";
+  }
   return true;
 }
 
@@ -137,6 +140,7 @@ export const NAV_ITEMS: {
   { label: "Leads", href: "/leads", icon: "Users", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
   { label: "Customers", href: "/customers", icon: "Contact", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
   { label: "Pipeline", href: "/pipeline", icon: "KanbanSquare", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
+  { label: "Team", href: "/team", icon: "UserCog", roles: ["admin", "manager"], group: "CRM" },
   { label: "Properties", href: "/properties", icon: "Building2", roles: ["admin", "manager", "agent", "accountant"], group: "Inventory" },
   { label: "Quotations", href: "/quotations", icon: "FileText", roles: ["admin", "manager", "agent", "accountant"], group: "Commercial" },
   { label: "Invoices", href: "/invoices", icon: "ReceiptText", roles: ["admin", "manager", "accountant"], group: "Commercial" },

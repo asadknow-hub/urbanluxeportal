@@ -19,6 +19,7 @@ import {
   BarChart3,
   Settings,
   ChevronLeft,
+  UserCog,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -35,6 +36,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   CheckCircle2,
   BarChart3,
   Settings,
+  UserCog,
 };
 
 export function Sidebar({ role }: { role: UserRole }) {
