@@ -1,0 +1,114 @@
+"use server";
+
+import { z } from "zod";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/auth";
+import { logActivity } from "@/lib/activity-log";
+import { revalidatePath } from "next/cache";
+
+export type ActionResult<T = unknown> = {
+  ok: boolean;
+  data?: T;
+  error?: string;
+};
+
+const customerSchema = z.object({
+  type: z.enum(["individual", "company"]),
+  name: z.string().min(1, "Name is required"),
+  phone: z.string().optional().nullable(),
+  email: z.string().email().optional().or(z.literal("")),
+  nationality: z.string().optional().nullable(),
+  emirates_id: z.string().optional().nullable(),
+  passport_no: z.string().optional().nullable(),
+  trn: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  tags: z.array(z.string()).optional().default([]),
+  notes: z.string().optional().nullable(),
+  assigned_to: z.string().uuid().optional().nullable(),
+});
+
+export async function createCustomer(
+  input: z.infer<typeof customerSchema>
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+
+    const parsed = customerSchema.safeParse(input);
+    if (!parsed.success) {
+      return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    }
+
+    const supabase = await createSupabaseServerClient();
+
+    const { data, error } = await supabase
+      .from("customers")
+      .insert({
+        type: parsed.data.type,
+        name: parsed.data.name,
+        phone: parsed.data.phone || null,
+        email: parsed.data.email || null,
+        nationality: parsed.data.nationality || null,
+        emirates_id: parsed.data.emirates_id || null,
+        passport_no: parsed.data.passport_no || null,
+        trn: parsed.data.trn || null,
+        address: parsed.data.address || null,
+        tags: parsed.data.tags,
+        notes: parsed.data.notes || null,
+        assigned_to: parsed.data.assigned_to || null,
+        created_by: user.id,
+      })
+      .select("id")
+      .single();
+
+    if (error) return { ok: false, error: error.message };
+
+    await logActivity({
+      actorId: user.id,
+      entityType: "customer",
+      entityId: data.id,
+      action: "created",
+    });
+
+    revalidatePath("/customers");
+    return { ok: true, data: { id: data.id } };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function updateCustomer(
+  id: string,
+  input: Partial<z.infer<typeof customerSchema>>
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+
+    const supabase = await createSupabaseServerClient();
+
+    const { error } = await supabase
+      .from("customers")
+      .update({
+        ...input,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (error) return { ok: false, error: error.message };
+
+    await logActivity({
+      actorId: user.id,
+      entityType: "customer",
+      entityId: id,
+      action: "updated",
+      diff: input as Record<string, unknown>,
+    });
+
+    revalidatePath("/customers");
+    revalidatePath(`/customers/${id}`);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
