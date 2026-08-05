@@ -40,11 +40,20 @@
 - [x] PDFs — quotation, tax invoice, payment receipt via @react-pdf/renderer (company header, TRN, VAT, line items, totals)
 - [x] Daily cron — overdue invoices, cheque due in 7 days, document expiry 30 days, quote auto-expire
 
-### Next: Phase 3 — Governance & Polish
-- [ ] Documents (6.11) — global library + embedded tabs
-- [ ] Approvals (6.12) — inbox, approve/reject
-- [ ] Notifications (6.13) — bell with unread count, mark-all-read
-- [ ] Automations (6.14) — rules table with toggle
-- [ ] Reports (6.10) — sales, lead, property, financial, agent scorecard
-- [ ] Financial views (6.9) — revenue vs expenses, VAT, commissions
-- [ ] Users/settings complete (6.15) — invite, roles, email templates
+## Phase 3 — Governance & Polish ✅
+- [x] Documents (/documents) — global library with search, category/entity filters, expiry badges, signed URLs, upload dialog with Supabase Storage
+- [x] Approvals (/approvals) — inbox for admins/managers, approve/reject with note, my requests tab, requester notification
+- [x] Notifications — bell with unread count, dropdown list, mark-all-read, auto-refresh, click-through to entity
+- [x] Automations (/settings/automations) — rules list with toggle on/off, trigger/action summary
+- [x] Reports (/reports) — tabbed: Sales (won/lost, win rate, agent scorecard), Leads (by source, conversion), Properties (by status/category), Financial (revenue, expenses, VAT, net profit)
+- [x] Users (/settings/users) — list with roles, activate/deactivate, invite dialog
+- [x] Email Templates (/settings/email-templates) — edit subject/body for transactional emails
+- [x] Settings hub — sub-page navigation cards, company profile form
+- [x] Switch UI component
+
+### Next: Phase 4 — AI Features & Polish
+- [ ] AI document extraction (passport, Emirates ID, title deed)
+- [ ] AI lead scoring & enrichment
+- [ ] AI quotation/valuation suggestions
+- [ ] Resend email integration
+- [ ] Production deployment & testing
