@@ -12,31 +12,45 @@ export type SessionUser = {
 };
 
 export async function getCurrentUser(): Promise<SessionUser | null> {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-  if (!user) return null;
+    if (authError) {
+      console.error("[auth] getUser error:", authError.message);
+      return null;
+    }
+    if (!user) return null;
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
 
-  if (!profile) return null;
-  if (!profile.is_active) return null;
+    if (profileError) {
+      console.error("[auth] profile query error:", profileError.message);
+      return null;
+    }
+    if (!profile) return null;
+    if (!profile.is_active) return null;
 
-  return {
-    id: profile.id,
-    email: profile.email ?? user.email ?? "",
-    full_name: profile.full_name ?? "",
-    role: profile.role as UserRole,
-    avatar_url: profile.avatar_url,
-    commission_rate: profile.commission_rate,
-    is_active: profile.is_active,
-  };
+    return {
+      id: profile.id,
+      email: profile.email ?? user.email ?? "",
+      full_name: profile.full_name ?? "",
+      role: profile.role as UserRole,
+      avatar_url: profile.avatar_url,
+      commission_rate: profile.commission_rate,
+      is_active: profile.is_active,
+    };
+  } catch (err) {
+    console.error("[auth] unexpected error:", err);
+    return null;
+  }
 }
 
 export async function requireAuth(): Promise<SessionUser> {

@@ -40,6 +40,11 @@ export default async function DashboardPage() {
         .eq("status", "overdue"),
     ]);
 
+  if (propertiesResult.error) console.error("[dashboard] properties error:", propertiesResult.error.message);
+  if (dealsResult.error) console.error("[dashboard] deals error:", dealsResult.error.message);
+  if (invoicesResult.error) console.error("[dashboard] invoices error:", invoicesResult.error.message);
+  if (overdueResult.error) console.error("[dashboard] overdue error:", overdueResult.error.message);
+
   const totalProperties = propertiesResult.count ?? 0;
   const activeDeals = dealsResult.data ?? [];
   const pipelineValue = activeDeals.reduce((sum, d) => sum + (d.value ?? 0), 0);
