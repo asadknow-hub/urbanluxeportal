@@ -28,13 +28,23 @@
 - [x] Base UI error #31 (DropdownMenuLabel wrapped in DropdownMenuGroup)
 - [x] Global error boundary, debug API route, auth error logging
 
-## Phase 2 — Inventory & Money (in progress)
+## Phase 2 — Inventory & Money ✅
 - [x] Properties + owners (/properties) — card grid with filters, detail page with Supabase Storage gallery upload, create dialog, linked deals
+- [x] Owners sub-page (/properties/owners) — list with property counts, create dialog
 - [x] Quotations (/quotations) — list with filters, create dialog with line items builder + VAT calc, detail page, convert-to-invoice flow, status management
 - [x] Invoices (/invoices) — list with status/balance, create dialog with line items+VAT, detail page with payment history, record payment with auto status flow (partial/paid), void action
 - [x] Payments + Cheque tracker (/payments) — tabbed UI, payments list, cheque lifecycle (pending→deposited→cleared/bounced), create cheque dialog, summary strip
+- [x] Expenses module (/expenses) — CRUD with receipt upload to Supabase Storage, category filter, search
 - [x] Document upload component — Supabase Storage canonical paths, always upload never link
 - [x] RLS migration 0007 — tighten quotations/documents policies, create storage buckets with RLS
-- [ ] PDFs (quotation, invoice, receipt)
-- [ ] Daily cron wiring
-- [ ] Expenses module
+- [x] PDFs — quotation, tax invoice, payment receipt via @react-pdf/renderer (company header, TRN, VAT, line items, totals)
+- [x] Daily cron — overdue invoices, cheque due in 7 days, document expiry 30 days, quote auto-expire
+
+### Next: Phase 3 — Governance & Polish
+- [ ] Documents (6.11) — global library + embedded tabs
+- [ ] Approvals (6.12) — inbox, approve/reject
+- [ ] Notifications (6.13) — bell with unread count, mark-all-read
+- [ ] Automations (6.14) — rules table with toggle
+- [ ] Reports (6.10) — sales, lead, property, financial, agent scorecard
+- [ ] Financial views (6.9) — revenue vs expenses, VAT, commissions
+- [ ] Users/settings complete (6.15) — invite, roles, email templates
