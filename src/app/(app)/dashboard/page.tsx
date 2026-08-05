@@ -4,22 +4,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, KanbanSquare, DollarSign, AlertCircle } from "lucide-react";
 import { formatAED } from "@/lib/money";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   const user = await getCurrentUser();
+  if (!user) throw new Error("User not found");
   const supabase = await createSupabaseServerClient();
 
-  const isAgent = user?.role === "agent";
-  const agentFilter = isAgent ? { assigned_to: user?.id } : {};
+  const isAgent = user.role === "agent";
+
+  let dealsQuery = supabase
+    .from("deals")
+    .select("value")
+    .eq("deleted_at", null)
+    .in("stage", ["inquiry", "viewing", "offer", "negotiation", "contract"]);
+
+  if (isAgent) {
+    dealsQuery = dealsQuery.eq("assigned_to", user.id);
+  }
 
   const [propertiesResult, dealsResult, invoicesResult, overdueResult] =
     await Promise.all([
       supabase.from("properties").select("id", { count: "exact", head: true }).eq("deleted_at", null),
-      supabase
-        .from("deals")
-        .select("value")
-        .eq("deleted_at", null)
-        .not("stage", "in", '("won","lost")')
-        .match(agentFilter),
+      dealsQuery,
       supabase
         .from("invoices")
         .select("total")
