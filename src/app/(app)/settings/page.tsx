@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { redirect } from "next/navigation";
 import { can } from "@/lib/permissions";
+import Link from "next/link";
+import { Users, Zap, Mail, ChevronRight } from "lucide-react";
 
 export default async function SettingsPage() {
   const user = await getCurrentUser();
@@ -25,6 +27,53 @@ export default async function SettingsPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
         <p className="text-sm text-slate-500">Manage your company profile and system configuration.</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Link href="/settings/users" className="group rounded-2xl bg-white p-5 shadow-sm border border-slate-200 hover:border-slate-300 transition-colors">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-blue-50 p-2">
+                <Users className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Users</p>
+                <p className="text-xs text-slate-400">Manage team & roles</p>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
+          </div>
+        </Link>
+
+        <Link href="/settings/automations" className="group rounded-2xl bg-white p-5 shadow-sm border border-slate-200 hover:border-slate-300 transition-colors">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-amber-50 p-2">
+                <Zap className="h-5 w-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Automations</p>
+                <p className="text-xs text-slate-400">Workflow rules</p>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
+          </div>
+        </Link>
+
+        <Link href="/settings/email-templates" className="group rounded-2xl bg-white p-5 shadow-sm border border-slate-200 hover:border-slate-300 transition-colors">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-purple-50 p-2">
+                <Mail className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Email Templates</p>
+                <p className="text-xs text-slate-400">Transactional emails</p>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
+          </div>
+        </Link>
       </div>
 
       <Card className="rounded-2xl">

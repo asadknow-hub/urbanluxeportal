@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Bell, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import { NotificationBell } from "@/components/shared/notification-bell";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -60,10 +61,7 @@ export function Topbar({ user }: { user: SessionUser }) {
       </div>
 
       <div className="flex items-center gap-4">
-        <button className="relative rounded-md p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
-          <Bell className="h-4 w-4" />
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" />
-        </button>
+        <NotificationBell />
 
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2 rounded-md p-1 hover:bg-slate-100">

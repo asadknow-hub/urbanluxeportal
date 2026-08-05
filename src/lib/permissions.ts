@@ -141,6 +141,7 @@ export const NAV_ITEMS: {
   { label: "Quotations", href: "/quotations", icon: "FileText", roles: ["admin", "manager", "agent", "accountant"], group: "Commercial" },
   { label: "Invoices", href: "/invoices", icon: "ReceiptText", roles: ["admin", "manager", "accountant"], group: "Commercial" },
   { label: "Payments", href: "/payments", icon: "CreditCard", roles: ["admin", "manager", "accountant"], group: "Commercial" },
+  { label: "Expenses", href: "/expenses", icon: "ReceiptText", roles: ["admin", "manager", "accountant"], group: "Commercial" },
   { label: "Documents", href: "/documents", icon: "FolderOpen", roles: ["admin", "manager", "agent", "accountant"], group: "Governance" },
   { label: "Approvals", href: "/approvals", icon: "CheckCircle2", roles: ["admin", "manager", "agent"], group: "Governance" },
   { label: "Reports", href: "/reports", icon: "BarChart3", roles: ["admin", "manager", "agent", "accountant"], group: "Governance" },
