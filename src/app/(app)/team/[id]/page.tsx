@@ -2,7 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { StaffDetail } from "@/components/team/staff-detail";
 import { redirect } from "next/navigation";
-import { formatDate } from "@/lib/dates";
+import { getStaffActivityStats } from "@/server/staff-sessions";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +77,10 @@ export default async function StaffDetailPage({
     .order("created_at", { ascending: false })
     .limit(15);
 
+  // Fetch session stats for portal activity tab
+  const sessionResult = await getStaffActivityStats(id, 1);
+  const sessionStats = sessionResult.ok ? sessionResult.data : null;
+
   return (
     <div className="space-y-6">
       <StaffDetail
@@ -86,6 +90,7 @@ export default async function StaffDetailPage({
         documents={documents ?? []}
         activities={activities ?? []}
         currentUserRole={user.role}
+        sessionStats={sessionStats ?? undefined}
       />
     </div>
   );

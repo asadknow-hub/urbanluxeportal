@@ -254,3 +254,187 @@ export async function addLeadActivity(
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
   }
 }
+
+export async function assignLead(
+  leadId: string,
+  agentId: string | null
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    if (!["admin", "manager"].includes(user.role)) {
+      return { ok: false, error: "Not authorized" };
+    }
+
+    const supabase = await createSupabaseServerClient();
+
+    const { error } = await supabase
+      .from("leads")
+      .update({
+        assigned_to: agentId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", leadId);
+
+    if (error) return { ok: false, error: error.message };
+
+    if (agentId) {
+      await supabase.from("lead_activities").insert({
+        lead_id: leadId,
+        type: "assignment",
+        summary: `Lead assigned to agent`,
+        created_by: user.id,
+      });
+    }
+
+    await logActivity({
+      actorId: user.id,
+      entityType: "lead",
+      entityId: leadId,
+      action: agentId ? "assigned" : "unassigned",
+      diff: { assigned_to: agentId },
+    });
+
+    revalidatePath("/leads");
+    revalidatePath(`/leads/${leadId}`);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function bulkAssignLeads(
+  leadIds: string[],
+  agentId: string | null
+): Promise<ActionResult<{ assigned: number }>> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    if (!["admin", "manager"].includes(user.role)) {
+      return { ok: false, error: "Not authorized" };
+    }
+
+    const supabase = await createSupabaseServerClient();
+
+    const { data, error } = await supabase
+      .from("leads")
+      .update({
+        assigned_to: agentId,
+        updated_at: new Date().toISOString(),
+      })
+      .in("id", leadIds)
+      .eq("deleted_at", null)
+      .select("id");
+
+    if (error) return { ok: false, error: error.message };
+
+    const assignedCount = data?.length ?? 0;
+
+    if (agentId && assignedCount > 0) {
+      const activities = (data ?? []).map((lead) => ({
+        lead_id: lead.id,
+        type: "assignment",
+        summary: `Bulk assigned to agent`,
+        created_by: user.id,
+      }));
+      await supabase.from("lead_activities").insert(activities);
+    }
+
+    await logActivity({
+      actorId: user.id,
+      entityType: "lead",
+      entityId: leadIds[0] ?? "",
+      action: "bulk_assigned",
+      diff: { count: assignedCount, assigned_to: agentId },
+    });
+
+    revalidatePath("/leads");
+    return { ok: true, data: { assigned: assignedCount } };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function scheduleFollowUp(
+  leadId: string,
+  followUpAt: string,
+  notes?: string
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+
+    const supabase = await createSupabaseServerClient();
+
+    const { error: leadError } = await supabase
+      .from("leads")
+      .update({
+        next_follow_up_at: followUpAt,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", leadId);
+
+    if (leadError) return { ok: false, error: leadError.message };
+
+    await supabase.from("lead_activities").insert({
+      lead_id: leadId,
+      type: "follow_up_scheduled",
+      summary: notes || `Follow-up scheduled for ${followUpAt}`,
+      created_by: user.id,
+    });
+
+    revalidatePath("/leads");
+    revalidatePath(`/leads/${leadId}`);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function updateLeadStatus(
+  leadId: string,
+  status: string
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+
+    const validStatuses = ["new", "contacted", "qualified", "unqualified", "converted"];
+    if (!validStatuses.includes(status)) {
+      return { ok: false, error: "Invalid status" };
+    }
+
+    const supabase = await createSupabaseServerClient();
+
+    const { error } = await supabase
+      .from("leads")
+      .update({
+        status,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", leadId);
+
+    if (error) return { ok: false, error: error.message };
+
+    await supabase.from("lead_activities").insert({
+      lead_id: leadId,
+      type: "status_change",
+      summary: `Status changed to ${status}`,
+      created_by: user.id,
+    });
+
+    await logActivity({
+      actorId: user.id,
+      entityType: "lead",
+      entityId: leadId,
+      action: "status_changed",
+      diff: { status },
+    });
+
+    revalidatePath("/leads");
+    revalidatePath(`/leads/${leadId}`);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,8 +16,9 @@ import { getStatusColor } from "@/lib/status-colors";
 import { whatsappLink } from "@/lib/phone";
 import { formatAED } from "@/lib/money";
 import { formatDate } from "@/lib/dates";
-import { LeadDrawer } from "./lead-drawer";
-import { MessageCircle, Search } from "lucide-react";
+import { bulkAssignLeads } from "@/server/leads";
+import { toast } from "sonner";
+import { MessageCircle, Search, Loader2, UserCog } from "lucide-react";
 
 export type LeadRow = {
   id: string;
@@ -69,8 +69,12 @@ export function LeadsTable({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [selectedLead, setSelectedLead] = useState<LeadRow | null>(null);
   const [searchValue, setSearchValue] = useState(currentFilters.q ?? "");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkAgent, setBulkAgent] = useState("");
+  const [pending, startTransition] = useTransition();
+
+  const canBulkAssign = userRole === "admin" || userRole === "manager";
 
   function updateFilter(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -85,6 +89,38 @@ export function LeadsTable({
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     updateFilter("q", searchValue);
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === leads.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(leads.map((l) => l.id)));
+    }
+  }
+
+  function handleBulkAssign() {
+    if (!bulkAgent || selectedIds.size === 0) return;
+    startTransition(async () => {
+      const agentId = bulkAgent === "unassigned" ? null : bulkAgent;
+      const result = await bulkAssignLeads([...selectedIds], agentId);
+      if (result.ok) {
+        toast.success(`${result.data?.assigned ?? 0} leads ${agentId ? "assigned" : "unassigned"}`);
+        setSelectedIds(new Set());
+        setBulkAgent("");
+      } else {
+        toast.error(result.error ?? "Failed");
+      }
+    });
   }
 
   return (
@@ -156,12 +192,49 @@ export function LeadsTable({
         )}
       </div>
 
+      {/* Bulk assign bar */}
+      {canBulkAssign && selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-200 p-3">
+          <span className="text-sm font-medium text-emerald-700">
+            {selectedIds.size} selected
+          </span>
+          <Select value={bulkAgent} onValueChange={(v) => setBulkAgent(v ?? "")}>
+            <SelectTrigger className="w-48 bg-white">
+              <SelectValue placeholder="Assign to..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="unassigned">Unassigned</SelectItem>
+              {agents.map((a) => (
+                <SelectItem key={a.id} value={a.id}>{a.full_name} ({a.role})</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button size="sm" onClick={handleBulkAssign} disabled={pending || !bulkAgent}>
+            {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserCog className="mr-2 h-4 w-4" />}
+            Assign
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
+            Clear
+          </Button>
+        </div>
+      )}
+
       {/* Table */}
       <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-200">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/50 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+                {canBulkAssign && (
+                  <th className="px-4 py-3 w-10">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.size === leads.length && leads.length > 0}
+                      onChange={toggleSelectAll}
+                      className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    />
+                  </th>
+                )}
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Phone</th>
                 <th className="px-4 py-3">Source</th>
@@ -176,7 +249,7 @@ export function LeadsTable({
             <tbody className="divide-y divide-slate-100">
               {leads.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-slate-400">
+                  <td colSpan={canBulkAssign ? 10 : 9} className="px-4 py-12 text-center text-slate-400">
                     No leads found. Try adjusting filters or create a new lead.
                   </td>
                 </tr>
@@ -184,14 +257,26 @@ export function LeadsTable({
                 leads.map((lead) => {
                   const colors = getStatusColor(lead.status);
                   const waLink = whatsappLink(lead.phone);
+                  const isSelected = selectedIds.has(lead.id);
                   return (
                     <tr
                       key={lead.id}
-                      onClick={() => setSelectedLead(lead)}
-                      className="cursor-pointer hover:bg-slate-50"
+                      className={`hover:bg-slate-50 ${isSelected ? "bg-emerald-50/50" : ""}`}
                     >
+                      {canBulkAssign && (
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleSelect(lead.id)}
+                            className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                          />
+                        </td>
+                      )}
                       <td className="px-4 py-3 font-medium text-slate-900">
-                        {lead.name}
+                        <Link href={`/leads/${lead.id}`} className="hover:text-emerald-600">
+                          {lead.name}
+                        </Link>
                       </td>
                       <td className="px-4 py-3">
                         {lead.phone ? (
@@ -199,7 +284,6 @@ export function LeadsTable({
                             href={waLink ?? "#"}
                             target="_blank"
                             rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
                             className="inline-flex items-center gap-1 text-emerald-600 hover:text-emerald-700"
                           >
                             <MessageCircle className="h-3.5 w-3.5" />
@@ -221,9 +305,11 @@ export function LeadsTable({
                           : "—"}
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${colors.bg} ${colors.text}`}>
-                          {lead.status}
-                        </span>
+                        <Link href={`/leads/${lead.id}`}>
+                          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${colors.bg} ${colors.text}`}>
+                            {lead.status}
+                          </span>
+                        </Link>
                       </td>
                       <td className="px-4 py-3">
                         {lead.score !== null ? (
@@ -250,14 +336,6 @@ export function LeadsTable({
           </table>
         </div>
       </div>
-
-      {/* Drawer */}
-      {selectedLead && (
-        <LeadDrawer
-          lead={selectedLead}
-          onClose={() => setSelectedLead(null)}
-        />
-      )}
     </div>
   );
 }

@@ -60,6 +60,21 @@ export default async function LeadsPage({
     .eq("is_active", true)
     .order("full_name");
 
+  // Pipeline summary stats
+  let statsQuery = supabase
+    .from("leads")
+    .select("status")
+    .eq("deleted_at", null);
+  if (user.role === "agent") {
+    statsQuery = statsQuery.or(`assigned_to.eq.${user.id},assigned_to.is.null`);
+  }
+  const { data: allStatuses } = await statsQuery;
+
+  const stats: Record<string, number> = {};
+  (allStatuses ?? []).forEach((l) => {
+    stats[l.status] = (stats[l.status] ?? 0) + 1;
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -70,6 +85,29 @@ export default async function LeadsPage({
           </p>
         </div>
         <LeadCreateDialog agents={agents ?? []} />
+      </div>
+
+      {/* Pipeline summary */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        {[
+          { key: "new", label: "New", color: "bg-blue-500" },
+          { key: "contacted", label: "Contacted", color: "bg-amber-500" },
+          { key: "qualified", label: "Qualified", color: "bg-emerald-500" },
+          { key: "converted", label: "Converted", color: "bg-teal-500" },
+          { key: "unqualified", label: "Unqualified", color: "bg-red-400" },
+        ].map((s) => (
+          <a
+            key={s.key}
+            href={`/leads?status=${s.key}`}
+            className="rounded-xl bg-white p-4 shadow-sm border border-slate-200 hover:border-slate-300 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <div className={`h-2 w-2 rounded-full ${s.color}`} />
+              <p className="text-2xl font-bold text-slate-900">{stats[s.key] ?? 0}</p>
+            </div>
+            <p className="text-xs text-slate-400">{s.label}</p>
+          </a>
+        ))}
       </div>
 
       <LeadsTable

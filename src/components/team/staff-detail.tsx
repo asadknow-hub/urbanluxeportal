@@ -38,6 +38,9 @@ import {
   Activity as ActivityIcon,
   Briefcase,
   Users,
+  Clock,
+  CalendarDays,
+  TrendingUp,
 } from "lucide-react";
 
 type Staff = {
@@ -67,6 +70,22 @@ type Doc = {
 };
 type Activity = { action: string; entity_type: string; entity_id: string; created_at: string };
 
+type SessionStats = {
+  daysLoggedInThisMonth: number;
+  daysNotLoggedIn: number;
+  totalActiveSecondsThisMonth: number;
+  avgDailyActiveSeconds: number;
+  lastLoginAt: string | null;
+  sessions: Array<{
+    id: string;
+    session_date: string;
+    login_at: string;
+    logout_at: string | null;
+    total_active_seconds: number;
+  }>;
+  dailyBreakdown: Array<{ date: string; active_seconds: number; sessions: number }>;
+};
+
 const ROLE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   admin: Shield,
   manager: UserCog,
@@ -78,7 +97,8 @@ const TABS = [
   { id: "profile", label: "Profile", icon: UserCog },
   { id: "documents", label: "Documents", icon: FileText },
   { id: "password", label: "Password & Login", icon: KeyRound },
-  { id: "activity", label: "Activity", icon: ActivityIcon },
+  { id: "portal_activity", label: "Portal Activity", icon: Clock },
+  { id: "activity", label: "Work Activity", icon: ActivityIcon },
 ];
 
 function formatBytes(bytes: number): string {
@@ -94,6 +114,7 @@ export function StaffDetail({
   documents,
   activities,
   currentUserRole,
+  sessionStats,
 }: {
   staff: Staff;
   leads: Lead[];
@@ -101,6 +122,7 @@ export function StaffDetail({
   documents: Doc[];
   activities: Activity[];
   currentUserRole: string;
+  sessionStats?: SessionStats;
 }) {
   const [activeTab, setActiveTab] = useState("profile");
   const RoleIcon = ROLE_ICONS[staff.role] ?? User;
@@ -207,12 +229,145 @@ export function StaffDetail({
       {activeTab === "password" && (
         <PasswordTab staff={staff} />
       )}
+      {activeTab === "portal_activity" && sessionStats && (
+        <PortalActivityTab stats={sessionStats} />
+      )}
       {activeTab === "activity" && (
         <ActivityTab
           activities={activities}
           leads={leads}
           deals={deals}
         />
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// PORTAL ACTIVITY TAB
+// ============================================================
+function formatDuration(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`;
+  const mins = Math.floor(seconds / 60);
+  if (mins < 60) return `${mins}m ${seconds % 60}s`;
+  const hrs = Math.floor(mins / 60);
+  return `${hrs}h ${mins % 60}m`;
+}
+
+function PortalActivityTab({ stats }: { stats: SessionStats }) {
+  const maxActive = Math.max(...stats.dailyBreakdown.map((d) => d.active_seconds), 1);
+  const monthName = new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  return (
+    <div className="space-y-4">
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-emerald-500" />
+            <p className="text-2xl font-bold text-slate-900">{stats.daysLoggedInThisMonth}</p>
+          </div>
+          <p className="text-xs text-slate-400">Days Logged In</p>
+        </div>
+        <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-red-400" />
+            <p className="text-2xl font-bold text-slate-900">{stats.daysNotLoggedIn}</p>
+          </div>
+          <p className="text-xs text-slate-400">Days Not Logged In</p>
+        </div>
+        <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-blue-500" />
+            <p className="text-2xl font-bold text-slate-900">{formatDuration(stats.totalActiveSecondsThisMonth)}</p>
+          </div>
+          <p className="text-xs text-slate-400">Total Active Time</p>
+        </div>
+        <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-purple-500" />
+            <p className="text-2xl font-bold text-slate-900">{formatDuration(stats.avgDailyActiveSeconds)}</p>
+          </div>
+          <p className="text-xs text-slate-400">Avg Daily Active</p>
+        </div>
+      </div>
+
+      {/* Daily activity bar chart */}
+      <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
+        <h3 className="text-sm font-semibold text-slate-900 mb-1">Daily Active Time — {monthName}</h3>
+        <p className="text-xs text-slate-400 mb-4">Time spent in portal per day</p>
+        {stats.dailyBreakdown.length === 0 ? (
+          <p className="text-sm text-slate-400 text-center py-8">No activity recorded this month.</p>
+        ) : (
+          <div className="flex items-end gap-1 h-32 overflow-x-auto">
+            {stats.dailyBreakdown.map((d) => {
+              const heightPct = (d.active_seconds / maxActive) * 100;
+              const dayLabel = new Date(d.date).getDate();
+              return (
+                <div key={d.date} className="flex flex-col items-center gap-1 shrink-0" style={{ minWidth: 28 }}>
+                  <div className="flex-1 flex items-end w-full">
+                    <div
+                      className="w-full rounded-t bg-gradient-to-t from-emerald-400 to-emerald-300 transition-all hover:from-emerald-500 hover:to-emerald-400"
+                      style={{ height: `${Math.max(heightPct, 4)}%` }}
+                      title={`${formatDate(d.date)}: ${formatDuration(d.active_seconds)}`}
+                    />
+                  </div>
+                  <span className="text-[10px] text-slate-400">{dayLabel}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Session log table */}
+      <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-200">
+        <div className="border-b border-slate-200 p-4">
+          <h3 className="text-sm font-semibold text-slate-900">Session Log (Recent 30)</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/50 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+                <th className="px-4 py-3">Date</th>
+                <th className="px-4 py-3">Login Time</th>
+                <th className="px-4 py-3">Logout Time</th>
+                <th className="px-4 py-3 text-right">Active Time</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {stats.sessions.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-slate-400">No sessions recorded.</td>
+                </tr>
+              ) : (
+                stats.sessions.map((s) => (
+                  <tr key={s.id} className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-slate-600">{formatDate(s.session_date)}</td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {new Date(s.login_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                    </td>
+                    <td className="px-4 py-3 text-slate-500">
+                      {s.logout_at
+                        ? new Date(s.logout_at).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
+                        : <span className="text-emerald-500">Active now</span>}
+                    </td>
+                    <td className="px-4 py-3 text-right font-medium text-slate-700">
+                      {formatDuration(s.total_active_seconds)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {stats.lastLoginAt && (
+        <p className="text-xs text-slate-400 text-center">
+          Last login: {formatDate(stats.lastLoginAt)} at {" "}
+          {new Date(stats.lastLoginAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+        </p>
       )}
     </div>
   );

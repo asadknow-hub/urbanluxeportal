@@ -1,0 +1,96 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createSupabaseServiceClient } from "@/lib/supabase/server";
+
+// POST /api/leads/webhook
+// Accepts lead data from external sources (website forms, portals, etc.)
+// Protected by API key header: x-api-key
+
+const LEAD_API_KEY = process.env.LEAD_API_KEY ?? "urbanluxe-lead-api-key";
+
+export async function POST(req: NextRequest) {
+  try {
+    const apiKey = req.headers.get("x-api-key");
+    if (apiKey !== LEAD_API_KEY) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json();
+
+    // Validate required fields
+    if (!body.name || typeof body.name !== "string") {
+      return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    }
+
+    // Map source — default to "website" if not recognized
+    const validSources = ["website", "bayut", "property_finder", "dubizzle", "referral", "walk_in", "social", "other"];
+    const source = validSources.includes(body.source) ? body.source : "website";
+
+    // Map interest — default to "buy"
+    const validInterests = ["buy", "rent", "sell", "off_plan", "commercial"];
+    const interest = validInterests.includes(body.interest) ? body.interest : "buy";
+
+    const supabase = createSupabaseServiceClient();
+
+    // Duplicate guard — check phone or email
+    if (body.phone || body.email) {
+      let dupQuery = supabase
+        .from("leads")
+        .select("id, name")
+        .eq("deleted_at", null)
+        .limit(1);
+      if (body.phone) dupQuery = dupQuery.eq("phone", body.phone);
+      if (body.email) dupQuery = dupQuery.eq("email", body.email);
+      const { data: dup } = await dupQuery.maybeSingle();
+      if (dup) {
+        return NextResponse.json(
+          { ok: true, message: "Duplicate lead — already exists", id: dup.id },
+          { status: 200 }
+        );
+      }
+    }
+
+    // Insert lead
+    const { data, error } = await supabase
+      .from("leads")
+      .insert({
+        name: body.name,
+        phone: body.phone || null,
+        email: body.email || null,
+        source,
+        interest,
+        budget_min: body.budget_min ? Math.round(Number(body.budget_min) * 100) : null,
+        budget_max: body.budget_max ? Math.round(Number(body.budget_max) * 100) : null,
+        preferred_areas: body.preferred_areas || [],
+        notes: body.notes || null,
+        status: "new",
+        assigned_to: body.assigned_to || null,
+      })
+      .select("id")
+      .single();
+
+    if (error) {
+      console.error("[leads/webhook] insert error:", error.message);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Log activity
+    await supabase.from("lead_activities").insert({
+      lead_id: data.id,
+      type: "note",
+      summary: `Lead captured from ${source}`,
+    });
+
+    return NextResponse.json({ ok: true, id: data.id }, { status: 201 });
+  } catch (err) {
+    console.error("[leads/webhook] error:", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Unknown error" },
+      { status: 500 }
+    );
+  }
+}
+
+// GET /api/leads/webhook — health check
+export async function GET() {
+  return NextResponse.json({ ok: true, endpoint: "/api/leads/webhook" });
+}
