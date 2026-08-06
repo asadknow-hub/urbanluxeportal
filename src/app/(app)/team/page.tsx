@@ -38,7 +38,7 @@ export default async function TeamPage({
   const { data: leadCounts } = await supabase
     .from("leads")
     .select("assigned_to")
-    .eq("deleted_at", null);
+    .is("deleted_at", null);
 
   const leadMap: Record<string, number> = {};
   (leadCounts ?? []).forEach((l) => {
@@ -49,7 +49,7 @@ export default async function TeamPage({
   const { data: dealCounts } = await supabase
     .from("deals")
     .select("assigned_to, stage")
-    .eq("deleted_at", null);
+    .is("deleted_at", null);
 
   const dealMap: Record<string, { total: number; won: number }> = {};
   (dealCounts ?? []).forEach((d) => {

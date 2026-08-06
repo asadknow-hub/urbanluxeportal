@@ -155,7 +155,7 @@ export async function convertQuotationToInvoice(
       .from("quotations")
       .select("*")
       .eq("id", quotationId)
-      .eq("deleted_at", null)
+      .is("deleted_at", null)
       .single();
 
     if (quoteError || !quote) return { ok: false, error: "Quotation not found" };

@@ -27,7 +27,7 @@ export default async function InvoiceDetailPage({
       `
     )
     .eq("id", id)
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .single();
 
   if (error || !invoice) notFound();
@@ -42,7 +42,7 @@ export default async function InvoiceDetailPage({
     .from("payments")
     .select("*")
     .eq("invoice_id", id)
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("received_date", { ascending: false });
 
   const colors = getStatusColor(invoice.status);

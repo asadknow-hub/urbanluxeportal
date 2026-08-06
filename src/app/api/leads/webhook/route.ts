@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       let dupQuery = supabase
         .from("leads")
         .select("id, name")
-        .eq("deleted_at", null)
+        .is("deleted_at", null)
         .limit(1);
       if (body.phone) dupQuery = dupQuery.eq("phone", body.phone);
       if (body.email) dupQuery = dupQuery.eq("email", body.email);

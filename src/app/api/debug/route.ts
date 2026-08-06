@@ -39,7 +39,7 @@ export async function GET() {
       const { data: props, error: propsError, count } = await supabase
         .from("properties")
         .select("id", { count: "exact", head: true })
-        .eq("deleted_at", null);
+        .is("deleted_at", null);
 
       results.properties = {
         count: count ?? 0,
@@ -49,7 +49,7 @@ export async function GET() {
       const { data: deals, error: dealsError } = await supabase
         .from("deals")
         .select("value")
-        .eq("deleted_at", null)
+        .is("deleted_at", null)
         .in("stage", ["inquiry", "viewing", "offer", "negotiation", "contract"]);
 
       results.deals = {
@@ -60,7 +60,7 @@ export async function GET() {
       const { data: invoices, error: invoicesError } = await supabase
         .from("invoices")
         .select("total")
-        .eq("deleted_at", null)
+        .is("deleted_at", null)
         .eq("status", "paid");
 
       results.invoices = {

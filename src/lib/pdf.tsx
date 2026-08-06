@@ -376,7 +376,7 @@ export async function fetchDocData(
       `
     )
     .eq("id", id)
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .single();
 
   if (error || !doc) return null;

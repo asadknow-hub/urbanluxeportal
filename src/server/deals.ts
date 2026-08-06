@@ -47,7 +47,7 @@ export async function updateDealStage(
       .from("deals")
       .select("id, assigned_to, stage, value")
       .eq("id", parsed.data.id)
-      .eq("deleted_at", null)
+      .is("deleted_at", null)
       .single();
 
     if (fetchError || !deal) return { ok: false, error: "Deal not found" };

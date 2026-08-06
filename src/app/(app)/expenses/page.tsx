@@ -21,7 +21,7 @@ export default async function ExpensesPage({
   let query = supabase
     .from("expenses")
     .select("*", { count: "exact" })
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("paid_date", { ascending: false });
 
   if (params.category && params.category !== "all") {

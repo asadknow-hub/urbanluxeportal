@@ -24,7 +24,7 @@ export default async function ReportsPage({
     .from("deals")
     .select("id, title, value, commission, stage, updated_at, agent:profiles!deals_assigned_to_fkey(id, full_name)")
     .eq("stage", "won")
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("updated_at", { ascending: false })
     .limit(50);
 
@@ -32,21 +32,21 @@ export default async function ReportsPage({
     .from("deals")
     .select("id, lost_reason, updated_at")
     .eq("stage", "lost")
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .limit(50);
 
   // Lead analytics
   const { data: leads } = await supabase
     .from("leads")
     .select("id, source, status, created_at")
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .limit(100);
 
   // Property report
   const { data: properties } = await supabase
     .from("properties")
     .select("id, status, category, community, purpose, created_at")
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .limit(100);
 
   // Financial data (admin/manager/accountant only)
@@ -59,7 +59,7 @@ export default async function ReportsPage({
       .from("invoices")
       .select("total, amount_paid, vat_amount, status")
       .neq("status", "void")
-      .eq("deleted_at", null);
+      .is("deleted_at", null);
 
     const invData = invoices ?? [];
     revenueData = {
@@ -74,7 +74,7 @@ export default async function ReportsPage({
     const { data: expenses } = await supabase
       .from("expenses")
       .select("amount")
-      .eq("deleted_at", null);
+      .is("deleted_at", null);
 
     expenseData = {
       total: (expenses ?? []).reduce((s, e) => s + (e.amount ?? 0), 0),

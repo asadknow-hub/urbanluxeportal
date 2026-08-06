@@ -40,7 +40,7 @@ export default async function PropertyDetailPage({
       `
     )
     .eq("id", id)
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .single();
 
   if (error || !property) notFound();
@@ -67,7 +67,7 @@ export default async function PropertyDetailPage({
     .from("deals")
     .select("id, title, stage, value, customer:customers(id, name)")
     .eq("property_id", id)
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   const colors = getStatusColor(property.status);

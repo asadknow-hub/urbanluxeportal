@@ -23,7 +23,7 @@ export default async function InvoicesPage({
       `,
       { count: "exact" }
     )
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (params.status && params.status !== "all") {
@@ -41,7 +41,7 @@ export default async function InvoicesPage({
   const { data: customers } = await supabase
     .from("customers")
     .select("id, name")
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("name");
 
   const canCreate = ["admin", "manager", "accountant"].includes(user.role);

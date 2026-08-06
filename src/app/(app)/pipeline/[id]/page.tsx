@@ -29,7 +29,7 @@ export default async function DealDetailPage({
       `
     )
     .eq("id", id)
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .single();
 
   if (error || !deal) notFound();
@@ -65,7 +65,7 @@ export default async function DealDetailPage({
     .select("*")
     .eq("entity_type", "deal")
     .eq("entity_id", id)
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   // Fetch invoices for this customer

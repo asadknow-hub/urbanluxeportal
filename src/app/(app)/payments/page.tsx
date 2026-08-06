@@ -25,7 +25,7 @@ export default async function PaymentsPage({
       invoice:invoices(id, invoice_no)
       `
     )
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("received_date", { ascending: false })
     .limit(50);
 
@@ -39,7 +39,7 @@ export default async function PaymentsPage({
       customer:customers(id, name)
       `
     )
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("due_date", { ascending: true })
     .limit(50);
 
@@ -49,7 +49,7 @@ export default async function PaymentsPage({
   const { data: customers } = await supabase
     .from("customers")
     .select("id, name")
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("name");
 
   // Summary stats

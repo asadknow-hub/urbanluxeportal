@@ -47,7 +47,7 @@ export default async function StaffDetailPage({
     .from("leads")
     .select("id, name, source, status, created_at")
     .eq("assigned_to", id)
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(10);
 
@@ -56,7 +56,7 @@ export default async function StaffDetailPage({
     .from("deals")
     .select("id, title, stage, value, updated_at")
     .eq("assigned_to", id)
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("updated_at", { ascending: false })
     .limit(10);
 
@@ -66,7 +66,7 @@ export default async function StaffDetailPage({
     .select("*")
     .eq("entity_type", "staff")
     .eq("entity_id", id)
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   // Fetch activity log

@@ -18,7 +18,7 @@ export default async function DashboardPage() {
   let dealsQuery = supabase
     .from("deals")
     .select("value")
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .in("stage", ["inquiry", "viewing", "offer", "negotiation", "contract"]);
 
   if (isAgent) {
@@ -42,18 +42,18 @@ export default async function DashboardPage() {
     activityResult,
     followupsResult,
   ] = await Promise.all([
-    supabase.from("properties").select("id", { count: "exact", head: true }).eq("deleted_at", null),
+    supabase.from("properties").select("id", { count: "exact", head: true }).is("deleted_at", null),
     dealsQuery,
     supabase
       .from("invoices")
       .select("total")
-      .eq("deleted_at", null)
+      .is("deleted_at", null)
       .eq("status", "paid")
       .gte("issue_date", new Date(now.getFullYear(), now.getMonth(), 1).toISOString()),
     supabase
       .from("invoices")
       .select("total")
-      .eq("deleted_at", null)
+      .is("deleted_at", null)
       .eq("status", "overdue"),
     chequeQuery,
     supabase
@@ -65,7 +65,7 @@ export default async function DashboardPage() {
       .from("leads")
       .select("id, name, next_follow_up_at")
       .not("next_follow_up_at", "is", null)
-      .eq("deleted_at", null)
+      .is("deleted_at", null)
       .gte("next_follow_up_at", now.toISOString())
       .order("next_follow_up_at", { ascending: true })
       .limit(10),

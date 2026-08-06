@@ -28,7 +28,7 @@ export default async function PipelinePage() {
       assigned_to_profile:profiles!deals_assigned_to_fkey(id, full_name, avatar_url)
       `
     )
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("stage_changed_at", { ascending: false });
 
   if (user.role === "agent") {

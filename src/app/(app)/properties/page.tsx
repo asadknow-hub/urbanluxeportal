@@ -31,7 +31,7 @@ export default async function PropertiesPage({
       `,
       { count: "exact" }
     )
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (params.q) {
@@ -55,7 +55,7 @@ export default async function PropertiesPage({
   const { data: owners } = await supabase
     .from("property_owners")
     .select("id, name, phone, email")
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("name");
 
   // Fetch agents

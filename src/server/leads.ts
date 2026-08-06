@@ -54,7 +54,7 @@ export async function createLead(
       let dupQuery = supabase
         .from("leads")
         .select("id, name, phone, email")
-        .eq("deleted_at", null)
+        .is("deleted_at", null)
         .limit(1);
       if (parsed.data.phone) {
         dupQuery = dupQuery.eq("phone", parsed.data.phone);
@@ -337,7 +337,7 @@ export async function bulkAssignLeads(
         updated_at: new Date().toISOString(),
       })
       .in("id", leadIds)
-      .eq("deleted_at", null)
+      .is("deleted_at", null)
       .select("id");
 
     if (error) return { ok: false, error: error.message };

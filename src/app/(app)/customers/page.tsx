@@ -23,7 +23,7 @@ export default async function CustomersPage({
       `,
       { count: "exact" }
     )
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (user.role === "agent") {
@@ -46,7 +46,7 @@ export default async function CustomersPage({
   const statsQuery = supabase
     .from("customers")
     .select("status")
-    .eq("deleted_at", null);
+    .is("deleted_at", null);
   const { data: allStatuses } = await statsQuery;
   const stats: Record<string, number> = {};
   (allStatuses ?? []).forEach((c) => {

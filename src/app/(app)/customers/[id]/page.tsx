@@ -38,7 +38,7 @@ export default async function CustomerDetailPage({
       `
     )
     .eq("id", id)
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .single();
 
   if (error || !customer) notFound();
@@ -48,7 +48,7 @@ export default async function CustomerDetailPage({
     .from("deals")
     .select("*, lead:leads(id, name, source, interest, score)")
     .eq("customer_id", id)
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   // Fetch originating lead

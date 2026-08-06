@@ -23,7 +23,7 @@ export default async function LeadsPage({
       `,
       { count: "exact" }
     )
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   // Agents see only own + unassigned
@@ -64,7 +64,7 @@ export default async function LeadsPage({
   let statsQuery = supabase
     .from("leads")
     .select("status")
-    .eq("deleted_at", null);
+    .is("deleted_at", null);
   if (user.role === "agent") {
     statsQuery = statsQuery.or(`assigned_to.eq.${user.id},assigned_to.is.null`);
   }

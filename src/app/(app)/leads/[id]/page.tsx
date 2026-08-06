@@ -89,7 +89,7 @@ export default async function LeadDetailPage({
     .select("*")
     .eq("entity_type", "lead")
     .eq("entity_id", id)
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   return (

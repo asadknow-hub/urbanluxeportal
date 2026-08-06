@@ -18,7 +18,7 @@ export default async function DocumentsPage({
   let query = supabase
     .from("documents")
     .select("*", { count: "exact" })
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (params.category && params.category !== "all") {

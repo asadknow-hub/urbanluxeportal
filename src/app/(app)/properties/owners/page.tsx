@@ -13,7 +13,7 @@ export default async function OwnersPage() {
   const { data: owners, error } = await supabase
     .from("property_owners")
     .select("*")
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .order("name");
 
   if (error) console.error("[owners] query error:", error.message);
@@ -22,7 +22,7 @@ export default async function OwnersPage() {
   const { data: propertyCounts } = await supabase
     .from("properties")
     .select("owner_id")
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .not("owner_id", "is", null);
 
   const countMap: Record<string, number> = {};

@@ -127,7 +127,7 @@ export async function recordPayment(
       .from("invoices")
       .select("total, amount_paid, status")
       .eq("id", invoiceId)
-      .eq("deleted_at", null)
+      .is("deleted_at", null)
       .single();
 
     if (invError || !invoice) return { ok: false, error: "Invoice not found" };

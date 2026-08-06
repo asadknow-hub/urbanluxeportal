@@ -76,7 +76,7 @@ export async function GET(
       `
     )
     .eq("id", id)
-    .eq("deleted_at", null)
+    .is("deleted_at", null)
     .single();
 
   if (error || !payment) {
