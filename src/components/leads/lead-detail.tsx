@@ -45,6 +45,7 @@ import {
   Home,
   Tag,
   Clock,
+  FileText,
 } from "lucide-react";
 
 type Lead = {
@@ -136,6 +137,7 @@ export function LeadDetail({
   agents,
   customer,
   deal,
+  documents,
   userRole,
   userId,
 }: {
@@ -143,7 +145,8 @@ export function LeadDetail({
   activities: LeadActivity[];
   agents: Agent[];
   customer: { id: string; name: string; phone: string | null; email: string | null } | null;
-  deal: { id: string; title: string; stage: string; value: number } | null;
+  deal: { id: string; title: string; stage: string; value: number; deal_type: string } | null;
+  documents: { id: string; file_name: string; file_url: string; file_type: string; created_at: string }[];
   userRole: string;
   userId: string;
 }) {
@@ -239,11 +242,11 @@ export function LeadDetail({
     });
   }
 
-  function confirmConvert(createDeal: boolean) {
+  function confirmConvert() {
     startTransition(async () => {
-      const result = await convertLead(lead.id, { createDeal });
+      const result = await convertLead(lead.id, {});
       if (result.ok) {
-        toast.success(createDeal ? "Converted to customer + deal" : "Converted to customer");
+        toast.success("Lead converted to pipeline deal");
         setConverting(false);
       } else {
         toast.error(result.error ?? "Conversion failed");
@@ -597,12 +600,10 @@ export function LeadDetail({
               </h3>
               {converting ? (
                 <div className="space-y-2">
-                  <p className="text-sm text-slate-600">Convert this lead to:</p>
-                  <Button size="sm" className="w-full bg-emerald-500 hover:bg-emerald-600" onClick={() => confirmConvert(true)} disabled={pending}>
-                    Customer + Deal
-                  </Button>
-                  <Button size="sm" variant="outline" className="w-full" onClick={() => confirmConvert(false)} disabled={pending}>
-                    Customer only
+                  <p className="text-sm text-slate-600">This will create a prospect customer and a pipeline deal (Inquiry stage).</p>
+                  <Button size="sm" className="w-full bg-emerald-500 hover:bg-emerald-600" onClick={() => confirmConvert()} disabled={pending}>
+                    {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Confirm Conversion
                   </Button>
                   <Button size="sm" variant="ghost" className="w-full" onClick={() => setConverting(false)}>
                     Cancel
@@ -611,7 +612,7 @@ export function LeadDetail({
               ) : (
                 <Button className="w-full bg-emerald-500 hover:bg-emerald-600" onClick={() => setConverting(true)}>
                   <UserPlus className="mr-2 h-4 w-4" />
-                  Convert to Customer
+                  Convert to Pipeline Deal
                 </Button>
               )}
             </div>
@@ -631,7 +632,7 @@ export function LeadDetail({
                 </Link>
               )}
               {deal && (
-                <Link href="/pipeline" className="flex items-center gap-2 text-sm text-emerald-700 hover:text-emerald-800">
+                <Link href={`/pipeline/${deal.id}`} className="flex items-center gap-2 text-sm text-emerald-700 hover:text-emerald-800">
                   <Briefcase className="h-3 w-3" />
                   Deal: {deal.title} ({deal.stage})
                 </Link>
@@ -659,6 +660,36 @@ export function LeadDetail({
               )}
             </div>
           )}
+
+          {/* Documents */}
+          <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900 mb-3">
+              <FileText className="h-4 w-4" />
+              Documents ({documents.length})
+            </h3>
+            {documents.length === 0 ? (
+              <p className="text-sm text-slate-400">No documents uploaded yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {documents.map((doc) => (
+                  <a
+                    key={doc.id}
+                    href={doc.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 rounded-lg border border-slate-100 px-3 py-2 hover:bg-slate-50"
+                  >
+                    <FileText className="h-4 w-4 text-slate-400" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-slate-700 truncate">{doc.file_name}</p>
+                      <p className="text-xs text-slate-400">{formatDate(doc.created_at)}</p>
+                    </div>
+                    <ExternalLink className="h-3 w-3 text-slate-400" />
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -85,6 +85,48 @@ export async function updateDealStage(
 
     if (error) return { ok: false, error: error.message };
 
+    // If moving to "won", activate the customer from the originating lead
+    if (parsed.data.stage === "won" && deal) {
+      const { data: fullDeal } = await supabase
+        .from("deals")
+        .select("lead_id, customer_id")
+        .eq("id", parsed.data.id)
+        .single();
+
+      if (fullDeal?.lead_id) {
+        // Call RPC to create/activate customer from lead
+        await supabase.rpc("create_customer_from_lead", {
+          p_lead_id: fullDeal.lead_id,
+          p_deal_id: parsed.data.id,
+        });
+      } else if (fullDeal?.customer_id) {
+        // Direct customer (no lead) — just update status
+        await supabase
+          .from("customers")
+          .update({ status: "active", updated_at: new Date().toISOString() })
+          .eq("id", fullDeal.customer_id);
+      }
+
+      // Log deal activity
+      await supabase.from("deal_activities").insert({
+        deal_id: parsed.data.id,
+        type: "won",
+        summary: `Deal won${parsed.data.value ? ` — Value: ${parsed.data.value} AED` : ""}`,
+        created_by: user.id,
+      });
+
+      revalidatePath("/customers");
+      revalidatePath(`/customers/${fullDeal?.customer_id ?? ""}`);
+    } else {
+      // Log stage change as deal activity
+      await supabase.from("deal_activities").insert({
+        deal_id: parsed.data.id,
+        type: "stage_change",
+        summary: `Stage changed: ${deal.stage} → ${parsed.data.stage}`,
+        created_by: user.id,
+      });
+    }
+
     await logActivity({
       actorId: user.id,
       entityType: "deal",
@@ -93,6 +135,8 @@ export async function updateDealStage(
     });
 
     revalidatePath("/pipeline");
+    revalidatePath(`/pipeline/${parsed.data.id}`);
+    revalidatePath("/leads");
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
@@ -137,6 +181,112 @@ export async function createDeal(input: {
 
     revalidatePath("/pipeline");
     return { ok: true, data: { id: data.id } };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function addDealActivity(
+  dealId: string,
+  type: string,
+  summary: string
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+
+    const supabase = await createSupabaseServerClient();
+
+    const { error } = await supabase.from("deal_activities").insert({
+      deal_id: dealId,
+      type,
+      summary,
+      created_by: user.id,
+    });
+
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath("/pipeline");
+    revalidatePath(`/pipeline/${dealId}`);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function assignDeal(
+  dealId: string,
+  agentId: string | null
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    if (!["admin", "manager"].includes(user.role)) {
+      return { ok: false, error: "Not authorized" };
+    }
+
+    const supabase = await createSupabaseServerClient();
+
+    const { error } = await supabase
+      .from("deals")
+      .update({
+        assigned_to: agentId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", dealId);
+
+    if (error) return { ok: false, error: error.message };
+
+    await supabase.from("deal_activities").insert({
+      deal_id: dealId,
+      type: "assignment",
+      summary: agentId ? "Deal assigned to agent" : "Deal unassigned",
+      created_by: user.id,
+    });
+
+    revalidatePath("/pipeline");
+    revalidatePath(`/pipeline/${dealId}`);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function updateDeal(
+  dealId: string,
+  input: {
+    title?: string;
+    value?: number;
+    expected_close_date?: string | null;
+    property_id?: string | null;
+    commission_rate?: number | null;
+  }
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+
+    const supabase = await createSupabaseServerClient();
+
+    const updateData: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+    if (input.title !== undefined) updateData.title = input.title;
+    if (input.value !== undefined) updateData.value = Math.round(input.value * 100);
+    if (input.expected_close_date !== undefined) updateData.expected_close_date = input.expected_close_date;
+    if (input.property_id !== undefined) updateData.property_id = input.property_id;
+    if (input.commission_rate !== undefined) updateData.commission_rate = input.commission_rate;
+
+    const { error } = await supabase
+      .from("deals")
+      .update(updateData)
+      .eq("id", dealId);
+
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath("/pipeline");
+    revalidatePath(`/pipeline/${dealId}`);
+    return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
   }

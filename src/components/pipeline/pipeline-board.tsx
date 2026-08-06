@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import {
   DndContext,
   DragEndEvent,
@@ -26,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ExternalLink } from "lucide-react";
 
 const STAGES = [
   { key: "inquiry", label: "Inquiry", color: "bg-blue-500" },
@@ -47,6 +49,7 @@ export type DealCard = {
   assigned_to_profile: { id: string; full_name: string; avatar_url: string | null } | null;
   stage_changed_at: string | null;
   property_id: string | null;
+  lead_id: string | null;
 };
 
 function DealCardItem({ deal, isDragging }: { deal: DealCard; isDragging?: boolean }) {
@@ -54,10 +57,14 @@ function DealCardItem({ deal, isDragging }: { deal: DealCard; isDragging?: boole
   const dayColor = days > 30 ? "text-red-600 bg-red-50" : days > 14 ? "text-amber-600 bg-amber-50" : "text-slate-500 bg-slate-50";
 
   return (
-    <div
-      className={`rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-shadow ${isDragging ? "shadow-lg opacity-75" : "hover:shadow-md"}`}
+    <Link
+      href={`/pipeline/${deal.id}`}
+      className={`block rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-shadow ${isDragging ? "shadow-lg opacity-75" : "hover:shadow-md"}`}
     >
-      <p className="text-sm font-medium text-slate-900 line-clamp-1">{deal.title}</p>
+      <div className="flex items-start justify-between">
+        <p className="text-sm font-medium text-slate-900 line-clamp-1 flex-1">{deal.title}</p>
+        <ExternalLink className="h-3 w-3 text-slate-300 flex-shrink-0 ml-1" />
+      </div>
       {deal.customer && (
         <p className="text-xs text-slate-500 mt-0.5">{deal.customer.name}</p>
       )}
@@ -70,7 +77,7 @@ function DealCardItem({ deal, isDragging }: { deal: DealCard; isDragging?: boole
       {deal.assigned_to_profile && (
         <p className="mt-1.5 text-xs text-slate-400">{deal.assigned_to_profile.full_name}</p>
       )}
-    </div>
+    </Link>
   );
 }
 

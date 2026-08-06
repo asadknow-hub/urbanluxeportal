@@ -77,11 +77,20 @@ export default async function LeadDetailPage({
   if (lead.converted_deal_id) {
     const { data: d } = await supabase
       .from("deals")
-      .select("id, title, stage, value")
+      .select("id, title, stage, value, deal_type")
       .eq("id", lead.converted_deal_id)
       .single();
     deal = d;
   }
+
+  // Fetch lead documents
+  const { data: documents } = await supabase
+    .from("documents")
+    .select("*")
+    .eq("entity_type", "lead")
+    .eq("entity_id", id)
+    .eq("deleted_at", null)
+    .order("created_at", { ascending: false });
 
   return (
     <LeadDetail
@@ -90,6 +99,7 @@ export default async function LeadDetailPage({
       agents={agents ?? []}
       customer={customer}
       deal={deal}
+      documents={documents ?? []}
       userRole={user.role}
       userId={user.id}
     />

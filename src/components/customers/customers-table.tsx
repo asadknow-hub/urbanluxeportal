@@ -22,6 +22,7 @@ export type CustomerRow = {
   phone: string | null;
   email: string | null;
   nationality: string | null;
+  status: string;
   assigned_to: string | null;
   assigned_to_profile: { id: string; full_name: string; avatar_url: string | null } | null;
   created_at: string;
@@ -90,7 +91,7 @@ export function CustomersTable({
                 <th className="px-4 py-3">Type</th>
                 <th className="px-4 py-3">Phone</th>
                 <th className="px-4 py-3">Email</th>
-                <th className="px-4 py-3">Nationality</th>
+                <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3">Agent</th>
                 <th className="px-4 py-3">Created</th>
                 <th className="px-4 py-3"></th>
@@ -139,8 +140,14 @@ export function CustomersTable({
                       <td className="px-4 py-3 text-slate-600">
                         {customer.email ?? <span className="text-slate-300">—</span>}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
-                        {customer.nationality ?? <span className="text-slate-300">—</span>}
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          customer.status === 'active' ? 'bg-emerald-50 text-emerald-700' :
+                          customer.status === 'prospect' ? 'bg-amber-50 text-amber-700' :
+                          'bg-slate-100 text-slate-500'
+                        }`}>
+                          {customer.status}
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-slate-600">
                         {customer.assigned_to_profile?.full_name ?? (

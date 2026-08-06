@@ -46,10 +46,21 @@ export default async function CustomerDetailPage({
   // Fetch deals
   const { data: deals } = await supabase
     .from("deals")
-    .select("*")
+    .select("*, lead:leads(id, name, source, interest, score)")
     .eq("customer_id", id)
     .eq("deleted_at", null)
     .order("created_at", { ascending: false });
+
+  // Fetch originating lead
+  let originatingLead = null;
+  if (customer.lead_id) {
+    const { data: ld } = await supabase
+      .from("leads")
+      .select("id, name, source, interest, score, status")
+      .eq("id", customer.lead_id)
+      .single();
+    originatingLead = ld;
+  }
 
   // Fetch invoices
   const { data: invoices } = await supabase
@@ -233,7 +244,7 @@ export default async function CustomerDetailPage({
                   return (
                     <Link
                       key={deal.id}
-                      href={`/pipeline?deal=${deal.id}`}
+                      href={`/pipeline/${deal.id}`}
                       className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 hover:bg-slate-50"
                     >
                       <div>
@@ -252,6 +263,36 @@ export default async function CustomerDetailPage({
               )}
             </div>
           </div>
+
+          {/* Originating Lead */}
+          {originatingLead && (
+            <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+              <h2 className="mb-4 text-sm font-semibold text-slate-700">Originating Lead</h2>
+              <Link
+                href={`/leads/${originatingLead.id}`}
+                className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 hover:bg-slate-50"
+              >
+                <div>
+                  <p className="text-sm font-medium text-slate-900">{originatingLead.name}</p>
+                  <p className="text-xs text-slate-400 capitalize">
+                    {originatingLead.source.replace(/_/g, " ")} · {originatingLead.interest.replace(/_/g, " ")}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  {originatingLead.score !== null && (
+                    <span className={`text-xs font-bold ${originatingLead.score >= 70 ? "text-emerald-600" : originatingLead.score >= 40 ? "text-amber-600" : "text-slate-400"}`}>
+                      Score: {originatingLead.score}
+                    </span>
+                  )}
+                  <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                    originatingLead.status === "converted" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
+                  }`}>
+                    {originatingLead.status}
+                  </span>
+                </div>
+              </Link>
+            </div>
+          )}
 
           {/* Invoices */}
           <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">

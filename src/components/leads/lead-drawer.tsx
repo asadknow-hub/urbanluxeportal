@@ -46,11 +46,11 @@ export function LeadDrawer({ lead, onClose }: { lead: LeadRow; onClose: () => vo
     setConverting(true);
   }
 
-  function confirmConvert(createDeal: boolean) {
+  function confirmConvert() {
     startTransition(async () => {
-      const result = await convertLead(lead.id, { createDeal });
+      const result = await convertLead(lead.id, {});
       if (result.ok) {
-        toast.success(createDeal ? "Lead converted to customer + deal" : "Lead converted to customer");
+        toast.success("Lead converted to pipeline deal");
         handleClose();
       } else {
         toast.error(result.error ?? "Conversion failed");
@@ -220,29 +220,22 @@ export function LeadDrawer({ lead, onClose }: { lead: LeadRow; onClose: () => vo
             <div className="flex flex-col gap-2">
               {converting ? (
                 <div className="space-y-2 rounded-lg bg-slate-50 p-3">
-                  <p className="text-sm font-medium text-slate-700">Convert this lead?</p>
+                  <p className="text-sm font-medium text-slate-700">Convert to pipeline deal?</p>
                   <div className="flex gap-2">
                     <Button
                       size="sm"
                       className="flex-1 bg-emerald-500 hover:bg-emerald-600"
-                      onClick={() => confirmConvert(true)}
+                      onClick={() => confirmConvert()}
                       disabled={pending}
                     >
-                      Customer + Deal
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => confirmConvert(false)}
-                      disabled={pending}
-                    >
-                      Customer only
+                      Confirm Conversion
                     </Button>
                     <Button
                       size="sm"
                       variant="ghost"
+                      className="flex-1"
                       onClick={() => setConverting(false)}
+                      disabled={pending}
                     >
                       Cancel
                     </Button>
@@ -254,7 +247,7 @@ export function LeadDrawer({ lead, onClose }: { lead: LeadRow; onClose: () => vo
                   onClick={handleConvert}
                 >
                   <UserPlus className="mr-2 h-4 w-4" />
-                  Convert to Customer
+                  Convert to Pipeline Deal
                 </Button>
               )}
               <Button

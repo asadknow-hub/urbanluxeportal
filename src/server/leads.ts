@@ -143,8 +143,8 @@ export async function updateLead(
 
 export async function convertLead(
   leadId: string,
-  options: { createDeal: boolean; dealTitle?: string; dealValue?: number; propertyId?: string }
-): Promise<ActionResult<{ customerId: string; dealId?: string }>> {
+  options: { dealTitle?: string; dealValue?: number; propertyId?: string }
+): Promise<ActionResult<{ customerId: string; dealId: string }>> {
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
@@ -160,7 +160,7 @@ export async function convertLead(
     if (leadError || !lead) return { ok: false, error: "Lead not found" };
     if (lead.status === "converted") return { ok: false, error: "Lead already converted" };
 
-    // Create customer
+    // Create customer as "prospect" — becomes "active" when deal is won
     const { data: customer, error: custError } = await supabase
       .from("customers")
       .insert({
@@ -171,33 +171,31 @@ export async function convertLead(
         notes: lead.notes,
         assigned_to: lead.assigned_to,
         created_by: user.id,
+        lead_id: leadId,
+        status: "prospect",
       })
       .select("id")
       .single();
     if (custError) return { ok: false, error: custError.message };
 
-    let dealId: string | undefined;
-
-    // Optionally create deal
-    if (options.createDeal) {
-      const title = options.dealTitle || `${lead.interest} — ${lead.name}`;
-      const { data: deal, error: dealError } = await supabase
-        .from("deals")
-        .insert({
-          title,
-          customer_id: customer.id,
-          property_id: options.propertyId || null,
-          deal_type: lead.interest === "rent" ? "rental" : "sale",
-          stage: "inquiry",
-          value: options.dealValue ? Math.round(options.dealValue * 100) : 0,
-          assigned_to: lead.assigned_to,
-          created_by: user.id,
-        })
-        .select("id")
-        .single();
-      if (dealError) return { ok: false, error: dealError.message };
-      dealId = deal.id;
-    }
+    // Always create a deal — this is the unified flow
+    const title = options.dealTitle || `${lead.interest} — ${lead.name}`;
+    const { data: deal, error: dealError } = await supabase
+      .from("deals")
+      .insert({
+        title,
+        customer_id: customer.id,
+        property_id: options.propertyId || null,
+        deal_type: lead.interest === "rent" ? "rental" : lead.interest === "off_plan" ? "off_plan" : "sale",
+        stage: "inquiry",
+        value: options.dealValue ? Math.round(options.dealValue * 100) : 0,
+        assigned_to: lead.assigned_to,
+        created_by: user.id,
+        lead_id: leadId,
+      })
+      .select("id")
+      .single();
+    if (dealError) return { ok: false, error: dealError.message };
 
     // Update lead status
     const { error: updateError } = await supabase
@@ -205,24 +203,40 @@ export async function convertLead(
       .update({
         status: "converted",
         converted_customer_id: customer.id,
-        converted_deal_id: dealId ?? null,
+        converted_deal_id: deal.id,
         updated_at: new Date().toISOString(),
       })
       .eq("id", leadId);
     if (updateError) return { ok: false, error: updateError.message };
+
+    // Log activities on both lead and deal
+    await supabase.from("lead_activities").insert({
+      lead_id: leadId,
+      type: "converted",
+      summary: `Lead converted to pipeline deal: ${title}`,
+      created_by: user.id,
+    });
+
+    await supabase.from("deal_activities").insert({
+      deal_id: deal.id,
+      type: "created",
+      summary: `Deal created from lead: ${lead.name}`,
+      created_by: user.id,
+    });
 
     await logActivity({
       actorId: user.id,
       entityType: "lead",
       entityId: leadId,
       action: "converted",
-      diff: { customerId: customer.id, dealId },
+      diff: { customerId: customer.id, dealId: deal.id },
     });
 
     revalidatePath("/leads");
+    revalidatePath(`/leads/${leadId}`);
     revalidatePath("/customers");
     revalidatePath("/pipeline");
-    return { ok: true, data: { customerId: customer.id, dealId } };
+    return { ok: true, data: { customerId: customer.id, dealId: deal.id } };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
   }
