@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   Sheet,
   SheetContent,
@@ -33,6 +34,7 @@ export function LeadDrawer({ lead, onClose }: { lead: LeadRow; onClose: () => vo
   const [activityText, setActivityText] = useState("");
   const [activityType, setActivityType] = useState("note");
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
 
   const colors = getStatusColor(lead.status);
   const waLink = whatsappLink(lead.phone);
@@ -52,6 +54,7 @@ export function LeadDrawer({ lead, onClose }: { lead: LeadRow; onClose: () => vo
       if (result.ok) {
         toast.success("Lead converted to pipeline deal");
         handleClose();
+        router.refresh();
       } else {
         toast.error(result.error ?? "Conversion failed");
       }
@@ -78,6 +81,7 @@ export function LeadDrawer({ lead, onClose }: { lead: LeadRow; onClose: () => vo
       if (result.ok) {
         toast.success("Lead marked as unqualified");
         handleClose();
+        router.refresh();
       } else {
         toast.error(result.error ?? "Failed to update lead");
       }

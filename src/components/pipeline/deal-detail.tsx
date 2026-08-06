@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -137,6 +138,7 @@ export function DealDetail({
   userId: string;
 }) {
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
   const [activityText, setActivityText] = useState("");
   const [activityType, setActivityType] = useState("note");
   const [editMode, setEditMode] = useState(false);
@@ -159,6 +161,7 @@ export function DealDetail({
       const result = await updateDealStage({ id: deal.id, stage: newStage as any });
       if (result.ok) {
         toast.success(`Deal moved to ${STAGES.find((s) => s.key === newStage)?.label}`);
+        router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
       }
@@ -170,6 +173,7 @@ export function DealDetail({
       const result = await assignDeal(deal.id, agentId);
       if (result.ok) {
         toast.success(agentId ? "Deal assigned" : "Deal unassigned");
+        router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
       }
@@ -183,6 +187,7 @@ export function DealDetail({
       if (result.ok) {
         setActivityText("");
         toast.success("Activity logged");
+        router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
       }
@@ -200,6 +205,7 @@ export function DealDetail({
       if (result.ok) {
         toast.success("Deal updated");
         setEditMode(false);
+        router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
       }

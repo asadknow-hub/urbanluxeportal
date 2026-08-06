@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,7 @@ export function CustomerCreateDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
   const [form, setForm] = useState({
     type: "individual",
     name: "",
@@ -68,6 +70,7 @@ export function CustomerCreateDialog({
       if (result.ok) {
         toast.success("Customer created");
         setOpen(false);
+        router.refresh();
         setForm({
           type: "individual",
           name: "",

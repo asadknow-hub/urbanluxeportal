@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -151,6 +152,7 @@ export function LeadDetail({
   userId: string;
 }) {
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
   const [activityText, setActivityText] = useState("");
   const [activityType, setActivityType] = useState("note");
   const [followUpDate, setFollowUpDate] = useState("");
@@ -178,6 +180,7 @@ export function LeadDetail({
       const result = await assignLead(lead.id, agentId);
       if (result.ok) {
         toast.success(agentId ? "Lead assigned" : "Lead unassigned");
+        router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
       }
@@ -189,6 +192,7 @@ export function LeadDetail({
       const result = await updateLeadStatus(lead.id, newStatus);
       if (result.ok) {
         toast.success(`Status changed to ${newStatus}`);
+        router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
       }
@@ -202,6 +206,7 @@ export function LeadDetail({
       if (result.ok) {
         toast.success("Activity logged");
         setActivityText("");
+        router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
       }
@@ -216,6 +221,7 @@ export function LeadDetail({
         toast.success("Follow-up scheduled");
         setFollowUpDate("");
         setFollowUpNotes("");
+        router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
       }
@@ -236,6 +242,7 @@ export function LeadDetail({
       if (result.ok) {
         toast.success("Lead updated");
         setEditMode(false);
+        router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
       }
@@ -248,6 +255,7 @@ export function LeadDetail({
       if (result.ok) {
         toast.success("Lead converted to pipeline deal");
         setConverting(false);
+        router.refresh();
       } else {
         toast.error(result.error ?? "Conversion failed");
       }

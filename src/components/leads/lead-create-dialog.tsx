@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -49,6 +50,7 @@ export function LeadCreateDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -83,6 +85,7 @@ export function LeadCreateDialog({
       if (result.ok) {
         toast.success("Lead created");
         setOpen(false);
+        router.refresh();
         setForm({
           name: "",
           phone: "",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   DndContext,
@@ -147,6 +148,7 @@ export function PipelineBoard({
   const [wonCommission, setWonCommission] = useState("");
   const [lostReason, setLostReason] = useState("");
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -186,7 +188,11 @@ export function PipelineBoard({
     // Optimistic: move immediately
     startTransition(async () => {
       const result = await updateDealStage({ id: dealId, stage: newStage as any });
-      if (!result.ok) toast.error(result.error ?? "Failed to update deal");
+      if (result.ok) {
+        router.refresh();
+      } else {
+        toast.error(result.error ?? "Failed to update deal");
+      }
     });
   }
 
@@ -202,6 +208,7 @@ export function PipelineBoard({
       if (result.ok) {
         toast.success("Deal moved to Won!");
         setWonDialog(null);
+        router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
       }
@@ -223,6 +230,7 @@ export function PipelineBoard({
         toast.success("Deal marked as Lost");
         setLostDialog(null);
         setLostReason("");
+        router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
       }

@@ -117,6 +117,7 @@ export function LeadsTable({
         toast.success(`${result.data?.assigned ?? 0} leads ${agentId ? "assigned" : "unassigned"}`);
         setSelectedIds(new Set());
         setBulkAgent("");
+        router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
       }
