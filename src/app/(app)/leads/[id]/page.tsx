@@ -16,7 +16,9 @@ export default async function LeadDetailPage({
   const { id } = await params;
   const supabase = await createSupabaseServerClient();
 
-  // Fetch lead with assigned agent profile
+  // Fetch lead with assigned agent profile + activity author profiles in a single query
+  // The activities join fetches profiles for each activity's created_by field
+  // so we can display agent names instead of UUIDs in the timeline
   const { data: lead, error } = await supabase
     .from("leads")
     .select(
@@ -45,59 +47,63 @@ export default async function LeadDetailPage({
     );
   }
 
-  // Fetch stages for stage dropdown
-  const { data: stages } = await supabase
-    .from("lead_stages")
-    .select("*")
-    .eq("is_active", true)
-    .order("sort");
+  // ─── Parallel data fetching ───────────────────────────────
+  // All these queries are independent, so we run them in parallel
+  // with Promise.all instead of sequential awaits.
+  // This cuts page load time from 6× round-trip to 1× round-trip.
+  const [
+    { data: stages },
+    { data: activities },
+    { data: agents },
+    { data: documents },
+    customerResult,
+    dealResult,
+  ] = await Promise.all([
+    // Stages for the stage dropdown
+    supabase
+      .from("lead_stages")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort"),
 
-  // Fetch lead activities (timeline)
-  const { data: activities } = await supabase
-    .from("lead_activities")
-    .select("*")
-    .eq("lead_id", id)
-    .order("occurred_at", { ascending: false })
-    .limit(50);
+    // Activities with author profile (fixes agent names showing as UUIDs)
+    supabase
+      .from("lead_activities")
+      .select(`*, author:profiles!lead_activities_created_by_fkey(id, full_name)`)
+      .eq("lead_id", id)
+      .order("occurred_at", { ascending: false })
+      .limit(50),
 
-  // Fetch agents for assignment
-  const { data: agents } = await supabase
-    .from("profiles")
-    .select("id, full_name, role")
-    .in("role", ["admin", "manager", "agent"])
-    .eq("is_active", true)
-    .order("full_name");
+    // Agents for assignment dropdown
+    supabase
+      .from("profiles")
+      .select("id, full_name, role")
+      .in("role", ["admin", "manager", "agent"])
+      .eq("is_active", true)
+      .order("full_name"),
 
-  // Fetch linked customer if converted
-  let customer = null;
-  if (lead.converted_customer_id) {
-    const { data: cust } = await supabase
-      .from("customers")
-      .select("id, name, phone, email")
-      .eq("id", lead.converted_customer_id)
-      .single();
-    customer = cust;
-  }
+    // Documents
+    supabase
+      .from("documents")
+      .select("*")
+      .eq("entity_type", "lead")
+      .eq("entity_id", id)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false }),
 
-  // Fetch linked deal if converted
-  let deal = null;
-  if (lead.converted_deal_id) {
-    const { data: d } = await supabase
-      .from("deals")
-      .select("id, title, stage, value, deal_type")
-      .eq("id", lead.converted_deal_id)
-      .single();
-    deal = d;
-  }
+    // Linked customer (only if converted)
+    lead.converted_customer_id
+      ? supabase.from("customers").select("id, name, phone, email").eq("id", lead.converted_customer_id).single()
+      : Promise.resolve({ data: null, error: null }),
 
-  // Fetch lead documents
-  const { data: documents } = await supabase
-    .from("documents")
-    .select("*")
-    .eq("entity_type", "lead")
-    .eq("entity_id", id)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+    // Linked deal (only if converted)
+    lead.converted_deal_id
+      ? supabase.from("deals").select("id, title, stage, value, deal_type").eq("id", lead.converted_deal_id).single()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+
+  const customer = customerResult?.data ?? null;
+  const deal = dealResult?.data ?? null;
 
   return (
     <LeadDetail

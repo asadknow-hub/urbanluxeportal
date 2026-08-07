@@ -96,6 +96,7 @@ type LeadActivity = {
   summary: string | null;
   occurred_at: string;
   created_by: string | null;
+  author: { id: string; full_name: string } | null;
 };
 
 type Agent = { id: string; full_name: string; role: string };
@@ -165,6 +166,14 @@ export function LeadDetail({
 }) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
+
+  // ─── Optimistic state ─────────────────────────────────────
+  // These mirror the server-side lead data but allow instant UI updates.
+  // When an action is triggered, we update local state immediately,
+  // then fire the server action in the background.
+  // router.refresh() is called WITHOUT awaiting so the UI never blocks.
+  const [optimisticLead, setOptimisticLead] = useState(lead);
+  const [optimisticActivities, setOptimisticActivities] = useState(activities);
   const [activityText, setActivityText] = useState("");
   const [activityType, setActivityType] = useState("note");
   const [followUpDate, setFollowUpDate] = useState("");
@@ -181,56 +190,96 @@ export function LeadDetail({
   });
   const [converting, setConverting] = useState(false);
 
-  const colors = getStatusColor(lead.status);
-  const waLink = whatsappLink(lead.phone);
+  const colors = getStatusColor(optimisticLead.status);
+  const waLink = whatsappLink(optimisticLead.phone);
   const canManage = userRole === "admin" || userRole === "manager";
-  const canEdit = canManage || lead.assigned_to === userId;
-  const initials = lead.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  const canEdit = canManage || optimisticLead.assigned_to === userId;
+  const initials = optimisticLead.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+
+  // ─── Optimistic action handlers ──────────────────────────
+  // Each handler updates local state IMMEDIATELY for instant feedback,
+  // then fires the server action. router.refresh() is non-blocking.
 
   function handleAssign(agentId: string | null) {
+    // Instant UI update
+    const agent = agents.find((a) => a.id === agentId);
+    setOptimisticLead((prev) => ({
+      ...prev,
+      assigned_to: agentId,
+      assigned_to_profile: agent
+        ? { id: agent.id, full_name: agent.full_name, avatar_url: null, role: agent.role, email: null, phone: null }
+        : null,
+    }));
     startTransition(async () => {
-      const result = await assignLead(lead.id, agentId);
+      const result = await assignLead(optimisticLead.id, agentId);
       if (result.ok) {
         toast.success(agentId ? "Lead assigned" : "Lead unassigned");
-        router.refresh();
+        router.refresh(); // non-blocking background refresh
       } else {
+        // Revert on failure
+        setOptimisticLead((prev) => ({ ...prev, assigned_to: lead.assigned_to, assigned_to_profile: lead.assigned_to_profile }));
         toast.error(result.error ?? "Failed");
       }
     });
   }
 
   function handleStatusChange(newStatus: string) {
+    // Instant UI update
+    setOptimisticLead((prev) => ({ ...prev, status: newStatus }));
     startTransition(async () => {
-      const result = await updateLeadStatus(lead.id, newStatus);
+      const result = await updateLeadStatus(optimisticLead.id, newStatus);
       if (result.ok) {
         toast.success(`Status changed to ${newStatus}`);
         router.refresh();
       } else {
+        setOptimisticLead((prev) => ({ ...prev, status: lead.status }));
         toast.error(result.error ?? "Failed");
       }
     });
   }
 
   function handleStageChange(stageId: string) {
+    const stage = stages.find((s) => s.id === stageId);
+    // Instant UI update
+    setOptimisticLead((prev) => ({ ...prev, stage_id: stageId }));
+    // Add optimistic activity to timeline
+    const optimisticActivity: LeadActivity = {
+      id: `optimistic_${Date.now()}`,
+      type: "stage_change",
+      summary: `Moved to ${stage?.name ?? "new stage"}`,
+      occurred_at: new Date().toISOString(),
+      created_by: userId,
+      author: { id: userId, full_name: "You" },
+    };
+    setOptimisticActivities((prev) => [optimisticActivity, ...prev]);
     startTransition(async () => {
-      const result = await updateLeadStage(lead.id, stageId);
+      const result = await updateLeadStage(optimisticLead.id, stageId);
       if (result.ok) {
-        const stage = stages.find((s) => s.id === stageId);
         toast.success(`Moved to ${stage?.name ?? "new stage"}`);
         router.refresh();
       } else {
+        // Revert on failure
+        setOptimisticLead((prev) => ({ ...prev, stage_id: lead.stage_id }));
+        setOptimisticActivities((prev) => prev.filter((a) => a.id !== optimisticActivity.id));
         toast.error(result.error ?? "Failed to change stage");
       }
     });
   }
 
   function handleClaim() {
+    // Instant UI update
+    setOptimisticLead((prev) => ({
+      ...prev,
+      assigned_to: userId,
+      assigned_to_profile: { id: userId, full_name: "You", avatar_url: null, role: userRole, email: null, phone: null },
+    }));
     startTransition(async () => {
-      const result = await claimLead(lead.id);
+      const result = await claimLead(optimisticLead.id);
       if (result.ok) {
         toast.success("Lead claimed");
         router.refresh();
       } else {
+        setOptimisticLead((prev) => ({ ...prev, assigned_to: lead.assigned_to, assigned_to_profile: lead.assigned_to_profile }));
         toast.error(result.error ?? "Failed to claim");
       }
     });
@@ -238,13 +287,25 @@ export function LeadDetail({
 
   function handleAddActivity() {
     if (!activityText.trim()) return;
+    // Instant UI update — add to timeline immediately
+    const newActivity: LeadActivity = {
+      id: `optimistic_${Date.now()}`,
+      type: activityType,
+      summary: activityText,
+      occurred_at: new Date().toISOString(),
+      created_by: userId,
+      author: { id: userId, full_name: "You" },
+    };
+    setOptimisticActivities((prev) => [newActivity, ...prev]);
+    setActivityText("");
     startTransition(async () => {
-      const result = await addLeadActivity(lead.id, activityType, activityText);
+      const result = await addLeadActivity(optimisticLead.id, activityType, activityText);
       if (result.ok) {
         toast.success("Activity logged");
-        setActivityText("");
         router.refresh();
       } else {
+        // Revert on failure
+        setOptimisticActivities((prev) => prev.filter((a) => a.id !== newActivity.id));
         toast.error(result.error ?? "Failed");
       }
     });
@@ -252,14 +313,17 @@ export function LeadDetail({
 
   function handleScheduleFollowUp() {
     if (!followUpDate) return;
+    // Instant UI update
+    setOptimisticLead((prev) => ({ ...prev, next_follow_up_at: followUpDate }));
     startTransition(async () => {
-      const result = await scheduleFollowUp(lead.id, followUpDate, followUpNotes || undefined);
+      const result = await scheduleFollowUp(optimisticLead.id, followUpDate, followUpNotes || undefined);
       if (result.ok) {
         toast.success("Follow-up scheduled");
         setFollowUpDate("");
         setFollowUpNotes("");
         router.refresh();
       } else {
+        setOptimisticLead((prev) => ({ ...prev, next_follow_up_at: lead.next_follow_up_at }));
         toast.error(result.error ?? "Failed");
       }
     });
@@ -267,7 +331,7 @@ export function LeadDetail({
 
   function handleSaveEdit() {
     startTransition(async () => {
-      const result = await updateLead(lead.id, {
+      const result = await updateLead(optimisticLead.id, {
         name: editForm.name,
         phone: editForm.phone || null,
         email: editForm.email || undefined,
@@ -277,6 +341,17 @@ export function LeadDetail({
         notes: editForm.notes || null,
       } as any);
       if (result.ok) {
+        // Instant UI update
+        setOptimisticLead((prev) => ({
+          ...prev,
+          name: editForm.name,
+          phone: editForm.phone || null,
+          email: editForm.email || null,
+          interest: editForm.interest,
+          budget_min: editForm.budget_min ? Number(editForm.budget_min) * 100 : null,
+          budget_max: editForm.budget_max ? Number(editForm.budget_max) * 100 : null,
+          notes: editForm.notes || null,
+        }));
         toast.success("Lead updated");
         setEditMode(false);
         router.refresh();
@@ -288,7 +363,7 @@ export function LeadDetail({
 
   function confirmConvert() {
     startTransition(async () => {
-      const result = await convertLead(lead.id, {});
+      const result = await convertLead(optimisticLead.id, {});
       if (result.ok) {
         toast.success("Lead converted to pipeline deal");
         setConverting(false);
@@ -316,26 +391,26 @@ export function LeadDetail({
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-xl font-bold text-slate-900">{lead.name}</h1>
+            <h1 className="text-xl font-bold text-slate-900">{optimisticLead.name}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-slate-500">
               <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${colors.bg} ${colors.text}`}>
-                {STATUS_LABELS[lead.status] ?? lead.status}
+                {STATUS_LABELS[optimisticLead.status] ?? optimisticLead.status}
               </span>
-              <span className="capitalize">{SOURCE_LABELS[lead.source] ?? lead.source}</span>
+              <span className="capitalize">{SOURCE_LABELS[optimisticLead.source] ?? optimisticLead.source}</span>
               <span>·</span>
-              <span className="capitalize">{INTEREST_LABELS[lead.interest] ?? lead.interest}</span>
-              {lead.score !== null && (
+              <span className="capitalize">{INTEREST_LABELS[optimisticLead.interest] ?? optimisticLead.interest}</span>
+              {optimisticLead.score !== null && (
                 <>
                   <span>·</span>
                   <span className="flex items-center gap-1">
-                    <TrendingUp className="h-3 w-3" /> Score: {lead.score}
+                    <TrendingUp className="h-3 w-3" /> Score: {optimisticLead.score}
                   </span>
                 </>
               )}
             </div>
           </div>
         </div>
-        {canEdit && !editMode && lead.status !== "converted" && (
+        {canEdit && !editMode && optimisticLead.status !== "converted" && (
           <Button variant="outline" size="sm" onClick={() => setEditMode(true)}>
             Edit
           </Button>
@@ -347,7 +422,7 @@ export function LeadDetail({
         <div className="flex items-center gap-2">
           <Label className="text-xs text-slate-500">Stage</Label>
           <Select
-            value={lead.stage_id ?? undefined}
+            value={optimisticLead.stage_id ?? undefined}
             onValueChange={(v) => canEdit && handleStageChange(v ?? "")}
             disabled={pending || !canEdit}
           >
@@ -363,7 +438,7 @@ export function LeadDetail({
             </SelectContent>
           </Select>
         </div>
-        {!lead.assigned_to && canEdit && (
+        {!optimisticLead.assigned_to && canEdit && (
           <Button size="sm" variant="outline" onClick={handleClaim} disabled={pending}>
             <UserPlus className="mr-2 h-4 w-4" />
             Claim
@@ -372,14 +447,14 @@ export function LeadDetail({
       </div>
 
       {/* Status pipeline (legacy, still works alongside stages) */}
-      {lead.status !== "converted" && lead.status !== "unqualified" && (
+      {optimisticLead.status !== "converted" && optimisticLead.status !== "unqualified" && (
         <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
           <h3 className="text-sm font-semibold text-slate-900 mb-3">Lead Workflow</h3>
           <div className="flex items-center gap-2">
             {STATUS_FLOW.filter((s) => s !== "unqualified").map((status, idx) => {
-              const currentIdx = STATUS_FLOW.indexOf(lead.status);
+              const currentIdx = STATUS_FLOW.indexOf(optimisticLead.status);
               const isPassed = idx <= currentIdx;
-              const isCurrent = status === lead.status;
+              const isCurrent = status === optimisticLead.status;
               return (
                 <div key={status} className="flex items-center gap-2 flex-1">
                   <button
@@ -475,10 +550,10 @@ export function LeadDetail({
               </div>
             ) : (
               <div className="space-y-2 text-sm">
-                {lead.phone && (
+                {optimisticLead.phone && (
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-slate-400" />
-                    <a href={`tel:${lead.phone}`} className="text-slate-700 hover:text-slate-900">{lead.phone}</a>
+                    <a href={`tel:${optimisticLead.phone}`} className="text-slate-700 hover:text-slate-900">{optimisticLead.phone}</a>
                     {waLink && (
                       <a href={waLink} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100">
                         <MessageCircle className="h-3 w-3" /> WhatsApp
@@ -486,67 +561,67 @@ export function LeadDetail({
                     )}
                   </div>
                 )}
-                {lead.email && (
+                {optimisticLead.email && (
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-slate-400" />
-                    <a href={`mailto:${lead.email}`} className="text-slate-700 hover:text-slate-900">{lead.email}</a>
+                    <a href={`mailto:${optimisticLead.email}`} className="text-slate-700 hover:text-slate-900">{optimisticLead.email}</a>
                   </div>
                 )}
                 <div className="grid grid-cols-2 gap-3 pt-2">
                   <div>
                     <p className="text-xs text-slate-400">Budget</p>
                     <p className="font-medium text-slate-700">
-                      {lead.budget_min || lead.budget_max
-                        ? `${lead.budget_min ? formatAED(lead.budget_min) : "?"} – ${lead.budget_max ? formatAED(lead.budget_max) : "?"}`
+                      {optimisticLead.budget_min || optimisticLead.budget_max
+                        ? `${optimisticLead.budget_min ? formatAED(optimisticLead.budget_min) : "?"} – ${optimisticLead.budget_max ? formatAED(optimisticLead.budget_max) : "?"}`
                         : "—"}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Preferred Areas</p>
                     <p className="font-medium text-slate-700">
-                      {lead.preferred_areas && lead.preferred_areas.length > 0
-                        ? lead.preferred_areas.join(", ")
+                      {optimisticLead.preferred_areas && optimisticLead.preferred_areas.length > 0
+                        ? optimisticLead.preferred_areas.join(", ")
                         : "—"}
                     </p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Bedrooms</p>
-                    <p className="font-medium text-slate-700 capitalize">{lead.bedrooms ?? "—"}</p>
+                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.bedrooms ?? "—"}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Category</p>
-                    <p className="font-medium text-slate-700 capitalize">{lead.category ?? "—"}</p>
+                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.category ?? "—"}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Financing</p>
-                    <p className="font-medium text-slate-700 capitalize">{lead.financing?.replace(/_/g, " ") ?? "—"}</p>
+                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.financing?.replace(/_/g, " ") ?? "—"}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Timeframe</p>
-                    <p className="font-medium text-slate-700 capitalize">{lead.timeframe?.replace(/_/g, " ") ?? "—"}</p>
+                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.timeframe?.replace(/_/g, " ") ?? "—"}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Purpose</p>
-                    <p className="font-medium text-slate-700 capitalize">{lead.purpose?.replace(/_/g, " ") ?? "—"}</p>
+                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.purpose?.replace(/_/g, " ") ?? "—"}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Language</p>
-                    <p className="font-medium text-slate-700 uppercase">{lead.language ?? "—"}</p>
+                    <p className="font-medium text-slate-700 uppercase">{optimisticLead.language ?? "—"}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Created</p>
-                    <p className="font-medium text-slate-700">{formatDate(lead.created_at)}</p>
+                    <p className="font-medium text-slate-700">{formatDate(optimisticLead.created_at)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Created By</p>
-                    <p className="font-medium text-slate-700">{lead.created_by_profile?.full_name ?? "—"}</p>
+                    <p className="font-medium text-slate-700">{optimisticLead.created_by_profile?.full_name ?? "—"}</p>
                   </div>
                 </div>
-                {lead.tags && lead.tags.length > 0 && (
+                {optimisticLead.tags && optimisticLead.tags.length > 0 && (
                   <div className="pt-2">
                     <p className="text-xs text-slate-400">Tags</p>
                     <div className="mt-1 flex flex-wrap gap-1">
-                      {lead.tags.map((tag) => (
+                      {optimisticLead.tags.map((tag) => (
                         <span key={tag} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
                           {tag}
                         </span>
@@ -554,10 +629,10 @@ export function LeadDetail({
                     </div>
                   </div>
                 )}
-                {lead.notes && (
+                {optimisticLead.notes && (
                   <div className="pt-2">
                     <p className="text-xs text-slate-400">Notes</p>
-                    <p className="text-slate-600 mt-1">{lead.notes}</p>
+                    <p className="text-slate-600 mt-1">{optimisticLead.notes}</p>
                   </div>
                 )}
               </div>
@@ -600,10 +675,10 @@ export function LeadDetail({
 
             {/* Timeline */}
             <div className="space-y-3">
-              {activities.length === 0 ? (
+              {optimisticActivities.length === 0 ? (
                 <p className="text-sm text-slate-400 text-center py-6">No activities yet.</p>
               ) : (
-                activities.map((a) => {
+                optimisticActivities.map((a) => {
                   const Icon = ACTIVITY_ICONS[a.type] ?? Activity;
                   return (
                     <div key={a.id} className="flex gap-3">
@@ -614,6 +689,9 @@ export function LeadDetail({
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium text-slate-700 capitalize">
                             {a.type.replace(/_/g, " ")}
+                            {a.author && (
+                              <span className="text-slate-400 font-normal ml-1">· {a.author.full_name}</span>
+                            )}
                           </span>
                           <span className="text-xs text-slate-300">{timeAgo(a.occurred_at)}</span>
                         </div>
@@ -637,17 +715,17 @@ export function LeadDetail({
               <UserCog className="h-4 w-4" />
               Assignment
             </h3>
-            {lead.assigned_to_profile ? (
+            {optimisticLead.assigned_to_profile ? (
               <div className="flex items-center gap-3 mb-3">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={lead.assigned_to_profile.avatar_url ?? undefined} />
+                  <AvatarImage src={optimisticLead.assigned_to_profile.avatar_url ?? undefined} />
                   <AvatarFallback className="bg-emerald-100 text-emerald-700 text-xs">
-                    {lead.assigned_to_profile.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
+                    {optimisticLead.assigned_to_profile.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-sm font-medium text-slate-900">{lead.assigned_to_profile.full_name}</p>
-                  <p className="text-xs text-slate-400 capitalize">{lead.assigned_to_profile.role}</p>
+                  <p className="text-sm font-medium text-slate-900">{optimisticLead.assigned_to_profile.full_name}</p>
+                  <p className="text-xs text-slate-400 capitalize">{optimisticLead.assigned_to_profile.role}</p>
                 </div>
               </div>
             ) : (
@@ -655,7 +733,7 @@ export function LeadDetail({
             )}
             {canManage && (
               <Select
-                value={lead.assigned_to ?? "unassigned"}
+                value={optimisticLead.assigned_to ?? "unassigned"}
                 onValueChange={(v) => handleAssign(v === "unassigned" ? null : v ?? null)}
               >
                 <SelectTrigger><SelectValue placeholder="Assign to agent" /></SelectTrigger>
@@ -675,10 +753,10 @@ export function LeadDetail({
               <CalendarClock className="h-4 w-4" />
               Follow-up
             </h3>
-            {lead.next_follow_up_at && !followUpDate && (
+            {optimisticLead.next_follow_up_at && !followUpDate && (
               <div className="mb-3 rounded-lg bg-amber-50 p-3">
                 <p className="text-xs text-amber-600">Next follow-up</p>
-                <p className="text-sm font-medium text-amber-900">{formatDate(lead.next_follow_up_at)}</p>
+                <p className="text-sm font-medium text-amber-900">{formatDate(optimisticLead.next_follow_up_at)}</p>
               </div>
             )}
             {canEdit && (
@@ -702,7 +780,7 @@ export function LeadDetail({
           </div>
 
           {/* Convert action */}
-          {lead.status !== "converted" && lead.status !== "unqualified" && canEdit && (
+          {optimisticLead.status !== "converted" && optimisticLead.status !== "unqualified" && canEdit && (
             <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
               <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900 mb-3">
                 <UserPlus className="h-4 w-4" />
@@ -729,7 +807,7 @@ export function LeadDetail({
           )}
 
           {/* Conversion info */}
-          {lead.status === "converted" && (
+          {optimisticLead.status === "converted" && (
             <div className="rounded-2xl bg-emerald-50 p-5 border border-emerald-200">
               <h3 className="flex items-center gap-2 text-sm font-semibold text-emerald-900 mb-3">
                 <CheckCircle2 className="h-4 w-4" />
@@ -751,22 +829,22 @@ export function LeadDetail({
           )}
 
           {/* Score info */}
-          {lead.score !== null && (
+          {optimisticLead.score !== null && (
             <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
               <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900 mb-3">
                 <TrendingUp className="h-4 w-4" />
                 Lead Score
               </h3>
               <div className="text-center">
-                <p className={`text-3xl font-bold ${lead.score >= 70 ? "text-emerald-600" : lead.score >= 40 ? "text-amber-600" : "text-slate-400"}`}>
-                  {lead.score}
+                <p className={`text-3xl font-bold ${optimisticLead.score >= 70 ? "text-emerald-600" : optimisticLead.score >= 40 ? "text-amber-600" : "text-slate-400"}`}>
+                  {optimisticLead.score}
                 </p>
                 <p className="text-xs text-slate-400 mt-1">
-                  {lead.score >= 70 ? "Hot lead" : lead.score >= 40 ? "Warm lead" : "Cold lead"}
+                  {optimisticLead.score >= 70 ? "Hot lead" : optimisticLead.score >= 40 ? "Warm lead" : "Cold lead"}
                 </p>
               </div>
-              {lead.score_reason && (
-                <p className="text-xs text-slate-400 mt-2 text-center">{lead.score_reason}</p>
+              {optimisticLead.score_reason && (
+                <p className="text-xs text-slate-400 mt-2 text-center">{optimisticLead.score_reason}</p>
               )}
             </div>
           )}

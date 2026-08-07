@@ -158,30 +158,20 @@ export async function updateLeadStage(
 
     const supabase = await createSupabaseServerClient();
 
-    // Fetch the target stage
-    const { data: stage, error: stageError } = await supabase
-      .from("lead_stages")
-      .select("*")
-      .eq("id", stageId)
-      .single();
+    // Fetch stage + current lead in parallel (reduces 2 round-trips to 1)
+    const [
+      { data: stage, error: stageError },
+      { data: lead },
+    ] = await Promise.all([
+      supabase.from("lead_stages").select("*").eq("id", stageId).single(),
+      supabase.from("leads").select("*").eq("id", leadId).single(),
+    ]);
     if (stageError || !stage) return { ok: false, error: "Stage not found" };
-
-    // Fetch current lead
-    const { data: lead } = await supabase
-      .from("leads")
-      .select("stage_id, status")
-      .eq("id", leadId)
-      .single();
     if (!lead) return { ok: false, error: "Lead not found" };
 
-    // Check required fields
+    // Check required fields (use the already-fetched full lead)
     const requiredFields = (stage.required_fields as string[]) ?? [];
     if (requiredFields.length > 0) {
-      const { data: fullLead } = await supabase
-        .from("leads")
-        .select("*")
-        .eq("id", leadId)
-        .single();
       const missing: string[] = [];
       for (const field of requiredFields) {
         if (field === "viewing_scheduled") {
@@ -193,7 +183,7 @@ export async function updateLeadStage(
         } else if (field === "junk_reason") {
           if (!extra?.junk_reason) missing.push("Junk reason");
         } else {
-          const val = (fullLead as Record<string, unknown>)?.[field];
+          const val = (lead as Record<string, unknown>)?.[field];
           if (val === null || val === undefined || val === "") {
             missing.push(field.replace(/_/g, " "));
           }
@@ -229,20 +219,21 @@ export async function updateLeadStage(
 
     if (error) return { ok: false, error: error.message };
 
-    // Log events
-    await supabase.from("lead_events").insert({
-      lead_id: leadId,
-      kind: "stage_changed",
-      actor_id: user.id,
-      payload: { from_stage_id: lead.stage_id, to_stage_id: stageId, stage_name: stage.name },
-    });
-
-    await supabase.from("lead_activities").insert({
-      lead_id: leadId,
-      type: "stage_change",
-      summary: `Moved to ${stage.name}`,
-      created_by: user.id,
-    });
+    // Log events in parallel (fire-and-forget, don't block the response)
+    Promise.all([
+      supabase.from("lead_events").insert({
+        lead_id: leadId,
+        kind: "stage_changed",
+        actor_id: user.id,
+        payload: { from_stage_id: lead.stage_id, to_stage_id: stageId, stage_name: stage.name },
+      }),
+      supabase.from("lead_activities").insert({
+        lead_id: leadId,
+        type: "stage_change",
+        summary: `Moved to ${stage.name}`,
+        created_by: user.id,
+      }),
+    ]).catch(() => {}); // ignore logging errors
 
     revalidatePath("/leads");
     revalidatePath(`/leads/${leadId}`);
@@ -278,27 +269,27 @@ export async function claimLead(
       return { ok: false, error: "Lead already claimed by someone else" };
     }
 
-    // Log assignment + event
-    await supabase.from("lead_assignments").insert({
-      lead_id: leadId,
-      from_user: null,
-      to_user: user.id,
-      reason: "claim",
-    });
-
-    await supabase.from("lead_events").insert({
-      lead_id: leadId,
-      kind: "claimed",
-      actor_id: user.id,
-      payload: {},
-    });
-
-    await supabase.from("lead_activities").insert({
-      lead_id: leadId,
-      type: "assignment",
-      summary: "Lead claimed from pool",
-      created_by: user.id,
-    });
+    // Log assignment + event + activity in parallel (fire-and-forget)
+    Promise.all([
+      supabase.from("lead_assignments").insert({
+        lead_id: leadId,
+        from_user: null,
+        to_user: user.id,
+        reason: "claim",
+      }),
+      supabase.from("lead_events").insert({
+        lead_id: leadId,
+        kind: "claimed",
+        actor_id: user.id,
+        payload: {},
+      }),
+      supabase.from("lead_activities").insert({
+        lead_id: leadId,
+        type: "assignment",
+        summary: "Lead claimed from pool",
+        created_by: user.id,
+      }),
+    ]).catch(() => {}); // ignore logging errors
 
     revalidatePath("/leads");
     revalidatePath(`/leads/${leadId}`);
@@ -494,22 +485,26 @@ export async function assignLead(
 
     if (error) return { ok: false, error: error.message };
 
+    // Log activity + audit in parallel (fire-and-forget, don't block response)
+    const logPromises: Promise<unknown>[] = [];
     if (agentId) {
-      await supabase.from("lead_activities").insert({
-        lead_id: leadId,
-        type: "assignment",
-        summary: `Lead assigned to agent`,
-        created_by: user.id,
-      });
+      logPromises.push(
+        Promise.resolve(supabase.from("lead_activities").insert({
+          lead_id: leadId,
+          type: "assignment",
+          summary: `Lead assigned to agent`,
+          created_by: user.id,
+        }))
+      );
     }
-
-    await logActivity({
+    logPromises.push(logActivity({
       actorId: user.id,
       entityType: "lead",
       entityId: leadId,
       action: agentId ? "assigned" : "unassigned",
       diff: { assigned_to: agentId },
-    });
+    }));
+    Promise.all(logPromises).catch(() => {}); // ignore logging errors
 
     revalidatePath("/leads");
     revalidatePath(`/leads/${leadId}`);
