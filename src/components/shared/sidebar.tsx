@@ -23,6 +23,7 @@ import {
   List,
   CalendarClock,
   Megaphone,
+  Settings2,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -43,6 +44,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   List,
   CalendarClock,
   Megaphone,
+  Settings2,
 };
 
 export function Sidebar({ role }: { role: UserRole }) {
@@ -86,8 +88,8 @@ export function Sidebar({ role }: { role: UserRole }) {
               .map((item) => {
                 const Icon = ICON_MAP[item.icon] ?? LayoutDashboard;
                 const isActive =
-                  item.href === "/leads"
-                    ? pathname === "/leads"
+                  item.href === "/leads" || item.href === "/leads/inflow"
+                    ? pathname === item.href
                     : pathname === item.href || pathname.startsWith(item.href + "/");
                 return (
                   <Link

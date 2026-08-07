@@ -654,3 +654,139 @@ export async function updateLeadStatus(
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
   }
 }
+
+const sourceSchema = z.object({
+  kind: z.enum(["web_form", "instagram", "facebook", "google_ads", "property_finder", "bayut", "dubizzle", "referral", "walk_in", "api", "import", "other"]),
+  name: z.string().min(1, "Name is required"),
+  token: z.string().optional().nullable(),
+  secret: z.string().optional().nullable(),
+  config: z.record(z.string(), z.unknown()).optional().default({}),
+  is_active: z.boolean().optional().default(true),
+});
+
+export async function createLeadSource(
+  input: z.infer<typeof sourceSchema>
+): Promise<ActionResult<{ id: string }>> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    if (user.role !== "admin" && user.role !== "manager") {
+      return { ok: false, error: "Only admins and managers can configure lead sources" };
+    }
+
+    const parsed = sourceSchema.safeParse(input);
+    if (!parsed.success) {
+      return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    }
+
+    const supabase = await createSupabaseServerClient();
+
+    const { data, error } = await supabase
+      .from("lead_sources")
+      .insert({
+        kind: parsed.data.kind,
+        name: parsed.data.name,
+        token: parsed.data.token || null,
+        secret: parsed.data.secret || null,
+        config: parsed.data.config ?? {},
+        is_active: parsed.data.is_active,
+      })
+      .select("id")
+      .single();
+
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath("/leads/inflow");
+    return { ok: true, data: { id: data.id } };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function updateLeadSource(
+  id: string,
+  input: Partial<z.infer<typeof sourceSchema>>
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    if (user.role !== "admin" && user.role !== "manager") {
+      return { ok: false, error: "Only admins and managers can configure lead sources" };
+    }
+
+    const supabase = await createSupabaseServerClient();
+
+    const updateData: Record<string, unknown> = {};
+    if (input.name !== undefined) updateData.name = input.name;
+    if (input.kind !== undefined) updateData.kind = input.kind;
+    if (input.token !== undefined) updateData.token = input.token || null;
+    if (input.secret !== undefined) updateData.secret = input.secret || null;
+    if (input.config !== undefined) updateData.config = input.config;
+    if (input.is_active !== undefined) updateData.is_active = input.is_active;
+
+    const { error } = await supabase
+      .from("lead_sources")
+      .update(updateData)
+      .eq("id", id);
+
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath("/leads/inflow");
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function toggleLeadSource(
+  id: string,
+  isActive: boolean
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    if (user.role !== "admin" && user.role !== "manager") {
+      return { ok: false, error: "Only admins and managers can configure lead sources" };
+    }
+
+    const supabase = await createSupabaseServerClient();
+
+    const { error } = await supabase
+      .from("lead_sources")
+      .update({ is_active: isActive })
+      .eq("id", id);
+
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath("/leads/inflow");
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function deleteLeadSource(
+  id: string
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    if (user.role !== "admin" && user.role !== "manager") {
+      return { ok: false, error: "Only admins and managers can delete lead sources" };
+    }
+
+    const supabase = await createSupabaseServerClient();
+
+    const { error } = await supabase
+      .from("lead_sources")
+      .delete()
+      .eq("id", id);
+
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath("/leads/inflow");
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}

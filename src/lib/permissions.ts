@@ -129,6 +129,9 @@ export function canAccessRoute(role: UserRole | null | undefined, path: string):
   if (path.startsWith("/leads/campaigns")) {
     return role === "admin" || role === "manager" || role === "accountant";
   }
+  if (path.startsWith("/leads/inflow")) {
+    return role === "admin" || role === "manager";
+  }
   return true;
 }
 
@@ -140,6 +143,7 @@ export const NAV_ITEMS: {
   group: string;
 }[] = [
   { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard", roles: ["admin", "manager", "agent", "accountant"], group: "Main" },
+  { label: "Configure Leads Inflow", href: "/leads/inflow", icon: "Settings2", roles: ["admin", "manager"], group: "CRM" },
   { label: "Leads Board", href: "/leads", icon: "Users", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
   { label: "All Leads", href: "/leads/list", icon: "List", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
   { label: "Follow-ups", href: "/leads/followups", icon: "CalendarClock", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },

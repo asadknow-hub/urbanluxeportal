@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -158,13 +158,36 @@ function LeadCard({ lead, stage, isDragging }: { lead: BoardLead; stage: LeadSta
 }
 
 function DraggableLeadCard({ lead, stage }: { lead: BoardLead; stage: LeadStage }) {
+  const router = useRouter();
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: lead.id,
     data: { lead, stageId: stage.id },
   });
+  const dragStartPos = useRef<{ x: number; y: number } | null>(null);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    dragStartPos.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    // Only navigate if it wasn't a drag (small movement threshold)
+    if (!dragStartPos.current) return;
+    const dx = Math.abs(e.clientX - dragStartPos.current.x);
+    const dy = Math.abs(e.clientY - dragStartPos.current.y);
+    if (dx < 5 && dy < 5 && !isDragging) {
+      router.push(`/leads/${lead.id}`);
+    }
+    dragStartPos.current = null;
+  };
 
   return (
-    <div ref={setNodeRef} {...attributes} {...listeners}>
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      onPointerDown={handlePointerDown}
+      onClick={handleClick}
+    >
       <LeadCard lead={lead} stage={stage} isDragging={isDragging} />
     </div>
   );

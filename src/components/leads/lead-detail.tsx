@@ -510,6 +510,30 @@ export function LeadDetail({
                     </p>
                   </div>
                   <div>
+                    <p className="text-xs text-slate-400">Bedrooms</p>
+                    <p className="font-medium text-slate-700 capitalize">{lead.bedrooms ?? "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Category</p>
+                    <p className="font-medium text-slate-700 capitalize">{lead.category ?? "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Financing</p>
+                    <p className="font-medium text-slate-700 capitalize">{lead.financing?.replace(/_/g, " ") ?? "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Timeframe</p>
+                    <p className="font-medium text-slate-700 capitalize">{lead.timeframe?.replace(/_/g, " ") ?? "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Purpose</p>
+                    <p className="font-medium text-slate-700 capitalize">{lead.purpose?.replace(/_/g, " ") ?? "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400">Language</p>
+                    <p className="font-medium text-slate-700 uppercase">{lead.language ?? "—"}</p>
+                  </div>
+                  <div>
                     <p className="text-xs text-slate-400">Created</p>
                     <p className="font-medium text-slate-700">{formatDate(lead.created_at)}</p>
                   </div>
@@ -518,6 +542,18 @@ export function LeadDetail({
                     <p className="font-medium text-slate-700">{lead.created_by_profile?.full_name ?? "—"}</p>
                   </div>
                 </div>
+                {lead.tags && lead.tags.length > 0 && (
+                  <div className="pt-2">
+                    <p className="text-xs text-slate-400">Tags</p>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {lead.tags.map((tag) => (
+                        <span key={tag} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {lead.notes && (
                   <div className="pt-2">
                     <p className="text-xs text-slate-400">Notes</p>
