@@ -421,6 +421,8 @@ export interface Database {
           sort: number;
           is_active: boolean;
           created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
         };
         Insert: {
           entity?: string;
@@ -445,9 +447,11 @@ export interface Database {
           token: string | null;
           secret: string | null;
           config: Record<string, unknown>;
+          field_mapping: Record<string, unknown>;
           is_active: boolean;
           stats: Record<string, unknown>;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           kind: string;
@@ -455,11 +459,13 @@ export interface Database {
           token?: string | null;
           secret?: string | null;
           config?: Record<string, unknown>;
+          field_mapping?: Record<string, unknown>;
           is_active?: boolean;
           stats?: Record<string, unknown>;
         };
         Update: Partial<Database["public"]["Tables"]["lead_sources"]["Insert"]>;
       };
+      // ─── END lead_sources ───
       lost_reasons: {
         Row: {
           id: string;
