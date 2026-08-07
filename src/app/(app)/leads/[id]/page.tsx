@@ -56,10 +56,11 @@ export default async function LeadDetailPage({
     { data: activities },
     { data: agents },
     { data: documents },
+    { data: fieldDefs },
     customerResult,
     dealResult,
   ] = await Promise.all([
-    // Stages for the stage dropdown
+    // Stages for the stage dropdown + workflow bar
     supabase
       .from("lead_stages")
       .select("*")
@@ -91,6 +92,14 @@ export default async function LeadDetailPage({
       .is("deleted_at", null)
       .order("created_at", { ascending: false }),
 
+    // Custom field definitions (active, for lead entity)
+    supabase
+      .from("custom_field_defs")
+      .select("*")
+      .eq("entity", "lead")
+      .eq("is_active", true)
+      .order("sort"),
+
     // Linked customer (only if converted)
     lead.converted_customer_id
       ? supabase.from("customers").select("id, name, phone, email").eq("id", lead.converted_customer_id).single()
@@ -111,6 +120,7 @@ export default async function LeadDetailPage({
       activities={activities ?? []}
       agents={agents ?? []}
       stages={stages ?? []}
+      fieldDefs={fieldDefs ?? []}
       customer={customer}
       deal={deal}
       documents={documents ?? []}

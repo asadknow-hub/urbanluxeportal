@@ -461,18 +461,21 @@ function FieldsTab({ fieldDefs }: { fieldDefs: FieldDef[] }) {
       let options: Array<{ value: string; label: string }> | null = null;
       if (form.type === "select" || form.type === "multiselect") {
         if (form.optionsText.trim()) {
-          try {
-            const parsed = JSON.parse(form.optionsText);
-            if (Array.isArray(parsed)) {
-              options = parsed;
-            } else {
-              toast.error("Options must be a JSON array");
-              return;
-            }
-          } catch {
-            toast.error("Invalid JSON for options");
+          const lines = form.optionsText.trim().split("\n").map((l) => l.trim()).filter(Boolean);
+          if (lines.length === 0) {
+            toast.error("Please add at least one option");
             return;
           }
+          options = lines.map((line) => {
+            const colonIdx = line.indexOf(":");
+            if (colonIdx > 0) {
+              const value = line.slice(0, colonIdx).trim();
+              const label = line.slice(colonIdx + 1).trim();
+              return { value, label: label || value };
+            }
+            const value = line.toLowerCase().replace(/\s+/g, "_");
+            return { value, label: line };
+          });
         }
       }
 
@@ -527,7 +530,7 @@ function FieldsTab({ fieldDefs }: { fieldDefs: FieldDef[] }) {
       required: def.required,
       show_on_card: def.show_on_card,
       show_in_list: def.show_in_list,
-      optionsText: def.options ? JSON.stringify(def.options, null, 2) : "",
+      optionsText: def.options ? def.options.map((o) => o.value === o.label ? o.label : `${o.value}:${o.label}`).join("\n") : "",
     });
     setOpen(true);
   }
@@ -563,9 +566,11 @@ function FieldsTab({ fieldDefs }: { fieldDefs: FieldDef[] }) {
   return (
     <div className="space-y-4">
       <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 text-xs text-blue-700">
-        <strong>How custom fields work:</strong> Fields are stored in the <code>leads.custom</code> JSONB column.
-        Deleting a field <strong>preserves existing data</strong> — it only hides the field from the UI.
-        Re-activating with the same key makes old data visible again. Field keys are immutable after creation.
+        <p className="font-semibold mb-1">What are custom fields?</p>
+        <p>Custom fields are extra fields you can add to every lead beyond the standard ones (name, phone, email, budget, etc.).
+        They appear on the lead detail page and can be edited just like standard fields.</p>
+        <p className="mt-1">For example: Visa Status, Referred By, Pre-Approval Amount, Nationality, etc.</p>
+        <p className="mt-1 text-blue-500">Deleting a field <strong>preserves existing data</strong> — it only hides the field. Re-activating makes data visible again.</p>
       </div>
 
       <div className="flex justify-end">
@@ -613,16 +618,15 @@ function FieldsTab({ fieldDefs }: { fieldDefs: FieldDef[] }) {
               </div>
               {(form.type === "select" || form.type === "multiselect") && (
                 <div className="space-y-2">
-                  <Label htmlFor="optionsText">Options (JSON array)</Label>
+                  <Label htmlFor="optionsText">Options (one per line)</Label>
                   <Textarea
                     id="optionsText"
                     value={form.optionsText}
                     onChange={(e) => set("optionsText", e.target.value)}
-                    placeholder='[{"value":"tourist","label":"Tourist"},{"value":"resident","label":"Resident"}]'
+                    placeholder={`Cash\nMortgage\nPre-approved\nNot sure`}
                     rows={4}
-                    className="font-mono text-xs"
                   />
-                  <p className="text-xs text-slate-400">Array of objects with "value" and "label" keys</p>
+                  <p className="text-xs text-slate-400">Each line becomes a dropdown option. Use <code>value:Label</code> format for custom values (e.g. <code>cash:Cash Buyer</code>)</p>
                 </div>
               )}
               <div className="space-y-2">

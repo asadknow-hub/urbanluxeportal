@@ -77,6 +77,7 @@ type Lead = {
   bedrooms: string | null;
   category: string | null;
   tags: string[];
+  custom: Record<string, unknown>;
   assigned_to_profile: {
     id: string;
     full_name: string;
@@ -98,6 +99,21 @@ type LeadActivity = {
 };
 
 type Agent = { id: string; full_name: string; role: string };
+
+type FieldDef = {
+  id: string;
+  entity: string;
+  key: string;
+  label: string;
+  type: string;
+  options: Array<{ value: string; label: string }> | null;
+  required: boolean;
+  show_on_card: boolean;
+  show_in_list: boolean;
+  group_name: string | null;
+  sort: number;
+  is_active: boolean;
+};
 
 // Format any DB string into a readable label (e.g. "property_finder" → "Property Finder")
 // No hardcoded labels — everything is derived dynamically from the data.
@@ -123,6 +139,7 @@ export function LeadDetail({
   activities,
   agents,
   stages,
+  fieldDefs,
   customer,
   deal,
   documents,
@@ -133,6 +150,7 @@ export function LeadDetail({
   activities: LeadActivity[];
   agents: Agent[];
   stages: { id: string; name: string; color: string; kind: string; sort: number; helper_text: string | null }[];
+  fieldDefs: FieldDef[];
   customer: { id: string; name: string; phone: string | null; email: string | null } | null;
   deal: { id: string; title: string; stage: string; value: number; deal_type: string } | null;
   documents: { id: string; file_name: string; file_url: string; file_type: string; created_at: string }[];
@@ -154,7 +172,7 @@ export function LeadDetail({
   const [followUpDate, setFollowUpDate] = useState("");
   const [followUpNotes, setFollowUpNotes] = useState("");
   const [editMode, setEditMode] = useState(false);
-  const [editForm, setEditForm] = useState({
+  const [editForm, setEditForm] = useState<Record<string, string>>({
     name: lead.name,
     phone: lead.phone ?? "",
     email: lead.email ?? "",
@@ -162,6 +180,27 @@ export function LeadDetail({
     budget_min: lead.budget_min ? String(lead.budget_min / 100) : "",
     budget_max: lead.budget_max ? String(lead.budget_max / 100) : "",
     notes: lead.notes ?? "",
+    preferred_areas: lead.preferred_areas?.join(", ") ?? "",
+    language: lead.language ?? "",
+    financing: lead.financing ?? "",
+    timeframe: lead.timeframe ?? "",
+    purpose: lead.purpose ?? "",
+    bedrooms: lead.bedrooms ?? "",
+    category: lead.category ?? "",
+    tags: lead.tags?.join(", ") ?? "",
+  });
+  // Custom field values in the edit form (keyed by field def key)
+  const [editCustom, setEditCustom] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
+    for (const def of fieldDefs) {
+      const val = lead.custom?.[def.key];
+      if (val !== undefined && val !== null) {
+        initial[def.key] = Array.isArray(val) ? val.join(", ") : String(val);
+      } else {
+        initial[def.key] = "";
+      }
+    }
+    return initial;
   });
   const [converting, setConverting] = useState(false);
 
@@ -296,16 +335,43 @@ export function LeadDetail({
   }
 
   function handleSaveEdit() {
+    // Build custom object from editCustom state
+    const customData: Record<string, unknown> = {};
+    for (const def of fieldDefs) {
+      const raw = editCustom[def.key];
+      if (raw === undefined || raw === "") continue;
+      if (def.type === "multiselect") {
+        customData[def.key] = raw.split(",").map((s) => s.trim()).filter(Boolean);
+      } else if (def.type === "number" || def.type === "money") {
+        customData[def.key] = def.type === "money" ? Number(raw) * 100 : Number(raw);
+      } else if (def.type === "checkbox") {
+        customData[def.key] = raw === "true" || raw === "1";
+      } else {
+        customData[def.key] = raw;
+      }
+    }
+
+    const updatePayload: Record<string, unknown> = {
+      name: editForm.name,
+      phone: editForm.phone || null,
+      email: editForm.email || undefined,
+      interest: editForm.interest,
+      budget_min: editForm.budget_min ? Number(editForm.budget_min) * 100 : null,
+      budget_max: editForm.budget_max ? Number(editForm.budget_max) * 100 : null,
+      notes: editForm.notes || null,
+      preferred_areas: editForm.preferred_areas ? editForm.preferred_areas.split(",").map((s) => s.trim()).filter(Boolean) : [],
+      language: editForm.language || null,
+      financing: editForm.financing || null,
+      timeframe: editForm.timeframe || null,
+      purpose: editForm.purpose || null,
+      bedrooms: editForm.bedrooms || null,
+      category: editForm.category || null,
+      tags: editForm.tags ? editForm.tags.split(",").map((s) => s.trim()).filter(Boolean) : [],
+      custom: customData,
+    };
+
     startTransition(async () => {
-      const result = await updateLead(optimisticLead.id, {
-        name: editForm.name,
-        phone: editForm.phone || null,
-        email: editForm.email || undefined,
-        interest: editForm.interest as any,
-        budget_min: editForm.budget_min ? Number(editForm.budget_min) * 100 : null,
-        budget_max: editForm.budget_max ? Number(editForm.budget_max) * 100 : null,
-        notes: editForm.notes || null,
-      } as any);
+      const result = await updateLead(optimisticLead.id, updatePayload as any);
       if (result.ok) {
         // Instant UI update
         setOptimisticLead((prev) => ({
@@ -317,6 +383,15 @@ export function LeadDetail({
           budget_min: editForm.budget_min ? Number(editForm.budget_min) * 100 : null,
           budget_max: editForm.budget_max ? Number(editForm.budget_max) * 100 : null,
           notes: editForm.notes || null,
+          preferred_areas: editForm.preferred_areas ? editForm.preferred_areas.split(",").map((s) => s.trim()).filter(Boolean) : [],
+          language: editForm.language || null,
+          financing: editForm.financing || null,
+          timeframe: editForm.timeframe || null,
+          purpose: editForm.purpose || null,
+          bedrooms: editForm.bedrooms || null,
+          category: editForm.category || null,
+          tags: editForm.tags ? editForm.tags.split(",").map((s) => s.trim()).filter(Boolean) : [],
+          custom: customData,
         }));
         toast.success("Lead updated");
         setEditMode(false);
@@ -429,46 +504,96 @@ export function LeadDetail({
         )}
       </div>
 
-      {/* Stage workflow — fully dynamic from lead_stages table, no hardcoding */}
+      {/* Stage workflow — beautiful step map, fully dynamic from lead_stages table */}
       {stages.length > 0 && (
-        <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
-          <h3 className="text-sm font-semibold text-slate-900 mb-4">Lead Workflow</h3>
+        <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-sm font-semibold text-slate-900">Lead Workflow</h3>
+            {currentStage && (
+              <span className="text-xs text-slate-400">
+                Current: <span className="font-medium" style={{ color: currentStage.color }}>{currentStage.name}</span>
+              </span>
+            )}
+          </div>
 
-          {/* Active stages as connected pills */}
-          <div className="flex items-center gap-1 flex-wrap">
-            {stages.filter((s) => s.kind === "active").map((stage, idx, filtered) => {
+          {/* Active stages as a beautiful stepper */}
+          <div className="flex items-stretch gap-0 overflow-x-auto pb-2">
+            {stages.filter((s) => s.kind === "open" || s.kind === "active" || s.kind === "won").map((stage, idx, filtered) => {
               const isCurrent = optimisticLead.stage_id === stage.id;
               const currentIdx = filtered.findIndex((s) => s.id === optimisticLead.stage_id);
               const isPassed = currentIdx >= 0 && idx < currentIdx;
+              const isLast = idx === filtered.length - 1;
               const stageColor = stage.color || "#10b981";
 
               return (
-                <div key={stage.id} className="flex items-center gap-1">
+                <div key={stage.id} className="flex items-stretch shrink-0">
+                  {/* Step card */}
                   <button
                     onClick={() => canEdit && handleStageChange(stage.id)}
                     disabled={pending || !canEdit}
-                    className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all ${
+                    className={`group relative flex flex-col items-center gap-2 px-4 py-3 rounded-xl transition-all min-w-[120px] ${
                       isCurrent
-                        ? "text-white shadow-sm"
+                        ? "shadow-md ring-2 ring-offset-2"
                         : isPassed
-                        ? "bg-slate-100 text-slate-600"
-                        : "bg-slate-50 text-slate-400 hover:bg-slate-100"
+                        ? "bg-slate-50 hover:bg-slate-100"
+                        : "bg-slate-50/50 hover:bg-slate-100"
                     } ${canEdit ? "cursor-pointer" : "cursor-default"}`}
-                    style={isCurrent ? { backgroundColor: stageColor } : {}}
+                    style={isCurrent ? {
+                      backgroundColor: `${stageColor}10`,
+                      borderColor: stageColor,
+                      ["--tw-ring-color" as string]: stageColor,
+                    } : {}}
                   >
+                    {/* Number circle */}
+                    <div
+                      className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold transition-all ${
+                        isCurrent
+                          ? "text-white shadow-sm"
+                          : isPassed
+                          ? "text-white"
+                          : "text-slate-400 bg-slate-100"
+                      }`}
+                      style={isCurrent || isPassed ? { backgroundColor: stageColor } : {}}
+                    >
+                      {isPassed ? (
+                        <CheckCircle2 className="h-5 w-5" />
+                      ) : (
+                        idx + 1
+                      )}
+                    </div>
+                    {/* Stage name */}
                     <span
-                      className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${
-                        isCurrent ? "bg-white/20" : isPassed ? "bg-slate-200" : "bg-slate-200"
+                      className={`text-xs font-medium text-center leading-tight ${
+                        isCurrent
+                          ? "text-slate-900"
+                          : isPassed
+                          ? "text-slate-600"
+                          : "text-slate-400"
                       }`}
                     >
-                      {isPassed ? "✓" : idx + 1}
+                      {stage.name}
                     </span>
-                    {stage.name}
+                    {/* Active indicator dot */}
+                    {isCurrent && (
+                      <div
+                        className="absolute -top-1 -right-1 h-3 w-3 rounded-full border-2 border-white"
+                        style={{ backgroundColor: stageColor }}
+                      />
+                    )}
                   </button>
-                  {idx < filtered.length - 1 && (
-                    <div
-                      className={`h-0.5 w-4 ${isPassed ? "bg-slate-300" : "bg-slate-200"}`}
-                    />
+
+                  {/* Connector arrow */}
+                  {!isLast && (
+                    <div className="flex items-center px-1">
+                      <div
+                        className={`h-0.5 w-6 transition-colors ${isPassed ? "" : "bg-slate-200"}`}
+                        style={isPassed ? { backgroundColor: stageColor } : {}}
+                      />
+                      <div
+                        className={`h-0 w-0 border-y-4 border-y-transparent border-l-[6px] transition-colors ${isPassed ? "" : "border-l-slate-200"}`}
+                        style={isPassed ? { borderLeftColor: stageColor } : {}}
+                      />
+                    </div>
                   )}
                 </div>
               );
@@ -477,7 +602,8 @@ export function LeadDetail({
 
           {/* Lost / Junk stages as separate end actions */}
           {stages.filter((s) => s.kind === "lost" || s.kind === "junk").length > 0 && (
-            <div className="mt-3 flex items-center gap-2 pt-3 border-t border-slate-100">
+            <div className="mt-4 flex items-center gap-2 pt-4 border-t border-slate-100">
+              <span className="text-xs text-slate-400 mr-1">End lead:</span>
               {stages
                 .filter((s) => s.kind === "lost" || s.kind === "junk")
                 .map((stage) => (
@@ -485,10 +611,10 @@ export function LeadDetail({
                     key={stage.id}
                     onClick={() => canEdit && handleStageChange(stage.id)}
                     disabled={pending || !canEdit}
-                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
                       optimisticLead.stage_id === stage.id
-                        ? "bg-red-100 text-red-700"
-                        : "text-red-500 hover:bg-red-50"
+                        ? "bg-red-100 text-red-700 ring-1 ring-red-200"
+                        : "text-red-500 hover:bg-red-50 border border-slate-200"
                     } ${canEdit ? "cursor-pointer" : "cursor-default"}`}
                   >
                     <XCircle className="h-3 w-3" />
@@ -500,7 +626,9 @@ export function LeadDetail({
 
           {/* Helper text for current stage */}
           {currentStage?.helper_text && (
-            <p className="mt-3 text-xs text-slate-400">{currentStage.helper_text}</p>
+            <div className="mt-3 rounded-lg bg-slate-50 px-3 py-2">
+              <p className="text-xs text-slate-500">{currentStage.helper_text}</p>
+            </div>
           )}
         </div>
       )}
@@ -512,7 +640,8 @@ export function LeadDetail({
           <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
             <h3 className="text-sm font-semibold text-slate-900 mb-3">Contact Information</h3>
             {editMode ? (
-              <div className="space-y-3">
+              <div className="space-y-4">
+                {/* Standard fields */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Name</Label>
@@ -538,11 +667,104 @@ export function LeadDetail({
                     <Label className="text-xs">Budget Max (AED)</Label>
                     <Input type="number" value={editForm.budget_max} onChange={(e) => setEditForm({ ...editForm, budget_max: e.target.value })} />
                   </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Preferred Areas (comma-separated)</Label>
+                    <Input value={editForm.preferred_areas} onChange={(e) => setEditForm({ ...editForm, preferred_areas: e.target.value })} placeholder="e.g. Dubai Marina, JLT" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Language</Label>
+                    <Input value={editForm.language} onChange={(e) => setEditForm({ ...editForm, language: e.target.value })} placeholder="e.g. en, ar, fr" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Financing</Label>
+                    <Input value={editForm.financing} onChange={(e) => setEditForm({ ...editForm, financing: e.target.value })} placeholder="e.g. Cash, Mortgage" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Timeframe</Label>
+                    <Input value={editForm.timeframe} onChange={(e) => setEditForm({ ...editForm, timeframe: e.target.value })} placeholder="e.g. 1-3 months" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Purpose</Label>
+                    <Input value={editForm.purpose} onChange={(e) => setEditForm({ ...editForm, purpose: e.target.value })} placeholder="e.g. Investment, End Use" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Bedrooms</Label>
+                    <Input value={editForm.bedrooms} onChange={(e) => setEditForm({ ...editForm, bedrooms: e.target.value })} placeholder="e.g. Studio, 1BR, 2BR" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Category</Label>
+                    <Input value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} placeholder="e.g. Apartment, Villa" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Tags (comma-separated)</Label>
+                    <Input value={editForm.tags} onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })} placeholder="e.g. hot, vip, investor" />
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Notes</Label>
                   <Textarea rows={3} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
                 </div>
+
+                {/* Custom fields — dynamically rendered from fieldDefs */}
+                {fieldDefs.length > 0 && (
+                  <div className="space-y-3 pt-2 border-t border-slate-100">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Custom Fields</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {fieldDefs.map((def) => {
+                        const val = editCustom[def.key] ?? "";
+                        return (
+                          <div key={def.id} className="space-y-1">
+                            <Label className="text-xs">
+                              {def.label}
+                              {def.required && <span className="text-red-500 ml-1">*</span>}
+                            </Label>
+                            {def.type === "textarea" ? (
+                              <Textarea
+                                rows={2}
+                                value={val}
+                                onChange={(e) => setEditCustom({ ...editCustom, [def.key]: e.target.value })}
+                              />
+                            ) : def.type === "select" && def.options ? (
+                              <Select value={val} onValueChange={(v) => setEditCustom({ ...editCustom, [def.key]: v ?? "" })}>
+                                <SelectTrigger><SelectValue placeholder={`Select ${def.label}`} /></SelectTrigger>
+                                <SelectContent>
+                                  {def.options.map((opt) => (
+                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : def.type === "multiselect" && def.options ? (
+                              <Select value={val ? val.split(", ")[0] : undefined} onValueChange={(v) => setEditCustom({ ...editCustom, [def.key]: v ?? "" })}>
+                                <SelectTrigger><SelectValue placeholder={`Select ${def.label}`} /></SelectTrigger>
+                                <SelectContent>
+                                  {def.options.map((opt) => (
+                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : def.type === "checkbox" ? (
+                              <Select value={val || "false"} onValueChange={(v) => setEditCustom({ ...editCustom, [def.key]: v ?? "false" })}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="true">Yes</SelectItem>
+                                  <SelectItem value="false">No</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Input
+                                type={def.type === "number" || def.type === "money" ? "number" : def.type === "date" ? "date" : def.type === "phone" ? "tel" : def.type === "url" ? "url" : "text"}
+                                value={val}
+                                onChange={(e) => setEditCustom({ ...editCustom, [def.key]: e.target.value })}
+                                placeholder={def.type === "money" ? "Amount in AED" : `Enter ${def.label}`}
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex justify-end gap-2">
                   <Button size="sm" variant="outline" onClick={() => setEditMode(false)}>Cancel</Button>
                   <Button size="sm" onClick={handleSaveEdit} disabled={pending}>
@@ -589,23 +811,23 @@ export function LeadDetail({
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Bedrooms</p>
-                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.bedrooms ?? "—"}</p>
+                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.bedrooms ? formatLabel(optimisticLead.bedrooms) : "—"}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Category</p>
-                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.category ?? "—"}</p>
+                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.category ? formatLabel(optimisticLead.category) : "—"}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Financing</p>
-                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.financing?.replace(/_/g, " ") ?? "—"}</p>
+                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.financing ? formatLabel(optimisticLead.financing) : "—"}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Timeframe</p>
-                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.timeframe?.replace(/_/g, " ") ?? "—"}</p>
+                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.timeframe ? formatLabel(optimisticLead.timeframe) : "—"}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Purpose</p>
-                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.purpose?.replace(/_/g, " ") ?? "—"}</p>
+                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.purpose ? formatLabel(optimisticLead.purpose) : "—"}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-400">Language</p>
@@ -620,6 +842,42 @@ export function LeadDetail({
                     <p className="font-medium text-slate-700">{optimisticLead.created_by_profile?.full_name ?? "—"}</p>
                   </div>
                 </div>
+
+                {/* Custom fields — dynamically rendered from fieldDefs and lead.custom */}
+                {fieldDefs.length > 0 && (
+                  <div className="pt-3 border-t border-slate-100">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Custom Fields</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {fieldDefs.map((def) => {
+                        const rawVal = optimisticLead.custom?.[def.key];
+                        if (rawVal === undefined || rawVal === null || rawVal === "") return null;
+                        let displayVal: string;
+                        if (Array.isArray(rawVal)) {
+                          displayVal = rawVal.join(", ");
+                        } else if (def.type === "money") {
+                          displayVal = formatAED(Number(rawVal));
+                        } else if (def.type === "checkbox") {
+                          displayVal = rawVal ? "Yes" : "No";
+                        } else if (def.type === "date") {
+                          displayVal = formatDate(String(rawVal));
+                        } else {
+                          displayVal = String(rawVal);
+                        }
+                        return (
+                          <div key={def.id}>
+                            <p className="text-xs text-slate-400">{def.label}</p>
+                            <p className="font-medium text-slate-700 capitalize">
+                              {def.type === "select" && def.options
+                                ? def.options.find((o) => o.value === rawVal)?.label ?? displayVal
+                                : displayVal}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {optimisticLead.tags && optimisticLead.tags.length > 0 && (
                   <div className="pt-2">
                     <p className="text-xs text-slate-400">Tags</p>
