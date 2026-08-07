@@ -19,6 +19,8 @@ export type LeadStatus =
   | "unqualified"
   | "converted";
 
+export type StageKind = "open" | "won" | "lost" | "junk";
+
 export type CustomerType = "individual" | "company";
 
 export type DealType = "sale" | "rental" | "off_plan";
@@ -193,6 +195,30 @@ export interface Database {
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
+          stage_id: string | null;
+          custom: Record<string, unknown>;
+          campaign_id: string | null;
+          source_id: string | null;
+          external_ref: string | null;
+          phone_norm: string | null;
+          email_norm: string | null;
+          language: string | null;
+          financing: string | null;
+          timeframe: string | null;
+          purpose: string | null;
+          bedrooms: string | null;
+          category: string | null;
+          no_show_count: number;
+          first_response_due_at: string | null;
+          first_responded_at: string | null;
+          last_activity_at: string | null;
+          last_inquiry_at: string | null;
+          import_batch_id: string | null;
+          merged_into_id: string | null;
+          tags: string[];
+          pipeline_id: string | null;
+          lost_reason: string | null;
+          junk_reason: string | null;
         };
         Insert: {
           id?: string;
@@ -213,8 +239,309 @@ export interface Database {
           converted_customer_id?: string | null;
           converted_deal_id?: string | null;
           created_by?: string | null;
+          stage_id?: string | null;
+          custom?: Record<string, unknown>;
+          campaign_id?: string | null;
+          source_id?: string | null;
+          external_ref?: string | null;
+          language?: string | null;
+          financing?: string | null;
+          timeframe?: string | null;
+          purpose?: string | null;
+          bedrooms?: string | null;
+          category?: string | null;
+          no_show_count?: number;
+          first_response_due_at?: string | null;
+          first_responded_at?: string | null;
+          last_activity_at?: string | null;
+          last_inquiry_at?: string | null;
+          import_batch_id?: string | null;
+          merged_into_id?: string | null;
+          tags?: string[];
+          pipeline_id?: string | null;
+          lost_reason?: string | null;
+          junk_reason?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["leads"]["Insert"]>;
+      };
+      lead_stages: {
+        Row: {
+          id: string;
+          name: string;
+          color: string;
+          kind: StageKind;
+          sort: number;
+          stale_after_days: number | null;
+          required_fields: unknown[];
+          helper_text: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          color?: string;
+          kind?: StageKind;
+          sort?: number;
+          stale_after_days?: number | null;
+          required_fields?: unknown[];
+          helper_text?: string | null;
+          is_active?: boolean;
+        };
+        Update: Partial<Database["public"]["Tables"]["lead_stages"]["Insert"]>;
+      };
+      communities: {
+        Row: { id: string; name: string; area_group: string; created_at: string };
+        Insert: { id?: string; name: string; area_group?: string };
+        Update: Partial<Database["public"]["Tables"]["communities"]["Insert"]>;
+      };
+      lead_events: {
+        Row: {
+          id: number;
+          lead_id: string;
+          kind: string;
+          actor_id: string | null;
+          payload: Record<string, unknown>;
+          created_at: string;
+        };
+        Insert: {
+          lead_id: string;
+          kind: string;
+          actor_id?: string | null;
+          payload?: Record<string, unknown>;
+        };
+        Update: Partial<Database["public"]["Tables"]["lead_events"]["Insert"]>;
+      };
+      lead_assignments: {
+        Row: {
+          id: string;
+          lead_id: string;
+          from_user: string | null;
+          to_user: string | null;
+          reason: string;
+          created_at: string;
+        };
+        Insert: {
+          lead_id: string;
+          from_user?: string | null;
+          to_user?: string | null;
+          reason?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["lead_assignments"]["Insert"]>;
+      };
+      lead_viewings: {
+        Row: {
+          id: string;
+          lead_id: string;
+          property_id: string | null;
+          scheduled_at: string;
+          agent_id: string | null;
+          note: string | null;
+          outcome: string | null;
+          outcome_note: string | null;
+          reminded_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          lead_id: string;
+          property_id?: string | null;
+          scheduled_at: string;
+          agent_id?: string | null;
+          note?: string | null;
+          outcome?: string | null;
+          outcome_note?: string | null;
+          reminded_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["lead_viewings"]["Insert"]>;
+      };
+      lead_tasks: {
+        Row: {
+          id: string;
+          lead_id: string;
+          title: string;
+          due_at: string | null;
+          assignee_id: string | null;
+          done_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          lead_id: string;
+          title: string;
+          due_at?: string | null;
+          assignee_id?: string | null;
+          done_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["lead_tasks"]["Insert"]>;
+      };
+      campaigns: {
+        Row: {
+          id: string;
+          name: string;
+          channel: string;
+          tracking_code: string;
+          budget: number | null;
+          spend: number | null;
+          starts_on: string | null;
+          ends_on: string | null;
+          target: Record<string, unknown>;
+          status: string;
+          notes: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          name: string;
+          channel: string;
+          tracking_code: string;
+          budget?: number | null;
+          spend?: number | null;
+          starts_on?: string | null;
+          ends_on?: string | null;
+          target?: Record<string, unknown>;
+          status?: string;
+          notes?: string | null;
+          created_by?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["campaigns"]["Insert"]>;
+      };
+      custom_field_defs: {
+        Row: {
+          id: string;
+          entity: string;
+          key: string;
+          label: string;
+          type: string;
+          options: unknown | null;
+          required: boolean;
+          show_on_card: boolean;
+          show_in_list: boolean;
+          group_name: string | null;
+          sort: number;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          entity?: string;
+          key: string;
+          label: string;
+          type: string;
+          options?: unknown | null;
+          required?: boolean;
+          show_on_card?: boolean;
+          show_in_list?: boolean;
+          group_name?: string | null;
+          sort?: number;
+          is_active?: boolean;
+        };
+        Update: Partial<Database["public"]["Tables"]["custom_field_defs"]["Insert"]>;
+      };
+      lead_sources: {
+        Row: {
+          id: string;
+          kind: string;
+          name: string;
+          token: string | null;
+          secret: string | null;
+          config: Record<string, unknown>;
+          is_active: boolean;
+          stats: Record<string, unknown>;
+          created_at: string;
+        };
+        Insert: {
+          kind: string;
+          name: string;
+          token?: string | null;
+          secret?: string | null;
+          config?: Record<string, unknown>;
+          is_active?: boolean;
+          stats?: Record<string, unknown>;
+        };
+        Update: Partial<Database["public"]["Tables"]["lead_sources"]["Insert"]>;
+      };
+      lost_reasons: {
+        Row: {
+          id: string;
+          kind: string;
+          label: string;
+          sort: number;
+          is_active: boolean;
+        };
+        Insert: {
+          kind: string;
+          label: string;
+          sort?: number;
+          is_active?: boolean;
+        };
+        Update: Partial<Database["public"]["Tables"]["lost_reasons"]["Insert"]>;
+      };
+      saved_filters: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          params: Record<string, unknown>;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          name: string;
+          params?: Record<string, unknown>;
+        };
+        Update: Partial<Database["public"]["Tables"]["saved_filters"]["Insert"]>;
+      };
+      teams: {
+        Row: { id: string; name: string; rr_cursor: number; created_at: string };
+        Insert: { name: string; rr_cursor?: number };
+        Update: Partial<Database["public"]["Tables"]["teams"]["Insert"]>;
+      };
+      team_members: {
+        Row: { team_id: string; user_id: string; daily_cap: number };
+        Insert: { team_id: string; user_id: string; daily_cap?: number };
+        Update: Partial<Database["public"]["Tables"]["team_members"]["Insert"]>;
+      };
+      routing_rules: {
+        Row: {
+          id: string;
+          sort: number;
+          conditions: Record<string, unknown>;
+          action: Record<string, unknown>;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          sort?: number;
+          conditions?: Record<string, unknown>;
+          action?: Record<string, unknown>;
+          is_active?: boolean;
+        };
+        Update: Partial<Database["public"]["Tables"]["routing_rules"]["Insert"]>;
+      };
+      lead_doc_requirements: {
+        Row: {
+          id: string;
+          name: string;
+          slots: unknown;
+          applies_when: Record<string, unknown>;
+          required: boolean;
+          allowed_types: string[];
+          max_mb: number;
+          sort: number;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          name: string;
+          slots?: unknown;
+          applies_when?: Record<string, unknown>;
+          required?: boolean;
+          allowed_types?: string[];
+          max_mb?: number;
+          sort?: number;
+          is_active?: boolean;
+        };
+        Update: Partial<Database["public"]["Tables"]["lead_doc_requirements"]["Insert"]>;
       };
       lead_activities: {
         Row: {
@@ -800,6 +1127,7 @@ export interface Database {
       doc_category: DocCategory;
       approval_kind: ApprovalKind;
       approval_status: ApprovalStatus;
+      stage_kind: StageKind;
     };
   };
 };

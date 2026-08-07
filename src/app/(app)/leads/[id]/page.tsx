@@ -45,6 +45,13 @@ export default async function LeadDetailPage({
     );
   }
 
+  // Fetch stages for stage dropdown
+  const { data: stages } = await supabase
+    .from("lead_stages")
+    .select("*")
+    .eq("is_active", true)
+    .order("sort");
+
   // Fetch lead activities (timeline)
   const { data: activities } = await supabase
     .from("lead_activities")
@@ -97,6 +104,7 @@ export default async function LeadDetailPage({
       lead={lead}
       activities={activities ?? []}
       agents={agents ?? []}
+      stages={stages ?? []}
       customer={customer}
       deal={deal}
       documents={documents ?? []}

@@ -59,12 +59,14 @@ const INTEREST_LABELS: Record<string, string> = {
 export function LeadsTable({
   leads,
   agents,
+  stages,
   currentFilters,
   userRole,
 }: {
   leads: LeadRow[];
   agents: { id: string; full_name: string; role: string }[];
-  currentFilters: { status?: string; source?: string; assigned?: string; q?: string };
+  stages?: { id: string; name: string; color: string }[];
+  currentFilters: { status?: string; source?: string; assigned?: string; q?: string; stage?: string };
   userRole: string;
 }) {
   const router = useRouter();
@@ -83,7 +85,7 @@ export function LeadsTable({
     } else {
       params.set(key, value);
     }
-    router.push(`/leads?${params.toString()}`);
+    router.push(`/leads/list?${params.toString()}`);
   }
 
   function handleSearch(e: React.FormEvent) {
@@ -154,6 +156,25 @@ export function LeadsTable({
             <SelectItem value="converted">Converted</SelectItem>
           </SelectContent>
         </Select>
+
+        {stages && stages.length > 0 && (
+          <Select
+            value={currentFilters.stage ?? "all"}
+            onValueChange={(v) => updateFilter("stage", v ?? "all")}
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Stage" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Stages</SelectItem>
+              {stages.map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
 
         <Select
           value={currentFilters.source ?? "all"}

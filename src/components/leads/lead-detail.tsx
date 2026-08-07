@@ -26,6 +26,8 @@ import {
   addLeadActivity,
   convertLead,
   updateLead,
+  updateLeadStage,
+  claimLead,
 } from "@/server/leads";
 import { toast } from "sonner";
 import {
@@ -69,6 +71,14 @@ type Lead = {
   converted_deal_id: string | null;
   created_at: string;
   updated_at: string;
+  stage_id: string | null;
+  language: string | null;
+  financing: string | null;
+  timeframe: string | null;
+  purpose: string | null;
+  bedrooms: string | null;
+  category: string | null;
+  tags: string[];
   assigned_to_profile: {
     id: string;
     full_name: string;
@@ -136,6 +146,7 @@ export function LeadDetail({
   lead,
   activities,
   agents,
+  stages,
   customer,
   deal,
   documents,
@@ -145,6 +156,7 @@ export function LeadDetail({
   lead: Lead;
   activities: LeadActivity[];
   agents: Agent[];
+  stages: { id: string; name: string; color: string; kind: string; sort: number; helper_text: string | null }[];
   customer: { id: string; name: string; phone: string | null; email: string | null } | null;
   deal: { id: string; title: string; stage: string; value: number; deal_type: string } | null;
   documents: { id: string; file_name: string; file_url: string; file_type: string; created_at: string }[];
@@ -195,6 +207,31 @@ export function LeadDetail({
         router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
+      }
+    });
+  }
+
+  function handleStageChange(stageId: string) {
+    startTransition(async () => {
+      const result = await updateLeadStage(lead.id, stageId);
+      if (result.ok) {
+        const stage = stages.find((s) => s.id === stageId);
+        toast.success(`Moved to ${stage?.name ?? "new stage"}`);
+        router.refresh();
+      } else {
+        toast.error(result.error ?? "Failed to change stage");
+      }
+    });
+  }
+
+  function handleClaim() {
+    startTransition(async () => {
+      const result = await claimLead(lead.id);
+      if (result.ok) {
+        toast.success("Lead claimed");
+        router.refresh();
+      } else {
+        toast.error(result.error ?? "Failed to claim");
       }
     });
   }
@@ -305,7 +342,36 @@ export function LeadDetail({
         )}
       </div>
 
-      {/* Status pipeline */}
+      {/* Stage selector + claim */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-slate-500">Stage</Label>
+          <Select
+            value={lead.stage_id ?? undefined}
+            onValueChange={(v) => canEdit && handleStageChange(v ?? "")}
+            disabled={pending || !canEdit}
+          >
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="No stage" />
+            </SelectTrigger>
+            <SelectContent>
+              {stages.map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {!lead.assigned_to && canEdit && (
+          <Button size="sm" variant="outline" onClick={handleClaim} disabled={pending}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Claim
+          </Button>
+        )}
+      </div>
+
+      {/* Status pipeline (legacy, still works alongside stages) */}
       {lead.status !== "converted" && lead.status !== "unqualified" && (
         <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
           <h3 className="text-sm font-semibold text-slate-900 mb-3">Lead Workflow</h3>

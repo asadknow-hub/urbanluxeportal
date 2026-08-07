@@ -126,6 +126,9 @@ export function canAccessRoute(role: UserRole | null | undefined, path: string):
   if (path.startsWith("/team")) {
     return role === "admin" || role === "manager";
   }
+  if (path.startsWith("/leads/campaigns")) {
+    return role === "admin" || role === "manager" || role === "accountant";
+  }
   return true;
 }
 
@@ -137,7 +140,10 @@ export const NAV_ITEMS: {
   group: string;
 }[] = [
   { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard", roles: ["admin", "manager", "agent", "accountant"], group: "Main" },
-  { label: "Leads", href: "/leads", icon: "Users", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
+  { label: "Leads Board", href: "/leads", icon: "Users", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
+  { label: "All Leads", href: "/leads/list", icon: "List", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
+  { label: "Follow-ups", href: "/leads/followups", icon: "CalendarClock", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
+  { label: "Campaigns", href: "/leads/campaigns", icon: "Megaphone", roles: ["admin", "manager", "accountant"], group: "CRM" },
   { label: "Customers", href: "/customers", icon: "Contact", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
   { label: "Pipeline", href: "/pipeline", icon: "KanbanSquare", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
   { label: "Team", href: "/team", icon: "UserCog", roles: ["admin", "manager"], group: "CRM" },

@@ -33,6 +33,15 @@ const leadSchema = z.object({
   notes: z.string().optional().nullable(),
   assigned_to: z.string().uuid().optional().nullable(),
   next_follow_up_at: z.string().optional().nullable(),
+  stage_id: z.string().uuid().optional().nullable(),
+  language: z.string().optional().nullable(),
+  financing: z.string().optional().nullable(),
+  timeframe: z.string().optional().nullable(),
+  purpose: z.string().optional().nullable(),
+  bedrooms: z.string().optional().nullable(),
+  category: z.string().optional().nullable(),
+  tags: z.array(z.string()).optional().default([]),
+  custom: z.record(z.string(), z.unknown()).optional().default({}),
 });
 
 export async function createLead(
@@ -71,6 +80,18 @@ export async function createLead(
       }
     }
 
+    // Get the 'New' stage as default
+    let stageId = parsed.data.stage_id;
+    if (!stageId) {
+      const { data: newStage } = await supabase
+        .from("lead_stages")
+        .select("id")
+        .eq("name", "New")
+        .eq("kind", "open")
+        .single();
+      stageId = newStage?.id ?? null;
+    }
+
     const { data, error } = await supabase
       .from("leads")
       .insert({
@@ -86,6 +107,16 @@ export async function createLead(
         assigned_to: parsed.data.assigned_to || null,
         next_follow_up_at: parsed.data.next_follow_up_at || null,
         created_by: user.id,
+        stage_id: stageId,
+        language: parsed.data.language || null,
+        financing: parsed.data.financing || null,
+        timeframe: parsed.data.timeframe || null,
+        purpose: parsed.data.purpose || null,
+        bedrooms: parsed.data.bedrooms || null,
+        category: parsed.data.category || null,
+        tags: parsed.data.tags ?? [],
+        custom: parsed.data.custom ?? {},
+        last_activity_at: new Date().toISOString(),
       })
       .select("id")
       .single();
@@ -99,8 +130,179 @@ export async function createLead(
       action: "created",
     });
 
+    // Log lead event
+    if (data) {
+      await supabase.from("lead_events").insert({
+        lead_id: data.id,
+        kind: "created",
+        actor_id: user.id,
+        payload: { source: parsed.data.source, stage: "New" },
+      });
+    }
+
     revalidatePath("/leads");
     return { ok: true, data: { id: data.id } };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function updateLeadStage(
+  leadId: string,
+  stageId: string,
+  extra?: { lost_reason?: string; junk_reason?: string }
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+
+    const supabase = await createSupabaseServerClient();
+
+    // Fetch the target stage
+    const { data: stage, error: stageError } = await supabase
+      .from("lead_stages")
+      .select("*")
+      .eq("id", stageId)
+      .single();
+    if (stageError || !stage) return { ok: false, error: "Stage not found" };
+
+    // Fetch current lead
+    const { data: lead } = await supabase
+      .from("leads")
+      .select("stage_id, status")
+      .eq("id", leadId)
+      .single();
+    if (!lead) return { ok: false, error: "Lead not found" };
+
+    // Check required fields
+    const requiredFields = (stage.required_fields as string[]) ?? [];
+    if (requiredFields.length > 0) {
+      const { data: fullLead } = await supabase
+        .from("leads")
+        .select("*")
+        .eq("id", leadId)
+        .single();
+      const missing: string[] = [];
+      for (const field of requiredFields) {
+        if (field === "viewing_scheduled") {
+ // skip for now — L2
+        } else if (field === "activity_logged") {
+          // skip for now — L2
+        } else if (field === "lost_reason") {
+          if (!extra?.lost_reason) missing.push("Lost reason");
+        } else if (field === "junk_reason") {
+          if (!extra?.junk_reason) missing.push("Junk reason");
+        } else {
+          const val = (fullLead as Record<string, unknown>)?.[field];
+          if (val === null || val === undefined || val === "") {
+            missing.push(field.replace(/_/g, " "));
+          }
+        }
+      }
+      if (missing.length > 0) {
+        return { ok: false, error: `Missing required fields: ${missing.join(", ")}` };
+      }
+    }
+
+    // Update lead stage
+    const updateData: Record<string, unknown> = {
+      stage_id: stageId,
+      updated_at: new Date().toISOString(),
+      last_activity_at: new Date().toISOString(),
+    };
+
+    // Map stage kind to old status for backward compat
+    if (stage.kind === "won") updateData.status = "converted";
+    else if (stage.kind === "lost") updateData.status = "unqualified";
+    else if (stage.kind === "junk") updateData.status = "unqualified";
+    else if (stage.name === "New") updateData.status = "new";
+    else if (stage.name === "Contacted") updateData.status = "contacted";
+    else if (stage.name === "Qualified") updateData.status = "qualified";
+
+    if (extra?.lost_reason) updateData.lost_reason = extra.lost_reason;
+    if (extra?.junk_reason) updateData.junk_reason = extra.junk_reason;
+
+    const { error } = await supabase
+      .from("leads")
+      .update(updateData)
+      .eq("id", leadId);
+
+    if (error) return { ok: false, error: error.message };
+
+    // Log events
+    await supabase.from("lead_events").insert({
+      lead_id: leadId,
+      kind: "stage_changed",
+      actor_id: user.id,
+      payload: { from_stage_id: lead.stage_id, to_stage_id: stageId, stage_name: stage.name },
+    });
+
+    await supabase.from("lead_activities").insert({
+      lead_id: leadId,
+      type: "stage_change",
+      summary: `Moved to ${stage.name}`,
+      created_by: user.id,
+    });
+
+    revalidatePath("/leads");
+    revalidatePath(`/leads/${leadId}`);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function claimLead(
+  leadId: string
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+
+    const supabase = await createSupabaseServerClient();
+
+    // Conditional update: only claim if still unassigned
+    const { data, error } = await supabase
+      .from("leads")
+      .update({
+        assigned_to: user.id,
+        updated_at: new Date().toISOString(),
+        last_activity_at: new Date().toISOString(),
+      })
+      .eq("id", leadId)
+      .is("assigned_to", null)
+      .select("id, assigned_to")
+      .single();
+
+    if (error || !data) {
+      return { ok: false, error: "Lead already claimed by someone else" };
+    }
+
+    // Log assignment + event
+    await supabase.from("lead_assignments").insert({
+      lead_id: leadId,
+      from_user: null,
+      to_user: user.id,
+      reason: "claim",
+    });
+
+    await supabase.from("lead_events").insert({
+      lead_id: leadId,
+      kind: "claimed",
+      actor_id: user.id,
+      payload: {},
+    });
+
+    await supabase.from("lead_activities").insert({
+      lead_id: leadId,
+      type: "assignment",
+      summary: "Lead claimed from pool",
+      created_by: user.id,
+    });
+
+    revalidatePath("/leads");
+    revalidatePath(`/leads/${leadId}`);
+    return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
   }

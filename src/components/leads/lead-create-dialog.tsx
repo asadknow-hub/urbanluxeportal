@@ -61,6 +61,12 @@ export function LeadCreateDialog({
     budget_max: "",
     notes: "",
     assigned_to: "",
+    language: "en",
+    financing: "",
+    timeframe: "",
+    purpose: "",
+    bedrooms: "",
+    category: "",
   });
 
   function set<K extends keyof typeof form>(key: K, value: string) {
@@ -81,6 +87,14 @@ export function LeadCreateDialog({
         preferred_areas: [],
         notes: form.notes || null,
         assigned_to: form.assigned_to || null,
+        language: form.language || null,
+        financing: form.financing || null,
+        timeframe: form.timeframe || null,
+        purpose: form.purpose || null,
+        bedrooms: form.bedrooms || null,
+        category: form.category || null,
+        tags: [],
+        custom: {},
       });
       if (result.ok) {
         toast.success("Lead created");
@@ -96,6 +110,12 @@ export function LeadCreateDialog({
           budget_max: "",
           notes: "",
           assigned_to: "",
+          language: "en",
+          financing: "",
+          timeframe: "",
+          purpose: "",
+          bedrooms: "",
+          category: "",
         });
       } else {
         toast.error(result.error ?? "Failed to create lead");
@@ -204,6 +224,104 @@ export function LeadCreateDialog({
                 onChange={(e) => set("budget_max", e.target.value)}
                 placeholder="2000000"
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Bedrooms</Label>
+              <Select value={form.bedrooms} onValueChange={(v) => set("bedrooms", v ?? "")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Any" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="studio">Studio</SelectItem>
+                  <SelectItem value="1">1 BR</SelectItem>
+                  <SelectItem value="2">2 BR</SelectItem>
+                  <SelectItem value="3">3 BR</SelectItem>
+                  <SelectItem value="4">4 BR</SelectItem>
+                  <SelectItem value="5+">5+ BR</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Category</Label>
+              <Select value={form.category} onValueChange={(v) => set("category", v ?? "")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Any" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="apartment">Apartment</SelectItem>
+                  <SelectItem value="villa">Villa</SelectItem>
+                  <SelectItem value="townhouse">Townhouse</SelectItem>
+                  <SelectItem value="penthouse">Penthouse</SelectItem>
+                  <SelectItem value="office">Office</SelectItem>
+                  <SelectItem value="retail">Retail</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Financing</Label>
+              <Select value={form.financing} onValueChange={(v) => set("financing", v ?? "")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Unknown" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cash">Cash</SelectItem>
+                  <SelectItem value="mortgage">Mortgage</SelectItem>
+                  <SelectItem value="pre_approved">Pre-approved</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Timeframe</Label>
+              <Select value={form.timeframe} onValueChange={(v) => set("timeframe", v ?? "")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Unknown" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="immediate">Immediate</SelectItem>
+                  <SelectItem value="1_month">1 Month</SelectItem>
+                  <SelectItem value="3_months">3 Months</SelectItem>
+                  <SelectItem value="6_months">6 Months</SelectItem>
+                  <SelectItem value="1_year">1 Year+</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Language</Label>
+              <Select value={form.language} onValueChange={(v) => set("language", v ?? "en")}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="ar">Arabic</SelectItem>
+                  <SelectItem value="ru">Russian</SelectItem>
+                  <SelectItem value="zh">Chinese</SelectItem>
+                  <SelectItem value="fr">French</SelectItem>
+                  <SelectItem value="hi">Hindi</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Purpose</Label>
+              <Select value={form.purpose} onValueChange={(v) => set("purpose", v ?? "")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Unknown" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="end_use">End Use</SelectItem>
+                  <SelectItem value="investment">Investment</SelectItem>
+                  <SelectItem value="rental_yield">Rental Yield</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
