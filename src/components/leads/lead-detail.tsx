@@ -15,13 +15,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getStatusColor } from "@/lib/status-colors";
 import { whatsappLink } from "@/lib/phone";
 import { formatAED } from "@/lib/money";
 import { formatDate, timeAgo } from "@/lib/dates";
 import {
   assignLead,
-  updateLeadStatus,
   scheduleFollowUp,
   addLeadActivity,
   convertLead,
@@ -101,34 +99,11 @@ type LeadActivity = {
 
 type Agent = { id: string; full_name: string; role: string };
 
-const STATUS_FLOW = ["new", "contacted", "qualified", "converted", "unqualified"];
-
-const STATUS_LABELS: Record<string, string> = {
-  new: "New",
-  contacted: "Contacted",
-  qualified: "Qualified",
-  unqualified: "Unqualified",
-  converted: "Converted",
-};
-
-const SOURCE_LABELS: Record<string, string> = {
-  website: "Website",
-  bayut: "Bayut",
-  property_finder: "Property Finder",
-  dubizzle: "Dubizzle",
-  referral: "Referral",
-  walk_in: "Walk-in",
-  social: "Social",
-  other: "Other",
-};
-
-const INTEREST_LABELS: Record<string, string> = {
-  buy: "Buy",
-  rent: "Rent",
-  sell: "Sell",
-  off_plan: "Off-Plan",
-  commercial: "Commercial",
-};
+// Format any DB string into a readable label (e.g. "property_finder" → "Property Finder")
+// No hardcoded labels — everything is derived dynamically from the data.
+function formatLabel(s: string): string {
+  return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 const ACTIVITY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   note: Activity,
@@ -190,7 +165,7 @@ export function LeadDetail({
   });
   const [converting, setConverting] = useState(false);
 
-  const colors = getStatusColor(optimisticLead.status);
+  const currentStage = stages.find((s) => s.id === optimisticLead.stage_id) ?? null;
   const waLink = whatsappLink(optimisticLead.phone);
   const canManage = userRole === "admin" || userRole === "manager";
   const canEdit = canManage || optimisticLead.assigned_to === userId;
@@ -223,25 +198,16 @@ export function LeadDetail({
     });
   }
 
-  function handleStatusChange(newStatus: string) {
-    // Instant UI update
-    setOptimisticLead((prev) => ({ ...prev, status: newStatus }));
-    startTransition(async () => {
-      const result = await updateLeadStatus(optimisticLead.id, newStatus);
-      if (result.ok) {
-        toast.success(`Status changed to ${newStatus}`);
-        router.refresh();
-      } else {
-        setOptimisticLead((prev) => ({ ...prev, status: lead.status }));
-        toast.error(result.error ?? "Failed");
-      }
-    });
-  }
-
   function handleStageChange(stageId: string) {
     const stage = stages.find((s) => s.id === stageId);
-    // Instant UI update
-    setOptimisticLead((prev) => ({ ...prev, stage_id: stageId }));
+    // Instant UI update — also map stage kind to legacy status for backward compat
+    setOptimisticLead((prev) => ({
+      ...prev,
+      stage_id: stageId,
+      status: stage?.kind === "won" ? "converted"
+        : (stage?.kind === "lost" || stage?.kind === "junk") ? "unqualified"
+        : prev.status,
+    }));
     // Add optimistic activity to timeline
     const optimisticActivity: LeadActivity = {
       id: `optimistic_${Date.now()}`,
@@ -393,12 +359,20 @@ export function LeadDetail({
           <div>
             <h1 className="text-xl font-bold text-slate-900">{optimisticLead.name}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-slate-500">
-              <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${colors.bg} ${colors.text}`}>
-                {STATUS_LABELS[optimisticLead.status] ?? optimisticLead.status}
-              </span>
-              <span className="capitalize">{SOURCE_LABELS[optimisticLead.source] ?? optimisticLead.source}</span>
+              {currentStage && (
+                <span
+                  className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
+                  style={{
+                    backgroundColor: `${currentStage.color}15`,
+                    color: currentStage.color,
+                  }}
+                >
+                  {currentStage.name}
+                </span>
+              )}
+              <span className="capitalize">{formatLabel(optimisticLead.source)}</span>
               <span>·</span>
-              <span className="capitalize">{INTEREST_LABELS[optimisticLead.interest] ?? optimisticLead.interest}</span>
+              <span className="capitalize">{formatLabel(optimisticLead.interest)}</span>
               {optimisticLead.score !== null && (
                 <>
                   <span>·</span>
@@ -410,7 +384,7 @@ export function LeadDetail({
             </div>
           </div>
         </div>
-        {canEdit && !editMode && optimisticLead.status !== "converted" && (
+        {canEdit && !editMode && currentStage?.kind !== "won" && (
           <Button variant="outline" size="sm" onClick={() => setEditMode(true)}>
             Edit
           </Button>
@@ -427,12 +401,21 @@ export function LeadDetail({
             disabled={pending || !canEdit}
           >
             <SelectTrigger className="w-48">
-              <SelectValue placeholder="No stage" />
+              {currentStage ? (
+                <span className="text-sm font-medium" style={{ color: currentStage.color }}>
+                  {currentStage.name}
+                </span>
+              ) : (
+                <span className="text-sm text-muted-foreground">No stage</span>
+              )}
             </SelectTrigger>
             <SelectContent>
               {stages.map((s) => (
                 <SelectItem key={s.id} value={s.id}>
-                  {s.name}
+                  <span className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: s.color }} />
+                    {s.name}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -446,51 +429,78 @@ export function LeadDetail({
         )}
       </div>
 
-      {/* Status pipeline (legacy, still works alongside stages) */}
-      {optimisticLead.status !== "converted" && optimisticLead.status !== "unqualified" && (
+      {/* Stage workflow — fully dynamic from lead_stages table, no hardcoding */}
+      {stages.length > 0 && (
         <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
-          <h3 className="text-sm font-semibold text-slate-900 mb-3">Lead Workflow</h3>
-          <div className="flex items-center gap-2">
-            {STATUS_FLOW.filter((s) => s !== "unqualified").map((status, idx) => {
-              const currentIdx = STATUS_FLOW.indexOf(optimisticLead.status);
-              const isPassed = idx <= currentIdx;
-              const isCurrent = status === optimisticLead.status;
+          <h3 className="text-sm font-semibold text-slate-900 mb-4">Lead Workflow</h3>
+
+          {/* Active stages as connected pills */}
+          <div className="flex items-center gap-1 flex-wrap">
+            {stages.filter((s) => s.kind === "active").map((stage, idx, filtered) => {
+              const isCurrent = optimisticLead.stage_id === stage.id;
+              const currentIdx = filtered.findIndex((s) => s.id === optimisticLead.stage_id);
+              const isPassed = currentIdx >= 0 && idx < currentIdx;
+              const stageColor = stage.color || "#10b981";
+
               return (
-                <div key={status} className="flex items-center gap-2 flex-1">
+                <div key={stage.id} className="flex items-center gap-1">
                   <button
-                    onClick={() => canEdit && handleStatusChange(status)}
+                    onClick={() => canEdit && handleStageChange(stage.id)}
                     disabled={pending || !canEdit}
-                    className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                    className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-all ${
                       isCurrent
-                        ? "bg-emerald-500 text-white"
+                        ? "text-white shadow-sm"
                         : isPassed
-                        ? "bg-emerald-50 text-emerald-700"
+                        ? "bg-slate-100 text-slate-600"
                         : "bg-slate-50 text-slate-400 hover:bg-slate-100"
                     } ${canEdit ? "cursor-pointer" : "cursor-default"}`}
+                    style={isCurrent ? { backgroundColor: stageColor } : {}}
                   >
-                    <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${
-                      isCurrent ? "bg-white/20" : isPassed ? "bg-emerald-200" : "bg-slate-200"
-                    }`}>
+                    <span
+                      className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${
+                        isCurrent ? "bg-white/20" : isPassed ? "bg-slate-200" : "bg-slate-200"
+                      }`}
+                    >
                       {isPassed ? "✓" : idx + 1}
                     </span>
-                    {STATUS_LABELS[status]}
+                    {stage.name}
                   </button>
-                  {idx < STATUS_FLOW.filter((s) => s !== "unqualified").length - 1 && (
-                    <div className={`h-0.5 flex-1 ${isPassed ? "bg-emerald-300" : "bg-slate-200"}`} />
+                  {idx < filtered.length - 1 && (
+                    <div
+                      className={`h-0.5 w-4 ${isPassed ? "bg-slate-300" : "bg-slate-200"}`}
+                    />
                   )}
                 </div>
               );
             })}
           </div>
-          {canEdit && (
-            <button
-              onClick={() => handleStatusChange("unqualified")}
-              disabled={pending}
-              className="mt-3 inline-flex items-center gap-1 text-xs text-red-500 hover:text-red-600"
-            >
-              <XCircle className="h-3 w-3" />
-              Mark as Unqualified
-            </button>
+
+          {/* Lost / Junk stages as separate end actions */}
+          {stages.filter((s) => s.kind === "lost" || s.kind === "junk").length > 0 && (
+            <div className="mt-3 flex items-center gap-2 pt-3 border-t border-slate-100">
+              {stages
+                .filter((s) => s.kind === "lost" || s.kind === "junk")
+                .map((stage) => (
+                  <button
+                    key={stage.id}
+                    onClick={() => canEdit && handleStageChange(stage.id)}
+                    disabled={pending || !canEdit}
+                    className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                      optimisticLead.stage_id === stage.id
+                        ? "bg-red-100 text-red-700"
+                        : "text-red-500 hover:bg-red-50"
+                    } ${canEdit ? "cursor-pointer" : "cursor-default"}`}
+                  >
+                    <XCircle className="h-3 w-3" />
+                    {stage.name}
+                  </button>
+                ))}
+            </div>
+          )}
+
+          {/* Helper text for current stage */}
+          {currentStage?.helper_text && (
+            <p className="mt-3 text-xs text-slate-400">{currentStage.helper_text}</p>
           )}
         </div>
       )}
@@ -518,14 +528,7 @@ export function LeadDetail({
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">Interest</Label>
-                    <Select value={editForm.interest} onValueChange={(v) => setEditForm({ ...editForm, interest: v ?? "buy" })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(INTEREST_LABELS).map(([k, v]) => (
-                          <SelectItem key={k} value={k}>{v}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Input value={editForm.interest} onChange={(e) => setEditForm({ ...editForm, interest: e.target.value })} placeholder="e.g. Buy, Rent, Off-Plan..." />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">Budget Min (AED)</Label>
@@ -736,7 +739,13 @@ export function LeadDetail({
                 value={optimisticLead.assigned_to ?? "unassigned"}
                 onValueChange={(v) => handleAssign(v === "unassigned" ? null : v ?? null)}
               >
-                <SelectTrigger><SelectValue placeholder="Assign to agent" /></SelectTrigger>
+                <SelectTrigger>
+                  {optimisticLead.assigned_to_profile ? (
+                    <span className="text-sm">{optimisticLead.assigned_to_profile.full_name}</span>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">Assign to agent</span>
+                  )}
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="unassigned">Unassigned</SelectItem>
                   {agents.map((a) => (
@@ -780,7 +789,7 @@ export function LeadDetail({
           </div>
 
           {/* Convert action */}
-          {optimisticLead.status !== "converted" && optimisticLead.status !== "unqualified" && canEdit && (
+          {currentStage?.kind !== "won" && currentStage?.kind !== "lost" && currentStage?.kind !== "junk" && canEdit && (
             <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
               <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900 mb-3">
                 <UserPlus className="h-4 w-4" />
@@ -807,7 +816,7 @@ export function LeadDetail({
           )}
 
           {/* Conversion info */}
-          {optimisticLead.status === "converted" && (
+          {currentStage?.kind === "won" && (
             <div className="rounded-2xl bg-emerald-50 p-5 border border-emerald-200">
               <h3 className="flex items-center gap-2 text-sm font-semibold text-emerald-900 mb-3">
                 <CheckCircle2 className="h-4 w-4" />

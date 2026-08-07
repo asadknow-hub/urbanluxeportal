@@ -201,13 +201,11 @@ export async function updateLeadStage(
       last_activity_at: new Date().toISOString(),
     };
 
-    // Map stage kind to old status for backward compat
+    // Map stage kind to legacy status for backward compat
+    // Only use stage.kind (dynamic, DB-driven) — never match on stage names
     if (stage.kind === "won") updateData.status = "converted";
-    else if (stage.kind === "lost") updateData.status = "unqualified";
-    else if (stage.kind === "junk") updateData.status = "unqualified";
-    else if (stage.name === "New") updateData.status = "new";
-    else if (stage.name === "Contacted") updateData.status = "contacted";
-    else if (stage.name === "Qualified") updateData.status = "qualified";
+    else if (stage.kind === "lost" || stage.kind === "junk") updateData.status = "unqualified";
+    else if (stage.kind === "active") updateData.status = stage.sort <= 1 ? "new" : "qualified";
 
     if (extra?.lost_reason) updateData.lost_reason = extra.lost_reason;
     if (extra?.junk_reason) updateData.junk_reason = extra.junk_reason;
