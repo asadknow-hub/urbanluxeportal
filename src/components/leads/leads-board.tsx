@@ -185,7 +185,10 @@ function DraggableLeadCard({ lead, stage }: { lead: BoardLead; stage: LeadStage 
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      onPointerDown={handlePointerDown}
+      onPointerDown={(e) => {
+        listeners?.onPointerDown?.(e);
+        handlePointerDown(e);
+      }}
       onClick={handleClick}
     >
       <LeadCard lead={lead} stage={stage} isDragging={isDragging} />
