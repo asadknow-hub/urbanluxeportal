@@ -9,6 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -26,6 +34,7 @@ import {
   updateLead,
   updateLeadStage,
   claimLead,
+  deleteLead,
 } from "@/server/leads";
 import { toast } from "sonner";
 import {
@@ -46,6 +55,7 @@ import {
   Home,
   Tag,
   FileText,
+  Trash2,
 } from "lucide-react";
 
 type Lead = {
@@ -142,6 +152,7 @@ export function LeadDetail({
   customer,
   deal,
   documents,
+  lostReasons,
   userRole,
   userId,
 }: {
@@ -153,6 +164,7 @@ export function LeadDetail({
   customer: { id: string; name: string; phone: string | null; email: string | null } | null;
   deal: { id: string; title: string; stage: string; value: number; deal_type: string } | null;
   documents: { id: string; file_name: string; file_url: string; file_type: string; created_at: string }[];
+  lostReasons: Record<string, string[]>;
   userRole: string;
   userId: string;
 }) {
@@ -202,6 +214,9 @@ export function LeadDetail({
     return initial;
   });
   const [converting, setConverting] = useState(false);
+  const [reasonDialog, setReasonDialog] = useState<{ stageId: string; stageName: string; kind: string } | null>(null);
+  const [selectedReason, setSelectedReason] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const currentStage = stages.find((s) => s.id === optimisticLead.stage_id) ?? null;
   const waLink = whatsappLink(optimisticLead.phone);
@@ -238,6 +253,15 @@ export function LeadDetail({
 
   function handleStageChange(stageId: string) {
     const stage = stages.find((s) => s.id === stageId);
+    if (!stage) return;
+
+    // Lost / Junk stages require a reason — show dialog
+    if (stage.kind === "lost" || stage.kind === "junk") {
+      setReasonDialog({ stageId, stageName: stage.name, kind: stage.kind });
+      setSelectedReason("");
+      return;
+    }
+
     // Instant UI update — also map stage kind to legacy status for backward compat
     setOptimisticLead((prev) => ({
       ...prev,
@@ -267,6 +291,55 @@ export function LeadDetail({
         setOptimisticActivities((prev) => prev.filter((a) => a.id !== optimisticActivity.id));
         toast.error(result.error ?? "Failed to change stage");
       }
+    });
+  }
+
+  function handleReasonConfirm() {
+    if (!reasonDialog || !selectedReason) return;
+    const stage = stages.find((s) => s.id === reasonDialog.stageId);
+    // Instant UI update
+    setOptimisticLead((prev) => ({
+      ...prev,
+      stage_id: reasonDialog.stageId,
+      status: "unqualified",
+    }));
+    const optimisticActivity: LeadActivity = {
+      id: `optimistic_${Date.now()}`,
+      type: "stage_change",
+      summary: `Moved to ${reasonDialog.stageName} — ${selectedReason}`,
+      occurred_at: new Date().toISOString(),
+      created_by: userId,
+      author: { id: userId, full_name: "You" },
+    };
+    setOptimisticActivities((prev) => [optimisticActivity, ...prev]);
+    setReasonDialog(null);
+    startTransition(async () => {
+      const extra: { lost_reason?: string; junk_reason?: string } = {};
+      if (reasonDialog.kind === "lost") extra.lost_reason = selectedReason;
+      else extra.junk_reason = selectedReason;
+      const result = await updateLeadStage(optimisticLead.id, reasonDialog.stageId, extra);
+      if (result.ok) {
+        toast.success(`Moved to ${stage?.name ?? "new stage"}`);
+        router.refresh();
+      } else {
+        setOptimisticLead((prev) => ({ ...prev, stage_id: lead.stage_id }));
+        setOptimisticActivities((prev) => prev.filter((a) => a.id !== optimisticActivity.id));
+        toast.error(result.error ?? "Failed to change stage");
+      }
+      setSelectedReason("");
+    });
+  }
+
+  function handleDelete() {
+    startTransition(async () => {
+      const result = await deleteLead(optimisticLead.id);
+      if (result.ok) {
+        toast.success("Lead deleted");
+        router.push("/leads");
+      } else {
+        toast.error(result.error ?? "Failed to delete lead");
+      }
+      setShowDeleteConfirm(false);
     });
   }
 
@@ -467,6 +540,12 @@ export function LeadDetail({
           {canEdit && !editMode && currentStage?.kind !== "won" && (
             <Button variant="outline" size="sm" onClick={() => setEditMode(true)}>
               Edit
+            </Button>
+          )}
+          {canManage && (
+            <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => setShowDeleteConfirm(true)} disabled={pending}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
             </Button>
           )}
         </div>
@@ -1042,6 +1121,54 @@ export function LeadDetail({
           </div>
         </div>
       </div>
+
+      {/* Reason dialog for Lost / Junk stage changes */}
+      <Dialog open={reasonDialog !== null} onOpenChange={(open) => { if (!open) setReasonDialog(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Move to {reasonDialog?.stageName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-slate-500">
+              Please select a reason for marking this lead as {reasonDialog?.stageName}:
+            </p>
+            <Select value={selectedReason} onValueChange={(v) => setSelectedReason(v ?? "")}>
+              <SelectTrigger className="h-9"><SelectValue placeholder="Select a reason..." /></SelectTrigger>
+              <SelectContent>
+                {(lostReasons[reasonDialog?.kind ?? ""] ?? []).map((reason) => (
+                  <SelectItem key={reason} value={reason}>{reason}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setReasonDialog(null)}>Cancel</Button>
+            <Button size="sm" onClick={handleReasonConfirm} disabled={!selectedReason || pending}>
+              {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Lead</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-slate-500">
+            Are you sure you want to delete <strong>{optimisticLead.name}</strong>? This will soft-delete the lead — it will be hidden from all views but can be restored if needed.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
+            <Button variant="destructive" size="sm" onClick={handleDelete} disabled={pending}>
+              {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete Lead
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -649,6 +649,41 @@ export async function updateLeadStatus(
   }
 }
 
+export async function deleteLead(leadId: string): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    if (!["admin", "manager"].includes(user.role)) {
+      return { ok: false, error: "Only admins and managers can delete leads" };
+    }
+
+    const supabase = await createSupabaseServerClient();
+
+    const { error } = await supabase
+      .from("leads")
+      .update({
+        deleted_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", leadId);
+
+    if (error) return { ok: false, error: error.message };
+
+    await logActivity({
+      actorId: user.id,
+      entityType: "lead",
+      entityId: leadId,
+      action: "deleted",
+    });
+
+    revalidatePath("/leads");
+    revalidatePath(`/leads/${leadId}`);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
 const sourceSchema = z.object({
   kind: z.enum(["web_form", "instagram", "facebook", "google_ads", "property_finder", "bayut", "dubizzle", "referral", "walk_in", "api", "import", "other"]),
   name: z.string().min(1, "Name is required"),
