@@ -476,7 +476,7 @@ export function LeadDetail({
       {/* Stage workflow — thin inline step bar, fully dynamic from lead_stages table */}
       {stages.length > 0 && (
         <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-          <div className="flex items-center gap-1 flex-wrap">
+          <div className="flex items-center gap-0 flex-wrap">
             {stages.filter((s) => s.kind === "open" || s.kind === "active" || s.kind === "won").map((stage, idx, filtered) => {
               const isCurrent = optimisticLead.stage_id === stage.id;
               const currentIdx = filtered.findIndex((s) => s.id === optimisticLead.stage_id);
@@ -489,11 +489,11 @@ export function LeadDetail({
                   <button
                     onClick={() => canEdit && handleStageChange(stage.id)}
                     disabled={pending || !canEdit}
-                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                       isCurrent
                         ? "text-white"
                         : isPassed
-                        ? "text-slate-600 hover:bg-slate-100"
+                        ? "text-slate-700 hover:bg-slate-100"
                         : "text-slate-400 hover:bg-slate-100"
                     } ${canEdit ? "cursor-pointer" : "cursor-default"}`}
                     style={isCurrent ? { backgroundColor: stageColor } : isPassed ? { backgroundColor: `${stageColor}15` } : {}}
@@ -504,7 +504,10 @@ export function LeadDetail({
                     {stage.name}
                   </button>
                   {!isLast && (
-                    <div className={`h-px w-3 ${isPassed ? "bg-slate-300" : "bg-slate-200"}`} />
+                    <div
+                      className="h-0.5 w-5 rounded-full transition-colors"
+                      style={{ backgroundColor: isPassed ? stageColor : "#e2e8f0" }}
+                    />
                   )}
                 </div>
               );
@@ -699,57 +702,83 @@ export function LeadDetail({
                     <a href={`mailto:${optimisticLead.email}`} className="text-slate-700 hover:text-slate-900">{optimisticLead.email}</a>
                   </div>
                 )}
-                {/* Detail fields — only show fields that have values */}
-                {(() => {
-                  const fields: Array<{ label: string; value: string }> = [];
-                  if (optimisticLead.budget_min || optimisticLead.budget_max) {
-                    fields.push({
-                      label: "Budget",
-                      value: `${optimisticLead.budget_min ? formatAED(optimisticLead.budget_min) : "?"} – ${optimisticLead.budget_max ? formatAED(optimisticLead.budget_max) : "?"}`,
-                    });
-                  }
-                  if (optimisticLead.preferred_areas?.length) {
-                    fields.push({ label: "Areas", value: optimisticLead.preferred_areas.join(", ") });
-                  }
-                  if (optimisticLead.bedrooms) fields.push({ label: "Bedrooms", value: formatLabel(optimisticLead.bedrooms) });
-                  if (optimisticLead.category) fields.push({ label: "Category", value: formatLabel(optimisticLead.category) });
-                  if (optimisticLead.financing) fields.push({ label: "Financing", value: formatLabel(optimisticLead.financing) });
-                  if (optimisticLead.timeframe) fields.push({ label: "Timeframe", value: formatLabel(optimisticLead.timeframe) });
-                  if (optimisticLead.purpose) fields.push({ label: "Purpose", value: formatLabel(optimisticLead.purpose) });
-                  if (optimisticLead.language) fields.push({ label: "Language", value: optimisticLead.language.toUpperCase() });
-                  fields.push({ label: "Created", value: formatDate(optimisticLead.created_at) });
-                  if (optimisticLead.created_by_profile?.full_name) {
-                    fields.push({ label: "Created By", value: optimisticLead.created_by_profile.full_name });
-                  }
-                  // Custom fields
-                  for (const def of fieldDefs) {
+                {/* Detail fields — grid showing all fields including empty ones */}
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2 text-sm">
+                  <div>
+                    <span className="text-xs text-slate-400">Budget</span>
+                    <p className="font-medium text-slate-700">
+                      {optimisticLead.budget_min || optimisticLead.budget_max
+                        ? `${optimisticLead.budget_min ? formatAED(optimisticLead.budget_min) : "?"} – ${optimisticLead.budget_max ? formatAED(optimisticLead.budget_max) : "?"}`
+                        : "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-400">Preferred Areas</span>
+                    <p className="font-medium text-slate-700">
+                      {optimisticLead.preferred_areas && optimisticLead.preferred_areas.length > 0
+                        ? optimisticLead.preferred_areas.join(", ")
+                        : "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-400">Bedrooms</span>
+                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.bedrooms ? formatLabel(optimisticLead.bedrooms) : "—"}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-400">Category</span>
+                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.category ? formatLabel(optimisticLead.category) : "—"}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-400">Financing</span>
+                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.financing ? formatLabel(optimisticLead.financing) : "—"}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-400">Timeframe</span>
+                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.timeframe ? formatLabel(optimisticLead.timeframe) : "—"}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-400">Purpose</span>
+                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.purpose ? formatLabel(optimisticLead.purpose) : "—"}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-400">Language</span>
+                    <p className="font-medium text-slate-700 uppercase">{optimisticLead.language ?? "—"}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-400">Created</span>
+                    <p className="font-medium text-slate-700">{formatDate(optimisticLead.created_at)}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-slate-400">Created By</span>
+                    <p className="font-medium text-slate-700">{optimisticLead.created_by_profile?.full_name ?? "—"}</p>
+                  </div>
+                  {fieldDefs.map((def) => {
                     const rawVal = optimisticLead.custom?.[def.key];
-                    if (rawVal === undefined || rawVal === null || rawVal === "") continue;
                     let displayVal: string;
-                    if (Array.isArray(rawVal)) displayVal = rawVal.join(", ");
-                    else if (def.type === "money") displayVal = formatAED(Number(rawVal));
-                    else if (def.type === "checkbox") displayVal = rawVal ? "Yes" : "No";
-                    else if (def.type === "date") displayVal = formatDate(String(rawVal));
-                    else displayVal = String(rawVal);
-                    if (def.type === "select" && def.options) {
+                    if (rawVal === undefined || rawVal === null || rawVal === "") {
+                      displayVal = "—";
+                    } else if (Array.isArray(rawVal)) {
+                      displayVal = rawVal.join(", ");
+                    } else if (def.type === "money") {
+                      displayVal = formatAED(Number(rawVal));
+                    } else if (def.type === "checkbox") {
+                      displayVal = rawVal ? "Yes" : "No";
+                    } else if (def.type === "date") {
+                      displayVal = formatDate(String(rawVal));
+                    } else {
+                      displayVal = String(rawVal);
+                    }
+                    if (def.type === "select" && def.options && rawVal) {
                       displayVal = def.options.find((o) => o.value === rawVal)?.label ?? displayVal;
                     }
-                    fields.push({ label: def.label, value: displayVal });
-                  }
-
-                  if (fields.length === 0) return null;
-
-                  return (
-                    <div className="flex flex-wrap gap-x-4 gap-y-2 pt-2 text-sm">
-                      {fields.map((f) => (
-                        <div key={f.label}>
-                          <span className="text-xs text-slate-400">{f.label}: </span>
-                          <span className="font-medium text-slate-700 capitalize">{f.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
+                    return (
+                      <div key={def.id}>
+                        <span className="text-xs text-slate-400">{def.label}</span>
+                        <p className="font-medium text-slate-700 capitalize">{displayVal}</p>
+                      </div>
+                    );
+                  })}
+                </div>
 
                 {optimisticLead.tags && optimisticLead.tags.length > 0 && (
                   <div className="pt-2">
