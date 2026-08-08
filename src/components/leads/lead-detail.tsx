@@ -496,7 +496,7 @@ export function LeadDetail({
                         ? "text-slate-700 hover:bg-slate-100"
                         : "text-slate-400 hover:bg-slate-100"
                     } ${canEdit ? "cursor-pointer" : "cursor-default"}`}
-                    style={isCurrent ? { backgroundColor: stageColor } : isPassed ? { backgroundColor: `${stageColor}15` } : {}}
+                    style={isCurrent ? { backgroundColor: stageColor } : isPassed ? { backgroundColor: `${stageColor}20`, border: `1px solid ${stageColor}40` } : {}}
                   >
                     {isPassed && (
                       <CheckCircle2 className="h-3 w-3" style={{ color: stageColor }} />
