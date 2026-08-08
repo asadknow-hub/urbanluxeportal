@@ -99,7 +99,11 @@ export function LeadCreateDialog({
       if (result.ok) {
         toast.success("Lead created");
         setOpen(false);
-        router.refresh();
+        if (result.data?.id) {
+          router.push(`/leads/${result.data.id}`);
+        } else {
+          router.push("/leads");
+        }
         setForm({
           name: "",
           phone: "",

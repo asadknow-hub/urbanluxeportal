@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { revalidatePath } from "next/cache";
@@ -80,10 +80,11 @@ export async function createLead(
       }
     }
 
-    // Get the 'New' stage as default
+    // Get the 'New' stage as default — use service client to bypass RLS
     let stageId = parsed.data.stage_id;
     if (!stageId) {
-      const { data: newStage } = await supabase
+      const serviceClient = createSupabaseServiceClient();
+      const { data: newStage } = await serviceClient
         .from("lead_stages")
         .select("id")
         .eq("name", "New")
