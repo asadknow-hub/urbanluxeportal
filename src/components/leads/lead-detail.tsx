@@ -325,7 +325,6 @@ export function LeadDetail({
         toast.success("Follow-up scheduled");
         setFollowUpDate("");
         setFollowUpNotes("");
-        router.refresh();
       } else {
         setOptimisticLead((prev) => ({ ...prev, next_follow_up_at: lead.next_follow_up_at }));
         toast.error(result.error ?? "Failed");
