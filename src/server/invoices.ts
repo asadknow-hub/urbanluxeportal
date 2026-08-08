@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { revalidatePath } from "next/cache";
@@ -40,7 +40,7 @@ export async function createInvoice(
       return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { data: invoiceNo } = await supabase.rpc("next_doc_number", { p_prefix: "INV" });
     if (!invoiceNo) return { ok: false, error: "Failed to generate invoice number" };
@@ -120,7 +120,7 @@ export async function recordPayment(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     // Fetch invoice to check balance
     const { data: invoice, error: invError } = await supabase
@@ -188,7 +188,7 @@ export async function voidInvoice(invoiceId: string): Promise<ActionResult> {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { error } = await supabase
       .from("invoices")

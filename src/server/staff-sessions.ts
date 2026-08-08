@@ -1,6 +1,6 @@
 "use server";
 
-import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase/server";
+import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 
 export type ActionResult<T = unknown> = {
@@ -91,7 +91,7 @@ export async function getStaffActivityStats(
       return { ok: false, error: "Not authorized" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth() - (monthsBack - 1), 1);

@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { notify } from "@/lib/notify";
@@ -26,7 +26,7 @@ export async function decideApproval(
       return { ok: false, error: "Not authorized to approve/reject" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { data: approval, error: fetchError } = await supabase
       .from("approvals")

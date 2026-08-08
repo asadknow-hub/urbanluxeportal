@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase/server";
+import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { revalidatePath } from "next/cache";
@@ -40,7 +40,7 @@ export async function updateStaffProfile(
     }
 
     const { id, ...updates } = parsed.data;
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     // Managers can't edit admins
     if (user.role === "manager") {
@@ -214,7 +214,7 @@ export async function toggleStaffActive(
       return { ok: false, error: "Not authorized" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     // Managers can't deactivate admins
     if (user.role === "manager") {

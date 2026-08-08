@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { revalidatePath } from "next/cache";
@@ -40,7 +40,7 @@ export async function updateDealStage(
       return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     // Fetch the deal to check ownership
     const { data: deal, error: fetchError } = await supabase
@@ -154,7 +154,7 @@ export async function createDeal(input: {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { data, error } = await supabase
       .from("deals")
@@ -195,7 +195,7 @@ export async function addDealActivity(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { error } = await supabase.from("deal_activities").insert({
       deal_id: dealId,
@@ -225,7 +225,7 @@ export async function assignDeal(
       return { ok: false, error: "Not authorized" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { error } = await supabase
       .from("deals")
@@ -266,7 +266,7 @@ export async function updateDeal(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const updateData: Record<string, unknown> = {
       updated_at: new Date().toISOString(),

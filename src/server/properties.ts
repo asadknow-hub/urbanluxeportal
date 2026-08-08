@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { revalidatePath } from "next/cache";
@@ -58,7 +58,7 @@ export async function createProperty(
       return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { data, error } = await supabase
       .from("properties")
@@ -114,7 +114,7 @@ export async function updateProperty(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const updateData: Record<string, unknown> = { ...input, updated_at: new Date().toISOString() };
     if (input.price !== undefined) updateData.price = Math.round(input.price * 100);
@@ -153,7 +153,7 @@ export async function deletePropertyMedia(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     // Delete from storage
     const { error: storageError } = await supabase.storage
@@ -197,7 +197,7 @@ export async function createOwner(
       return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { data, error } = await supabase
       .from("property_owners")

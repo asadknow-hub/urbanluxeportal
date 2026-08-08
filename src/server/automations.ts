@@ -1,6 +1,6 @@
 "use server";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
@@ -16,7 +16,7 @@ export async function toggleAutomation(id: string, isActive: boolean): Promise<A
     if (!user) return { ok: false, error: "Unauthorized" };
     if (user.role !== "admin") return { ok: false, error: "Admin only" };
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { error } = await supabase
       .from("automation_rules")

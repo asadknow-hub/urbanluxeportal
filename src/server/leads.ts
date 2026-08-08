@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase/server";
+import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { revalidatePath } from "next/cache";
@@ -56,7 +56,7 @@ export async function createLead(
       return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     // Duplicate guard
     if (parsed.data.phone || parsed.data.email) {
@@ -157,7 +157,7 @@ export async function updateLeadStage(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     // Fetch stage + current lead in parallel (reduces 2 round-trips to 1)
     const [
@@ -249,7 +249,7 @@ export async function claimLead(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     // Conditional update: only claim if still unassigned
     const { data, error } = await supabase
@@ -306,7 +306,7 @@ export async function updateLead(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { error } = await supabase
       .from("leads")
@@ -341,7 +341,7 @@ export async function convertLead(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     // Fetch the lead
     const { data: lead, error: leadError } = await supabase
@@ -443,7 +443,7 @@ export async function addLeadActivity(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { error } = await supabase.from("lead_activities").insert({
       lead_id: leadId,
@@ -472,7 +472,7 @@ export async function assignLead(
       return { ok: false, error: "Not authorized" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { error } = await supabase
       .from("leads")
@@ -524,7 +524,7 @@ export async function bulkAssignLeads(
       return { ok: false, error: "Not authorized" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { data, error } = await supabase
       .from("leads")
@@ -574,7 +574,7 @@ export async function scheduleFollowUp(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { error: leadError } = await supabase
       .from("leads")
@@ -614,7 +614,7 @@ export async function updateLeadStatus(
       return { ok: false, error: "Invalid status" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { error } = await supabase
       .from("leads")
@@ -657,7 +657,7 @@ export async function deleteLead(leadId: string): Promise<ActionResult> {
       return { ok: false, error: "Only admins and managers can delete leads" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { error } = await supabase
       .from("leads")
@@ -708,7 +708,7 @@ export async function createLeadSource(
       return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { data, error } = await supabase
       .from("lead_sources")
@@ -743,7 +743,7 @@ export async function updateLeadSource(
       return { ok: false, error: "Only admins and managers can configure lead sources" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const updateData: Record<string, unknown> = {};
     if (input.name !== undefined) updateData.name = input.name;
@@ -778,7 +778,7 @@ export async function toggleLeadSource(
       return { ok: false, error: "Only admins and managers can configure lead sources" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { error } = await supabase
       .from("lead_sources")
@@ -804,7 +804,7 @@ export async function deleteLeadSource(
       return { ok: false, error: "Only admins and managers can delete lead sources" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { error } = await supabase
       .from("lead_sources")
@@ -871,7 +871,7 @@ export async function createCustomFieldDef(
       return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { data, error } = await supabase
       .from("custom_field_defs")
@@ -918,7 +918,7 @@ export async function updateCustomFieldDef(
       return { ok: false, error: "Only admins and managers can configure custom fields" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     // Build update object from provided fields only
     const updateData: Record<string, unknown> = {};
@@ -963,7 +963,7 @@ export async function deleteCustomFieldDef(
       return { ok: false, error: "Only admins and managers can delete custom fields" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     // Soft delete: set is_active = false, record deleted_at
     // Data in leads.custom[key] is PRESERVED — not removed.
@@ -994,7 +994,7 @@ export async function reactivateCustomFieldDef(
       return { ok: false, error: "Only admins and managers can configure custom fields" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { error } = await supabase
       .from("custom_field_defs")
@@ -1042,7 +1042,7 @@ export async function updateLeadSourceMapping(
       return { ok: false, error: "Only admins and managers can configure field mappings" };
     }
 
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseServiceClient();
 
     const { error } = await supabase
       .from("lead_sources")
