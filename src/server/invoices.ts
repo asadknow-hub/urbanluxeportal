@@ -19,8 +19,8 @@ const invoiceItemSchema = z.object({
 });
 
 const invoiceSchema = z.object({
-  customer_id: z.string().uuid(),
-  deal_id: z.string().uuid().optional().nullable(),
+  customer_id: z.string().min(1),
+  deal_id: z.string().min(1).optional().nullable(),
   issue_date: z.string(),
   due_date: z.string(),
   notes: z.string().optional().nullable(),

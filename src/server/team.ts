@@ -13,7 +13,7 @@ export type ActionResult<T = unknown> = {
 };
 
 const updateProfileSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
   full_name: z.string().min(1, "Name required"),
   email: z.string().email("Valid email required"),
   phone: z.string().optional().nullable(),

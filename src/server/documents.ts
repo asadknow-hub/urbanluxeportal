@@ -19,7 +19,7 @@ const documentSchema = z.object({
   size_bytes: z.number().default(0),
   category: z.string().default("other"),
   entity_type: z.string().optional().nullable(),
-  entity_id: z.string().uuid().optional().nullable(),
+  entity_id: z.string().min(1).optional().nullable(),
   expiry_date: z.string().optional().nullable(),
 });
 

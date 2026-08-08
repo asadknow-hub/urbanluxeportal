@@ -19,8 +19,8 @@ const quotationItemSchema = z.object({
 });
 
 const quotationSchema = z.object({
-  customer_id: z.string().uuid(),
-  deal_id: z.string().uuid().optional().nullable(),
+  customer_id: z.string().min(1),
+  deal_id: z.string().min(1).optional().nullable(),
   issue_date: z.string(),
   valid_until: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),

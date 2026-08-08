@@ -37,12 +37,12 @@ const propertySchema = z.object({
   parking: z.number().optional().nullable(),
   price: z.number(),
   service_charge: z.number().optional().nullable(),
-  owner_id: z.string().uuid().optional().nullable(),
+  owner_id: z.string().min(1).optional().nullable(),
   trakheesi_permit_no: z.string().optional().nullable(),
   dtcm_permit_no: z.string().optional().nullable(),
   furnishing: z.string().optional().nullable(),
   amenities: z.array(z.string()).optional().default([]),
-  assigned_to: z.string().uuid().optional().nullable(),
+  assigned_to: z.string().min(1).optional().nullable(),
   featured: z.boolean().optional().default(false),
 });
 

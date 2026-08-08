@@ -14,15 +14,15 @@ export type ActionResult<T = unknown> = {
 
 const chequeSchema = z.object({
   direction: z.enum(["incoming", "outgoing"]),
-  customer_id: z.string().uuid().optional().nullable(),
+  customer_id: z.string().min(1).optional().nullable(),
   payee: z.string().optional().nullable(),
   bank_name: z.string().min(1, "Bank name required"),
   cheque_no: z.string().min(1, "Cheque number required"),
   amount: z.number().positive(),
   due_date: z.string(),
-  invoice_id: z.string().uuid().optional().nullable(),
-  deal_id: z.string().uuid().optional().nullable(),
-  property_id: z.string().uuid().optional().nullable(),
+  invoice_id: z.string().min(1).optional().nullable(),
+  deal_id: z.string().min(1).optional().nullable(),
+  property_id: z.string().min(1).optional().nullable(),
   notes: z.string().optional().nullable(),
 });
 

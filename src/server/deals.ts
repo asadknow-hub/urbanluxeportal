@@ -13,7 +13,7 @@ export type ActionResult<T = unknown> = {
 };
 
 const dealStageSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
   stage: z.enum([
     "inquiry",
     "viewing",

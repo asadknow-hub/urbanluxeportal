@@ -24,7 +24,7 @@ const customerSchema = z.object({
   address: z.string().optional().nullable(),
   tags: z.array(z.string()).optional().default([]),
   notes: z.string().optional().nullable(),
-  assigned_to: z.string().uuid().optional().nullable(),
+  assigned_to: z.string().min(1).optional().nullable(),
 });
 
 export async function createCustomer(
