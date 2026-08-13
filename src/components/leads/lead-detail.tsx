@@ -241,11 +241,35 @@ export function LeadDetail({
   const canManage = userRole === "admin" || userRole === "manager";
   const canEdit = canManage || optimisticLead.assigned_to === userId;
   const initials = optimisticLead.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  const lastTouchAt = optimisticActivities[0]?.occurred_at ?? optimisticLead.updated_at;
   const signalItems = [
     { label: "Stage", value: currentStage?.name ?? "Unassigned" },
     { label: "Next follow-up", value: optimisticLead.next_follow_up_at ? formatDate(optimisticLead.next_follow_up_at) : "None" },
-    { label: "Last activity", value: timeAgo(optimisticLead.updated_at) },
+    { label: "Last activity", value: timeAgo(lastTouchAt) },
     { label: "Assigned to", value: optimisticLead.assigned_to_profile?.full_name ?? "Unassigned" },
+  ];
+  const workflowStages = stages.filter((s) => s.kind === "open" || s.kind === "active" || s.kind === "won");
+  const closingStages = stages.filter((s) => s.kind === "lost" || s.kind === "junk");
+  const detailCards = [
+    {
+      label: "Budget",
+      value:
+        optimisticLead.budget_min || optimisticLead.budget_max
+          ? `${optimisticLead.budget_min ? formatAED(optimisticLead.budget_min) : "?"} – ${optimisticLead.budget_max ? formatAED(optimisticLead.budget_max) : "?"}`
+          : "—",
+    },
+    {
+      label: "Preferred Areas",
+      value: optimisticLead.preferred_areas && optimisticLead.preferred_areas.length > 0 ? optimisticLead.preferred_areas.join(", ") : "—",
+    },
+    { label: "Bedrooms", value: optimisticLead.bedrooms ? formatLabel(optimisticLead.bedrooms) : "—" },
+    { label: "Category", value: optimisticLead.category ? formatLabel(optimisticLead.category) : "—" },
+    { label: "Financing", value: optimisticLead.financing ? formatLabel(optimisticLead.financing) : "—" },
+    { label: "Timeframe", value: optimisticLead.timeframe ? formatLabel(optimisticLead.timeframe) : "—" },
+    { label: "Purpose", value: optimisticLead.purpose ? formatLabel(optimisticLead.purpose) : "—" },
+    { label: "Language", value: optimisticLead.language ? optimisticLead.language.toUpperCase() : "—" },
+    { label: "Created", value: formatDate(optimisticLead.created_at) },
+    { label: "Updated", value: timeAgo(optimisticLead.updated_at) },
   ];
 
   // ─── Optimistic action handlers ──────────────────────────
@@ -519,7 +543,7 @@ export function LeadDetail({
       </Link>
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+      <div className="flex flex-col gap-5 rounded-[2rem] border border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-slate-100 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur xl:flex-row xl:items-start xl:justify-between">
         <div className="flex items-center gap-4">
           <Avatar className="h-14 w-14">
             <AvatarFallback className="bg-emerald-100 text-emerald-700 text-lg font-medium">
@@ -554,7 +578,15 @@ export function LeadDetail({
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+          <div className="rounded-2xl border border-slate-200 bg-white/90 px-3 py-2 shadow-[0_10px_20px_rgba(15,23,42,0.05)]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Last touched</p>
+            <p className="text-sm font-semibold text-slate-900">{timeAgo(lastTouchAt)}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white/90 px-3 py-2 shadow-[0_10px_20px_rgba(15,23,42,0.05)]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Created</p>
+            <p className="text-sm font-semibold text-slate-900">{formatDate(optimisticLead.created_at)}</p>
+          </div>
           {phoneLink && (
             <a href={phoneLink} className={buttonVariants({ variant: "outline", size: "sm" })}>
               <Phone className="mr-2 h-4 w-4" />
@@ -580,11 +612,6 @@ export function LeadDetail({
               Claim
             </Button>
           )}
-          {canEdit && !editMode && currentStage?.kind !== "won" && (
-            <Button variant="outline" size="sm" onClick={() => setEditMode(true)}>
-              Edit
-            </Button>
-          )}
           {canManage && (
             <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => setShowDeleteConfirm(true)} disabled={pending}>
               <Trash2 className="mr-2 h-4 w-4" />
@@ -596,7 +623,7 @@ export function LeadDetail({
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {signalItems.map((item) => (
-          <div key={item.label} className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
+          <div key={item.label} className="rounded-[1.4rem] border border-slate-200/80 bg-gradient-to-br from-white to-slate-50 p-4 shadow-[0_12px_24px_rgba(15,23,42,0.06)]">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{item.label}</p>
             <p className="mt-1 text-sm font-medium text-slate-900">{item.value}</p>
           </div>
@@ -605,70 +632,93 @@ export function LeadDetail({
 
       {/* Stage workflow — thin inline step bar, fully dynamic from lead_stages table */}
       {stages.length > 0 && (
-        <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-          <div className="flex items-center gap-0 flex-wrap">
-            {stages.filter((s) => s.kind === "open" || s.kind === "active" || s.kind === "won").map((stage, idx, filtered) => {
-              const isCurrent = optimisticLead.stage_id === stage.id;
-              const currentIdx = filtered.findIndex((s) => s.id === optimisticLead.stage_id);
-              const isPassed = currentIdx >= 0 && idx < currentIdx;
-              const isLast = idx === filtered.length - 1;
-              const stageColor = stage.color || "#10b981";
-
-              return (
-                <div key={stage.id} className="flex items-center shrink-0">
-                  <button
-                    onClick={() => canEdit && handleStageChange(stage.id)}
-                    disabled={pending || !canEdit}
-                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                      isCurrent
-                        ? "text-white"
-                        : isPassed
-                        ? "text-slate-700 hover:bg-slate-100"
-                        : "text-slate-400 hover:bg-slate-100"
-                    } ${canEdit ? "cursor-pointer" : "cursor-default"}`}
-                    style={isCurrent ? { backgroundColor: stageColor } : isPassed ? { backgroundColor: `${stageColor}20`, border: `1px solid ${stageColor}40` } : {}}
-                  >
-                    {isPassed && (
-                      <CheckCircle2 className="h-3 w-3" style={{ color: stageColor }} />
-                    )}
-                    {stage.name}
-                  </button>
-                  {!isLast && (
-                    <div
-                      className="h-0.5 w-5 rounded-full transition-colors"
-                      style={{ backgroundColor: isPassed ? stageColor : "#e2e8f0" }}
-                    />
-                  )}
-                </div>
-              );
-            })}
-
-            {/* Lost / Junk as small end actions */}
-            {stages.filter((s) => s.kind === "lost" || s.kind === "junk").length > 0 && (
-              <div className="flex items-center gap-1 ml-2 pl-2 border-l border-slate-200">
-                {stages
-                  .filter((s) => s.kind === "lost" || s.kind === "junk")
-                  .map((stage) => (
-                    <button
-                      key={stage.id}
-                      onClick={() => canEdit && handleStageChange(stage.id)}
-                      disabled={pending || !canEdit}
-                      className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium transition-colors ${
-                        optimisticLead.stage_id === stage.id
-                          ? "bg-red-100 text-red-600"
-                          : "text-slate-400 hover:text-red-500 hover:bg-red-50"
-                      } ${canEdit ? "cursor-pointer" : "cursor-default"}`}
-                    >
-                      <XCircle className="h-3 w-3" />
-                      {stage.name}
-                    </button>
-                  ))}
-              </div>
+        <div className="rounded-[1.75rem] border border-slate-200/80 bg-white p-4 shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Workflow Path</p>
+              <p className="text-sm text-slate-500">Tap a stage to move the lead instantly.</p>
+            </div>
+            {currentStage && (
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
+                {currentStage.name}
+              </span>
             )}
           </div>
 
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {workflowStages.map((stage) => {
+              const isCurrent = optimisticLead.stage_id === stage.id;
+              const currentIdx = workflowStages.findIndex((s) => s.id === optimisticLead.stage_id);
+              const stageIdx = workflowStages.findIndex((s) => s.id === stage.id);
+              const isPassed = currentIdx >= 0 && stageIdx < currentIdx;
+              const stageColor = stage.color || "#10b981";
+
+              return (
+                <button
+                  key={stage.id}
+                  onClick={() => canEdit && handleStageChange(stage.id)}
+                  disabled={pending || !canEdit}
+                  className={`group relative min-w-[150px] flex-1 rounded-2xl border px-4 py-3 text-left shadow-sm transition-all ${
+                    isCurrent
+                      ? "translate-y-[-1px] text-white shadow-[0_14px_24px_rgba(16,185,129,0.25)]"
+                      : isPassed
+                      ? "text-slate-700 hover:-translate-y-0.5 hover:shadow-md"
+                      : "text-slate-500 hover:-translate-y-0.5 hover:shadow-md"
+                  } ${canEdit ? "cursor-pointer" : "cursor-default"}`}
+                  style={
+                    isCurrent
+                      ? { background: `linear-gradient(135deg, ${stageColor}, ${stageColor}dd)`, borderColor: stageColor }
+                      : isPassed
+                      ? { background: `${stageColor}14`, borderColor: `${stageColor}33` }
+                      : { background: "linear-gradient(180deg, #f8fafc, #eef2f7)", borderColor: "#e2e8f0" }
+                  }
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="truncate text-sm font-semibold">{stage.name}</span>
+                    {isCurrent ? (
+                      <CheckCircle2 className="h-4 w-4 shrink-0" />
+                    ) : isPassed ? (
+                      <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: stageColor }} />
+                    ) : null}
+                  </div>
+                  <div
+                    className="mt-2 h-1.5 rounded-full"
+                    style={{ backgroundColor: isCurrent ? "rgba(255,255,255,0.35)" : isPassed ? stageColor : "#dbe4ee" }}
+                  />
+                </button>
+              );
+            })}
+          </div>
+
+          {closingStages.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+              {closingStages.map((stage) => {
+                const isCurrent = optimisticLead.stage_id === stage.id;
+                const stageColor = stage.color || "#ef4444";
+                return (
+                  <button
+                    key={stage.id}
+                    onClick={() => canEdit && handleStageChange(stage.id)}
+                    disabled={pending || !canEdit}
+                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
+                      isCurrent ? "text-white shadow-md" : "text-slate-500 hover:-translate-y-0.5 hover:shadow-sm"
+                    } ${canEdit ? "cursor-pointer" : "cursor-default"}`}
+                    style={
+                      isCurrent
+                        ? { backgroundColor: stageColor, borderColor: stageColor }
+                        : { backgroundColor: `${stageColor}10`, borderColor: `${stageColor}25` }
+                    }
+                  >
+                    <XCircle className="h-3.5 w-3.5" />
+                    {stage.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {currentStage?.helper_text && (
-            <p className="mt-2 text-xs text-slate-400">{currentStage.helper_text}</p>
+            <p className="mt-3 text-xs text-slate-400">{currentStage.helper_text}</p>
           )}
         </div>
       )}
@@ -677,8 +727,16 @@ export function LeadDetail({
         {/* Left column: details + edit */}
         <div className="space-y-4 lg:col-span-2">
           {/* Contact info */}
-          <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
-            <h3 className="text-sm font-semibold text-slate-900 mb-3">Contact Information</h3>
+          <div className="rounded-[1.75rem] border border-slate-200/80 bg-white p-5 shadow-[0_16px_38px_rgba(15,23,42,0.08)]">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">Lead Snapshot</h3>
+                <p className="text-xs text-slate-400">Click any card below to switch into edit mode.</p>
+              </div>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
+                Compact profile
+              </span>
+            </div>
             {editMode ? (
               <div className="space-y-4">
                 {/* Standard fields */}
@@ -838,55 +896,18 @@ export function LeadDetail({
                   </div>
                 )}
                 {/* Detail fields — grid showing all fields including empty ones */}
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2 pt-2 text-sm">
-                  <div>
-                    <span className="text-xs text-slate-400">Budget</span>
-                    <p className="font-medium text-slate-700">
-                      {optimisticLead.budget_min || optimisticLead.budget_max
-                        ? `${optimisticLead.budget_min ? formatAED(optimisticLead.budget_min) : "?"} – ${optimisticLead.budget_max ? formatAED(optimisticLead.budget_max) : "?"}`
-                        : "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-xs text-slate-400">Preferred Areas</span>
-                    <p className="font-medium text-slate-700">
-                      {optimisticLead.preferred_areas && optimisticLead.preferred_areas.length > 0
-                        ? optimisticLead.preferred_areas.join(", ")
-                        : "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-xs text-slate-400">Bedrooms</span>
-                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.bedrooms ? formatLabel(optimisticLead.bedrooms) : "—"}</p>
-                  </div>
-                  <div>
-                    <span className="text-xs text-slate-400">Category</span>
-                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.category ? formatLabel(optimisticLead.category) : "—"}</p>
-                  </div>
-                  <div>
-                    <span className="text-xs text-slate-400">Financing</span>
-                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.financing ? formatLabel(optimisticLead.financing) : "—"}</p>
-                  </div>
-                  <div>
-                    <span className="text-xs text-slate-400">Timeframe</span>
-                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.timeframe ? formatLabel(optimisticLead.timeframe) : "—"}</p>
-                  </div>
-                  <div>
-                    <span className="text-xs text-slate-400">Purpose</span>
-                    <p className="font-medium text-slate-700 capitalize">{optimisticLead.purpose ? formatLabel(optimisticLead.purpose) : "—"}</p>
-                  </div>
-                  <div>
-                    <span className="text-xs text-slate-400">Language</span>
-                    <p className="font-medium text-slate-700 uppercase">{optimisticLead.language ?? "—"}</p>
-                  </div>
-                  <div>
-                    <span className="text-xs text-slate-400">Created</span>
-                    <p className="font-medium text-slate-700">{formatDate(optimisticLead.created_at)}</p>
-                  </div>
-                  <div>
-                    <span className="text-xs text-slate-400">Created By</span>
-                    <p className="font-medium text-slate-700">{optimisticLead.created_by_profile?.full_name ?? "—"}</p>
-                  </div>
+                <div className="grid grid-cols-2 gap-3 pt-2 text-sm md:grid-cols-3 xl:grid-cols-4">
+                  {detailCards.map((field) => (
+                    <button
+                      key={field.label}
+                      type="button"
+                      onClick={() => setEditMode(true)}
+                      className="group rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                    >
+                      <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{field.label}</span>
+                      <p className="mt-1 text-sm font-medium text-slate-700 group-hover:text-slate-900">{field.value}</p>
+                    </button>
+                  ))}
                   {fieldDefs.map((def) => {
                     const rawVal = optimisticLead.custom?.[def.key];
                     let displayVal: string;
@@ -907,10 +928,15 @@ export function LeadDetail({
                       displayVal = def.options.find((o) => o.value === rawVal)?.label ?? displayVal;
                     }
                     return (
-                      <div key={def.id}>
-                        <span className="text-xs text-slate-400">{def.label}</span>
-                        <p className="font-medium text-slate-700 capitalize">{displayVal}</p>
-                      </div>
+                      <button
+                        key={def.id}
+                        type="button"
+                        onClick={() => setEditMode(true)}
+                        className="group rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                      >
+                        <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{def.label}</span>
+                        <p className="mt-1 text-sm font-medium text-slate-700 group-hover:text-slate-900">{displayVal}</p>
+                      </button>
                     );
                   })}
                 </div>
@@ -938,17 +964,27 @@ export function LeadDetail({
           </div>
 
           {/* Activity timeline */}
-          <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900 mb-4">
-              <Activity className="h-4 w-4" />
-              Activity Timeline
-            </h3>
+          <div className="rounded-[1.75rem] border border-slate-200/80 bg-white p-5 shadow-[0_16px_38px_rgba(15,23,42,0.08)]">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                  <Activity className="h-4 w-4" />
+                  Activity Timeline
+                </h3>
+                <p className="mt-1 text-xs text-slate-400">
+                  Recent actions, calls, notes, and touchpoints stay in one place.
+                </p>
+              </div>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
+                {optimisticActivities.length} items
+              </span>
+            </div>
 
             {/* Quick add activity */}
             {canEdit && (
-              <div className="mb-4 flex flex-col gap-2 lg:flex-row">
+              <div className="mb-4 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-slate-50/70 p-3 lg:flex-row lg:items-center">
                 <Select value={activityType} onValueChange={(v) => setActivityType(v ?? "note")}>
-                  <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-36 bg-white"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="note">Note</SelectItem>
                     <SelectItem value="call">Call</SelectItem>
@@ -988,16 +1024,19 @@ export function LeadDetail({
             {/* Timeline */}
             <div className="space-y-3">
               {optimisticActivities.length === 0 ? (
-                <p className="text-sm text-slate-400 text-center py-6">No activities yet.</p>
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-6 text-center">
+                  <p className="text-sm font-medium text-slate-500">No activities yet.</p>
+                  <p className="mt-1 text-xs text-slate-400">Log the first call, note, or follow-up to start the trail.</p>
+                </div>
               ) : (
                 optimisticActivities.map((a) => {
                   const Icon = ACTIVITY_ICONS[a.type] ?? Activity;
                   return (
-                    <div key={a.id} className="flex gap-3">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100">
+                    <div key={a.id} className="flex gap-3 rounded-2xl border border-slate-100 bg-gradient-to-r from-white to-slate-50/80 p-3 shadow-[0_8px_18px_rgba(15,23,42,0.04)]">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 ring-1 ring-emerald-100">
                         <Icon className="h-4 w-4 text-slate-500" />
                       </div>
-                      <div className="flex-1 border-b border-slate-50 pb-3">
+                      <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium text-slate-700 capitalize">
                             {a.type.replace(/_/g, " ")}
@@ -1005,10 +1044,10 @@ export function LeadDetail({
                               <span className="text-slate-400 font-normal ml-1">· {a.author.full_name}</span>
                             )}
                           </span>
-                          <span className="text-xs text-slate-300">{timeAgo(a.occurred_at)}</span>
+                          <span className="text-xs font-medium text-slate-400">{timeAgo(a.occurred_at)}</span>
                         </div>
                         {a.summary && (
-                          <p className="text-sm text-slate-600 mt-0.5">{a.summary}</p>
+                          <p className="mt-1 text-sm text-slate-600">{a.summary}</p>
                         )}
                       </div>
                     </div>
