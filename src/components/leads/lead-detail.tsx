@@ -355,6 +355,84 @@ export function LeadDetail({
     });
   }
 
+  function renderInlineEditor() {
+    if (!inlineEdit) return null;
+
+    return (
+      <div className="space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Editing field</p>
+            <p className="truncate text-sm font-medium text-slate-900">{inlineEdit.label}</p>
+          </div>
+          <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={cancelInlineEdit}>
+            Close
+          </Button>
+        </div>
+
+        {inlineEdit.kind === "areas" ? (
+          <PreferredAreasPicker
+            value={inlineEdit.value}
+            onChange={(value) => setInlineEditValue(value)}
+            label={inlineEdit.label}
+            description="Search and select the Dubai communities this lead prefers."
+            className="w-full"
+          />
+        ) : inlineEdit.kind === "textarea" ? (
+          <Textarea rows={4} value={inlineEdit.value} onChange={(e) => setInlineEditValue(e.target.value)} className="min-h-24 text-sm" />
+        ) : inlineEdit.kind === "select" && inlineEdit.options ? (
+          <Select value={inlineEdit.value || undefined} onValueChange={(v) => setInlineEditValue(v ?? "") }>
+            <SelectTrigger className="h-9 text-sm">
+              <SelectValue placeholder={`Select ${inlineEdit.label}`} />
+            </SelectTrigger>
+            <SelectContent>
+              {inlineEdit.options.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : inlineEdit.kind === "checkbox" ? (
+          <Select value={inlineEdit.value || "false"} onValueChange={(v) => setInlineEditValue(v ?? "false")}>
+            <SelectTrigger className="h-9 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="true">Yes</SelectItem>
+              <SelectItem value="false">No</SelectItem>
+            </SelectContent>
+          </Select>
+        ) : inlineEdit.kind === "tags" ? (
+          <Input
+            value={inlineEdit.value.join(", ")}
+            onChange={(e) => setInlineEditValue(e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
+            placeholder="Comma separated values"
+            className="h-9 text-sm"
+          />
+        ) : (
+          <Input
+            type={inlineEdit.kind === "number" || inlineEdit.kind === "money" ? "number" : "text"}
+            value={inlineEdit.value}
+            onChange={(e) => setInlineEditValue(e.target.value)}
+            placeholder={inlineEdit.kind === "money" ? "Amount in AED" : inlineEdit.label}
+            className="h-9 text-sm"
+          />
+        )}
+
+        <div className="flex justify-end gap-2">
+          <Button size="sm" variant="outline" className="h-8 px-3 text-xs" onClick={cancelInlineEdit}>
+            Cancel
+          </Button>
+          <Button size="sm" className="h-8 px-3 text-xs" onClick={handleInlineSave} disabled={pending}>
+            {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // ─── Optimistic action handlers ──────────────────────────
   // Each handler updates local state IMMEDIATELY for instant feedback,
   // then fires the server action. router.refresh() is non-blocking.
@@ -689,27 +767,28 @@ export function LeadDetail({
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-semibold text-slate-900">Lead Snapshot</h3>
-                <p className="text-xs text-slate-400">Tap the pen beside any field to edit it inline.</p>
+                <p className="text-xs text-slate-400">Compact grid view. Tap the pen to edit a field inline.</p>
               </div>
             </div>
-            <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-slate-50/60 text-sm">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {[
-                { label: "Name", kind: "text" as const, value: optimisticLead.name, key: "name" },
-                { label: "Phone", kind: "text" as const, value: optimisticLead.phone ?? "", key: "phone" },
-                { label: "Email", kind: "text" as const, value: optimisticLead.email ?? "", key: "email" },
-                { label: "Interest", kind: "text" as const, value: optimisticLead.interest, key: "interest" },
-                { label: "Budget Min (AED)", kind: "money" as const, value: optimisticLead.budget_min ? String(optimisticLead.budget_min / 100) : "", key: "budget_min" },
-                { label: "Budget Max (AED)", kind: "money" as const, value: optimisticLead.budget_max ? String(optimisticLead.budget_max / 100) : "", key: "budget_max" },
-                { label: "Preferred Areas", kind: "areas" as const, value: optimisticLead.preferred_areas?.length ? optimisticLead.preferred_areas.join(", ") : "", key: "preferred_areas" },
-                { label: "Language", kind: "text" as const, value: optimisticLead.language ?? "", key: "language" },
-                { label: "Financing", kind: "text" as const, value: optimisticLead.financing ?? "", key: "financing" },
-                { label: "Timeframe", kind: "text" as const, value: optimisticLead.timeframe ?? "", key: "timeframe" },
-                { label: "Purpose", kind: "text" as const, value: optimisticLead.purpose ?? "", key: "purpose" },
-                { label: "Bedrooms", kind: "text" as const, value: optimisticLead.bedrooms ?? "", key: "bedrooms" },
-                { label: "Category", kind: "text" as const, value: optimisticLead.category ?? "", key: "category" },
-                { label: "Tags", kind: "tags" as const, value: optimisticLead.tags ?? [], key: "tags" },
-                { label: "Notes", kind: "textarea" as const, value: optimisticLead.notes ?? "", key: "notes" },
-              ].map((field, index) => {
+                { label: "Name", kind: "text" as const, value: optimisticLead.name, key: "name", span: "" },
+                { label: "Phone", kind: "text" as const, value: optimisticLead.phone ?? "", key: "phone", span: "" },
+                { label: "Email", kind: "text" as const, value: optimisticLead.email ?? "", key: "email", span: "" },
+                { label: "Interest", kind: "text" as const, value: optimisticLead.interest, key: "interest", span: "" },
+                { label: "Budget Min (AED)", kind: "money" as const, value: optimisticLead.budget_min ? String(optimisticLead.budget_min / 100) : "", key: "budget_min", span: "" },
+                { label: "Budget Max (AED)", kind: "money" as const, value: optimisticLead.budget_max ? String(optimisticLead.budget_max / 100) : "", key: "budget_max", span: "" },
+                { label: "Preferred Areas", kind: "areas" as const, value: optimisticLead.preferred_areas?.length ? optimisticLead.preferred_areas.join(", ") : "", key: "preferred_areas", span: "" },
+                { label: "Language", kind: "text" as const, value: optimisticLead.language ?? "", key: "language", span: "" },
+                { label: "Financing", kind: "text" as const, value: optimisticLead.financing ?? "", key: "financing", span: "" },
+                { label: "Timeframe", kind: "text" as const, value: optimisticLead.timeframe ?? "", key: "timeframe", span: "" },
+                { label: "Purpose", kind: "text" as const, value: optimisticLead.purpose ?? "", key: "purpose", span: "" },
+                { label: "Bedrooms", kind: "text" as const, value: optimisticLead.bedrooms ?? "", key: "bedrooms", span: "" },
+                { label: "Category", kind: "text" as const, value: optimisticLead.category ?? "", key: "category", span: "" },
+                { label: "Tags", kind: "tags" as const, value: optimisticLead.tags ?? [], key: "tags", span: "" },
+                { label: "Notes", kind: "textarea" as const, value: optimisticLead.notes ?? "", key: "notes", span: "sm:col-span-2 xl:col-span-3" },
+              ].map((field) => {
+                const isEditing = inlineEdit?.key === field.key;
                 const valueText =
                   field.kind === "areas"
                     ? field.value || "—"
@@ -718,106 +797,46 @@ export function LeadDetail({
                       ? field.value.map((tag) => formatLeadTag(tag)).join(", ")
                       : "—"
                     : field.value || "—";
+                const editState =
+                  field.kind === "areas"
+                    ? { key: field.key, label: field.label, kind: field.kind, value: optimisticLead.preferred_areas ?? [] }
+                    : field.kind === "tags"
+                    ? { key: field.key, label: field.label, kind: field.kind, value: optimisticLead.tags ?? [] }
+                    : { key: field.key, label: field.label, kind: field.kind, value: field.value };
 
-                return (
+                return isEditing ? (
+                  <div
+                    key={field.key}
+                    className={`rounded-2xl border border-emerald-200 bg-emerald-50/40 p-3 shadow-[0_10px_24px_rgba(15,23,42,0.05)] ${field.span}`}
+                  >
+                    {renderInlineEditor()}
+                  </div>
+                ) : (
                   <button
                     key={field.key}
                     type="button"
-                    onClick={() =>
-                      startInlineEdit(
-                        field.kind === "areas"
-                          ? { key: field.key, label: field.label, kind: field.kind, value: optimisticLead.preferred_areas ?? [] }
-                          : field.kind === "tags"
-                          ? { key: field.key, label: field.label, kind: field.kind, value: optimisticLead.tags ?? [] }
-                          : { key: field.key, label: field.label, kind: field.kind, value: field.value }
-                      )
-                    }
-                    className={`group flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-emerald-200 ${
-                      index !== 0 ? "border-t border-slate-100" : ""
-                    } ${inlineEdit?.key === field.key ? "bg-emerald-50/50" : ""}`}
+                    onClick={() => startInlineEdit(editState as InlineEditState)}
+                    className={`group flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/90 px-3 py-2.5 text-left shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200 ${field.span}`}
                   >
                     <div className="min-w-0 flex-1">
-                      <span className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">{field.label}</span>
-                      <span className="mt-0.5 block truncate text-sm font-medium text-slate-800">{valueText}</span>
+                      <span className="block text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400">{field.label}</span>
+                      <span className="mt-0.5 block truncate text-[12px] font-medium text-slate-700 group-hover:text-slate-900">{valueText}</span>
                     </div>
                     <span
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition ${
-                        inlineEdit?.key === field.key
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition ${
+                        isEditing
                           ? "border-emerald-200 bg-emerald-50 text-emerald-600"
                           : "border-slate-200 bg-white text-slate-400 group-hover:border-slate-300 group-hover:text-slate-600"
                       }`}
                       aria-hidden="true"
                     >
-                      <PenLine className="h-3.5 w-3.5" />
+                      <PenLine className="h-3 w-3" />
                     </span>
                   </button>
                 );
               })}
-
-              {inlineEdit && (
-                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm">
-                  <div className="mb-3 flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Editing field</p>
-                      <p className="text-sm font-medium text-slate-900">{inlineEdit.label}</p>
-                    </div>
-                    <Button size="sm" variant="ghost" onClick={cancelInlineEdit}>
-                      Close
-                    </Button>
-                  </div>
-                  {inlineEdit.kind === "areas" ? (
-                    <PreferredAreasPicker
-                      value={inlineEdit.value}
-                      onChange={(value) => setInlineEditValue(value)}
-                      label={inlineEdit.label}
-                      description="Search and select the Dubai communities this lead prefers."
-                      className="w-full"
-                    />
-                  ) : inlineEdit.kind === "textarea" ? (
-                    <Textarea rows={4} value={inlineEdit.value} onChange={(e) => setInlineEditValue(e.target.value)} />
-                  ) : inlineEdit.kind === "select" && inlineEdit.options ? (
-                    <Select value={inlineEdit.value || undefined} onValueChange={(v) => setInlineEditValue(v ?? "")}>
-                      <SelectTrigger><SelectValue placeholder={`Select ${inlineEdit.label}`} /></SelectTrigger>
-                      <SelectContent>
-                        {inlineEdit.options.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : inlineEdit.kind === "checkbox" ? (
-                    <Select value={inlineEdit.value || "false"} onValueChange={(v) => setInlineEditValue(v ?? "false")}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="true">Yes</SelectItem>
-                        <SelectItem value="false">No</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : inlineEdit.kind === "tags" ? (
-                    <Input
-                      value={inlineEdit.value.join(", ")}
-                      onChange={(e) => setInlineEditValue(e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
-                      placeholder="Comma separated values"
-                    />
-                  ) : (
-                    <Input
-                      type={inlineEdit.kind === "number" || inlineEdit.kind === "money" ? "number" : "text"}
-                      value={inlineEdit.value}
-                      onChange={(e) => setInlineEditValue(e.target.value)}
-                      placeholder={inlineEdit.kind === "money" ? "Amount in AED" : inlineEdit.label}
-                    />
-                  )}
-                  <div className="mt-3 flex justify-end gap-2">
-                    <Button size="sm" variant="outline" onClick={cancelInlineEdit}>
-                      Cancel
-                    </Button>
-                    <Button size="sm" onClick={handleInlineSave} disabled={pending}>
-                      {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Save
-                    </Button>
-                  </div>
-                </div>
-              )}
             </div>
+
           </div>
 
           {/* Activity timeline */}
