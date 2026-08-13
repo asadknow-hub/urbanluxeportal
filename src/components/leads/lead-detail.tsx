@@ -138,6 +138,23 @@ type FieldDef = {
   is_active: boolean;
 };
 
+type InlineEditState =
+  | {
+      key: string;
+      label: string;
+      kind: "text" | "number" | "money" | "textarea" | "select" | "checkbox";
+      value: string;
+      options?: Array<{ value: string; label: string }> | null;
+      custom?: boolean;
+    }
+  | {
+      key: string;
+      label: string;
+      kind: "areas" | "tags";
+      value: string[];
+      custom?: boolean;
+    };
+
 // Format any DB string into a readable label (e.g. "property_finder" → "Property Finder")
 // No hardcoded labels — everything is derived dynamically from the data.
 function formatLabel(s: string): string {
@@ -198,37 +215,7 @@ export function LeadDetail({
   const [activityType, setActivityType] = useState("note");
   const [followUpDate, setFollowUpDate] = useState("");
   const [followUpNotes, setFollowUpNotes] = useState("");
-  const [editMode, setEditMode] = useState(false);
-  const [editForm, setEditForm] = useState<Record<string, string>>({
-    name: lead.name,
-    phone: lead.phone ?? "",
-    email: lead.email ?? "",
-    interest: lead.interest,
-    budget_min: lead.budget_min ? String(lead.budget_min / 100) : "",
-    budget_max: lead.budget_max ? String(lead.budget_max / 100) : "",
-    notes: lead.notes ?? "",
-    language: lead.language ?? "",
-    financing: lead.financing ?? "",
-    timeframe: lead.timeframe ?? "",
-    purpose: lead.purpose ?? "",
-    bedrooms: lead.bedrooms ?? "",
-    category: lead.category ?? "",
-    tags: lead.tags?.join(", ") ?? "",
-  });
-  const [preferredAreas, setPreferredAreas] = useState<string[]>(lead.preferred_areas ?? []);
-  // Custom field values in the edit form (keyed by field def key)
-  const [editCustom, setEditCustom] = useState<Record<string, string>>(() => {
-    const initial: Record<string, string> = {};
-    for (const def of fieldDefs) {
-      const val = lead.custom?.[def.key];
-      if (val !== undefined && val !== null) {
-        initial[def.key] = Array.isArray(val) ? val.join(", ") : String(val);
-      } else {
-        initial[def.key] = "";
-      }
-    }
-    return initial;
-  });
+  const [inlineEdit, setInlineEdit] = useState<InlineEditState | null>(null);
   const [converting, setConverting] = useState(false);
   const [reasonDialog, setReasonDialog] = useState<{ stageId: string; stageName: string; kind: string } | null>(null);
   const [selectedReason, setSelectedReason] = useState("");
@@ -245,32 +232,105 @@ export function LeadDetail({
   const signalItems = [
     { label: "Stage", value: currentStage?.name ?? "Unassigned" },
     { label: "Next follow-up", value: optimisticLead.next_follow_up_at ? formatDate(optimisticLead.next_follow_up_at) : "None" },
-    { label: "Last activity", value: timeAgo(lastTouchAt) },
     { label: "Assigned to", value: optimisticLead.assigned_to_profile?.full_name ?? "Unassigned" },
   ];
   const workflowStages = stages.filter((s) => s.kind === "open" || s.kind === "active" || s.kind === "won");
   const closingStages = stages.filter((s) => s.kind === "lost" || s.kind === "junk");
-  const detailCards = [
-    {
-      label: "Budget",
-      value:
-        optimisticLead.budget_min || optimisticLead.budget_max
-          ? `${optimisticLead.budget_min ? formatAED(optimisticLead.budget_min) : "?"} – ${optimisticLead.budget_max ? formatAED(optimisticLead.budget_max) : "?"}`
-          : "—",
-    },
-    {
-      label: "Preferred Areas",
-      value: optimisticLead.preferred_areas && optimisticLead.preferred_areas.length > 0 ? optimisticLead.preferred_areas.join(", ") : "—",
-    },
-    { label: "Bedrooms", value: optimisticLead.bedrooms ? formatLabel(optimisticLead.bedrooms) : "—" },
-    { label: "Category", value: optimisticLead.category ? formatLabel(optimisticLead.category) : "—" },
-    { label: "Financing", value: optimisticLead.financing ? formatLabel(optimisticLead.financing) : "—" },
-    { label: "Timeframe", value: optimisticLead.timeframe ? formatLabel(optimisticLead.timeframe) : "—" },
-    { label: "Purpose", value: optimisticLead.purpose ? formatLabel(optimisticLead.purpose) : "—" },
-    { label: "Language", value: optimisticLead.language ? optimisticLead.language.toUpperCase() : "—" },
-    { label: "Created", value: formatDate(optimisticLead.created_at) },
-    { label: "Updated", value: timeAgo(optimisticLead.updated_at) },
-  ];
+
+  function startInlineEdit(next: InlineEditState) {
+    setInlineEdit(next);
+  }
+
+  function cancelInlineEdit() {
+    setInlineEdit(null);
+  }
+
+  function setInlineEditValue(nextValue: string | string[]) {
+    setInlineEdit((prev) => (prev ? ({ ...prev, value: nextValue } as InlineEditState) : prev));
+  }
+
+  function handleInlineSave() {
+    if (!inlineEdit) return;
+
+    const updatePayload: Record<string, unknown> = {};
+    const nextCustom = { ...(optimisticLead.custom ?? {}) };
+    const nextLeadState: Partial<Lead> = { updated_at: new Date().toISOString() };
+
+    if (inlineEdit.kind === "areas") {
+      const areas = inlineEdit.value.map((item) => item.trim()).filter(Boolean);
+      updatePayload.preferred_areas = areas;
+      nextLeadState.preferred_areas = areas;
+    } else if (inlineEdit.kind === "tags") {
+      const tags = inlineEdit.value.map((item) => item.trim()).filter(Boolean);
+      if (inlineEdit.custom) {
+        if (tags.length > 0) nextCustom[inlineEdit.key] = tags;
+        else delete nextCustom[inlineEdit.key];
+        updatePayload.custom = nextCustom;
+      } else {
+        updatePayload.tags = tags;
+        nextLeadState.tags = tags;
+      }
+    } else if (inlineEdit.kind === "money") {
+      const money = inlineEdit.value.trim() ? Math.round(Number(inlineEdit.value) * 100) : null;
+      if (inlineEdit.custom) {
+        if (money === null) delete nextCustom[inlineEdit.key];
+        else nextCustom[inlineEdit.key] = money;
+        updatePayload.custom = nextCustom;
+      } else {
+        updatePayload[inlineEdit.key] = money;
+        (nextLeadState as Record<string, unknown>)[inlineEdit.key] = money;
+      }
+    } else if (inlineEdit.kind === "number") {
+      const numeric = inlineEdit.value.trim() ? Number(inlineEdit.value) : null;
+      if (inlineEdit.custom) {
+        if (numeric === null) delete nextCustom[inlineEdit.key];
+        else nextCustom[inlineEdit.key] = numeric;
+        updatePayload.custom = nextCustom;
+      } else {
+        updatePayload[inlineEdit.key] = numeric;
+        (nextLeadState as Record<string, unknown>)[inlineEdit.key] = numeric;
+      }
+    } else if (inlineEdit.kind === "checkbox") {
+      const checked = inlineEdit.value === "true";
+      if (inlineEdit.custom) {
+        nextCustom[inlineEdit.key] = checked;
+        updatePayload.custom = nextCustom;
+      } else {
+        updatePayload[inlineEdit.key] = checked;
+        (nextLeadState as Record<string, unknown>)[inlineEdit.key] = checked;
+      }
+    } else {
+      const nextValue = typeof inlineEdit.value === "string" ? inlineEdit.value.trim() : "";
+      if (inlineEdit.custom) {
+        if (nextValue) nextCustom[inlineEdit.key] = nextValue;
+        else delete nextCustom[inlineEdit.key];
+        updatePayload.custom = nextCustom;
+      } else {
+        updatePayload[inlineEdit.key] = nextValue || null;
+        (nextLeadState as Record<string, unknown>)[inlineEdit.key] = nextValue || null;
+      }
+    }
+
+    setOptimisticLead((prev) => ({
+      ...prev,
+      ...nextLeadState,
+      ...(updatePayload.tags ? { tags: updatePayload.tags as string[] } : {}),
+      ...(updatePayload.preferred_areas ? { preferred_areas: updatePayload.preferred_areas as string[] } : {}),
+      ...(updatePayload.custom ? { custom: nextCustom } : {}),
+    }));
+
+    startTransition(async () => {
+      const result = await updateLead(optimisticLead.id, updatePayload as any);
+      if (result.ok) {
+        toast.success(`${inlineEdit.label} updated`);
+        setInlineEdit(null);
+        router.refresh();
+      } else {
+        setOptimisticLead(lead);
+        toast.error(result.error ?? "Failed");
+      }
+    });
+  }
 
   // ─── Optimistic action handlers ──────────────────────────
   // Each handler updates local state IMMEDIATELY for instant feedback,
@@ -453,74 +513,6 @@ export function LeadDetail({
     });
   }
 
-  function handleSaveEdit() {
-    // Build custom object from editCustom state
-    const customData: Record<string, unknown> = {};
-    for (const def of fieldDefs) {
-      const raw = editCustom[def.key];
-      if (raw === undefined || raw === "") continue;
-      if (def.type === "multiselect") {
-        customData[def.key] = raw.split(",").map((s) => s.trim()).filter(Boolean);
-      } else if (def.type === "number" || def.type === "money") {
-        customData[def.key] = def.type === "money" ? Number(raw) * 100 : Number(raw);
-      } else if (def.type === "checkbox") {
-        customData[def.key] = raw === "true" || raw === "1";
-      } else {
-        customData[def.key] = raw;
-      }
-    }
-
-    const updatePayload: Record<string, unknown> = {
-      name: editForm.name,
-      phone: editForm.phone || null,
-      email: editForm.email || undefined,
-      interest: editForm.interest,
-      budget_min: editForm.budget_min ? Number(editForm.budget_min) * 100 : null,
-      budget_max: editForm.budget_max ? Number(editForm.budget_max) * 100 : null,
-      notes: editForm.notes || null,
-      preferred_areas: preferredAreas,
-      language: editForm.language || null,
-      financing: editForm.financing || null,
-      timeframe: editForm.timeframe || null,
-      purpose: editForm.purpose || null,
-      bedrooms: editForm.bedrooms || null,
-      category: editForm.category || null,
-      tags: editForm.tags ? editForm.tags.split(",").map((s) => s.trim()).filter(Boolean) : [],
-      custom: customData,
-    };
-
-    startTransition(async () => {
-      const result = await updateLead(optimisticLead.id, updatePayload as any);
-      if (result.ok) {
-        // Instant UI update
-        setOptimisticLead((prev) => ({
-          ...prev,
-          name: editForm.name,
-          phone: editForm.phone || null,
-          email: editForm.email || null,
-          interest: editForm.interest,
-          budget_min: editForm.budget_min ? Number(editForm.budget_min) * 100 : null,
-          budget_max: editForm.budget_max ? Number(editForm.budget_max) * 100 : null,
-          notes: editForm.notes || null,
-          preferred_areas: preferredAreas,
-          language: editForm.language || null,
-          financing: editForm.financing || null,
-          timeframe: editForm.timeframe || null,
-          purpose: editForm.purpose || null,
-          bedrooms: editForm.bedrooms || null,
-          category: editForm.category || null,
-          tags: editForm.tags ? editForm.tags.split(",").map((s) => s.trim()).filter(Boolean) : [],
-          custom: customData,
-        }));
-        toast.success("Lead updated");
-        setEditMode(false);
-        router.refresh();
-      } else {
-        toast.error(result.error ?? "Failed");
-      }
-    });
-  }
-
   function confirmConvert() {
     startTransition(async () => {
       const result = await convertLead(optimisticLead.id, {});
@@ -623,7 +615,7 @@ export function LeadDetail({
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {signalItems.map((item) => (
-          <div key={item.label} className="rounded-[1.4rem] border border-slate-200/80 bg-gradient-to-br from-white to-slate-50 p-4 shadow-[0_12px_24px_rgba(15,23,42,0.06)]">
+          <div key={item.label} className="rounded-[1.4rem] border border-slate-200/80 bg-white p-4 shadow-[0_10px_22px_rgba(15,23,42,0.05)]">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{item.label}</p>
             <p className="mt-1 text-sm font-medium text-slate-900">{item.value}</p>
           </div>
@@ -727,240 +719,194 @@ export function LeadDetail({
         {/* Left column: details + edit */}
         <div className="space-y-4 lg:col-span-2">
           {/* Contact info */}
-          <div className="rounded-[1.75rem] border border-slate-200/80 bg-white p-5 shadow-[0_16px_38px_rgba(15,23,42,0.08)]">
+          <div className="rounded-[1.75rem] border border-slate-200/80 bg-white p-4 shadow-[0_16px_38px_rgba(15,23,42,0.08)]">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-semibold text-slate-900">Lead Snapshot</h3>
-                <p className="text-xs text-slate-400">Click any card below to switch into edit mode.</p>
+                <p className="text-xs text-slate-400">Tap one card to edit only that field.</p>
               </div>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
-                Compact profile
-              </span>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">Minimal</span>
             </div>
-            {editMode ? (
-              <div className="space-y-4">
-                {/* Standard fields */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Name</Label>
-                    <Input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+            <div className="space-y-4 text-sm">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+                {[
+                  { label: "Name", kind: "text" as const, value: optimisticLead.name, key: "name" },
+                  { label: "Phone", kind: "text" as const, value: optimisticLead.phone ?? "", key: "phone" },
+                  { label: "Email", kind: "text" as const, value: optimisticLead.email ?? "", key: "email" },
+                  { label: "Interest", kind: "text" as const, value: optimisticLead.interest, key: "interest" },
+                  { label: "Budget Min (AED)", kind: "money" as const, value: optimisticLead.budget_min ? String(optimisticLead.budget_min / 100) : "", key: "budget_min" },
+                  { label: "Budget Max (AED)", kind: "money" as const, value: optimisticLead.budget_max ? String(optimisticLead.budget_max / 100) : "", key: "budget_max" },
+                  { label: "Preferred Areas", kind: "areas" as const, value: optimisticLead.preferred_areas?.length ? optimisticLead.preferred_areas.join(", ") : "", key: "preferred_areas" },
+                  { label: "Language", kind: "text" as const, value: optimisticLead.language ?? "", key: "language" },
+                  { label: "Financing", kind: "text" as const, value: optimisticLead.financing ?? "", key: "financing" },
+                  { label: "Timeframe", kind: "text" as const, value: optimisticLead.timeframe ?? "", key: "timeframe" },
+                  { label: "Purpose", kind: "text" as const, value: optimisticLead.purpose ?? "", key: "purpose" },
+                  { label: "Bedrooms", kind: "text" as const, value: optimisticLead.bedrooms ?? "", key: "bedrooms" },
+                  { label: "Category", kind: "text" as const, value: optimisticLead.category ?? "", key: "category" },
+                  { label: "Tags", kind: "tags" as const, value: optimisticLead.tags ?? [], key: "tags" },
+                ].map((field) => (
+                  <button
+                    key={field.key}
+                    type="button"
+                    onClick={() =>
+                      startInlineEdit(
+                        field.kind === "areas"
+                          ? { key: field.key, label: field.label, kind: field.kind, value: optimisticLead.preferred_areas ?? [] }
+                          : field.kind === "tags"
+                          ? { key: field.key, label: field.label, kind: field.kind, value: optimisticLead.tags ?? [] }
+                          : { key: field.key, label: field.label, kind: field.kind, value: field.value }
+                      )
+                    }
+                    className={`group rounded-2xl border bg-white p-3 text-left shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200 ${
+                      inlineEdit?.key === field.key ? "border-emerald-300 ring-1 ring-emerald-100" : "border-slate-200"
+                    }`}
+                  >
+                    <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{field.label}</span>
+                    <p className="mt-1 text-sm font-medium text-slate-700 group-hover:text-slate-900">
+                      {field.kind === "areas"
+                        ? field.value || "—"
+                        : field.kind === "tags"
+                        ? field.value.length > 0
+                          ? field.value.map((tag) => formatLeadTag(tag)).join(", ")
+                          : "—"
+                        : field.value || "—"}
+                    </p>
+                  </button>
+                ))}
+
+                {fieldDefs.map((def) => {
+                  const rawVal = optimisticLead.custom?.[def.key];
+                  let displayVal: string;
+                  if (rawVal === undefined || rawVal === null || rawVal === "") {
+                    displayVal = "—";
+                  } else if (Array.isArray(rawVal)) {
+                    displayVal = rawVal.join(", ");
+                  } else if (def.type === "money") {
+                    displayVal = formatAED(Number(rawVal));
+                  } else if (def.type === "checkbox") {
+                    displayVal = rawVal ? "Yes" : "No";
+                  } else if (def.type === "date") {
+                    displayVal = formatDate(String(rawVal));
+                  } else {
+                    displayVal = String(rawVal);
+                  }
+                  if (def.type === "select" && def.options && rawVal) {
+                    displayVal = def.options.find((o) => o.value === rawVal)?.label ?? displayVal;
+                  }
+                  const kind = def.type === "textarea"
+                    ? "textarea"
+                    : def.type === "select"
+                    ? "select"
+                    : def.type === "multiselect"
+                    ? "tags"
+                    : def.type === "checkbox"
+                    ? "checkbox"
+                    : def.type === "date"
+                    ? "text"
+                    : def.type === "number"
+                    ? "number"
+                    : def.type === "money"
+                    ? "money"
+                    : "text";
+                  return (
+                    <button
+                      key={def.id}
+                      type="button"
+                      onClick={() =>
+                        startInlineEdit(
+                          kind === "tags"
+                            ? { key: def.key, label: def.label, kind, value: Array.isArray(rawVal) ? rawVal.map(String) : String(rawVal ?? "").split(",").map((s) => s.trim()).filter(Boolean), custom: true }
+                            : { key: def.key, label: def.label, kind, value: displayVal === "—" ? "" : String(displayVal), options: def.options, custom: true }
+                        )
+                      }
+                      className={`group rounded-2xl border bg-white p-3 text-left shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200 ${
+                        inlineEdit?.key === def.key ? "border-emerald-300 ring-1 ring-emerald-100" : "border-slate-200"
+                      }`}
+                    >
+                      <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{def.label}</span>
+                      <p className="mt-1 text-sm font-medium text-slate-700 group-hover:text-slate-900">{displayVal}</p>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {optimisticLead.notes && (
+                <button
+                  type="button"
+                  onClick={() => startInlineEdit({ key: "notes", label: "Notes", kind: "textarea", value: optimisticLead.notes ?? "" })}
+                  className={`w-full rounded-2xl border bg-white p-3 text-left shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200 ${
+                    inlineEdit?.key === "notes" ? "border-emerald-300 ring-1 ring-emerald-100" : "border-slate-200"
+                  }`}
+                >
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Notes</span>
+                  <p className="mt-1 max-h-14 overflow-hidden text-sm leading-6 text-slate-600">{optimisticLead.notes}</p>
+                </button>
+              )}
+
+              {inlineEdit && (
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Editing field</p>
+                      <p className="text-sm font-medium text-slate-900">{inlineEdit.label}</p>
+                    </div>
+                    <Button size="sm" variant="ghost" onClick={cancelInlineEdit}>
+                      Close
+                    </Button>
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Phone</Label>
-                    <Input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Email</Label>
-                    <Input value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Interest</Label>
-                    <Input value={editForm.interest} onChange={(e) => setEditForm({ ...editForm, interest: e.target.value })} placeholder="e.g. Buy, Rent, Off Plan..." />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Budget Min (AED)</Label>
-                    <Input type="number" value={editForm.budget_min} onChange={(e) => setEditForm({ ...editForm, budget_min: e.target.value })} />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Budget Max (AED)</Label>
-                    <Input type="number" value={editForm.budget_max} onChange={(e) => setEditForm({ ...editForm, budget_max: e.target.value })} />
-                  </div>
-                  <div className="space-y-1 col-span-2">
+                  {inlineEdit.kind === "areas" ? (
                     <PreferredAreasPicker
-                      value={preferredAreas}
-                      onChange={setPreferredAreas}
-                      label="Preferred Areas"
+                      value={inlineEdit.value}
+                      onChange={(value) => setInlineEditValue(value)}
+                      label={inlineEdit.label}
                       description="Search and select the Dubai communities this lead prefers."
                       className="w-full"
                     />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Language</Label>
-                    <Input value={editForm.language} onChange={(e) => setEditForm({ ...editForm, language: e.target.value })} placeholder="e.g. en, ar, fr" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Financing</Label>
-                    <Input value={editForm.financing} onChange={(e) => setEditForm({ ...editForm, financing: e.target.value })} placeholder="e.g. Cash, Mortgage" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Timeframe</Label>
-                    <Input value={editForm.timeframe} onChange={(e) => setEditForm({ ...editForm, timeframe: e.target.value })} placeholder="e.g. 1-3 months" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Purpose</Label>
-                    <Input value={editForm.purpose} onChange={(e) => setEditForm({ ...editForm, purpose: e.target.value })} placeholder="e.g. Investment, End Use" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Bedrooms</Label>
-                    <Input value={editForm.bedrooms} onChange={(e) => setEditForm({ ...editForm, bedrooms: e.target.value })} placeholder="e.g. Studio, 1BR, 2BR" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Category</Label>
-                    <Input value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} placeholder="e.g. Apartment, Villa" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Tags (comma-separated)</Label>
-                    <Input value={editForm.tags} onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })} placeholder="e.g. hot, vip, investor" />
+                  ) : inlineEdit.kind === "textarea" ? (
+                    <Textarea rows={4} value={inlineEdit.value} onChange={(e) => setInlineEditValue(e.target.value)} />
+                  ) : inlineEdit.kind === "select" && inlineEdit.options ? (
+                    <Select value={inlineEdit.value || undefined} onValueChange={(v) => setInlineEditValue(v ?? "")}>
+                      <SelectTrigger><SelectValue placeholder={`Select ${inlineEdit.label}`} /></SelectTrigger>
+                      <SelectContent>
+                        {inlineEdit.options.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : inlineEdit.kind === "checkbox" ? (
+                    <Select value={inlineEdit.value || "false"} onValueChange={(v) => setInlineEditValue(v ?? "false")}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="true">Yes</SelectItem>
+                        <SelectItem value="false">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : inlineEdit.kind === "tags" ? (
+                    <Input
+                      value={inlineEdit.value.join(", ")}
+                      onChange={(e) => setInlineEditValue(e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
+                      placeholder="Comma separated values"
+                    />
+                  ) : (
+                    <Input
+                      type={inlineEdit.kind === "number" || inlineEdit.kind === "money" ? "number" : "text"}
+                      value={inlineEdit.value}
+                      onChange={(e) => setInlineEditValue(e.target.value)}
+                      placeholder={inlineEdit.kind === "money" ? "Amount in AED" : inlineEdit.label}
+                    />
+                  )}
+                  <div className="mt-3 flex justify-end gap-2">
+                    <Button size="sm" variant="outline" onClick={cancelInlineEdit}>
+                      Cancel
+                    </Button>
+                    <Button size="sm" onClick={handleInlineSave} disabled={pending}>
+                      {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Save
+                    </Button>
                   </div>
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Notes</Label>
-                  <Textarea rows={3} value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} />
-                </div>
-
-                {/* Custom fields — dynamically rendered from fieldDefs */}
-                {fieldDefs.length > 0 && (
-                  <div className="space-y-3 pt-2 border-t border-slate-100">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Custom Fields</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      {fieldDefs.map((def) => {
-                        const val = editCustom[def.key] ?? "";
-                        return (
-                          <div key={def.id} className="space-y-1">
-                            <Label className="text-xs">
-                              {def.label}
-                              {def.required && <span className="text-red-500 ml-1">*</span>}
-                            </Label>
-                            {def.type === "textarea" ? (
-                              <Textarea
-                                rows={2}
-                                value={val}
-                                onChange={(e) => setEditCustom({ ...editCustom, [def.key]: e.target.value })}
-                              />
-                            ) : def.type === "select" && def.options ? (
-                              <Select value={val} onValueChange={(v) => setEditCustom({ ...editCustom, [def.key]: v ?? "" })}>
-                                <SelectTrigger><SelectValue placeholder={`Select ${def.label}`} /></SelectTrigger>
-                                <SelectContent>
-                                  {def.options.map((opt) => (
-                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            ) : def.type === "multiselect" && def.options ? (
-                              <Select value={val ? val.split(", ")[0] : undefined} onValueChange={(v) => setEditCustom({ ...editCustom, [def.key]: v ?? "" })}>
-                                <SelectTrigger><SelectValue placeholder={`Select ${def.label}`} /></SelectTrigger>
-                                <SelectContent>
-                                  {def.options.map((opt) => (
-                                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            ) : def.type === "checkbox" ? (
-                              <Select value={val || "false"} onValueChange={(v) => setEditCustom({ ...editCustom, [def.key]: v ?? "false" })}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="true">Yes</SelectItem>
-                                  <SelectItem value="false">No</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            ) : (
-                              <Input
-                                type={def.type === "number" || def.type === "money" ? "number" : def.type === "date" ? "date" : def.type === "phone" ? "tel" : def.type === "url" ? "url" : "text"}
-                                value={val}
-                                onChange={(e) => setEditCustom({ ...editCustom, [def.key]: e.target.value })}
-                                placeholder={def.type === "money" ? "Amount in AED" : `Enter ${def.label}`}
-                              />
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex justify-end gap-2">
-                  <Button size="sm" variant="outline" onClick={() => setEditMode(false)}>Cancel</Button>
-                  <Button size="sm" onClick={handleSaveEdit} disabled={pending}>
-                    {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2 text-sm">
-                {optimisticLead.phone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-slate-400" />
-                    <a href={`tel:${optimisticLead.phone}`} className="text-slate-700 hover:text-slate-900">{optimisticLead.phone}</a>
-                    {waLink && (
-                      <a href={waLink} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100">
-                        <MessageCircle className="h-3 w-3" /> WhatsApp
-                      </a>
-                    )}
-                  </div>
-                )}
-                {optimisticLead.email && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-slate-400" />
-                    <a href={`mailto:${optimisticLead.email}`} className="text-slate-700 hover:text-slate-900">{optimisticLead.email}</a>
-                  </div>
-                )}
-                {/* Detail fields — grid showing all fields including empty ones */}
-                <div className="grid grid-cols-2 gap-3 pt-2 text-sm md:grid-cols-3 xl:grid-cols-4">
-                  {detailCards.map((field) => (
-                    <button
-                      key={field.label}
-                      type="button"
-                      onClick={() => setEditMode(true)}
-                      className="group rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200"
-                    >
-                      <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{field.label}</span>
-                      <p className="mt-1 text-sm font-medium text-slate-700 group-hover:text-slate-900">{field.value}</p>
-                    </button>
-                  ))}
-                  {fieldDefs.map((def) => {
-                    const rawVal = optimisticLead.custom?.[def.key];
-                    let displayVal: string;
-                    if (rawVal === undefined || rawVal === null || rawVal === "") {
-                      displayVal = "—";
-                    } else if (Array.isArray(rawVal)) {
-                      displayVal = rawVal.join(", ");
-                    } else if (def.type === "money") {
-                      displayVal = formatAED(Number(rawVal));
-                    } else if (def.type === "checkbox") {
-                      displayVal = rawVal ? "Yes" : "No";
-                    } else if (def.type === "date") {
-                      displayVal = formatDate(String(rawVal));
-                    } else {
-                      displayVal = String(rawVal);
-                    }
-                    if (def.type === "select" && def.options && rawVal) {
-                      displayVal = def.options.find((o) => o.value === rawVal)?.label ?? displayVal;
-                    }
-                    return (
-                      <button
-                        key={def.id}
-                        type="button"
-                        onClick={() => setEditMode(true)}
-                        className="group rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200"
-                      >
-                        <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{def.label}</span>
-                        <p className="mt-1 text-sm font-medium text-slate-700 group-hover:text-slate-900">{displayVal}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {optimisticLead.tags && optimisticLead.tags.length > 0 && (
-                  <div className="pt-2">
-                    <p className="text-xs text-slate-400">Tags</p>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {optimisticLead.tags.map((tag) => (
-                        <span key={tag} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-                          {formatLeadTag(tag)}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {optimisticLead.notes && (
-                  <div className="pt-2">
-                    <p className="text-xs text-slate-400">Notes</p>
-                    <p className="text-slate-600 mt-1">{optimisticLead.notes}</p>
-                  </div>
-                )}
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Activity timeline */}
