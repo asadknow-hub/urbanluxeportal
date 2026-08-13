@@ -20,7 +20,6 @@ import {
   Settings,
   ChevronLeft,
   UserCog,
-  List,
   CalendarClock,
   Megaphone,
   Settings2,
@@ -41,7 +40,6 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   BarChart3,
   Settings,
   UserCog,
-  List,
   CalendarClock,
   Megaphone,
   Settings2,
@@ -88,9 +86,15 @@ export function Sidebar({ role }: { role: UserRole }) {
               .map((item) => {
                 const Icon = ICON_MAP[item.icon] ?? LayoutDashboard;
                 const isActive =
-                  item.href === "/leads" || item.href === "/leads/inflow"
-                    ? pathname === item.href
-                    : pathname === item.href || pathname.startsWith(item.href + "/");
+                  item.href === "/leads"
+                    ? pathname === "/leads"
+                    : item.href === "/leads/inflow"
+                      ? pathname === "/leads/inflow"
+                      : item.href === "/deals"
+                        ? pathname === "/deals" || pathname === "/pipeline"
+                        : item.href === "/pipeline"
+                          ? pathname === "/pipeline" || pathname === "/deals"
+                          : pathname === item.href || pathname.startsWith(item.href + "/");
                 return (
                   <Link
                     key={item.href}

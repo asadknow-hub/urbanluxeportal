@@ -85,7 +85,8 @@ export function LeadsTable({
     } else {
       params.set(key, value);
     }
-    router.push(`/leads/list?${params.toString()}`);
+    params.set("view", "list");
+    router.push(`/leads?${params.toString()}`);
   }
 
   function handleSearch(e: React.FormEvent) {
