@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { redirect } from "next/navigation";
 import { can } from "@/lib/permissions";
 import Link from "next/link";
-import { Users, Zap, Mail, ChevronRight } from "lucide-react";
+import { Users, Zap, Mail, ChevronRight, Route } from "lucide-react";
 
 export default async function SettingsPage() {
   const user = await getCurrentUser();
@@ -30,6 +30,21 @@ export default async function SettingsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Link href="/settings/leads" className="group rounded-2xl bg-white p-5 shadow-sm border border-slate-200 hover:border-slate-300 transition-colors">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-emerald-50 p-2">
+                <Route className="h-5 w-5 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">Leads</p>
+                <p className="text-xs text-slate-400">CRM activation flow</p>
+              </div>
+            </div>
+            <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
+          </div>
+        </Link>
+
         <Link href="/settings/users" className="group rounded-2xl bg-white p-5 shadow-sm border border-slate-200 hover:border-slate-300 transition-colors">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

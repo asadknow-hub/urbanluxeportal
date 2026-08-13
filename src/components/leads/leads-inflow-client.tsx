@@ -184,7 +184,7 @@ const STANDARD_LEAD_FIELDS = [
   { key: "tags", label: "Tags" },
 ];
 
-type Tab = "sources" | "fields" | "mapping";
+export type LeadInflowTab = "sources" | "fields" | "mapping";
 
 // ─── Main Component ────────────────────────────────────────────
 
@@ -192,12 +192,18 @@ export function LeadsInflowClient({
   sources,
   fieldDefs,
   statsMap,
+  initialTab = "sources",
 }: {
   sources: LeadSource[];
   fieldDefs: FieldDef[];
   statsMap: Record<string, number>;
+  initialTab?: LeadInflowTab;
 }) {
-  const [tab, setTab] = useState<Tab>("sources");
+  const [tab, setTab] = useState<LeadInflowTab>(initialTab);
+
+  useEffect(() => {
+    setTab(initialTab);
+  }, [initialTab]);
 
   return (
     <div className="space-y-4">

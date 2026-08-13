@@ -108,6 +108,9 @@ export function can(
 
 export function canAccessRoute(role: UserRole | null | undefined, path: string): boolean {
   if (!role) return false;
+  if (path.startsWith("/settings/leads")) {
+    return role === "admin" || role === "manager";
+  }
   if (path.startsWith("/settings")) {
     return can(role, "settings") || can(role, "user_management");
   }
@@ -144,7 +147,7 @@ export const NAV_ITEMS: {
 }[] = [
   { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard", roles: ["admin", "manager", "agent", "accountant"], group: "Main" },
   { label: "Team", href: "/team", icon: "UserCog", roles: ["admin", "manager"], group: "Main" },
-  { label: "Configure Leads Inflow", href: "/leads/inflow", icon: "Settings2", roles: ["admin", "manager"], group: "CRM" },
+  { label: "Configure Leads Inflow", href: "/settings/leads", icon: "Settings2", roles: ["admin", "manager"], group: "CRM" },
   { label: "Leads", href: "/leads", icon: "Users", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
   { label: "Follow-ups", href: "/leads/followups", icon: "CalendarClock", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
   { label: "Deals", href: "/deals", icon: "KanbanSquare", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
