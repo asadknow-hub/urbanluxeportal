@@ -161,6 +161,34 @@ function formatLabel(s: string): string {
   return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function mixHexWithWhite(hex: string, colorWeight: number): string {
+  const cleaned = hex.replace("#", "").trim();
+  const normalized = cleaned.length === 3
+    ? cleaned.split("").map((ch) => ch + ch).join("")
+    : cleaned;
+  const parsed = Number.parseInt(normalized, 16);
+
+  if (Number.isNaN(parsed)) return hex;
+
+  const r = (parsed >> 16) & 255;
+  const g = (parsed >> 8) & 255;
+  const b = parsed & 255;
+  const mix = (channel: number) => Math.round(255 * (1 - colorWeight) + channel * colorWeight);
+
+  return `rgb(${mix(r)} ${mix(g)} ${mix(b)})`;
+}
+
+const WORKFLOW_STAGE_COLORS = [
+  "#4fcfe5",
+  "#3ed2c2",
+  "#38bdf8",
+  "#a78bfa",
+  "#f59e0b",
+  "#fb7185",
+  "#f97316",
+  "#94a3b8",
+];
+
 const ACTIVITY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   note: Activity,
   call: Phone,
@@ -229,11 +257,6 @@ export function LeadDetail({
   const canEdit = canManage || optimisticLead.assigned_to === userId;
   const initials = optimisticLead.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
   const lastTouchAt = optimisticActivities[0]?.occurred_at ?? optimisticLead.updated_at;
-  const signalItems = [
-    { label: "Stage", value: currentStage?.name ?? "Unassigned" },
-    { label: "Next follow-up", value: optimisticLead.next_follow_up_at ? formatDate(optimisticLead.next_follow_up_at) : "None" },
-    { label: "Assigned to", value: optimisticLead.assigned_to_profile?.full_name ?? "Unassigned" },
-  ];
   const workflowStages = stages;
 
   function startInlineEdit(next: InlineEditState) {
@@ -527,14 +550,16 @@ export function LeadDetail({
 
   return (
     <div className="space-y-6">
-      {/* Back link */}
-      <Link href="/leads" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700">
-        <ArrowLeft className="h-4 w-4" />
-        Back to Leads
-      </Link>
-
       {/* Header */}
-      <div className="flex flex-col gap-5 rounded-[2rem] border border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-slate-100 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur xl:flex-row xl:items-start xl:justify-between">
+      <div className="relative flex flex-col gap-5 rounded-[2rem] border border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-slate-100 p-6 pt-10 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur xl:flex-row xl:items-start xl:justify-between">
+        <Link
+          href="/leads"
+          className="absolute left-6 top-4 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/85 px-3 py-1 text-[11px] font-medium text-slate-500 shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition-colors hover:border-slate-300 hover:text-slate-700"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back to Leads
+        </Link>
+
         <div className="flex items-center gap-4">
           <Avatar className="h-14 w-14">
             <AvatarFallback className="bg-emerald-100 text-emerald-700 text-lg font-medium">
@@ -612,25 +637,19 @@ export function LeadDetail({
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {signalItems.map((item) => (
-          <div key={item.label} className="rounded-[1.4rem] border border-slate-200/80 bg-white p-4 shadow-[0_10px_22px_rgba(15,23,42,0.05)]">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{item.label}</p>
-            <p className="mt-1 text-sm font-medium text-slate-900">{item.value}</p>
-          </div>
-        ))}
-      </div>
-
       {/* Stage workflow */}
       {stages.length > 0 && (
-        <div className="rounded-[1.35rem] border border-slate-200 bg-white p-2 shadow-[0_10px_28px_rgba(15,23,42,0.07)]">
+        <div className="overflow-hidden rounded-[1.35rem] border border-slate-200 bg-white p-2 shadow-[0_10px_28px_rgba(15,23,42,0.06)]">
           <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${workflowStages.length}, minmax(0, 1fr))` }}>
             {workflowStages.map((stage, idx) => {
               const currentIdx = workflowStages.findIndex((s) => s.id === optimisticLead.stage_id);
               const isCurrent = idx === currentIdx;
               const isPassed = currentIdx >= 0 && idx < currentIdx;
               const isEditable = canEdit && !pending;
-              const stageColor = stage.color || "#7dd3fc";
+              const stageColor = stage.color || WORKFLOW_STAGE_COLORS[idx % WORKFLOW_STAGE_COLORS.length];
+              const softFill = mixHexWithWhite(stageColor, isCurrent ? 0.88 : isPassed ? 0.22 : 0.16);
+              const softBorder = mixHexWithWhite(stageColor, 0.42);
+              const accentLine = mixHexWithWhite(stageColor, isCurrent ? 1 : 0.78);
 
               return (
                 <button
@@ -641,16 +660,19 @@ export function LeadDetail({
                     isEditable ? "cursor-pointer hover:-translate-y-[1px]" : "cursor-default"
                   } ${isCurrent ? "shadow-[0_10px_18px_rgba(15,23,42,0.10)]" : ""}`}
                   style={{
-                    backgroundColor: isCurrent || isPassed ? "#5fd2e5" : "#e5e7eb",
-                    color: "#475569",
+                    background: isCurrent
+                      ? `linear-gradient(180deg, ${stageColor}, ${mixHexWithWhite(stageColor, 0.68)})`
+                      : `linear-gradient(180deg, ${softFill}, ${mixHexWithWhite(stageColor, 0.1)})`,
+                    border: `1px solid ${softBorder}`,
+                    color: isCurrent ? "#ffffff" : "#334155",
                   }}
                 >
                   <span className="block truncate pr-6">{stage.name}</span>
                   <span
                     className="absolute inset-x-0 bottom-0 h-[2px]"
-                    style={{ backgroundColor: isCurrent || isPassed ? stageColor : "#cbd5e1" }}
+                    style={{ backgroundColor: accentLine }}
                   />
-                  {isCurrent && <span className="absolute right-2 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-white/80" />}
+                  {isCurrent && <span className="absolute right-2 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-white/90" />}
                 </button>
               );
             })}
