@@ -46,6 +46,7 @@ import {
   Phone,
   Mail,
   MessageCircle,
+  PenLine,
   UserPlus,
   XCircle,
   Activity,
@@ -688,28 +689,37 @@ export function LeadDetail({
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-semibold text-slate-900">Lead Snapshot</h3>
-                <p className="text-xs text-slate-400">Tap one card to edit only that field.</p>
+                <p className="text-xs text-slate-400">Tap the pen beside any field to edit it inline.</p>
               </div>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">Minimal</span>
             </div>
-            <div className="space-y-4 text-sm">
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
-                {[
-                  { label: "Name", kind: "text" as const, value: optimisticLead.name, key: "name" },
-                  { label: "Phone", kind: "text" as const, value: optimisticLead.phone ?? "", key: "phone" },
-                  { label: "Email", kind: "text" as const, value: optimisticLead.email ?? "", key: "email" },
-                  { label: "Interest", kind: "text" as const, value: optimisticLead.interest, key: "interest" },
-                  { label: "Budget Min (AED)", kind: "money" as const, value: optimisticLead.budget_min ? String(optimisticLead.budget_min / 100) : "", key: "budget_min" },
-                  { label: "Budget Max (AED)", kind: "money" as const, value: optimisticLead.budget_max ? String(optimisticLead.budget_max / 100) : "", key: "budget_max" },
-                  { label: "Preferred Areas", kind: "areas" as const, value: optimisticLead.preferred_areas?.length ? optimisticLead.preferred_areas.join(", ") : "", key: "preferred_areas" },
-                  { label: "Language", kind: "text" as const, value: optimisticLead.language ?? "", key: "language" },
-                  { label: "Financing", kind: "text" as const, value: optimisticLead.financing ?? "", key: "financing" },
-                  { label: "Timeframe", kind: "text" as const, value: optimisticLead.timeframe ?? "", key: "timeframe" },
-                  { label: "Purpose", kind: "text" as const, value: optimisticLead.purpose ?? "", key: "purpose" },
-                  { label: "Bedrooms", kind: "text" as const, value: optimisticLead.bedrooms ?? "", key: "bedrooms" },
-                  { label: "Category", kind: "text" as const, value: optimisticLead.category ?? "", key: "category" },
-                  { label: "Tags", kind: "tags" as const, value: optimisticLead.tags ?? [], key: "tags" },
-                ].map((field) => (
+            <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-slate-50/60 text-sm">
+              {[
+                { label: "Name", kind: "text" as const, value: optimisticLead.name, key: "name" },
+                { label: "Phone", kind: "text" as const, value: optimisticLead.phone ?? "", key: "phone" },
+                { label: "Email", kind: "text" as const, value: optimisticLead.email ?? "", key: "email" },
+                { label: "Interest", kind: "text" as const, value: optimisticLead.interest, key: "interest" },
+                { label: "Budget Min (AED)", kind: "money" as const, value: optimisticLead.budget_min ? String(optimisticLead.budget_min / 100) : "", key: "budget_min" },
+                { label: "Budget Max (AED)", kind: "money" as const, value: optimisticLead.budget_max ? String(optimisticLead.budget_max / 100) : "", key: "budget_max" },
+                { label: "Preferred Areas", kind: "areas" as const, value: optimisticLead.preferred_areas?.length ? optimisticLead.preferred_areas.join(", ") : "", key: "preferred_areas" },
+                { label: "Language", kind: "text" as const, value: optimisticLead.language ?? "", key: "language" },
+                { label: "Financing", kind: "text" as const, value: optimisticLead.financing ?? "", key: "financing" },
+                { label: "Timeframe", kind: "text" as const, value: optimisticLead.timeframe ?? "", key: "timeframe" },
+                { label: "Purpose", kind: "text" as const, value: optimisticLead.purpose ?? "", key: "purpose" },
+                { label: "Bedrooms", kind: "text" as const, value: optimisticLead.bedrooms ?? "", key: "bedrooms" },
+                { label: "Category", kind: "text" as const, value: optimisticLead.category ?? "", key: "category" },
+                { label: "Tags", kind: "tags" as const, value: optimisticLead.tags ?? [], key: "tags" },
+                { label: "Notes", kind: "textarea" as const, value: optimisticLead.notes ?? "", key: "notes" },
+              ].map((field, index) => {
+                const valueText =
+                  field.kind === "areas"
+                    ? field.value || "—"
+                    : field.kind === "tags"
+                    ? field.value.length > 0
+                      ? field.value.map((tag) => formatLeadTag(tag)).join(", ")
+                      : "—"
+                    : field.value || "—";
+
+                return (
                   <button
                     key={field.key}
                     type="button"
@@ -722,91 +732,27 @@ export function LeadDetail({
                           : { key: field.key, label: field.label, kind: field.kind, value: field.value }
                       )
                     }
-                    className={`group rounded-2xl border bg-white p-3 text-left shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200 ${
-                      inlineEdit?.key === field.key ? "border-emerald-300 ring-1 ring-emerald-100" : "border-slate-200"
-                    }`}
+                    className={`group flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-emerald-200 ${
+                      index !== 0 ? "border-t border-slate-100" : ""
+                    } ${inlineEdit?.key === field.key ? "bg-emerald-50/50" : ""}`}
                   >
-                    <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{field.label}</span>
-                    <p className="mt-1 text-sm font-medium text-slate-700 group-hover:text-slate-900">
-                      {field.kind === "areas"
-                        ? field.value || "—"
-                        : field.kind === "tags"
-                        ? field.value.length > 0
-                          ? field.value.map((tag) => formatLeadTag(tag)).join(", ")
-                          : "—"
-                        : field.value || "—"}
-                    </p>
-                  </button>
-                ))}
-
-                {fieldDefs.map((def) => {
-                  const rawVal = optimisticLead.custom?.[def.key];
-                  let displayVal: string;
-                  if (rawVal === undefined || rawVal === null || rawVal === "") {
-                    displayVal = "—";
-                  } else if (Array.isArray(rawVal)) {
-                    displayVal = rawVal.join(", ");
-                  } else if (def.type === "money") {
-                    displayVal = formatAED(Number(rawVal));
-                  } else if (def.type === "checkbox") {
-                    displayVal = rawVal ? "Yes" : "No";
-                  } else if (def.type === "date") {
-                    displayVal = formatDate(String(rawVal));
-                  } else {
-                    displayVal = String(rawVal);
-                  }
-                  if (def.type === "select" && def.options && rawVal) {
-                    displayVal = def.options.find((o) => o.value === rawVal)?.label ?? displayVal;
-                  }
-                  const kind = def.type === "textarea"
-                    ? "textarea"
-                    : def.type === "select"
-                    ? "select"
-                    : def.type === "multiselect"
-                    ? "tags"
-                    : def.type === "checkbox"
-                    ? "checkbox"
-                    : def.type === "date"
-                    ? "text"
-                    : def.type === "number"
-                    ? "number"
-                    : def.type === "money"
-                    ? "money"
-                    : "text";
-                  return (
-                    <button
-                      key={def.id}
-                      type="button"
-                      onClick={() =>
-                        startInlineEdit(
-                          kind === "tags"
-                            ? { key: def.key, label: def.label, kind, value: Array.isArray(rawVal) ? rawVal.map(String) : String(rawVal ?? "").split(",").map((s) => s.trim()).filter(Boolean), custom: true }
-                            : { key: def.key, label: def.label, kind, value: displayVal === "—" ? "" : String(displayVal), options: def.options, custom: true }
-                        )
-                      }
-                      className={`group rounded-2xl border bg-white p-3 text-left shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200 ${
-                        inlineEdit?.key === def.key ? "border-emerald-300 ring-1 ring-emerald-100" : "border-slate-200"
+                    <div className="min-w-0 flex-1">
+                      <span className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">{field.label}</span>
+                      <span className="mt-0.5 block truncate text-sm font-medium text-slate-800">{valueText}</span>
+                    </div>
+                    <span
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition ${
+                        inlineEdit?.key === field.key
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-600"
+                          : "border-slate-200 bg-white text-slate-400 group-hover:border-slate-300 group-hover:text-slate-600"
                       }`}
+                      aria-hidden="true"
                     >
-                      <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{def.label}</span>
-                      <p className="mt-1 text-sm font-medium text-slate-700 group-hover:text-slate-900">{displayVal}</p>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {optimisticLead.notes && (
-                <button
-                  type="button"
-                  onClick={() => startInlineEdit({ key: "notes", label: "Notes", kind: "textarea", value: optimisticLead.notes ?? "" })}
-                  className={`w-full rounded-2xl border bg-white p-3 text-left shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition-all hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200 ${
-                    inlineEdit?.key === "notes" ? "border-emerald-300 ring-1 ring-emerald-100" : "border-slate-200"
-                  }`}
-                >
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Notes</span>
-                  <p className="mt-1 max-h-14 overflow-hidden text-sm leading-6 text-slate-600">{optimisticLead.notes}</p>
-                </button>
-              )}
+                      <PenLine className="h-3.5 w-3.5" />
+                    </span>
+                  </button>
+                );
+              })}
 
               {inlineEdit && (
                 <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm">
