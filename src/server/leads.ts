@@ -445,6 +445,17 @@ export async function addLeadActivity(
 
     const supabase = createSupabaseServiceClient();
 
+    const now = new Date().toISOString();
+    const { error: leadError } = await supabase
+      .from("leads")
+      .update({
+        last_activity_at: now,
+        updated_at: now,
+      })
+      .eq("id", leadId);
+
+    if (leadError) return { ok: false, error: leadError.message };
+
     const { error } = await supabase.from("lead_activities").insert({
       lead_id: leadId,
       type,
@@ -455,6 +466,7 @@ export async function addLeadActivity(
     if (error) return { ok: false, error: error.message };
 
     revalidatePath("/leads");
+    revalidatePath(`/leads/${leadId}`);
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
@@ -595,6 +607,98 @@ export async function scheduleFollowUp(
 
     revalidatePath("/leads");
     revalidatePath(`/leads/${leadId}`);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function completeFollowUp(
+  leadId: string,
+  note?: string
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+
+    const supabase = createSupabaseServiceClient();
+
+    const { error: leadError } = await supabase
+      .from("leads")
+      .update({
+        next_follow_up_at: null,
+        updated_at: new Date().toISOString(),
+        last_activity_at: new Date().toISOString(),
+      })
+      .eq("id", leadId);
+
+    if (leadError) return { ok: false, error: leadError.message };
+
+    const summary = note?.trim() || "Follow-up completed";
+    await supabase.from("lead_activities").insert({
+      lead_id: leadId,
+      type: "follow_up_done",
+      summary,
+      created_by: user.id,
+    });
+
+    await logActivity({
+      actorId: user.id,
+      entityType: "lead",
+      entityId: leadId,
+      action: "follow_up_completed",
+      diff: note ? { note } : undefined,
+    });
+
+    revalidatePath("/leads");
+    revalidatePath(`/leads/${leadId}`);
+    revalidatePath("/leads/followups");
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function snoozeFollowUp(
+  leadId: string,
+  followUpAt: string,
+  note?: string
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+
+    const supabase = createSupabaseServiceClient();
+
+    const { error: leadError } = await supabase
+      .from("leads")
+      .update({
+        next_follow_up_at: followUpAt,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", leadId);
+
+    if (leadError) return { ok: false, error: leadError.message };
+
+    const summary = note?.trim() || `Follow-up snoozed to ${followUpAt}`;
+    await supabase.from("lead_activities").insert({
+      lead_id: leadId,
+      type: "follow_up_snoozed",
+      summary,
+      created_by: user.id,
+    });
+
+    await logActivity({
+      actorId: user.id,
+      entityType: "lead",
+      entityId: leadId,
+      action: "follow_up_snoozed",
+      diff: { next_follow_up_at: followUpAt, note },
+    });
+
+    revalidatePath("/leads");
+    revalidatePath(`/leads/${leadId}`);
+    revalidatePath("/leads/followups");
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };

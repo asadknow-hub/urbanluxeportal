@@ -19,10 +19,15 @@ import {
   ChevronDown,
   X,
   User as UserIcon,
+  Check,
+  Bell,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { whatsappLink, telLink } from "@/lib/phone";
 import { formatDate, timeAgo } from "@/lib/dates";
+import { completeFollowUp, snoozeFollowUp } from "@/server/leads";
+import { toast } from "sonner";
 
 export type FollowUpLead = {
   id: string;
@@ -585,10 +590,37 @@ export function FollowUpsView({
 function FollowUpCard({ lead, group }: { lead: FollowUpLead; group: TimeGroup }) {
   const cfg = GROUP_CONFIG[group];
   const stageColor = lead.stage ? getStageColor(lead.stage.color) : null;
+  const [pending, setPending] = useState<null | "done" | "snooze">(null);
+  const [note, setNote] = useState("");
+
+  async function handleDone() {
+    setPending("done");
+    const result = await completeFollowUp(lead.id, note || undefined);
+    if (result.ok) {
+      toast.success("Follow-up completed");
+      window.location.reload();
+    } else {
+      toast.error(result.error ?? "Failed to complete follow-up");
+    }
+    setPending(null);
+  }
+
+  async function handleSnooze(hours: number) {
+    setPending("snooze");
+    const next = new Date();
+    next.setHours(next.getHours() + hours);
+    const result = await snoozeFollowUp(lead.id, next.toISOString(), note || undefined);
+    if (result.ok) {
+      toast.success(`Snoozed for ${hours}h`);
+      window.location.reload();
+    } else {
+      toast.error(result.error ?? "Failed to snooze follow-up");
+    }
+    setPending(null);
+  }
 
   return (
-    <Link
-      href={`/leads/${lead.id}`}
+    <div
       className={cn(
         "group flex flex-col gap-2 rounded-lg border p-3 transition-all hover:shadow-md",
         cfg.border,
@@ -597,9 +629,9 @@ function FollowUpCard({ lead, group }: { lead: FollowUpLead; group: TimeGroup })
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <span className="text-sm font-semibold text-slate-900 group-hover:underline">
+          <Link href={`/leads/${lead.id}`} className="text-sm font-semibold text-slate-900 hover:underline">
             {lead.name}
-          </span>
+          </Link>
           {lead.interest && (
             <span className="ml-2 text-xs text-slate-400">{lead.interest}</span>
           )}
@@ -626,36 +658,91 @@ function FollowUpCard({ lead, group }: { lead: FollowUpLead; group: TimeGroup })
         )}
       </div>
 
-      <div className="flex items-center justify-between border-t border-slate-200/60 pt-2">
-        <span className={cn("flex items-center gap-1 text-xs font-medium", cfg.color)}>
-          <Clock className="h-3.5 w-3.5" />
-          {formatDate(lead.next_follow_up_at, "dd MMM, HH:mm")}
-        </span>
-        <div className="flex items-center gap-2">
-          {lead.phone && (
-            <>
-              <a
-                href={telLink(lead.phone) ?? "#"}
-                onClick={(e) => e.stopPropagation()}
-                className="text-slate-400 transition-colors hover:text-slate-700"
-                title="Call"
-              >
-                <Phone className="h-3.5 w-3.5" />
-              </a>
-              <a
-                href={whatsappLink(lead.phone) ?? "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="text-emerald-500 transition-colors hover:text-emerald-700"
-                title="WhatsApp"
-              >
-                <MessageCircle className="h-3.5 w-3.5" />
-              </a>
-            </>
-          )}
+      <div className="space-y-2 border-t border-slate-200/60 pt-2">
+        <div className="flex items-center justify-between">
+          <span className={cn("flex items-center gap-1 text-xs font-medium", cfg.color)}>
+            <Clock className="h-3.5 w-3.5" />
+            {formatDate(lead.next_follow_up_at, "dd MMM, HH:mm")}
+          </span>
+          <div className="flex items-center gap-2">
+            {lead.phone && (
+              <>
+                <a
+                  href={telLink(lead.phone) ?? "#"}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-slate-400 transition-colors hover:text-slate-700"
+                  title="Call"
+                >
+                  <Phone className="h-3.5 w-3.5" />
+                </a>
+                <a
+                  href={whatsappLink(lead.phone) ?? "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-emerald-500 transition-colors hover:text-emerald-700"
+                  title="WhatsApp"
+                >
+                  <MessageCircle className="h-3.5 w-3.5" />
+                </a>
+              </>
+            )}
+          </div>
+        </div>
+
+        <input
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+          placeholder="Quick note before action"
+          className="w-full rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 placeholder:text-slate-400 focus:border-slate-400 focus:outline-none"
+        />
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              void handleDone();
+            }}
+            disabled={pending !== null}
+            className="inline-flex items-center gap-1 rounded-md bg-emerald-500 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-emerald-600 disabled:opacity-50"
+          >
+            {pending === "done" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+            Done
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              void handleSnooze(2);
+            }}
+            disabled={pending !== null}
+            className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
+          >
+            {pending === "snooze" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Bell className="h-3 w-3" />}
+            Snooze 2h
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              void handleSnooze(24);
+            }}
+            disabled={pending !== null}
+            className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-50"
+          >
+            Tomorrow
+          </button>
+          <Link href={`/leads/${lead.id}`} className="inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-900">
+            Open
+          </Link>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }

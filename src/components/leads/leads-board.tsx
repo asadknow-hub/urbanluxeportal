@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { Phone, Mail, Clock, User as UserIcon, AlertCircle } from "lucide-react";
 import { updateLeadStage } from "@/server/leads";
 import { cn } from "@/lib/utils";
+import { formatLeadInterest, formatLeadTag } from "@/lib/lead-format";
 
 export type LeadStage = {
   id: string;
@@ -47,6 +48,7 @@ export type BoardLead = {
   last_activity_at: string | null;
   tags: string[];
   assigned_to_profile: { id: string; full_name: string; avatar_url: string | null } | null;
+  duplicate?: boolean;
 };
 
 const COLOR_MAP: Record<string, { bg: string; border: string; text: string; dot: string }> = {
@@ -114,7 +116,12 @@ function LeadCard({ lead, stage, isDragging }: { lead: BoardLead; stage: LeadSta
       <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-400">
         {lead.interest && (
           <span className={cn("rounded px-1.5 py-0.5 font-medium", color.bg, color.text)}>
-            {lead.interest}
+            {formatLeadInterest(lead.interest)}
+          </span>
+        )}
+        {lead.duplicate && (
+          <span className="rounded px-1.5 py-0.5 font-medium bg-red-50 text-red-700 border border-red-200">
+            Duplicate
           </span>
         )}
         {lead.assigned_to_profile ? (
@@ -140,6 +147,21 @@ function LeadCard({ lead, stage, isDragging }: { lead: BoardLead; stage: LeadSta
           {lead.preferred_areas.slice(0, 2).join(", ")}
           {lead.preferred_areas.length > 2 && ` +${lead.preferred_areas.length - 2}`}
         </p>
+      )}
+
+      {lead.tags && lead.tags.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {lead.tags.slice(0, 3).map((tag) => (
+            <span key={tag} className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+              {formatLeadTag(tag)}
+            </span>
+          ))}
+          {lead.tags.length > 3 && (
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+              +{lead.tags.length - 3}
+            </span>
+          )}
+        </div>
       )}
 
       <div className="mt-2 flex items-center justify-between text-xs text-slate-400">
@@ -249,10 +271,12 @@ function StageColumn({
 export function LeadsBoard({
   stages,
   leads,
+  duplicateLeadIds = [],
   userRole,
 }: {
   stages: LeadStage[];
   leads: BoardLead[];
+  duplicateLeadIds?: string[];
   userRole: string;
 }) {
   const router = useRouter();
@@ -262,6 +286,7 @@ export function LeadsBoard({
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
+  const duplicateSet = useMemo(() => new Set(duplicateLeadIds), [duplicateLeadIds]);
 
   // Group leads by stage
   const leadsByStage = useMemo(() => {
@@ -332,7 +357,11 @@ export function LeadsBoard({
           <StageColumn
             key={stage.id}
             stage={stage}
-            leads={leadsByStage[stage.id] ?? []}
+            leads={(leadsByStage[stage.id] ?? []).map((lead) => ({
+              ...lead,
+              tags: lead.tags ?? [],
+              duplicate: duplicateSet.has(lead.id),
+            }))}
             onDrop={() => {}}
           />
         ))}

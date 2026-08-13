@@ -38,6 +38,21 @@ export default async function LeadDetailPage({
     );
   }
 
+  const duplicateClauses: string[] = [];
+  if (lead.phone) duplicateClauses.push(`phone.eq.${lead.phone}`);
+  if (lead.email) duplicateClauses.push(`email.eq.${lead.email}`);
+
+  const duplicateMatches = duplicateClauses.length > 0
+    ? await supabase
+        .from("leads")
+        .select("id, name, phone, email, stage_id, updated_at, assigned_to")
+        .is("deleted_at", null)
+        .neq("id", lead.id)
+        .or(duplicateClauses.join(","))
+        .order("updated_at", { ascending: false })
+        .limit(6)
+    : { data: [], error: null };
+
   // Agents can only see their own + unassigned
   if (user.role === "agent" && lead.assigned_to !== user.id && lead.assigned_to !== null) {
     return (
@@ -138,6 +153,7 @@ export default async function LeadDetailPage({
       deal={deal}
       documents={documents ?? []}
       lostReasons={lostReasonsByKind}
+      duplicateMatches={duplicateMatches.data ?? []}
       userRole={user.role}
       userId={user.id}
     />

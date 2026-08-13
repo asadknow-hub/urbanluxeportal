@@ -670,7 +670,19 @@ function FieldsTab({ fieldDefs }: { fieldDefs: FieldDef[] }) {
           <h3 className="text-sm font-semibold text-slate-700">Active Fields ({activeFields.length})</h3>
           <div className="space-y-2">
             {activeFields.map((def) => (
-              <div key={def.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3">
+              <div
+                key={def.id}
+                onClick={() => handleEdit(def)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleEdit(def);
+                  }
+                }}
+                className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-white p-3 text-left transition-colors hover:border-emerald-300 hover:bg-emerald-50/40"
+              >
                 <div className="flex items-center gap-3">
                   <div className="flex flex-col">
                     <span className="text-sm font-medium text-slate-900">{def.label}</span>
@@ -680,10 +692,19 @@ function FieldsTab({ fieldDefs }: { fieldDefs: FieldDef[] }) {
                   {def.required && <span className="rounded bg-red-50 px-1.5 py-0.5 text-xs text-red-500">required</span>}
                   {def.show_on_card && <span className="rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-500">on card</span>}
                 </div>
-                <div className="flex items-center gap-1">
-                  <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => handleEdit(def)}><Pencil className="mr-1 h-3 w-3" />Edit</Button>
-                  <Button size="sm" variant="ghost" className="h-7 text-xs text-red-500 hover:text-red-600" onClick={() => handleDelete(def)} disabled={pending}><Trash2 className="mr-1 h-3 w-3" />Deactivate</Button>
-                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 text-xs text-red-500 hover:text-red-600"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleDelete(def);
+                  }}
+                  disabled={pending}
+                >
+                  <Trash2 className="mr-1 h-3 w-3" />Deactivate
+                </Button>
               </div>
             ))}
           </div>

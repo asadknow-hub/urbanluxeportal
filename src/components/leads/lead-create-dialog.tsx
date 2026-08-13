@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PreferredAreasPicker } from "@/components/leads/preferred-areas-picker";
 import {
   Select,
   SelectContent,
@@ -39,7 +40,7 @@ const INTERESTS = [
   { value: "buy", label: "Buy" },
   { value: "rent", label: "Rent" },
   { value: "sell", label: "Sell" },
-  { value: "off_plan", label: "Off-Plan" },
+  { value: "off_plan", label: "Off Plan" },
   { value: "commercial", label: "Commercial" },
 ];
 
@@ -61,6 +62,7 @@ export function LeadCreateDialog({
     budget_max: "",
     notes: "",
     assigned_to: "",
+    preferred_areas: [] as string[],
     language: "en",
     financing: "",
     timeframe: "",
@@ -84,7 +86,7 @@ export function LeadCreateDialog({
         interest: form.interest as any,
         budget_min: form.budget_min ? Number(form.budget_min) * 100 : null,
         budget_max: form.budget_max ? Number(form.budget_max) * 100 : null,
-        preferred_areas: [],
+        preferred_areas: form.preferred_areas,
         notes: form.notes || null,
         assigned_to: form.assigned_to || null,
         language: form.language || null,
@@ -114,6 +116,7 @@ export function LeadCreateDialog({
           budget_max: "",
           notes: "",
           assigned_to: "",
+          preferred_areas: [],
           language: "en",
           financing: "",
           timeframe: "",
@@ -317,6 +320,14 @@ export function LeadCreateDialog({
                 </Select>
               </div>
             </div>
+          </div>
+
+          {/* Notes */}
+          <div className="border-t border-slate-100 pt-3">
+            <PreferredAreasPicker
+              value={form.preferred_areas}
+              onChange={(next) => setForm((prev) => ({ ...prev, preferred_areas: next }))}
+            />
           </div>
 
           {/* Notes */}

@@ -4,9 +4,12 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PreferredAreasPicker } from "@/components/leads/preferred-areas-picker";
+import { DocumentUploadDialog } from "@/components/documents/document-upload-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
@@ -26,6 +29,7 @@ import {
 import { whatsappLink } from "@/lib/phone";
 import { formatAED } from "@/lib/money";
 import { formatDate, timeAgo } from "@/lib/dates";
+import { formatLeadInterest, formatLeadTag } from "@/lib/lead-format";
 import {
   assignLead,
   scheduleFollowUp,
@@ -98,6 +102,16 @@ type Lead = {
   created_by_profile: { id: string; full_name: string } | null;
 };
 
+type DuplicateLead = {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  stage_id: string | null;
+  updated_at: string;
+  assigned_to: string | null;
+};
+
 type LeadActivity = {
   id: string;
   type: string;
@@ -153,6 +167,7 @@ export function LeadDetail({
   deal,
   documents,
   lostReasons,
+  duplicateMatches,
   userRole,
   userId,
 }: {
@@ -165,6 +180,7 @@ export function LeadDetail({
   deal: { id: string; title: string; stage: string; value: number; deal_type: string } | null;
   documents: { id: string; file_name: string; file_url: string; file_type: string; created_at: string }[];
   lostReasons: Record<string, string[]>;
+  duplicateMatches: DuplicateLead[];
   userRole: string;
   userId: string;
 }) {
@@ -191,7 +207,6 @@ export function LeadDetail({
     budget_min: lead.budget_min ? String(lead.budget_min / 100) : "",
     budget_max: lead.budget_max ? String(lead.budget_max / 100) : "",
     notes: lead.notes ?? "",
-    preferred_areas: lead.preferred_areas?.join(", ") ?? "",
     language: lead.language ?? "",
     financing: lead.financing ?? "",
     timeframe: lead.timeframe ?? "",
@@ -200,6 +215,7 @@ export function LeadDetail({
     category: lead.category ?? "",
     tags: lead.tags?.join(", ") ?? "",
   });
+  const [preferredAreas, setPreferredAreas] = useState<string[]>(lead.preferred_areas ?? []);
   // Custom field values in the edit form (keyed by field def key)
   const [editCustom, setEditCustom] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {};
@@ -220,9 +236,17 @@ export function LeadDetail({
 
   const currentStage = stages.find((s) => s.id === optimisticLead.stage_id) ?? null;
   const waLink = whatsappLink(optimisticLead.phone);
+  const mailLink = optimisticLead.email ? `mailto:${optimisticLead.email}` : null;
+  const phoneLink = optimisticLead.phone ? `tel:${optimisticLead.phone}` : null;
   const canManage = userRole === "admin" || userRole === "manager";
   const canEdit = canManage || optimisticLead.assigned_to === userId;
   const initials = optimisticLead.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  const signalItems = [
+    { label: "Stage", value: currentStage?.name ?? "Unassigned" },
+    { label: "Next follow-up", value: optimisticLead.next_follow_up_at ? formatDate(optimisticLead.next_follow_up_at) : "None" },
+    { label: "Last activity", value: timeAgo(optimisticLead.updated_at) },
+    { label: "Assigned to", value: optimisticLead.assigned_to_profile?.full_name ?? "Unassigned" },
+  ];
 
   // ─── Optimistic action handlers ──────────────────────────
   // Each handler updates local state IMMEDIATELY for instant feedback,
@@ -430,7 +454,7 @@ export function LeadDetail({
       budget_min: editForm.budget_min ? Number(editForm.budget_min) * 100 : null,
       budget_max: editForm.budget_max ? Number(editForm.budget_max) * 100 : null,
       notes: editForm.notes || null,
-      preferred_areas: editForm.preferred_areas ? editForm.preferred_areas.split(",").map((s) => s.trim()).filter(Boolean) : [],
+      preferred_areas: preferredAreas,
       language: editForm.language || null,
       financing: editForm.financing || null,
       timeframe: editForm.timeframe || null,
@@ -454,7 +478,7 @@ export function LeadDetail({
           budget_min: editForm.budget_min ? Number(editForm.budget_min) * 100 : null,
           budget_max: editForm.budget_max ? Number(editForm.budget_max) * 100 : null,
           notes: editForm.notes || null,
-          preferred_areas: editForm.preferred_areas ? editForm.preferred_areas.split(",").map((s) => s.trim()).filter(Boolean) : [],
+          preferred_areas: preferredAreas,
           language: editForm.language || null,
           financing: editForm.financing || null,
           timeframe: editForm.timeframe || null,
@@ -518,7 +542,7 @@ export function LeadDetail({
               )}
               <span className="capitalize">{formatLabel(optimisticLead.source)}</span>
               <span>·</span>
-              <span className="capitalize">{formatLabel(optimisticLead.interest)}</span>
+              <span>{formatLeadInterest(optimisticLead.interest)}</span>
               {optimisticLead.score !== null && (
                 <>
                   <span>·</span>
@@ -531,6 +555,25 @@ export function LeadDetail({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {phoneLink && (
+            <a href={phoneLink} className={buttonVariants({ variant: "outline", size: "sm" })}>
+              <Phone className="mr-2 h-4 w-4" />
+              Call
+            </a>
+          )}
+          {waLink && (
+            <a href={waLink} target="_blank" rel="noopener noreferrer" className={buttonVariants({ variant: "outline", size: "sm" })}>
+              <MessageCircle className="mr-2 h-4 w-4" />
+              WhatsApp
+            </a>
+          )}
+          {mailLink && (
+            <a href={mailLink} className={buttonVariants({ variant: "outline", size: "sm" })}>
+              <Mail className="mr-2 h-4 w-4" />
+              Email
+            </a>
+          )}
+          <DocumentUploadDialog triggerLabel="Upload Lead Document" entityType="lead" entityId={optimisticLead.id} />
           {!optimisticLead.assigned_to && canEdit && (
             <Button size="sm" variant="outline" onClick={handleClaim} disabled={pending}>
               <UserPlus className="mr-2 h-4 w-4" />
@@ -549,6 +592,15 @@ export function LeadDetail({
             </Button>
           )}
         </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {signalItems.map((item) => (
+          <div key={item.label} className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{item.label}</p>
+            <p className="mt-1 text-sm font-medium text-slate-900">{item.value}</p>
+          </div>
+        ))}
       </div>
 
       {/* Stage workflow — thin inline step bar, fully dynamic from lead_stages table */}
@@ -645,7 +697,7 @@ export function LeadDetail({
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">Interest</Label>
-                    <Input value={editForm.interest} onChange={(e) => setEditForm({ ...editForm, interest: e.target.value })} placeholder="e.g. Buy, Rent, Off-Plan..." />
+                    <Input value={editForm.interest} onChange={(e) => setEditForm({ ...editForm, interest: e.target.value })} placeholder="e.g. Buy, Rent, Off Plan..." />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">Budget Min (AED)</Label>
@@ -655,9 +707,14 @@ export function LeadDetail({
                     <Label className="text-xs">Budget Max (AED)</Label>
                     <Input type="number" value={editForm.budget_max} onChange={(e) => setEditForm({ ...editForm, budget_max: e.target.value })} />
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Preferred Areas (comma-separated)</Label>
-                    <Input value={editForm.preferred_areas} onChange={(e) => setEditForm({ ...editForm, preferred_areas: e.target.value })} placeholder="e.g. Dubai Marina, JLT" />
+                  <div className="space-y-1 col-span-2">
+                    <PreferredAreasPicker
+                      value={preferredAreas}
+                      onChange={setPreferredAreas}
+                      label="Preferred Areas"
+                      description="Search and select the Dubai communities this lead prefers."
+                      className="w-full"
+                    />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">Language</Label>
@@ -864,7 +921,7 @@ export function LeadDetail({
                     <div className="mt-1 flex flex-wrap gap-1">
                       {optimisticLead.tags.map((tag) => (
                         <span key={tag} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
-                          {tag}
+                          {formatLeadTag(tag)}
                         </span>
                       ))}
                     </div>
@@ -889,7 +946,7 @@ export function LeadDetail({
 
             {/* Quick add activity */}
             {canEdit && (
-              <div className="mb-4 flex gap-2">
+              <div className="mb-4 flex flex-col gap-2 lg:flex-row">
                 <Select value={activityType} onValueChange={(v) => setActivityType(v ?? "note")}>
                   <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -901,6 +958,20 @@ export function LeadDetail({
                     <SelectItem value="viewing">Viewing</SelectItem>
                   </SelectContent>
                 </Select>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => { setActivityType("call"); setActivityText(`Called ${optimisticLead.phone ?? optimisticLead.name}`); }}>
+                    <Phone className="mr-2 h-4 w-4" />
+                    Call log
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => { setActivityType("whatsapp"); setActivityText(`WhatsApped ${optimisticLead.name}`); }}>
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    WhatsApp log
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => { setActivityType("email"); setActivityText(`Emailed ${optimisticLead.email ?? optimisticLead.name}`); }}>
+                    <Mail className="mr-2 h-4 w-4" />
+                    Email log
+                  </Button>
+                </div>
                 <Input
                   placeholder="Log activity..."
                   value={activityText}
@@ -950,6 +1021,50 @@ export function LeadDetail({
 
         {/* Right column: assignment + actions */}
         <div className="space-y-4">
+          {duplicateMatches.length > 0 && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
+              <div className="mb-2 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Possible Duplicates</p>
+                  <p className="text-xs text-amber-700/80">Matched by email or phone.</p>
+                </div>
+                <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
+                  {duplicateMatches.length}
+                </span>
+              </div>
+              <div className="space-y-2">
+                {duplicateMatches.map((dup) => {
+                  const dupPhoneLink = dup.phone ? `tel:${dup.phone}` : null;
+                  const dupMailLink = dup.email ? `mailto:${dup.email}` : null;
+                  const dupWaLink = dup.phone ? whatsappLink(dup.phone) : null;
+                  return (
+                    <div key={dup.id} className="rounded-xl border border-amber-200 bg-white p-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <Link href={`/leads/${dup.id}`} className="font-medium text-slate-900 hover:underline">
+                            {dup.name}
+                          </Link>
+                          <p className="text-xs text-slate-500">Updated {formatDate(dup.updated_at)}</p>
+                          <p className="text-xs text-slate-400">
+                            {dup.phone ?? "—"} {dup.email ? `· ${dup.email}` : ""}
+                          </p>
+                        </div>
+                        <Link href={`/leads/${dup.id}`} className={buttonVariants({ variant: "ghost", size: "sm" })}>
+                          Open
+                        </Link>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {dupPhoneLink && <a href={dupPhoneLink} className={buttonVariants({ variant: "outline", size: "xs" })}>Call</a>}
+                        {dupWaLink && <a href={dupWaLink} target="_blank" rel="noopener noreferrer" className={buttonVariants({ variant: "outline", size: "xs" })}>WhatsApp</a>}
+                        {dupMailLink && <a href={dupMailLink} className={buttonVariants({ variant: "outline", size: "xs" })}>Email</a>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Assignment + Follow-up combined */}
           <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200 space-y-3">
             {/* Assignment */}
@@ -1098,6 +1213,9 @@ export function LeadDetail({
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Documents</span>
               <span className="text-xs text-slate-400">{documents.length}</span>
+            </div>
+            <div className="mb-3">
+              <DocumentUploadDialog triggerLabel="Attach Document" entityType="lead" entityId={optimisticLead.id} />
             </div>
             {documents.length === 0 ? (
               <p className="text-xs text-slate-400">No documents yet.</p>

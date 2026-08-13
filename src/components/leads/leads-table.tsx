@@ -52,7 +52,7 @@ const INTEREST_LABELS: Record<string, string> = {
   buy: "Buy",
   rent: "Rent",
   sell: "Sell",
-  off_plan: "Off-Plan",
+  off_plan: "Off Plan",
   commercial: "Commercial",
 };
 

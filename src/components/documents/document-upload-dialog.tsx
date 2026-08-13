@@ -35,7 +35,15 @@ const CATEGORIES = [
   "other",
 ];
 
-export function DocumentUploadDialog() {
+export function DocumentUploadDialog({
+  triggerLabel = "Upload Document",
+  entityType,
+  entityId,
+}: {
+  triggerLabel?: string;
+  entityType?: string;
+  entityId?: string;
+}) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [uploading, setUploading] = useState(false);
@@ -50,7 +58,7 @@ export function DocumentUploadDialog() {
   const [form, setForm] = useState({
     name: "",
     category: "other",
-    entity_type: "",
+    entity_type: entityType ?? "",
     expiry_date: "",
   });
 
@@ -101,15 +109,15 @@ export function DocumentUploadDialog() {
         mime_type: uploadedFile.mime,
         size_bytes: uploadedFile.size,
         category: form.category,
-        entity_type: form.entity_type || null,
-        entity_id: null,
+        entity_type: (entityType ?? form.entity_type) || null,
+        entity_id: entityId ?? null,
         expiry_date: form.expiry_date || null,
       });
       if (result.ok) {
         toast.success("Document saved");
         setOpen(false);
         setUploadedFile(null);
-        setForm({ name: "", category: "other", entity_type: "", expiry_date: "" });
+        setForm({ name: "", category: "other", entity_type: entityType ?? "", expiry_date: "" });
       } else {
         toast.error(result.error ?? "Failed to save document");
       }
@@ -122,7 +130,7 @@ export function DocumentUploadDialog() {
         render={(props) => (
           <Button {...props} className="bg-emerald-500 hover:bg-emerald-600">
             <Plus className="mr-2 h-4 w-4" />
-            Upload Document
+            {triggerLabel}
           </Button>
         )}
       />
@@ -188,30 +196,51 @@ export function DocumentUploadDialog() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Category</Label>
-              <Select value={form.category} onValueChange={(v) => set("category", v ?? "other")}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase())}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <Select value={form.category} onValueChange={(v) => set("category", v ?? "other")}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIES.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase())}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="doc_expiry">Expiry Date</Label>
+                <Input
+                  id="doc_expiry"
+                  type="date"
+                  value={form.expiry_date}
+                  onChange={(e) => set("expiry_date", e.target.value)}
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="doc_expiry">Expiry Date</Label>
-              <Input
-                id="doc_expiry"
-                type="date"
-                value={form.expiry_date}
-                onChange={(e) => set("expiry_date", e.target.value)}
-              />
-            </div>
+            {!entityType && (
+              <div className="space-y-2">
+                <Label>Entity Type</Label>
+                <Select value={form.entity_type || "none"} onValueChange={(v) => set("entity_type", v === "none" ? "" : v ?? "")}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Optional" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="lead">Lead</SelectItem>
+                    <SelectItem value="customer">Customer</SelectItem>
+                    <SelectItem value="property">Property</SelectItem>
+                    <SelectItem value="deal">Deal</SelectItem>
+                    <SelectItem value="invoice">Invoice</SelectItem>
+                    <SelectItem value="expense">Expense</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

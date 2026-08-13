@@ -4,7 +4,8 @@ import { LeadsBoard, type BoardLead, type LeadStage } from "@/components/leads/l
 import { LeadsTable, type LeadRow } from "@/components/leads/leads-table";
 import { LeadCreateDialog } from "@/components/leads/lead-create-dialog";
 import Link from "next/link";
-import { KanbanSquare, List } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { KanbanSquare, List, Search } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -149,6 +150,23 @@ export default async function LeadsBoardPage({
   ]);
 
   const agents = agentsResult.data ?? [];
+  const visibleLeads = boardData?.leads ?? [];
+  const normalize = (value: string | null) => (value ?? "").trim().toLowerCase();
+  const phoneCounts = new Map<string, number>();
+  const emailCounts = new Map<string, number>();
+  for (const lead of visibleLeads) {
+    const phone = normalize(lead.phone);
+    const email = normalize(lead.email);
+    if (phone) phoneCounts.set(phone, (phoneCounts.get(phone) ?? 0) + 1);
+    if (email) emailCounts.set(email, (emailCounts.get(email) ?? 0) + 1);
+  }
+  const duplicateLeadIds = visibleLeads
+    .filter((lead) => {
+      const phone = normalize(lead.phone);
+      const email = normalize(lead.email);
+      return (phone && (phoneCounts.get(phone) ?? 0) > 1) || (email && (emailCounts.get(email) ?? 0) > 1);
+    })
+    .map((lead) => lead.id);
 
   return (
     <div className="space-y-4">
@@ -161,6 +179,21 @@ export default async function LeadsBoardPage({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <form action="/leads" method="get" className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              name="q"
+              defaultValue={params.q ?? ""}
+              placeholder="Search leads..."
+              className="w-72 pl-9"
+            />
+            <input type="hidden" name="view" value={view} />
+            {params.status && <input type="hidden" name="status" value={params.status} />}
+            {params.source && <input type="hidden" name="source" value={params.source} />}
+            {params.assigned && <input type="hidden" name="assigned" value={params.assigned} />}
+            {params.stage && <input type="hidden" name="stage" value={params.stage} />}
+          </form>
+
           <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
             <Link
               href={buildViewHref("board")}
@@ -189,6 +222,7 @@ export default async function LeadsBoardPage({
         <LeadsBoard
           stages={boardData?.stages ?? []}
           leads={boardData?.leads ?? []}
+          duplicateLeadIds={duplicateLeadIds}
           userRole={user.role}
         />
       ) : (
