@@ -234,8 +234,7 @@ export function LeadDetail({
     { label: "Next follow-up", value: optimisticLead.next_follow_up_at ? formatDate(optimisticLead.next_follow_up_at) : "None" },
     { label: "Assigned to", value: optimisticLead.assigned_to_profile?.full_name ?? "Unassigned" },
   ];
-  const workflowStages = stages.filter((s) => s.kind === "open" || s.kind === "active" || s.kind === "won");
-  const closingStages = stages.filter((s) => s.kind === "lost" || s.kind === "junk");
+  const workflowStages = stages;
 
   function startInlineEdit(next: InlineEditState) {
     setInlineEdit(next);
@@ -622,96 +621,40 @@ export function LeadDetail({
         ))}
       </div>
 
-      {/* Stage workflow — thin inline step bar, fully dynamic from lead_stages table */}
+      {/* Stage workflow */}
       {stages.length > 0 && (
-        <div className="rounded-[1.75rem] border border-slate-200/80 bg-white p-4 shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Workflow Path</p>
-              <p className="text-sm text-slate-500">Tap a stage to move the lead instantly.</p>
-            </div>
-            {currentStage && (
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-100">
-                {currentStage.name}
-              </span>
-            )}
-          </div>
-
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {workflowStages.map((stage) => {
-              const isCurrent = optimisticLead.stage_id === stage.id;
+        <div className="rounded-[1.35rem] border border-slate-200 bg-white p-2 shadow-[0_10px_28px_rgba(15,23,42,0.07)]">
+          <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${workflowStages.length}, minmax(0, 1fr))` }}>
+            {workflowStages.map((stage, idx) => {
               const currentIdx = workflowStages.findIndex((s) => s.id === optimisticLead.stage_id);
-              const stageIdx = workflowStages.findIndex((s) => s.id === stage.id);
-              const isPassed = currentIdx >= 0 && stageIdx < currentIdx;
-              const stageColor = stage.color || "#10b981";
+              const isCurrent = idx === currentIdx;
+              const isPassed = currentIdx >= 0 && idx < currentIdx;
+              const isEditable = canEdit && !pending;
+              const stageColor = stage.color || "#7dd3fc";
 
               return (
                 <button
                   key={stage.id}
-                  onClick={() => canEdit && handleStageChange(stage.id)}
-                  disabled={pending || !canEdit}
-                  className={`group relative min-w-[150px] flex-1 rounded-2xl border px-4 py-3 text-left shadow-sm transition-all ${
-                    isCurrent
-                      ? "translate-y-[-1px] text-white shadow-[0_14px_24px_rgba(16,185,129,0.25)]"
-                      : isPassed
-                      ? "text-slate-700 hover:-translate-y-0.5 hover:shadow-md"
-                      : "text-slate-500 hover:-translate-y-0.5 hover:shadow-md"
-                  } ${canEdit ? "cursor-pointer" : "cursor-default"}`}
-                  style={
-                    isCurrent
-                      ? { background: `linear-gradient(135deg, ${stageColor}, ${stageColor}dd)`, borderColor: stageColor }
-                      : isPassed
-                      ? { background: `${stageColor}14`, borderColor: `${stageColor}33` }
-                      : { background: "linear-gradient(180deg, #f8fafc, #eef2f7)", borderColor: "#e2e8f0" }
-                  }
+                  onClick={() => isEditable && handleStageChange(stage.id)}
+                  disabled={!isEditable}
+                  className={`relative h-9 min-w-0 overflow-hidden rounded-[0.85rem] px-3 text-left text-[11px] font-medium leading-none transition-all ${
+                    isEditable ? "cursor-pointer hover:-translate-y-[1px]" : "cursor-default"
+                  } ${isCurrent ? "shadow-[0_10px_18px_rgba(15,23,42,0.10)]" : ""}`}
+                  style={{
+                    backgroundColor: isCurrent || isPassed ? "#5fd2e5" : "#e5e7eb",
+                    color: "#475569",
+                  }}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-sm font-semibold">{stage.name}</span>
-                    {isCurrent ? (
-                      <CheckCircle2 className="h-4 w-4 shrink-0" />
-                    ) : isPassed ? (
-                      <CheckCircle2 className="h-4 w-4 shrink-0" style={{ color: stageColor }} />
-                    ) : null}
-                  </div>
-                  <div
-                    className="mt-2 h-1.5 rounded-full"
-                    style={{ backgroundColor: isCurrent ? "rgba(255,255,255,0.35)" : isPassed ? stageColor : "#dbe4ee" }}
+                  <span className="block truncate pr-6">{stage.name}</span>
+                  <span
+                    className="absolute inset-x-0 bottom-0 h-[2px]"
+                    style={{ backgroundColor: isCurrent || isPassed ? stageColor : "#cbd5e1" }}
                   />
+                  {isCurrent && <span className="absolute right-2 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-white/80" />}
                 </button>
               );
             })}
           </div>
-
-          {closingStages.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-              {closingStages.map((stage) => {
-                const isCurrent = optimisticLead.stage_id === stage.id;
-                const stageColor = stage.color || "#ef4444";
-                return (
-                  <button
-                    key={stage.id}
-                    onClick={() => canEdit && handleStageChange(stage.id)}
-                    disabled={pending || !canEdit}
-                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all ${
-                      isCurrent ? "text-white shadow-md" : "text-slate-500 hover:-translate-y-0.5 hover:shadow-sm"
-                    } ${canEdit ? "cursor-pointer" : "cursor-default"}`}
-                    style={
-                      isCurrent
-                        ? { backgroundColor: stageColor, borderColor: stageColor }
-                        : { backgroundColor: `${stageColor}10`, borderColor: `${stageColor}25` }
-                    }
-                  >
-                    <XCircle className="h-3.5 w-3.5" />
-                    {stage.name}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {currentStage?.helper_text && (
-            <p className="mt-3 text-xs text-slate-400">{currentStage.helper_text}</p>
-          )}
         </div>
       )}
 
