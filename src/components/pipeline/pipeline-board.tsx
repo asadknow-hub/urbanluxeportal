@@ -60,7 +60,7 @@ function DealCardItem({ deal, isDragging }: { deal: DealCard; isDragging?: boole
   return (
     <Link
       href={`/pipeline/${deal.id}`}
-      className={`group block rounded-[1.25rem] border border-slate-200/60 bg-white p-4 transition-all duration-300 ${isDragging ? "shadow-xl opacity-75 scale-[1.02] ring-2 ring-emerald-500" : "hover:-translate-y-1 hover:shadow-md hover:border-emerald-200/60"}`}
+      className={`group block rounded-xl border border-slate-200/60 bg-white p-3 transition-all duration-300 ${isDragging ? "shadow-xl opacity-75 scale-[1.02] ring-2 ring-emerald-500" : "hover:-translate-y-1 hover:shadow-md hover:border-emerald-200/60"}`}
     >
       <div className="flex items-start justify-between">
         <p className="text-[15px] font-bold text-slate-900 line-clamp-1 flex-1 group-hover:text-emerald-600 transition-colors">{deal.title}</p>
@@ -122,10 +122,10 @@ function DroppableColumn({
 
   return (
     <div className="flex flex-col min-w-[320px] w-80 shrink-0">
-      <div className={`mb-4 flex items-center justify-between rounded-t-[1.5rem] bg-gradient-to-r ${stage.grad} p-4 shadow-sm text-white`}>
+      <div className={`mb-2 flex items-center justify-between rounded-t-xl bg-white border-t-[3px] border-slate-200 p-2.5 shadow-sm text-slate-800`}>
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-bold uppercase tracking-wider">{stage.label}</h3>
-          <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold shadow-inner">
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold shadow-sm border border-slate-200/60 text-slate-600">
             {deals.length}
           </span>
         </div>
@@ -133,7 +133,7 @@ function DroppableColumn({
       </div>
       <div
         ref={setNodeRef}
-        className={`flex-1 space-y-3 rounded-b-[1.5rem] p-3 min-h-[500px] transition-colors border-x border-b border-slate-200/60 shadow-sm ${isOver ? "bg-emerald-50 border-emerald-200" : "bg-slate-50/50"}`}
+        className={`flex-1 space-y-3 rounded-b-xl p-2 min-h-[500px] transition-colors border-x border-b border-slate-200/60 shadow-sm ${isOver ? "bg-emerald-50 border-emerald-200" : "bg-slate-50/50"}`}
       >
         {deals.length === 0 ? (
           <div className="flex h-32 items-center justify-center text-xs font-bold uppercase tracking-wider text-slate-400">
@@ -202,6 +202,7 @@ export function PipelineBoard({
 
     // Optimistic: move immediately
     startTransition(async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result = await updateDealStage({ id: dealId, stage: newStage as any });
       if (result.ok) {
         router.refresh();
@@ -286,7 +287,7 @@ export function PipelineBoard({
 
       {/* Won dialog */}
       <Dialog open={!!wonDialog} onOpenChange={(v) => !v && setWonDialog(null)}>
-        <DialogContent className="sm:max-w-md rounded-[1.5rem] border-0 p-0 overflow-hidden shadow-2xl">
+        <DialogContent className="sm:max-w-md rounded-2xl border-0 p-0 overflow-hidden shadow-2xl">
           <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-4 text-white">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold tracking-tight text-white">Deal Won!</DialogTitle>
@@ -328,7 +329,7 @@ export function PipelineBoard({
 
       {/* Lost dialog */}
       <Dialog open={!!lostDialog} onOpenChange={(v) => !v && setLostDialog(null)}>
-        <DialogContent className="sm:max-w-md rounded-[1.5rem] border-0 p-0 overflow-hidden shadow-2xl">
+        <DialogContent className="sm:max-w-md rounded-2xl border-0 p-0 overflow-hidden shadow-2xl">
           <div className="bg-gradient-to-r from-red-500 to-red-600 p-4 text-white">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold tracking-tight text-white">Deal Lost</DialogTitle>

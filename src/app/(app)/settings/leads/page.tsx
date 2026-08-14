@@ -99,35 +99,37 @@ export default async function LeadsSettingsPage({
 
   return (
     <div className="space-y-5 max-w-[1600px] mx-auto">
-      {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-5 text-white shadow-xl">
-        <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
-        <div className="relative z-10 flex flex-col gap-4">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-300/80 mb-2">
-            <Link href="/settings" className="hover:text-white transition-colors">Settings</Link>
-            <span className="text-slate-500">/</span>
-            <span className="text-white">Leads</span>
+      {/* Minimalist White Header */}
+      <div className="flex flex-col gap-4 rounded-xl border border-slate-200/60 bg-white p-4 shadow-sm xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+            <Settings2 className="h-4 w-4" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight mb-2">Lead Settings Hub</h1>
-            <p className="max-w-2xl text-sm text-slate-300 font-medium leading-relaxed">
-              Control center for the lead lifecycle: configure capture sources, field mapping, activation stages, intelligent routing, and documentation rules.
+            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
+              <Link href="/settings" className="hover:text-slate-600 transition-colors">Settings</Link>
+              <span>/</span>
+              <span className="text-slate-900">Leads</span>
+            </div>
+            <h1 className="text-lg font-bold text-slate-900 leading-none mb-1">Lead Settings Hub</h1>
+            <p className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">
+              Control center for the lead lifecycle
             </p>
           </div>
         </div>
       </div>
 
       {/* Segmented Control Tabs */}
-      <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-slate-200/60 bg-white/60 backdrop-blur-md p-1.5 shadow-sm max-w-fit">
+      <div className="inline-flex flex-wrap items-center rounded-lg border border-slate-200 bg-slate-50 p-1 shadow-inner h-9 max-w-fit">
         {HUB_TABS.map((item) => (
           <Link
             key={item.key}
             href={`/settings/leads?tab=${item.key}`}
             className={cn(
-              "rounded-xl px-4 py-2 text-sm font-bold transition-all duration-200",
+              "inline-flex items-center justify-center rounded-md px-3 h-7 text-xs font-bold transition-all duration-200",
               tab === item.key 
-                ? "bg-emerald-50 text-emerald-700 shadow-sm ring-1 ring-emerald-200/50" 
-                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                ? "bg-white text-slate-900 shadow-sm" 
+                : "text-slate-500 hover:text-slate-700"
             )}
           >
             {item.label}
@@ -139,74 +141,74 @@ export default async function LeadsSettingsPage({
         <div className="space-y-6">
           {/* Top Metrics Bento Grid */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="group rounded-[1.5rem] bg-white p-4 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
+            <div className="group rounded-xl bg-white p-3 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
                <div className="flex items-center gap-3 mb-4">
-                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
-                   <Route className="h-5 w-5" />
+                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                   <Route className="h-4 w-4" />
                  </div>
                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Sources</h3>
                </div>
-               <div className="text-4xl font-extrabold text-slate-900">{sources.length}</div>
+               <div className="text-2xl font-bold text-slate-900">{sources.length}</div>
                <p className="mt-2 text-xs font-medium text-slate-400">Active capture channels</p>
             </div>
             
-            <div className="group rounded-[1.5rem] bg-white p-4 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
+            <div className="group rounded-xl bg-white p-3 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
                <div className="flex items-center gap-3 mb-4">
-                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
-                   <Layers3 className="h-5 w-5" />
+                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                   <Layers3 className="h-4 w-4" />
                  </div>
                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Stages</h3>
                </div>
-               <div className="text-4xl font-extrabold text-slate-900">{stages.length}</div>
+               <div className="text-2xl font-bold text-slate-900">{stages.length}</div>
                <p className="mt-2 text-xs font-medium text-slate-400">Flow states</p>
             </div>
             
-            <div className="group rounded-[1.5rem] bg-white p-4 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
+            <div className="group rounded-xl bg-white p-3 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
                <div className="flex items-center gap-3 mb-4">
-                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
-                   <Settings2 className="h-5 w-5" />
+                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                   <Settings2 className="h-4 w-4" />
                  </div>
                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Rules</h3>
                </div>
-               <div className="text-4xl font-extrabold text-slate-900">{routingRules.length}</div>
+               <div className="text-2xl font-bold text-slate-900">{routingRules.length}</div>
                <p className="mt-2 text-xs font-medium text-slate-400">Routing & SLAs</p>
             </div>
             
-            <div className="group rounded-[1.5rem] bg-white p-4 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
+            <div className="group rounded-xl bg-white p-3 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
                <div className="flex items-center gap-3 mb-4">
-                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
-                   <FileText className="h-5 w-5" />
+                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                   <FileText className="h-4 w-4" />
                  </div>
                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Fields</h3>
                </div>
-               <div className="text-4xl font-extrabold text-slate-900">{activeFields}</div>
+               <div className="text-2xl font-bold text-slate-900">{activeFields}</div>
                <p className="mt-2 text-xs font-medium text-slate-400">{inactiveFields} inactive in `leads.custom`</p>
             </div>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3">
-            <div className="rounded-[1.5rem] bg-white p-5 shadow-sm border border-slate-200/60 lg:col-span-2">
-              <div className="flex items-center gap-3 mb-6">
+            <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200/60 lg:col-span-2">
+              <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
                   <Layers3 className="h-4 w-4" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900">Activation Flow</h2>
+                <h2 className="text-base font-bold text-slate-900">Activation Flow</h2>
               </div>
-              <p className="text-sm text-slate-500 font-medium leading-relaxed mb-8">
+              <p className="text-sm text-slate-500 font-medium leading-relaxed mb-5">
                 1. Capture via a source, form, webhook, or manual entry.<br/>
                 2. Normalize and map fields into the lead model.<br/>
                 3. Enter the stage flow and apply routing / SLA rules.<br/>
                 4. Follow up, qualify, and convert into a customer and deal.
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl bg-slate-50 p-5 border border-slate-100/50">
+                <div className="rounded-xl bg-slate-50 p-4 border border-slate-100/50">
                   <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Next stop</p>
                   <div className="mt-3 flex items-center gap-3 text-sm font-bold text-slate-700">
                     <CalendarClock className="h-5 w-5 text-emerald-500" />
                     Follow-ups and SLA reclaim
                   </div>
                 </div>
-                <div className="rounded-2xl bg-slate-50 p-5 border border-slate-100/50">
+                <div className="rounded-xl bg-slate-50 p-4 border border-slate-100/50">
                   <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Conversion target</p>
                   <div className="mt-3 flex items-center gap-3 text-sm font-bold text-slate-700">
                     <CheckCircle2 className="h-5 w-5 text-emerald-500" />
@@ -216,12 +218,12 @@ export default async function LeadsSettingsPage({
               </div>
             </div>
 
-            <div className="rounded-[1.5rem] bg-white p-5 shadow-sm border border-slate-200/60">
-              <div className="flex items-center gap-3 mb-6">
+            <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200/60">
+              <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
                   <Settings2 className="h-4 w-4" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900">Quick Links</h2>
+                <h2 className="text-base font-bold text-slate-900">Quick Links</h2>
               </div>
               <div className="space-y-3">
                 <Link href="/leads?view=board" className="group flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4 transition-all hover:bg-white hover:border-slate-200 hover:shadow-md">
@@ -247,12 +249,12 @@ export default async function LeadsSettingsPage({
       )}
 
       {(tab === "sources" || tab === "fields" || tab === "mapping") && (
-        <div className="rounded-[1.5rem] bg-white p-5 shadow-sm border border-slate-200/60 flex flex-col">
-          <div className="flex items-center gap-3 mb-6">
+        <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200/60 flex flex-col">
+          <div className="flex items-center gap-3 mb-4">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
               <Route className="h-4 w-4" />
             </div>
-            <h2 className="text-xl font-bold text-slate-900">Capture Configuration</h2>
+            <h2 className="text-base font-bold text-slate-900">Capture Configuration</h2>
           </div>
           <div>
             <LeadsInflowClient
@@ -267,16 +269,16 @@ export default async function LeadsSettingsPage({
 
       {tab === "stages" && (
         <div className="space-y-6">
-          <div className="rounded-[1.5rem] bg-white p-5 shadow-sm border border-slate-200/60">
-            <div className="flex items-center gap-3 mb-6">
+          <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200/60">
+            <div className="flex items-center gap-3 mb-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
                 <Layers3 className="h-4 w-4" />
               </div>
-              <h2 className="text-xl font-bold text-slate-900">Activation Stages</h2>
+              <h2 className="text-base font-bold text-slate-900">Activation Stages</h2>
             </div>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {stages.map((stage: { id: string; name: string; color: string; kind: string; sort: number; helper_text: string | null; required_fields: unknown }) => (
-                <div key={stage.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-5 hover:border-slate-200 hover:shadow-sm transition-all flex flex-col">
+                <div key={stage.id} className="rounded-xl border border-slate-100 bg-slate-50 p-4 hover:border-slate-200 hover:shadow-sm transition-all flex flex-col">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-base font-bold text-slate-900">{stage.name}</p>
@@ -284,9 +286,9 @@ export default async function LeadsSettingsPage({
                     </div>
                     <span className="rounded-full bg-white px-3 py-1 text-[10px] font-bold tracking-wider text-slate-600 shadow-sm border border-slate-100">{stage.color}</span>
                   </div>
-                  {stage.helper_text && <p className="mt-4 text-sm font-medium text-slate-600 leading-relaxed">{stage.helper_text}</p>}
+                  {stage.helper_text && <p className="mt-3 text-sm font-medium text-slate-600 leading-relaxed">{stage.helper_text}</p>}
                   
-                  <div className="mt-auto pt-5">
+                  <div className="mt-auto pt-3">
                     <div className="border-t border-slate-200/60 pt-4">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Required Fields</p>
                       <div className="flex flex-wrap gap-1.5">
@@ -297,7 +299,7 @@ export default async function LeadsSettingsPage({
                         )) : <span className="text-xs text-slate-400 font-medium">None</span>}
                       </div>
                     </div>
-                    <div className="mt-4 flex items-center gap-2">
+                    <div className="mt-3 flex items-center gap-2">
                       <span className="flex h-5 items-center justify-center rounded bg-emerald-100 px-2 text-[10px] font-bold text-emerald-700">{stageCountMap[stage.id] ?? 0}</span>
                       <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Leads in stage</span>
                     </div>
@@ -307,11 +309,11 @@ export default async function LeadsSettingsPage({
             </div>
           </div>
 
-          <div className="rounded-[1.5rem] bg-white p-5 shadow-sm border border-slate-200/60">
-            <h2 className="text-xl font-bold text-slate-900 mb-6">Lost and Junk Reasons</h2>
+          <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200/60">
+            <h2 className="text-base font-bold text-slate-900 mb-4">Lost and Junk Reasons</h2>
             <div className="grid gap-4 md:grid-cols-2">
               {(["lost", "junk"] as const).map((kind) => (
-                <div key={kind} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <div key={kind} className="rounded-xl border border-slate-100 bg-slate-50 p-4">
                   <p className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">{kind}</p>
                   <div className="flex flex-wrap gap-2">
                     {lostReasons.filter((reason: { kind: string }) => reason.kind === kind).map((reason: { label: string; kind: string }) => (
@@ -328,12 +330,12 @@ export default async function LeadsSettingsPage({
       )}
 
       {tab === "routing" && (
-        <div className="rounded-[1.5rem] bg-white p-5 shadow-sm border border-slate-200/60">
-          <div className="flex items-center gap-3 mb-6">
+        <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200/60">
+          <div className="flex items-center gap-3 mb-4">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
               <Route className="h-4 w-4" />
             </div>
-            <h2 className="text-xl font-bold text-slate-900">Routing and SLA Rules</h2>
+            <h2 className="text-base font-bold text-slate-900">Routing and SLA Rules</h2>
           </div>
           <div className="space-y-4">
             {routingRules.length === 0 ? (
@@ -341,7 +343,7 @@ export default async function LeadsSettingsPage({
             ) : (
               <div className="grid gap-4">
                 {routingRules.map((rule: { id: string; sort: number; conditions: Record<string, unknown>; action: Record<string, unknown>; is_active: boolean }) => (
-                  <div key={rule.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 hover:border-slate-200 transition-colors">
+                  <div key={rule.id} className="rounded-xl border border-slate-100 bg-slate-50 p-4 hover:border-slate-200 transition-colors">
                     <div className="flex items-center justify-between gap-3 mb-4">
                       <div className="flex items-center gap-4">
                         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm border border-slate-200/60 text-sm font-bold text-slate-700">
@@ -381,16 +383,16 @@ export default async function LeadsSettingsPage({
       )}
 
       {tab === "documents" && (
-        <div className="rounded-[1.5rem] bg-white p-5 shadow-sm border border-slate-200/60">
-          <div className="flex items-center gap-3 mb-6">
+        <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200/60">
+          <div className="flex items-center gap-3 mb-4">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
               <FileText className="h-4 w-4" />
             </div>
-            <h2 className="text-xl font-bold text-slate-900">Lead Document Requirements</h2>
+            <h2 className="text-base font-bold text-slate-900">Lead Document Requirements</h2>
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {docReqs.map((req: { id: string; name: string; slots: Array<{ key: string; label: string }> | null; applies_when: Record<string, unknown>; required: boolean; allowed_types: string[]; max_mb: number }) => (
-              <div key={req.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 hover:border-slate-200 transition-colors flex flex-col">
+              <div key={req.id} className="rounded-xl border border-slate-100 bg-slate-50 p-4 hover:border-slate-200 transition-colors flex flex-col">
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div>
                     <p className="text-base font-bold text-slate-900">{req.name}</p>

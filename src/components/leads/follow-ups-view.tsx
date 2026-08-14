@@ -271,7 +271,7 @@ export function FollowUpsView({
               key={group}
               onClick={() => setGroupFilter(groupFilter === group ? null : group)}
               className={cn(
-                "relative overflow-hidden rounded-[1.5rem] border p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-gradient-to-br",
+                "relative overflow-hidden rounded-xl border p-3 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-gradient-to-br",
                 cfg.border,
                 cfg.bg,
                 cfg.grad,
@@ -282,14 +282,14 @@ export function FollowUpsView({
                 <span className={cn("text-sm font-bold uppercase tracking-wider", cfg.color)}>{cfg.label}</span>
                 <span className={cn("h-2.5 w-2.5 rounded-full shadow-sm", cfg.badge)} />
               </div>
-              <p className="relative z-10 text-4xl font-extrabold text-slate-900">{count}</p>
+              <p className="relative z-10 text-2xl font-bold text-slate-900">{count}</p>
             </button>
           );
         })}
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-white p-3 rounded-[1.5rem] border border-slate-200/60 shadow-sm">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-white p-2 rounded-xl border border-slate-200/60 shadow-sm">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
@@ -297,7 +297,7 @@ export function FollowUpsView({
             placeholder="Search by name, phone, email..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2 pl-9 pr-9 text-xs text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all"
           />
           {search && (
             <button
@@ -314,7 +314,7 @@ export function FollowUpsView({
           <button
             onClick={() => setShowFilters((v) => !v)}
             className={cn(
-              "inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition-colors shadow-sm",
+              "inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs text-sm font-bold transition-colors shadow-sm",
               hasActiveFilters
                 ? "border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700"
                 : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900"
@@ -357,7 +357,7 @@ export function FollowUpsView({
 
       {/* Expandable filters */}
       {showFilters && (
-        <div className="flex flex-wrap items-center gap-4 rounded-[1.5rem] border border-slate-200/60 bg-white p-5 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="flex flex-wrap items-center gap-4 rounded-xl border border-slate-200/60 bg-white p-4 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
           {/* Stage filter */}
           <div className="flex items-center gap-3">
             <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Stage</label>
@@ -474,27 +474,27 @@ export function FollowUpsView({
           })}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-[1.5rem] border border-slate-200/60 shadow-sm bg-white">
+        <div className="overflow-hidden rounded-xl border border-slate-200/60 shadow-sm bg-white">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200/80 bg-slate-50/50">
                 <tr className="text-left text-xs font-bold uppercase tracking-widest text-slate-500">
-                  <th className="px-5 py-4">
+                  <th className="px-4 py-3">
                     <SortButton field="name" label="Lead" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
                   </th>
-                  <th className="hidden px-5 py-4 md:table-cell">
+                  <th className="hidden px-4 py-3 md:table-cell">
                     <SortButton field="stage" label="Stage" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
                   </th>
-                  <th className="hidden px-5 py-4 lg:table-cell">
+                  <th className="hidden px-4 py-3 lg:table-cell">
                     <SortButton field="assigned_to" label="Agent" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
                   </th>
-                  <th className="hidden px-5 py-4 lg:table-cell">
+                  <th className="hidden px-4 py-3 lg:table-cell">
                     <SortButton field="last_activity_at" label="Last Activity" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
                   </th>
-                  <th className="px-5 py-4">
+                  <th className="px-4 py-3">
                     <SortButton field="next_follow_up_at" label="Follow-up" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
                   </th>
-                  <th className="px-5 py-4 text-right">Actions</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -504,7 +504,7 @@ export function FollowUpsView({
                   const stageColor = lead.stage ? getStageColor(lead.stage.color) : null;
                   return (
                     <tr key={lead.id} className="group transition-colors hover:bg-slate-50/80">
-                      <td className="px-5 py-3.5">
+                      <td className="px-4 py-2.5">
                         <Link
                           href={`/leads/${lead.id}`}
                           className="font-bold text-slate-900 group-hover:text-emerald-600 transition-colors"
@@ -515,14 +515,14 @@ export function FollowUpsView({
                           <span className="ml-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md">{lead.interest}</span>
                         )}
                       </td>
-                      <td className="hidden px-5 py-3.5 md:table-cell">
+                      <td className="hidden px-4 py-2.5 md:table-cell">
                         {lead.stage && stageColor && (
                           <span className={cn("inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-bold uppercase tracking-wider ring-1 ring-inset border border-transparent", stageColor.bg, stageColor.text)}>
                             {lead.stage.name}
                           </span>
                         )}
                       </td>
-                      <td className="hidden px-5 py-3.5 lg:table-cell">
+                      <td className="hidden px-4 py-2.5 lg:table-cell">
                         {lead.assigned_to_profile ? (
                           <div className="flex items-center gap-2">
                              {lead.assigned_to_profile.avatar_url ? (
@@ -538,17 +538,17 @@ export function FollowUpsView({
                           <span className="text-xs italic text-slate-400">Unassigned</span>
                         )}
                       </td>
-                      <td className="hidden px-5 py-3.5 lg:table-cell text-xs font-medium text-slate-500">
+                      <td className="hidden px-4 py-2.5 lg:table-cell text-xs font-medium text-slate-500">
                         {timeAgo(lead.last_activity_at ?? lead.updated_at)}
                       </td>
-                      <td className="px-5 py-3.5">
+                      <td className="px-4 py-2.5">
                         <span className={cn("inline-flex items-center gap-1.5 text-xs font-bold", cfg.color)}>
                           {group === "overdue" && <AlertCircle className="h-3.5 w-3.5" />}
                           <Clock className="h-3.5 w-3.5" />
                           {formatDate(lead.next_follow_up_at, "dd MMM, HH:mm")}
                         </span>
                       </td>
-                      <td className="px-5 py-3.5">
+                      <td className="px-4 py-2.5">
                         <div className="flex items-center justify-end gap-3">
                           {lead.phone && (
                             <>
@@ -628,7 +628,7 @@ function FollowUpCard({ lead, group }: { lead: FollowUpLead; group: TimeGroup })
   return (
     <div
       className={cn(
-        "group flex flex-col gap-3 rounded-[1.5rem] border p-4 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md",
+        "group flex flex-col gap-3 rounded-xl border p-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md",
         cfg.border,
         "bg-white"
       )}
