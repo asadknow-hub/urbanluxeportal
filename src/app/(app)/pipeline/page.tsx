@@ -51,15 +51,45 @@ export default async function PipelinePage() {
   }, 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Sales Pipeline</h1>
-          <p className="text-sm text-slate-500">
-            {activeDeals.length} active deals ·{" "}
-            <span className="font-medium text-slate-700">{formatAEDCompact(totalPipeline)}</span> total ·{" "}
-            <span className="font-medium text-emerald-600">{formatAEDCompact(weightedValue)}</span> weighted
+    <div className="space-y-6 max-w-[1600px] mx-auto">
+      {/* Glossy Header Banner */}
+      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-6 sm:p-8 text-white shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
+        <div className="relative z-10">
+          <h1 className="text-3xl font-extrabold tracking-tight mb-2">Sales Pipeline</h1>
+          <p className="text-sm text-slate-300 font-medium">
+            Manage your deals and track revenue projections
           </p>
+        </div>
+      </div>
+
+      {/* Metrics Bento Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Active Deals */}
+        <div className="relative overflow-hidden rounded-[1.5rem] border border-blue-200/60 p-5 bg-gradient-to-br from-blue-50 to-transparent shadow-sm hover:shadow-md transition-shadow">
+          <div className="relative z-10 flex items-center justify-between mb-2">
+            <span className="text-sm font-bold uppercase tracking-wider text-blue-700">Active Deals</span>
+            <span className="h-2.5 w-2.5 rounded-full bg-blue-500 shadow-sm" />
+          </div>
+          <p className="relative z-10 text-4xl font-extrabold text-slate-900">{activeDeals.length}</p>
+        </div>
+
+        {/* Total Pipeline */}
+        <div className="relative overflow-hidden rounded-[1.5rem] border border-slate-200/60 p-5 bg-gradient-to-br from-slate-50 to-transparent shadow-sm hover:shadow-md transition-shadow">
+          <div className="relative z-10 flex items-center justify-between mb-2">
+            <span className="text-sm font-bold uppercase tracking-wider text-slate-700">Total Pipeline</span>
+            <span className="h-2.5 w-2.5 rounded-full bg-slate-400 shadow-sm" />
+          </div>
+          <p className="relative z-10 text-4xl font-extrabold text-slate-900">{formatAEDCompact(totalPipeline)}</p>
+        </div>
+
+        {/* Weighted Value */}
+        <div className="relative overflow-hidden rounded-[1.5rem] border border-emerald-200/60 p-5 bg-gradient-to-br from-emerald-50 to-transparent shadow-sm hover:shadow-md transition-shadow">
+          <div className="relative z-10 flex items-center justify-between mb-2">
+            <span className="text-sm font-bold uppercase tracking-wider text-emerald-700">Weighted Value</span>
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-sm" />
+          </div>
+          <p className="relative z-10 text-4xl font-extrabold text-emerald-900">{formatAEDCompact(weightedValue)}</p>
         </div>
       </div>
 
