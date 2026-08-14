@@ -49,7 +49,7 @@ export function EmailTemplatesList({ templates }: { templates: Template[] }) {
   if (editingId) {
     const template = templates.find((t) => t.id === editingId);
     return (
-      <div className="space-y-4 rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+      <div className="space-y-4 rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-semibold text-slate-900 capitalize">
