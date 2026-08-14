@@ -9,12 +9,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!user) redirect("/login");
 
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen bg-slate-50/30">
       <SessionHeartbeat />
       <Sidebar role={user.role} />
-      <div className="pl-60 transition-all">
+      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
         <Topbar user={user} />
-        <main className="p-6">{children}</main>
+        <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

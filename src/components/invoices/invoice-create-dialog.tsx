@@ -111,25 +111,31 @@ export function InvoiceCreateDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={(props) => (
-          <Button {...props} className="bg-emerald-500 hover:bg-emerald-600">
+          <Button {...props} className="bg-emerald-500 hover:bg-emerald-600 shadow-sm rounded-full px-6 font-medium">
             <Plus className="mr-2 h-4 w-4" />
             New Invoice
           </Button>
         )}
       />
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>New Invoice</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Customer *</Label>
+      <DialogContent 
+        className="max-w-4xl sm:max-w-4xl w-[95vw] sm:w-[90vw] md:w-[80vw] lg:w-[60vw] max-h-[90vh] overflow-y-auto p-0 border-0 rounded-[2rem] shadow-2xl"
+        closeClassName="text-slate-300 hover:text-white hover:bg-slate-800/50"
+      >
+        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-6 sm:p-8 text-white relative overflow-hidden">
+          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
+          <DialogHeader className="relative z-10">
+            <DialogTitle className="text-2xl font-bold tracking-tight">Create New Invoice</DialogTitle>
+          </DialogHeader>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="space-y-2.5">
+              <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Customer *</Label>
               <Select value={customerId} onValueChange={(v) => setCustomerId(v ?? "")}>
-                <SelectTrigger>
+                <SelectTrigger className="h-11 rounded-xl bg-slate-50/50 border-slate-200 focus:ring-emerald-500/20">
                   <SelectValue placeholder="Select customer" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-xl shadow-xl">
                   {customers.map((c) => (
                     <SelectItem key={c.id ?? ""} value={c.id ?? ""}>
                       {c.name ?? ""}
@@ -138,109 +144,112 @@ export function InvoiceCreateDialog({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="issue_date">Issue Date</Label>
+            <div className="space-y-2.5">
+              <Label htmlFor="issue_date" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Issue Date</Label>
               <Input
                 id="issue_date"
                 type="date"
                 value={issueDate}
                 onChange={(e) => setIssueDate(e.target.value)}
+                className="h-11 rounded-xl bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500/20"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="due_date">Due Date</Label>
+            <div className="space-y-2.5">
+              <Label htmlFor="due_date" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Due Date</Label>
               <Input
                 id="due_date"
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
+                className="h-11 rounded-xl bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500/20"
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Line Items</Label>
-            <div className="space-y-2">
+          <div className="space-y-3">
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Line Items</Label>
+            <div className="space-y-3">
               {items.map((item, idx) => (
-                <div key={idx} className="flex items-start gap-2">
+                <div key={idx} className="flex items-start gap-3">
                   <Input
                     placeholder="Description"
                     value={item.description}
                     onChange={(e) => updateItem(idx, "description", e.target.value)}
-                    className="flex-1"
+                    className="flex-1 h-11 rounded-xl bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500/20"
                   />
                   <Input
                     type="number"
                     placeholder="Qty"
                     value={item.qty}
                     onChange={(e) => updateItem(idx, "qty", e.target.value)}
-                    className="w-20"
+                    className="w-24 h-11 rounded-xl bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500/20"
                   />
                   <Input
                     type="number"
                     placeholder="Unit Price"
                     value={item.unit_price}
                     onChange={(e) => updateItem(idx, "unit_price", e.target.value)}
-                    className="w-32"
+                    className="w-32 h-11 rounded-xl bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500/20"
                   />
-                  <span className="pt-2 text-sm font-medium text-slate-600 min-w-[80px] text-right">
+                  <span className="pt-3 text-sm font-semibold text-slate-700 min-w-[90px] text-right">
                     {formatAED((Number(item.qty) * Number(item.unit_price) || 0) * 100)}
                   </span>
                   {items.length > 1 && (
-                    <Button type="button" size="sm" variant="ghost" onClick={() => removeItem(idx)}>
-                      <Trash2 className="h-4 w-4 text-red-400" />
+                    <Button type="button" size="icon" variant="ghost" onClick={() => removeItem(idx)} className="mt-1 h-9 w-9 hover:bg-red-50 hover:text-red-600 rounded-full">
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   )}
                 </div>
               ))}
             </div>
-            <Button type="button" variant="outline" size="sm" onClick={addItem}>
-              <Plus className="mr-1 h-3.5 w-3.5" />
-              Add Line
+            <Button type="button" variant="outline" size="sm" onClick={addItem} className="rounded-full font-medium shadow-sm hover:bg-slate-50 border-slate-200/60 text-slate-600">
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              Add Line Item
             </Button>
           </div>
 
-          <div className="rounded-xl bg-slate-50 p-4 space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-slate-500">Subtotal</span>
-              <span className="font-medium text-slate-700">{formatAED(subtotal * 100)}</span>
+          <div className="rounded-[1.5rem] bg-slate-50/80 border border-slate-100 p-5 space-y-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500 font-medium">Subtotal</span>
+              <span className="font-semibold text-slate-700">{formatAED(subtotal * 100)}</span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-500">Discount (AED)</span>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-slate-500 font-medium">Discount (AED)</span>
               <Input
                 type="number"
                 value={discount}
                 onChange={(e) => setDiscount(e.target.value)}
                 placeholder="0"
-                className="w-28 text-right"
+                className="w-32 text-right h-9 rounded-lg border-slate-200 bg-white"
               />
             </div>
-            <div className="flex justify-between">
-              <span className="text-slate-500">VAT (5%)</span>
-              <span className="font-medium text-slate-700">{formatAED(vat * 100)}</span>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-500 font-medium">VAT (5%)</span>
+              <span className="font-semibold text-slate-700">{formatAED(vat * 100)}</span>
             </div>
-            <div className="flex justify-between border-t border-slate-200 pt-2">
-              <span className="font-semibold text-slate-700">Total</span>
-              <span className="font-bold text-slate-900">{formatAED(total * 100)}</span>
+            <div className="flex justify-between border-t border-slate-200 pt-4 mt-2">
+              <span className="font-bold text-slate-700">Total</span>
+              <span className="font-extrabold text-lg text-emerald-600">{formatAED(total * 100)}</span>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="notes" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Notes</Label>
             <Textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Additional notes..."
-              rows={2}
+              placeholder="Additional notes for the invoice..."
+              rows={3}
+              className="rounded-xl bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500/20 resize-none"
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="rounded-full px-6 font-medium shadow-sm">
               Cancel
             </Button>
-            <Button type="submit" disabled={pending || !customerId}>
+            <Button type="submit" disabled={pending || !customerId} className="rounded-full px-8 bg-emerald-500 hover:bg-emerald-600 font-medium shadow-sm">
               {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Invoice
             </Button>

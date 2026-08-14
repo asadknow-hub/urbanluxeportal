@@ -68,12 +68,31 @@ export default async function PropertiesPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Properties</h1>
-          <p className="text-sm text-slate-500">{count ?? 0} total properties</p>
+      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-8 sm:p-10 shadow-2xl">
+        <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
+        <div className="absolute -bottom-32 -left-32 h-80 w-80 rounded-full bg-blue-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
+
+        <div className="relative z-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+          <div className="max-w-2xl">
+            <div className="mb-2 inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-300 backdrop-blur-md">
+              Real Estate Hub
+            </div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+              Properties
+            </h1>
+            <p className="mt-4 text-base text-slate-300 leading-relaxed max-w-xl">
+              Manage your diverse portfolio of listings with elegant precision and showcase them effectively.
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col items-end mr-4">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total Portfolio</span>
+              <span className="text-2xl font-black text-white">{count ?? 0}</span>
+              <span className="text-xs text-slate-400 font-medium">properties</span>
+            </div>
+            <PropertyCreateDialog owners={owners ?? []} agents={agents ?? []} />
+          </div>
         </div>
-        <PropertyCreateDialog owners={owners ?? []} agents={agents ?? []} />
       </div>
 
       <PropertiesGrid

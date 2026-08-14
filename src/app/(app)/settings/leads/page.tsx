@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LeadsInflowClient, type LeadInflowTab } from "@/components/leads/leads-inflow-client";
 import { ArrowRight, CalendarClock, CheckCircle2, Layers3, Settings2, Route, FileText } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -97,28 +98,37 @@ export default async function LeadsSettingsPage({
   const inactiveFields = fieldDefs.length - activeFields;
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
-          <Link href="/settings" className="hover:text-slate-700">Settings</Link>
-          <span>/</span>
-          <span className="text-slate-900">Leads</span>
+    <div className="space-y-8 max-w-[1600px] mx-auto">
+      {/* Header Banner */}
+      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-8 text-white shadow-xl">
+        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
+        <div className="relative z-10 flex flex-col gap-4">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-300/80 mb-2">
+            <Link href="/settings" className="hover:text-white transition-colors">Settings</Link>
+            <span className="text-slate-500">/</span>
+            <span className="text-white">Leads</span>
+          </div>
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight mb-2">Lead Settings Hub</h1>
+            <p className="max-w-2xl text-sm text-slate-300 font-medium leading-relaxed">
+              Control center for the lead lifecycle: configure capture sources, field mapping, activation stages, intelligent routing, and documentation rules.
+            </p>
+          </div>
         </div>
-        <h1 className="text-2xl font-bold text-slate-900">Lead Settings</h1>
-        <p className="max-w-3xl text-sm text-slate-500">
-          This is the control center for the full lead lifecycle: sources, field mapping, stage flow, routing, and document rules.
-          The database tables are already RLS-protected; this page is the admin/manager surface for configuring them end to end.
-        </p>
       </div>
 
-      <div className="flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+      {/* Segmented Control Tabs */}
+      <div className="flex flex-wrap items-center gap-1.5 rounded-2xl border border-slate-200/60 bg-white/60 backdrop-blur-md p-1.5 shadow-sm max-w-fit">
         {HUB_TABS.map((item) => (
           <Link
             key={item.key}
             href={`/settings/leads?tab=${item.key}`}
-            className={`rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
-              tab === item.key ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-            }`}
+            className={cn(
+              "rounded-xl px-4 py-2 text-sm font-bold transition-all duration-200",
+              tab === item.key 
+                ? "bg-emerald-50 text-emerald-700 shadow-sm ring-1 ring-emerald-200/50" 
+                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+            )}
           >
             {item.label}
           </Link>
@@ -127,261 +137,292 @@ export default async function LeadsSettingsPage({
 
       {tab === "overview" && (
         <div className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Card className="rounded-2xl">
-              <CardHeader>
-                <CardTitle className="text-sm font-medium text-slate-500">Sources</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-slate-900">{sources.length}</div>
-                <p className="mt-1 text-xs text-slate-500">Channels feeding the CRM</p>
-              </CardContent>
-            </Card>
-            <Card className="rounded-2xl">
-              <CardHeader>
-                <CardTitle className="text-sm font-medium text-slate-500">Stages</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-slate-900">{stages.length}</div>
-                <p className="mt-1 text-xs text-slate-500">Current activation flow states</p>
-              </CardContent>
-            </Card>
-            <Card className="rounded-2xl">
-              <CardHeader>
-                <CardTitle className="text-sm font-medium text-slate-500">Routing rules</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-slate-900">{routingRules.length}</div>
-                <p className="mt-1 text-xs text-slate-500">Assignment and reclaim logic</p>
-              </CardContent>
-            </Card>
-            <Card className="rounded-2xl">
-              <CardHeader>
-                <CardTitle className="text-sm font-medium text-slate-500">Custom fields</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-slate-900">{activeFields}</div>
-                <p className="mt-1 text-xs text-slate-500">{inactiveFields} inactive, preserved in `leads.custom`</p>
-              </CardContent>
-            </Card>
+          {/* Top Metrics Bento Grid */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="group rounded-[2rem] bg-white p-6 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
+               <div className="flex items-center gap-3 mb-4">
+                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                   <Route className="h-5 w-5" />
+                 </div>
+                 <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Sources</h3>
+               </div>
+               <div className="text-4xl font-extrabold text-slate-900">{sources.length}</div>
+               <p className="mt-2 text-xs font-medium text-slate-400">Active capture channels</p>
+            </div>
+            
+            <div className="group rounded-[2rem] bg-white p-6 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
+               <div className="flex items-center gap-3 mb-4">
+                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                   <Layers3 className="h-5 w-5" />
+                 </div>
+                 <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Stages</h3>
+               </div>
+               <div className="text-4xl font-extrabold text-slate-900">{stages.length}</div>
+               <p className="mt-2 text-xs font-medium text-slate-400">Flow states</p>
+            </div>
+            
+            <div className="group rounded-[2rem] bg-white p-6 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
+               <div className="flex items-center gap-3 mb-4">
+                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                   <Settings2 className="h-5 w-5" />
+                 </div>
+                 <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Rules</h3>
+               </div>
+               <div className="text-4xl font-extrabold text-slate-900">{routingRules.length}</div>
+               <p className="mt-2 text-xs font-medium text-slate-400">Routing & SLAs</p>
+            </div>
+            
+            <div className="group rounded-[2rem] bg-white p-6 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
+               <div className="flex items-center gap-3 mb-4">
+                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                   <FileText className="h-5 w-5" />
+                 </div>
+                 <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Fields</h3>
+               </div>
+               <div className="text-4xl font-extrabold text-slate-900">{activeFields}</div>
+               <p className="mt-2 text-xs font-medium text-slate-400">{inactiveFields} inactive in `leads.custom`</p>
+            </div>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-3">
-            <Card className="rounded-2xl lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Layers3 className="h-4 w-4 text-emerald-500" />
-                  Activation flow
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600">
-                <p>
-                  1. Capture via a source, form, webhook, or manual entry.
-                  2. Normalize and map fields into the lead model.
-                  3. Enter the stage flow and apply routing / SLA rules.
-                  4. Follow up, qualify, and convert into a customer and deal.
-                </p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-xl bg-slate-50 p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Next stop</p>
-                    <div className="mt-2 flex items-center gap-2 text-slate-900">
-                      <CalendarClock className="h-4 w-4 text-emerald-500" />
-                      Follow-ups and SLA reclaim
-                    </div>
-                  </div>
-                  <div className="rounded-xl bg-slate-50 p-3">
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Conversion target</p>
-                    <div className="mt-2 flex items-center gap-2 text-slate-900">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                      Customer + deal creation
-                    </div>
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="rounded-[2rem] bg-white p-8 shadow-sm border border-slate-200/60 lg:col-span-2">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                  <Layers3 className="h-4 w-4" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-900">Activation Flow</h2>
+              </div>
+              <p className="text-sm text-slate-500 font-medium leading-relaxed mb-8">
+                1. Capture via a source, form, webhook, or manual entry.<br/>
+                2. Normalize and map fields into the lead model.<br/>
+                3. Enter the stage flow and apply routing / SLA rules.<br/>
+                4. Follow up, qualify, and convert into a customer and deal.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl bg-slate-50 p-5 border border-slate-100/50">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Next stop</p>
+                  <div className="mt-3 flex items-center gap-3 text-sm font-bold text-slate-700">
+                    <CalendarClock className="h-5 w-5 text-emerald-500" />
+                    Follow-ups and SLA reclaim
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="rounded-2xl bg-slate-50 p-5 border border-slate-100/50">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Conversion target</p>
+                  <div className="mt-3 flex items-center gap-3 text-sm font-bold text-slate-700">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                    Customer + deal creation
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            <Card className="rounded-2xl">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Settings2 className="h-4 w-4 text-emerald-500" />
-                  Quick links
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <Link href="/leads?view=board" className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-slate-600 hover:bg-slate-50">
-                  <span>Open Leads board</span>
-                  <ArrowRight className="h-4 w-4" />
+            <div className="rounded-[2rem] bg-white p-8 shadow-sm border border-slate-200/60">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                  <Settings2 className="h-4 w-4" />
+                </div>
+                <h2 className="text-xl font-bold text-slate-900">Quick Links</h2>
+              </div>
+              <div className="space-y-3">
+                <Link href="/leads?view=board" className="group flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4 transition-all hover:bg-white hover:border-slate-200 hover:shadow-md">
+                  <span className="text-sm font-bold text-slate-700 group-hover:text-emerald-700">Open Leads board</span>
+                  <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
                 </Link>
-                <Link href="/leads?view=list" className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-slate-600 hover:bg-slate-50">
-                  <span>Open list view</span>
-                  <ArrowRight className="h-4 w-4" />
+                <Link href="/leads?view=list" className="group flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4 transition-all hover:bg-white hover:border-slate-200 hover:shadow-md">
+                  <span className="text-sm font-bold text-slate-700 group-hover:text-emerald-700">Open list view</span>
+                  <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
                 </Link>
-                <Link href="/leads/followups" className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-slate-600 hover:bg-slate-50">
-                  <span>Open follow-ups</span>
-                  <ArrowRight className="h-4 w-4" />
+                <Link href="/leads/followups" className="group flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4 transition-all hover:bg-white hover:border-slate-200 hover:shadow-md">
+                  <span className="text-sm font-bold text-slate-700 group-hover:text-emerald-700">Open follow-ups</span>
+                  <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
                 </Link>
-                <Link href="/deals" className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-slate-600 hover:bg-slate-50">
-                  <span>Open deals pipeline</span>
-                  <ArrowRight className="h-4 w-4" />
+                <Link href="/deals" className="group flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4 transition-all hover:bg-white hover:border-slate-200 hover:shadow-md">
+                  <span className="text-sm font-bold text-slate-700 group-hover:text-emerald-700">Open deals pipeline</span>
+                  <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
                 </Link>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {(tab === "sources" || tab === "fields" || tab === "mapping") && (
-        <Card className="rounded-2xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Route className="h-4 w-4 text-emerald-500" />
-              Capture configuration
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="rounded-[2rem] bg-white p-8 shadow-sm border border-slate-200/60 flex flex-col">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+              <Route className="h-4 w-4" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">Capture Configuration</h2>
+          </div>
+          <div>
             <LeadsInflowClient
               sources={sources}
               fieldDefs={fieldDefs}
               statsMap={sourceCountMap}
               initialTab={inflowTab}
             />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {tab === "stages" && (
-        <div className="space-y-4">
-          <Card className="rounded-2xl">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Layers3 className="h-4 w-4 text-emerald-500" />
-                Activation stages
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {stages.map((stage: { id: string; name: string; color: string; kind: string; sort: number; helper_text: string | null; required_fields: unknown }) => (
-                  <div key={stage.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">{stage.name}</p>
-                        <p className="text-xs text-slate-500">{formatStageKind(stage.kind)} · sort {stage.sort}</p>
+        <div className="space-y-6">
+          <div className="rounded-[2rem] bg-white p-8 shadow-sm border border-slate-200/60">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                <Layers3 className="h-4 w-4" />
+              </div>
+              <h2 className="text-xl font-bold text-slate-900">Activation Stages</h2>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {stages.map((stage: { id: string; name: string; color: string; kind: string; sort: number; helper_text: string | null; required_fields: unknown }) => (
+                <div key={stage.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-5 hover:border-slate-200 hover:shadow-sm transition-all flex flex-col">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-base font-bold text-slate-900">{stage.name}</p>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mt-1">{formatStageKind(stage.kind)} · Sort {stage.sort}</p>
+                    </div>
+                    <span className="rounded-full bg-white px-3 py-1 text-[10px] font-bold tracking-wider text-slate-600 shadow-sm border border-slate-100">{stage.color}</span>
+                  </div>
+                  {stage.helper_text && <p className="mt-4 text-sm font-medium text-slate-600 leading-relaxed">{stage.helper_text}</p>}
+                  
+                  <div className="mt-auto pt-5">
+                    <div className="border-t border-slate-200/60 pt-4">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Required Fields</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {Array.isArray(stage.required_fields) && stage.required_fields.length > 0 ? stage.required_fields.map((field) => (
+                          <span key={String(field)} className="rounded-md bg-white border border-slate-200/60 px-2 py-1 text-[10px] font-bold text-slate-600">
+                            {String(field).replace(/_/g, " ")}
+                          </span>
+                        )) : <span className="text-xs text-slate-400 font-medium">None</span>}
                       </div>
-                      <span className="rounded-full bg-white px-2 py-0.5 text-xs text-slate-500 ring-1 ring-slate-200">{stage.color}</span>
                     </div>
-                    {stage.helper_text && <p className="mt-3 text-sm text-slate-600">{stage.helper_text}</p>}
-                    <p className="mt-3 text-xs text-slate-500">
-                      Required fields: {Array.isArray(stage.required_fields) && stage.required_fields.length > 0 ? stage.required_fields.map((field) => String(field).replace(/_/g, " ")).join(", ") : "none"}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-400">Leads currently in stage: {stageCountMap[stage.id] ?? 0}</p>
+                    <div className="mt-4 flex items-center gap-2">
+                      <span className="flex h-5 items-center justify-center rounded bg-emerald-100 px-2 text-[10px] font-bold text-emerald-700">{stageCountMap[stage.id] ?? 0}</span>
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Leads in stage</span>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              ))}
+            </div>
+          </div>
 
-          <Card className="rounded-2xl">
-            <CardHeader>
-              <CardTitle className="text-base">Lost and junk reasons</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                {(["lost", "junk"] as const).map((kind) => (
-                  <div key={kind} className="rounded-xl border border-slate-200 p-4">
-                    <p className="text-sm font-semibold text-slate-900 capitalize">{kind}</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {lostReasons.filter((reason: { kind: string }) => reason.kind === kind).map((reason: { label: string; kind: string }) => (
-                        <span key={reason.label} className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600">
-                          {reason.label}
-                        </span>
-                      ))}
-                    </div>
+          <div className="rounded-[2rem] bg-white p-8 shadow-sm border border-slate-200/60">
+            <h2 className="text-xl font-bold text-slate-900 mb-6">Lost and Junk Reasons</h2>
+            <div className="grid gap-6 md:grid-cols-2">
+              {(["lost", "junk"] as const).map((kind) => (
+                <div key={kind} className="rounded-2xl border border-slate-100 bg-slate-50 p-6">
+                  <p className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">{kind}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {lostReasons.filter((reason: { kind: string }) => reason.kind === kind).map((reason: { label: string; kind: string }) => (
+                      <span key={reason.label} className="rounded-full bg-white border border-slate-200/60 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm">
+                        {reason.label}
+                      </span>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
       {tab === "routing" && (
-        <Card className="rounded-2xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Route className="h-4 w-4 text-emerald-500" />
-              Routing and SLA rules
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div className="rounded-[2rem] bg-white p-8 shadow-sm border border-slate-200/60">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+              <Route className="h-4 w-4" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">Routing and SLA Rules</h2>
+          </div>
+          <div className="space-y-4">
             {routingRules.length === 0 ? (
-              <p className="text-sm text-slate-500">No routing rules found.</p>
+              <p className="text-sm font-medium text-slate-500">No routing rules found.</p>
             ) : (
-              <div className="space-y-3">
+              <div className="grid gap-4">
                 {routingRules.map((rule: { id: string; sort: number; conditions: Record<string, unknown>; action: Record<string, unknown>; is_active: boolean }) => (
-                  <div key={rule.id} className="rounded-xl border border-slate-200 p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">Rule #{rule.sort}</p>
-                        <p className="text-xs text-slate-500">{describeTarget(rule.action)}</p>
+                  <div key={rule.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-6 hover:border-slate-200 transition-colors">
+                    <div className="flex items-center justify-between gap-3 mb-4">
+                      <div className="flex items-center gap-4">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm border border-slate-200/60 text-sm font-bold text-slate-700">
+                          {rule.sort}
+                        </span>
+                        <div>
+                          <p className="text-base font-bold text-slate-900">{describeTarget(rule.action)}</p>
+                        </div>
                       </div>
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${rule.is_active ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-500"}`}>
+                      <span className={cn(
+                        "rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider shadow-sm",
+                        rule.is_active ? "bg-emerald-100 text-emerald-700 border border-emerald-200/50" : "bg-white text-slate-500 border border-slate-200"
+                      )}>
                         {rule.is_active ? "Active" : "Inactive"}
                       </span>
                     </div>
-                    <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <div className="grid gap-4 md:grid-cols-2 mt-6 border-t border-slate-200/60 pt-6">
                       <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Conditions</p>
-                        <pre className="mt-2 overflow-x-auto rounded-lg bg-slate-50 p-3 text-xs text-slate-600">{JSON.stringify(rule.conditions, null, 2)}</pre>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Conditions</p>
+                        <pre className="overflow-x-auto rounded-xl bg-white border border-slate-200/60 p-4 text-[11px] font-medium text-slate-600 shadow-inner max-h-40 overflow-y-auto custom-scrollbar">
+                          {JSON.stringify(rule.conditions, null, 2)}
+                        </pre>
                       </div>
                       <div>
-                        <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Action</p>
-                        <pre className="mt-2 overflow-x-auto rounded-lg bg-slate-50 p-3 text-xs text-slate-600">{JSON.stringify(rule.action, null, 2)}</pre>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Action Config</p>
+                        <pre className="overflow-x-auto rounded-xl bg-white border border-slate-200/60 p-4 text-[11px] font-medium text-slate-600 shadow-inner max-h-40 overflow-y-auto custom-scrollbar">
+                          {JSON.stringify(rule.action, null, 2)}
+                        </pre>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {tab === "documents" && (
-        <Card className="rounded-2xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <FileText className="h-4 w-4 text-emerald-500" />
-              Lead document requirements
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {docReqs.map((req: { id: string; name: string; slots: Array<{ key: string; label: string }> | null; applies_when: Record<string, unknown>; required: boolean; allowed_types: string[]; max_mb: number }) => (
-                <div key={req.id} className="rounded-xl border border-slate-200 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">{req.name}</p>
-                      <p className="text-xs text-slate-500">{req.required ? "Required" : "Optional"} · {req.max_mb} MB max</p>
-                    </div>
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">{req.allowed_types.join(", ")}</span>
+        <div className="rounded-[2rem] bg-white p-8 shadow-sm border border-slate-200/60">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+              <FileText className="h-4 w-4" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">Lead Document Requirements</h2>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {docReqs.map((req: { id: string; name: string; slots: Array<{ key: string; label: string }> | null; applies_when: Record<string, unknown>; required: boolean; allowed_types: string[]; max_mb: number }) => (
+              <div key={req.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-6 hover:border-slate-200 transition-colors flex flex-col">
+                <div className="flex items-start justify-between gap-3 mb-4">
+                  <div>
+                    <p className="text-base font-bold text-slate-900">{req.name}</p>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mt-1">{req.required ? "Required" : "Optional"} · {req.max_mb} MB max</p>
                   </div>
-                  <div className="mt-3 space-y-2 text-xs text-slate-500">
-                    <p>Slots:</p>
-                    <div className="flex flex-wrap gap-2">
+                  <span className="rounded-full bg-white border border-slate-200/60 shadow-sm px-2.5 py-1 text-[10px] font-bold text-slate-500 tracking-wide uppercase">
+                    {req.allowed_types.join(", ")}
+                  </span>
+                </div>
+                
+                <div className="mt-auto space-y-4 pt-4 border-t border-slate-200/60">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Available Slots</p>
+                    <div className="flex flex-wrap gap-1.5">
                       {(req.slots ?? []).map((slot) => (
-                        <span key={slot.key} className="rounded-full bg-slate-100 px-2 py-1 text-slate-600">
+                        <span key={slot.key} className="rounded-md bg-white border border-slate-200/60 shadow-sm px-2 py-1 text-[10px] font-bold text-slate-700">
                           {slot.label}
                         </span>
                       ))}
                     </div>
-                    <p className="pt-2">Applies when:</p>
-                    <pre className="overflow-x-auto rounded-lg bg-slate-50 p-3 text-xs text-slate-600">{JSON.stringify(req.applies_when, null, 2)}</pre>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Applies When</p>
+                    <pre className="overflow-x-auto rounded-xl bg-white border border-slate-200/60 p-3 text-[11px] font-medium text-slate-600 shadow-inner max-h-32 overflow-y-auto custom-scrollbar">
+                      {JSON.stringify(req.applies_when, null, 2)}
+                    </pre>
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

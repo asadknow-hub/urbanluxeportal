@@ -6,6 +6,7 @@ import { LeadCreateDialog } from "@/components/leads/lead-create-dialog";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { KanbanSquare, List, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -169,23 +170,25 @@ export default async function LeadsBoardPage({
     .map((lead) => lead.id);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Leads</h1>
-          <p className="text-sm text-slate-500">
-            {view === "board" ? `${boardData?.count ?? 0} total leads` : `${listData?.count ?? 0} total leads`}
+    <div className="space-y-6 max-w-[1600px] mx-auto">
+      {/* Glossy Header Banner */}
+      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-6 sm:p-8 text-white shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
+        <div className="relative z-10">
+          <h1 className="text-3xl font-extrabold tracking-tight mb-2">Lead Pipeline</h1>
+          <p className="text-sm text-slate-300 font-medium">
+            {view === "board" ? `${boardData?.count ?? 0} total leads` : `${listData?.count ?? 0} total leads`} · Manage and convert your opportunities
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="relative z-10 flex flex-wrap items-center gap-3">
           <form action="/leads" method="get" className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               name="q"
               defaultValue={params.q ?? ""}
               placeholder="Search leads..."
-              className="w-72 pl-9"
+              className="w-full sm:w-64 pl-11 h-11 bg-white/10 border-white/20 text-white placeholder:text-slate-400 focus-visible:ring-emerald-500/50 rounded-xl backdrop-blur-md"
             />
             <input type="hidden" name="view" value={view} />
             {params.status && <input type="hidden" name="status" value={params.status} />}
@@ -194,21 +197,23 @@ export default async function LeadsBoardPage({
             {params.stage && <input type="hidden" name="stage" value={params.stage} />}
           </form>
 
-          <div className="inline-flex rounded-xl border border-slate-200 bg-white p-1 shadow-sm">
+          <div className="inline-flex rounded-xl border border-white/20 bg-white/10 p-1.5 shadow-inner backdrop-blur-md h-11">
             <Link
               href={buildViewHref("board")}
-              className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                view === "board" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-              }`}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-lg px-4 text-sm font-bold transition-all duration-200",
+                view === "board" ? "bg-white text-slate-900 shadow-sm" : "text-slate-300 hover:text-white"
+              )}
             >
               <KanbanSquare className="h-4 w-4" />
               Board
             </Link>
             <Link
               href={buildViewHref("list")}
-              className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                view === "list" ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-              }`}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-lg px-4 text-sm font-bold transition-all duration-200",
+                view === "list" ? "bg-white text-slate-900 shadow-sm" : "text-slate-300 hover:text-white"
+              )}
             >
               <List className="h-4 w-4" />
               List

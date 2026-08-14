@@ -51,17 +51,17 @@ export type BoardLead = {
   duplicate?: boolean;
 };
 
-const COLOR_MAP: Record<string, { bg: string; border: string; text: string; dot: string }> = {
-  blue: { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", dot: "bg-blue-500" },
-  cyan: { bg: "bg-cyan-50", border: "border-cyan-200", text: "text-cyan-700", dot: "bg-cyan-500" },
-  teal: { bg: "bg-teal-50", border: "border-teal-200", text: "text-teal-700", dot: "bg-teal-500" },
-  purple: { bg: "bg-purple-50", border: "border-purple-200", text: "text-purple-700", dot: "bg-purple-500" },
-  indigo: { bg: "bg-indigo-50", border: "border-indigo-200", text: "text-indigo-700", dot: "bg-indigo-500" },
-  green: { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700", dot: "bg-emerald-500" },
-  slate: { bg: "bg-slate-100", border: "border-slate-300", text: "text-slate-600", dot: "bg-slate-400" },
-  gray: { bg: "bg-gray-100", border: "border-gray-300", text: "text-gray-600", dot: "bg-gray-400" },
-  amber: { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", dot: "bg-amber-500" },
-  red: { bg: "bg-red-50", border: "border-red-200", text: "text-red-700", dot: "bg-red-500" },
+const COLOR_MAP: Record<string, { bg: string; border: string; text: string; dot: string; grad: string }> = {
+  blue: { bg: "bg-blue-50/80", border: "border-blue-200/60", text: "text-blue-700", dot: "bg-blue-500", grad: "from-blue-50/80 to-transparent" },
+  cyan: { bg: "bg-cyan-50/80", border: "border-cyan-200/60", text: "text-cyan-700", dot: "bg-cyan-500", grad: "from-cyan-50/80 to-transparent" },
+  teal: { bg: "bg-teal-50/80", border: "border-teal-200/60", text: "text-teal-700", dot: "bg-teal-500", grad: "from-teal-50/80 to-transparent" },
+  purple: { bg: "bg-purple-50/80", border: "border-purple-200/60", text: "text-purple-700", dot: "bg-purple-500", grad: "from-purple-50/80 to-transparent" },
+  indigo: { bg: "bg-indigo-50/80", border: "border-indigo-200/60", text: "text-indigo-700", dot: "bg-indigo-500", grad: "from-indigo-50/80 to-transparent" },
+  green: { bg: "bg-emerald-50/80", border: "border-emerald-200/60", text: "text-emerald-700", dot: "bg-emerald-500", grad: "from-emerald-50/80 to-transparent" },
+  slate: { bg: "bg-slate-100/80", border: "border-slate-300/60", text: "text-slate-700", dot: "bg-slate-500", grad: "from-slate-100/80 to-transparent" },
+  gray: { bg: "bg-gray-100/80", border: "border-gray-300/60", text: "text-gray-700", dot: "bg-gray-500", grad: "from-gray-100/80 to-transparent" },
+  amber: { bg: "bg-amber-50/80", border: "border-amber-200/60", text: "text-amber-700", dot: "bg-amber-500", grad: "from-amber-50/80 to-transparent" },
+  red: { bg: "bg-red-50/80", border: "border-red-200/60", text: "text-red-700", dot: "bg-red-500", grad: "from-red-50/80 to-transparent" },
 };
 
 function getColor(color: string) {
@@ -95,47 +95,40 @@ function LeadCard({ lead, stage, isDragging }: { lead: BoardLead; stage: LeadSta
   return (
     <div
       className={cn(
-        "rounded-lg border bg-white p-3 shadow-sm transition-all hover:shadow-md cursor-grab active:cursor-grabbing",
-        isDragging && "opacity-50",
-        stale && "ring-1 ring-amber-300"
+        "rounded-2xl border border-slate-200/60 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-grab active:cursor-grabbing group",
+        isDragging && "opacity-50 ring-2 ring-emerald-500/50 shadow-xl",
+        stale && "ring-1 ring-amber-300 bg-amber-50/20"
       )}
     >
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start justify-between gap-3 mb-3">
         <Link
           href={`/leads/${lead.id}`}
-          className="text-sm font-semibold text-slate-900 hover:underline truncate"
+          className="text-[15px] font-bold text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-1"
           onClick={(e) => e.stopPropagation()}
         >
           {lead.name}
         </Link>
         {stale && (
-          <AlertCircle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+          <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
         )}
       </div>
 
-      <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-400">
+      <div className="flex flex-wrap items-center gap-2 mb-3">
         {lead.interest && (
-          <span className={cn("rounded px-1.5 py-0.5 font-medium", color.bg, color.text)}>
+          <span className={cn("rounded-lg px-2 py-1 text-[11px] font-bold uppercase tracking-wider ring-1 ring-inset", color.bg, color.text, color.border)}>
             {formatLeadInterest(lead.interest)}
           </span>
         )}
         {lead.duplicate && (
-          <span className="rounded px-1.5 py-0.5 font-medium bg-red-50 text-red-700 border border-red-200">
+          <span className="rounded-lg px-2 py-1 text-[11px] font-bold uppercase tracking-wider bg-red-50 text-red-700 ring-1 ring-inset ring-red-200">
             Duplicate
           </span>
-        )}
-        {lead.assigned_to_profile ? (
-          <span className="flex items-center gap-1 truncate">
-            <UserIcon className="h-3 w-3" />
-            {lead.assigned_to_profile.full_name}
-          </span>
-        ) : (
-          <span className="text-slate-400 italic">Unassigned</span>
         )}
       </div>
 
       {(lead.budget_min || lead.budget_max) && (
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-1.5">
+          <span className="text-slate-400 font-normal">Budget:</span>
           {lead.budget_min ? `${(lead.budget_min / 100).toLocaleString()}k` : "?"}
           {" – "}
           {lead.budget_max ? `${(lead.budget_max / 100).toLocaleString()}k` : "?"} AED
@@ -143,37 +136,58 @@ function LeadCard({ lead, stage, isDragging }: { lead: BoardLead; stage: LeadSta
       )}
 
       {lead.preferred_areas && lead.preferred_areas.length > 0 && (
-        <p className="mt-0.5 text-xs text-slate-400 truncate">
+        <p className="text-xs text-slate-500 mb-3 line-clamp-1 leading-relaxed">
           {lead.preferred_areas.slice(0, 2).join(", ")}
           {lead.preferred_areas.length > 2 && ` +${lead.preferred_areas.length - 2}`}
         </p>
       )}
 
       {lead.tags && lead.tags.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5 mb-4">
           {lead.tags.slice(0, 3).map((tag) => (
-            <span key={tag} className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+            <span key={tag} className="rounded-full bg-slate-100/80 px-2.5 py-0.5 text-[11px] font-medium text-slate-600 border border-slate-200/60">
               {formatLeadTag(tag)}
             </span>
           ))}
           {lead.tags.length > 3 && (
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+            <span className="rounded-full bg-slate-100/80 px-2.5 py-0.5 text-[11px] font-medium text-slate-500 border border-slate-200/60">
               +{lead.tags.length - 3}
             </span>
           )}
         </div>
       )}
 
-      <div className="mt-2 flex items-center justify-between text-xs text-slate-400">
-        <span className="flex items-center gap-1">
-          <Clock className="h-3 w-3" />
-          {timeAgo(lead.last_activity_at ?? lead.updated_at)}
-        </span>
-        {lead.next_follow_up_at && (
-          <span className="text-amber-600 font-medium">
-            {new Date(lead.next_follow_up_at).toLocaleDateString("en", { month: "short", day: "numeric" })}
-          </span>
-        )}
+      <div className="mt-auto pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+        <div className="flex items-center gap-1.5 text-slate-500 font-medium">
+          {lead.assigned_to_profile ? (
+             <div className="flex items-center gap-1.5">
+               {lead.assigned_to_profile.avatar_url ? (
+                 <img src={lead.assigned_to_profile.avatar_url} className="w-5 h-5 rounded-full object-cover" />
+               ) : (
+                 <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center">
+                   <UserIcon className="h-3 w-3 text-slate-500" />
+                 </div>
+               )}
+               <span className="truncate max-w-[80px]">{lead.assigned_to_profile.full_name.split(' ')[0]}</span>
+             </div>
+          ) : (
+            <span className="text-slate-400 italic">Unassigned</span>
+          )}
+        </div>
+        
+        <div className="flex flex-col items-end gap-1">
+          {lead.next_follow_up_at ? (
+            <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-md flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {new Date(lead.next_follow_up_at).toLocaleDateString("en", { month: "short", day: "numeric" })}
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-slate-400">
+              <Clock className="h-3 w-3" />
+              {timeAgo(lead.last_activity_at ?? lead.updated_at)}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -231,32 +245,31 @@ function StageColumn({
   const color = getColor(stage.color);
 
   return (
-    <div className="flex h-full flex-col min-w-[260px] w-[280px]">
-      <div className={cn("rounded-t-lg border-t-4 px-3 py-2", color.border, color.bg)}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className={cn("h-2 w-2 rounded-full", color.dot)} />
-            <h3 className="text-sm font-semibold text-slate-700">{stage.name}</h3>
+    <div className="flex h-full flex-col min-w-[320px] w-[320px] snap-center">
+      <div className={cn("rounded-t-[1.5rem] border-t-[6px] px-5 py-3.5 bg-gradient-to-b", color.border, color.grad)}>
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-3">
+            <div className={cn("h-3 w-3 rounded-full shadow-sm", color.dot)} />
+            <h3 className="text-base font-bold text-slate-800">{stage.name}</h3>
           </div>
-          <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-slate-500 border border-slate-200">
+          <span className="rounded-full bg-white px-2.5 py-0.5 text-xs font-bold text-slate-600 border border-slate-200/60 shadow-sm">
             {leads.length}
           </span>
         </div>
         {stage.helper_text && (
-          <p className="mt-0.5 text-xs text-slate-400 truncate">{stage.helper_text}</p>
+          <p className="text-xs text-slate-500 line-clamp-1 ml-6 font-medium">{stage.helper_text}</p>
         )}
       </div>
 
       <div
         ref={setNodeRef}
         className={cn(
-          "flex-1 overflow-y-auto rounded-b-lg border border-t-0 bg-slate-50/50 p-2 space-y-2 min-h-[200px] transition-colors",
-          color.border,
-          isOver && "bg-slate-100 ring-2 ring-inset ring-slate-300"
+          "flex-1 overflow-y-auto rounded-b-[1.5rem] border border-t-0 border-slate-200/60 bg-slate-50/50 p-3 space-y-3 min-h-[200px] transition-all",
+          isOver && "bg-slate-100/80 ring-2 ring-inset ring-slate-300 shadow-inner"
         )}
       >
         {leads.length === 0 && (
-          <div className="flex h-32 items-center justify-center text-xs text-slate-300">
+          <div className="flex h-32 items-center justify-center text-sm font-medium text-slate-400 border-2 border-dashed border-slate-200 rounded-xl m-2">
             Drop leads here
           </div>
         )}
@@ -352,7 +365,7 @@ export function LeadsBoard({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex gap-3 overflow-x-auto pb-4 h-[calc(100vh-12rem)]">
+      <div className="flex gap-4 overflow-x-auto pb-6 h-[calc(100vh-14rem)] px-1 snap-x scroll-smooth">
         {stages.map((stage) => (
           <StageColumn
             key={stage.id}

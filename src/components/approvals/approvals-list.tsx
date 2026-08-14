@@ -56,16 +56,16 @@ export function ApprovalsList({
   return (
     <div className="space-y-4">
       {canApprove && (
-        <div className="flex gap-2">
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-100/80 p-1.5 backdrop-blur-md shadow-sm border border-slate-200/60 mb-6">
           <button
             onClick={() => switchTab("inbox")}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${activeTab === "inbox" ? "bg-slate-900 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}
+            className={`rounded-full px-5 py-2 text-sm font-bold transition-all duration-300 ${activeTab === "inbox" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"}`}
           >
             Inbox ({pendingApprovals.length})
           </button>
           <button
             onClick={() => switchTab("mine")}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${activeTab === "mine" ? "bg-slate-900 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}
+            className={`rounded-full px-5 py-2 text-sm font-bold transition-all duration-300 ${activeTab === "mine" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"}`}
           >
             My Requests ({myRequests.length})
           </button>
@@ -83,11 +83,13 @@ export function ApprovalsList({
 
 function PendingApprovals({ approvals }: { approvals: ApprovalRow[] }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {approvals.length === 0 ? (
-        <div className="rounded-2xl bg-white p-12 text-center shadow-sm border border-slate-200">
-          <Clock className="mx-auto h-8 w-8 text-slate-300" />
-          <p className="mt-2 text-sm text-slate-400">No pending approvals.</p>
+        <div className="rounded-[2rem] bg-white p-12 text-center shadow-sm border border-slate-200/60 flex flex-col items-center justify-center">
+          <div className="h-16 w-16 rounded-full bg-slate-50 flex items-center justify-center mb-4">
+            <Clock className="h-8 w-8 text-slate-300" />
+          </div>
+          <p className="text-sm font-semibold text-slate-400">No pending approvals.</p>
         </div>
       ) : (
         approvals.map((approval) => (
@@ -100,11 +102,13 @@ function PendingApprovals({ approvals }: { approvals: ApprovalRow[] }) {
 
 function MyRequests({ requests }: { requests: ApprovalRow[] }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {requests.length === 0 ? (
-        <div className="rounded-2xl bg-white p-12 text-center shadow-sm border border-slate-200">
-          <Clock className="mx-auto h-8 w-8 text-slate-300" />
-          <p className="mt-2 text-sm text-slate-400">No approval requests submitted.</p>
+        <div className="rounded-[2rem] bg-white p-12 text-center shadow-sm border border-slate-200/60 flex flex-col items-center justify-center">
+          <div className="h-16 w-16 rounded-full bg-slate-50 flex items-center justify-center mb-4">
+            <Clock className="h-8 w-8 text-slate-300" />
+          </div>
+          <p className="text-sm font-semibold text-slate-400">No approval requests submitted.</p>
         </div>
       ) : (
         requests.map((req) => (
@@ -154,95 +158,122 @@ function ApprovalCard({
   );
 
   return (
-    <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
-      <div className="flex items-start justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            {statusIcon}
-            <span className="text-sm font-semibold text-slate-900 capitalize">
+    <div className="group rounded-[2rem] bg-white p-6 sm:p-8 shadow-sm border border-slate-200/60 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-emerald-200">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div className="space-y-2.5">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className={`flex items-center justify-center h-8 w-8 rounded-full ${approval.status === "pending" ? "bg-amber-50" : approval.status === "approved" ? "bg-emerald-50" : "bg-red-50"}`}>
+              {statusIcon}
+            </div>
+            <span className="text-lg font-extrabold text-slate-900 capitalize tracking-tight group-hover:text-emerald-600 transition-colors">
               {approval.kind.replace(/_/g, " ")}
             </span>
-            <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${approval.status === "pending" ? "bg-amber-50 text-amber-700" : approval.status === "approved" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
+            <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest shadow-sm border ${approval.status === "pending" ? "bg-amber-50 text-amber-700 border-amber-100" : approval.status === "approved" ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-red-50 text-red-700 border-red-100"}`}>
               {approval.status}
             </span>
           </div>
-          <p className="text-xs text-slate-500">
-            {approval.entity_type} · {formatDate(approval.created_at)}
-          </p>
-          {approval.requester && (
-            <p className="text-xs text-slate-400">
-              Requested by {approval.requester.full_name}
-            </p>
-          )}
-          {approval.decider && approval.decided_at && (
-            <p className="text-xs text-slate-400">
-              Decided by {approval.decider.full_name} · {formatDate(approval.decided_at)}
-            </p>
-          )}
+          
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-500 font-medium ml-11">
+            <span className="flex items-center gap-1.5 capitalize text-slate-700 font-semibold bg-slate-100 px-2 py-0.5 rounded-md text-xs">
+              {approval.entity_type}
+            </span>
+            <span>{formatDate(approval.created_at)}</span>
+            {approval.requester && (
+              <span className="text-slate-400 border-l border-slate-200 pl-4">
+                Requested by <span className="text-slate-700">{approval.requester.full_name}</span>
+              </span>
+            )}
+            {approval.decider && approval.decided_at && (
+              <span className="text-slate-400 border-l border-slate-200 pl-4">
+                Decided by <span className="text-slate-700">{approval.decider.full_name}</span> on {formatDate(approval.decided_at)}
+              </span>
+            )}
+          </div>
         </div>
+        
         {approval.amount != null && (
-          <p className="text-lg font-bold text-slate-900">{formatAED(approval.amount)}</p>
+          <div className="flex flex-col items-start sm:items-end sm:ml-auto pl-11 sm:pl-0">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Amount</span>
+            <span className="text-2xl font-black text-slate-900 group-hover:text-emerald-600 transition-colors">
+              {formatAED(approval.amount)}
+            </span>
+          </div>
         )}
       </div>
 
       {approval.reason && (
-        <p className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
-          {approval.reason}
-        </p>
+        <div className="mt-6 ml-0 sm:ml-11 rounded-xl bg-slate-50/80 p-4 border border-slate-100">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Request Reason</p>
+          <p className="text-sm font-medium text-slate-700 leading-relaxed">
+            {approval.reason}
+          </p>
+        </div>
       )}
 
       {approval.decision_note && (
-        <p className="mt-2 text-xs text-slate-500">
-          Note: {approval.decision_note}
-        </p>
+        <div className="mt-4 ml-0 sm:ml-11 rounded-xl bg-emerald-50/50 p-4 border border-emerald-100">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600/70 mb-2">Decision Note</p>
+          <p className="text-sm font-medium text-emerald-900 leading-relaxed">
+            {approval.decision_note}
+          </p>
+        </div>
       )}
 
       {pending && approval.status === "pending" && (
-        <div className="mt-4 flex gap-2">
+        <div className="mt-6 ml-0 sm:ml-11 flex gap-3 pt-4 border-t border-slate-100">
           <Button
-            size="sm"
-            className="bg-emerald-500 hover:bg-emerald-600"
+            size="lg"
+            className="rounded-full bg-emerald-500 hover:bg-emerald-600 px-8 font-bold shadow-sm"
             onClick={() => openDecision("approved")}
           >
-            <Check className="mr-1 h-3.5 w-3.5" />
-            Approve
+            <Check className="mr-2 h-4 w-4" />
+            Approve Request
           </Button>
           <Button
-            size="sm"
+            size="lg"
             variant="outline"
-            className="text-red-600 border-red-200 hover:bg-red-50"
+            className="rounded-full text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 font-bold shadow-sm px-8"
             onClick={() => openDecision("rejected")}
           >
-            <X className="mr-1 h-3.5 w-3.5" />
+            <X className="mr-2 h-4 w-4" />
             Reject
           </Button>
         </div>
       )}
 
       <Dialog open={decisionOpen} onOpenChange={(v) => !v && setDecisionOpen(false)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>
-              {decision === "approved" ? "Approve" : "Reject"} this request?
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <Label htmlFor="decision_note">Note (optional)</Label>
+        <DialogContent 
+          className="max-w-md overflow-hidden p-0 border-0 rounded-[2rem] shadow-2xl"
+          closeClassName="text-slate-300 hover:text-white hover:bg-slate-800/50"
+        >
+          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-6 sm:p-8 text-white relative overflow-hidden">
+            <div className={`absolute -right-20 -top-20 h-64 w-64 rounded-full blur-3xl mix-blend-overlay pointer-events-none ${decision === "approved" ? "bg-emerald-500/20" : "bg-red-500/20"}`}></div>
+            <DialogHeader className="relative z-10">
+              <DialogTitle className="text-2xl font-bold tracking-tight">
+                {decision === "approved" ? "Approve Request" : "Reject Request"}
+              </DialogTitle>
+            </DialogHeader>
+          </div>
+          
+          <div className="p-6 sm:p-8 space-y-6 bg-white">
+            <div className="space-y-2.5">
+              <Label htmlFor="decision_note" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Note (optional)</Label>
               <Textarea
                 id="decision_note"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 rows={3}
-                placeholder="Add a note..."
+                placeholder="Add a note or reason for this decision..."
+                className="rounded-xl bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500/20 resize-none"
               />
             </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setDecisionOpen(false)}>
+            
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <Button variant="outline" onClick={() => setDecisionOpen(false)} className="rounded-full px-6 font-medium shadow-sm">
                 Cancel
               </Button>
               <Button
-                className={decision === "approved" ? "bg-emerald-500 hover:bg-emerald-600" : "bg-red-500 hover:bg-red-600"}
+                className={`rounded-full px-8 font-medium shadow-sm ${decision === "approved" ? "bg-emerald-500 hover:bg-emerald-600" : "bg-red-500 hover:bg-red-600"}`}
                 onClick={handleDecide}
                 disabled={isPending}
               >

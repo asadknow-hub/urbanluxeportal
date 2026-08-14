@@ -128,19 +128,25 @@ export function DocumentUploadDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={(props) => (
-          <Button {...props} className="bg-emerald-500 hover:bg-emerald-600">
+          <Button {...props} className="bg-emerald-500 hover:bg-emerald-600 shadow-sm rounded-full px-6 font-medium">
             <Plus className="mr-2 h-4 w-4" />
             {triggerLabel}
           </Button>
         )}
       />
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Upload Document</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <DialogContent 
+        className="max-w-2xl w-[95vw] sm:w-[90vw] md:w-[60vw] max-h-[90vh] overflow-y-auto p-0 border-0 rounded-[2rem] shadow-2xl"
+        closeClassName="text-slate-300 hover:text-white hover:bg-slate-800/50"
+      >
+        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-6 sm:p-8 text-white relative overflow-hidden">
+          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
+          <DialogHeader className="relative z-10">
+            <DialogTitle className="text-2xl font-bold tracking-tight">Secure Document Upload</DialogTitle>
+          </DialogHeader>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
           {/* Upload area */}
-          <div className="rounded-xl border-2 border-dashed border-slate-200 p-4 text-center">
+          <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-8 text-center transition-colors hover:bg-slate-50/80 hover:border-emerald-200">
             <input
               ref={inputRef}
               type="file"
@@ -151,59 +157,67 @@ export function DocumentUploadDialog({
             />
             <label
               htmlFor="doc-upload-input"
-              className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-slate-50 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+              className="inline-flex cursor-pointer flex-col items-center justify-center gap-3 w-full"
             >
-              {uploading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Upload className="h-4 w-4" />
-              )}
-              {uploading ? "Uploading..." : "Click to upload"}
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm border border-slate-100">
+                {uploading ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-emerald-500" />
+                ) : (
+                  <Upload className="h-5 w-5 text-slate-400" />
+                )}
+              </div>
+              <span className="text-sm font-semibold text-slate-700">
+                {uploading ? "Uploading securely..." : "Click to select a document"}
+              </span>
             </label>
-            <p className="mt-2 text-xs text-slate-400">
+            <p className="mt-2 text-xs font-medium text-slate-400">
               PDF, JPG, PNG, WebP, DOCX, XLSX · Max 20MB
             </p>
           </div>
 
           {uploadedFile && (
-            <div className="flex items-center gap-3 rounded-lg border border-slate-100 p-3">
-              <FileCheck2 className="h-5 w-5 text-emerald-500" />
+            <div className="flex items-center gap-4 rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 shadow-sm">
+              <div className="p-2 bg-white rounded-lg shadow-sm border border-emerald-100">
+                <FileCheck2 className="h-6 w-6 text-emerald-500" />
+              </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-900 truncate">{uploadedFile.name}</p>
-                <p className="text-xs text-slate-400">
-                  {(uploadedFile.size / 1024).toFixed(0)} KB
+                <p className="text-sm font-bold text-slate-900 truncate">{uploadedFile.name}</p>
+                <p className="text-xs font-medium text-emerald-600 mt-0.5">
+                  {(uploadedFile.size / 1024).toFixed(0)} KB successfully uploaded
                 </p>
               </div>
               <Button
-                size="sm"
+                size="icon"
                 variant="ghost"
                 onClick={() => setUploadedFile(null)}
+                className="h-8 w-8 rounded-full hover:bg-emerald-100 hover:text-emerald-700"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="doc_name">Name *</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="doc_name" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Name *</Label>
             <Input
               id="doc_name"
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
               required
               placeholder="Document name"
+              className="h-11 rounded-xl bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500/20"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Category</Label>
+              <div className="space-y-2.5">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Category</Label>
                 <Select value={form.category} onValueChange={(v) => set("category", v ?? "other")}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11 rounded-xl bg-slate-50/50 border-slate-200 focus:ring-emerald-500/20">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl shadow-xl">
                     {CATEGORIES.map((c) => (
                       <SelectItem key={c} value={c}>
                         {c.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase())}
@@ -212,24 +226,25 @@ export function DocumentUploadDialog({
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="doc_expiry">Expiry Date</Label>
+              <div className="space-y-2.5">
+                <Label htmlFor="doc_expiry" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Expiry Date</Label>
                 <Input
                   id="doc_expiry"
                   type="date"
                   value={form.expiry_date}
                   onChange={(e) => set("expiry_date", e.target.value)}
+                  className="h-11 rounded-xl bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500/20"
                 />
               </div>
             </div>
             {!entityType && (
-              <div className="space-y-2">
-                <Label>Entity Type</Label>
+              <div className="space-y-2.5">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Entity Type</Label>
                 <Select value={form.entity_type || "none"} onValueChange={(v) => set("entity_type", v === "none" ? "" : v ?? "")}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-11 rounded-xl bg-slate-50/50 border-slate-200 focus:ring-emerald-500/20">
                     <SelectValue placeholder="Optional" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl shadow-xl">
                     <SelectItem value="none">None</SelectItem>
                     <SelectItem value="lead">Lead</SelectItem>
                     <SelectItem value="customer">Customer</SelectItem>
@@ -243,11 +258,11 @@ export function DocumentUploadDialog({
             )}
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="rounded-full px-6 font-medium shadow-sm">
               Cancel
             </Button>
-            <Button type="submit" disabled={pending || !uploadedFile}>
+            <Button type="submit" disabled={pending || !uploadedFile} className="rounded-full px-8 bg-emerald-500 hover:bg-emerald-600 font-medium shadow-sm">
               {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Document
             </Button>

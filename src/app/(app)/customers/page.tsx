@@ -61,28 +61,34 @@ export default async function CustomersPage({
     .order("full_name");
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Customers</h1>
-          <p className="text-sm text-slate-500">{count ?? 0} total customers</p>
+    <div className="space-y-6 max-w-[1600px] mx-auto">
+      {/* Glossy Header Banner */}
+      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-6 sm:p-8 text-white shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
+        <div className="relative z-10">
+          <h1 className="text-3xl font-extrabold tracking-tight mb-2">Customers</h1>
+          <p className="text-sm text-slate-300 font-medium">
+            Manage your {count ?? 0} total customers and prospects
+          </p>
         </div>
-        <CustomerCreateDialog agents={agents ?? []} />
+        <div className="relative z-10">
+          <CustomerCreateDialog agents={agents ?? []} />
+        </div>
       </div>
 
       {/* Status summary */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { key: "active", label: "Active", color: "bg-emerald-500" },
-          { key: "prospect", label: "Prospect", color: "bg-amber-500" },
-          { key: "inactive", label: "Inactive", color: "bg-slate-400" },
+          { key: "active", label: "Active", color: "text-emerald-700", border: "border-emerald-200/60", bg: "bg-white", badge: "bg-emerald-500", grad: "from-emerald-50 to-transparent" },
+          { key: "prospect", label: "Prospect", color: "text-amber-700", border: "border-amber-200/60", bg: "bg-white", badge: "bg-amber-500", grad: "from-amber-50 to-transparent" },
+          { key: "inactive", label: "Inactive", color: "text-slate-500", border: "border-slate-200/60", bg: "bg-white", badge: "bg-slate-300", grad: "from-slate-50 to-transparent" },
         ].map((s) => (
-          <div key={s.key} className="rounded-xl bg-white p-4 shadow-sm border border-slate-200">
-            <div className="flex items-center gap-2">
-              <div className={`h-2 w-2 rounded-full ${s.color}`} />
-              <p className="text-2xl font-bold text-slate-900">{stats[s.key] ?? 0}</p>
+          <div key={s.key} className={`relative overflow-hidden rounded-[1.5rem] border p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-gradient-to-br ${s.border} ${s.bg} ${s.grad} shadow-sm`}>
+            <div className="relative z-10 flex items-center justify-between mb-2">
+              <span className={`text-sm font-bold uppercase tracking-wider ${s.color}`}>{s.label}</span>
+              <span className={`h-2.5 w-2.5 rounded-full shadow-sm ${s.badge}`} />
             </div>
-            <p className="text-xs text-slate-400">{s.label}</p>
+            <p className="relative z-10 text-4xl font-extrabold text-slate-900">{stats[s.key] ?? 0}</p>
           </div>
         ))}
       </div>
