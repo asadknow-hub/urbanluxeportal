@@ -780,41 +780,68 @@ export function LeadDetail({
                 <FileText className="h-4 w-4 text-slate-400" />
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">Lead Snapshot</h3>
-                  <p className="text-xs text-slate-500">All key details and preferences in one place.</p>
+                  <p className="text-xs text-slate-500">Hover a field and click to edit it inline.</p>
                 </div>
               </div>
-              <Button variant="outline" size="sm" className="h-8 rounded-lg">
-                <PenLine className="mr-2 h-3.5 w-3.5" /> Edit
-              </Button>
             </div>
             
-            {/* The strict 3-column grid with inner borders */}
-            <div className="grid grid-cols-1 md:grid-cols-3 bg-slate-100 gap-px p-px flex-1">
+            {/* Inline-editable field grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 p-4">
               {[
-                { label: "Phone", value: optimisticLead.phone || "—", icon: Phone },
-                { label: "Budget Min (AED)", value: optimisticLead.budget_min ? formatAED(optimisticLead.budget_min) : "—", icon: FileText },
-                { label: "Language", value: optimisticLead.language || "EN", icon: ExternalLink },
-                { label: "Email", value: optimisticLead.email || "—", icon: Mail },
-                { label: "Budget Max (AED)", value: optimisticLead.budget_max ? formatAED(optimisticLead.budget_max) : "—", icon: FileText },
-                { label: "Bedrooms", value: optimisticLead.bedrooms || "—", icon: Home },
-                { label: "Interest", value: optimisticLead.interest ? formatLeadInterest(optimisticLead.interest) : "—", icon: Activity },
-                { label: "Financing", value: optimisticLead.financing || "—", icon: Building2 },
-                { label: "Tags", value: optimisticLead.tags?.length ? optimisticLead.tags.join(", ") : "—", icon: Tag },
-                { label: "Preferred Areas", value: optimisticLead.preferred_areas?.join(", ") || "—", icon: UserCog },
-                { label: "Purpose", value: optimisticLead.purpose || "—", icon: Building2 },
-                { label: "Notes", value: optimisticLead.notes || "—", icon: FileText },
-                { label: "Timeframe", value: optimisticLead.timeframe || "—", icon: CalendarClock },
-                { label: "Category", value: optimisticLead.category || "—", icon: Building2 },
-                { label: "", value: "", icon: null } // Empty block to fill 15 cells if needed, but we have 14. Let's pad it out nicely.
-              ].filter(f => f.icon !== null).map((field, idx) => (
-                <div key={idx} className="bg-white p-4 flex gap-3 min-h-[80px]">
-                  {field.icon && <field.icon className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />}
-                  <div>
-                    <p className="text-xs text-slate-500 mb-1">{field.label}</p>
-                    <p className="text-sm font-medium text-slate-900 leading-snug">{field.value}</p>
+                { label: "Name", kind: "text" as const, value: optimisticLead.name, key: "name", span: "" },
+                { label: "Phone", kind: "text" as const, value: optimisticLead.phone ?? "", key: "phone", span: "" },
+                { label: "Email", kind: "text" as const, value: optimisticLead.email ?? "", key: "email", span: "" },
+                { label: "Interest", kind: "text" as const, value: optimisticLead.interest, key: "interest", span: "" },
+                { label: "Budget Min (AED)", kind: "money" as const, value: optimisticLead.budget_min ? String(optimisticLead.budget_min / 100) : "", key: "budget_min", span: "" },
+                { label: "Budget Max (AED)", kind: "money" as const, value: optimisticLead.budget_max ? String(optimisticLead.budget_max / 100) : "", key: "budget_max", span: "" },
+                { label: "Preferred Areas", kind: "areas" as const, value: optimisticLead.preferred_areas?.length ? optimisticLead.preferred_areas.join(", ") : "", key: "preferred_areas", span: "" },
+                { label: "Language", kind: "text" as const, value: optimisticLead.language ?? "", key: "language", span: "" },
+                { label: "Financing", kind: "text" as const, value: optimisticLead.financing ?? "", key: "financing", span: "" },
+                { label: "Timeframe", kind: "text" as const, value: optimisticLead.timeframe ?? "", key: "timeframe", span: "" },
+                { label: "Purpose", kind: "text" as const, value: optimisticLead.purpose ?? "", key: "purpose", span: "" },
+                { label: "Bedrooms", kind: "text" as const, value: optimisticLead.bedrooms ?? "", key: "bedrooms", span: "" },
+                { label: "Category", kind: "text" as const, value: optimisticLead.category ?? "", key: "category", span: "" },
+                { label: "Tags", kind: "tags" as const, value: optimisticLead.tags ?? [], key: "tags", span: "" },
+                { label: "Notes", kind: "textarea" as const, value: optimisticLead.notes ?? "", key: "notes", span: "sm:col-span-2 xl:col-span-3" },
+              ].map((field) => {
+                const isEditing = inlineEdit?.key === field.key;
+                const valueText =
+                  field.kind === "areas"
+                    ? field.value || "—"
+                    : field.kind === "tags"
+                    ? field.value.length > 0
+                      ? field.value.map((tag) => formatLeadTag(tag)).join(", ")
+                      : "—"
+                    : field.value || "—";
+                const editState =
+                  field.kind === "areas"
+                    ? { key: field.key, label: field.label, kind: field.kind, value: optimisticLead.preferred_areas ?? [] }
+                    : field.kind === "tags"
+                    ? { key: field.key, label: field.label, kind: field.kind, value: optimisticLead.tags ?? [] }
+                    : { key: field.key, label: field.label, kind: field.kind, value: field.value };
+
+                return isEditing ? (
+                  <div
+                    key={field.key}
+                    className={`rounded-2xl border border-emerald-200 bg-emerald-50/40 p-3 shadow-[0_10px_24px_rgba(15,23,42,0.05)] ${field.span}`}
+                  >
+                    {renderInlineEditor()}
                   </div>
-                </div>
-              ))}
+                ) : (
+                  <button
+                    key={field.key}
+                    type="button"
+                    onClick={() => startInlineEdit(editState as InlineEditState)}
+                    className={`group flex w-full items-center justify-between gap-3 rounded-xl border border-transparent bg-transparent px-3 py-2.5 text-left transition-colors hover:border-slate-200 hover:bg-slate-50/80 focus:outline-none focus:ring-2 focus:ring-emerald-200 ${field.span}`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <span className="block text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400">{field.label}</span>
+                      <span className="mt-0.5 block truncate text-[12px] font-medium text-slate-700 group-hover:text-slate-900">{valueText}</span>
+                    </div>
+                    <PenLine className="h-3.5 w-3.5 shrink-0 text-slate-300 transition-colors group-hover:text-emerald-500" aria-hidden="true" />
+                  </button>
+                );
+              })}
             </div>
           </div>
 
