@@ -61,6 +61,7 @@ import {
   Tag,
   FileText,
   Trash2,
+  Building2,
 } from "lucide-react";
 
 type Lead = {
@@ -628,544 +629,392 @@ export function LeadDetail({
   }
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="relative flex flex-col gap-4 overflow-hidden rounded-[1.5rem] border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-5 shadow-2xl xl:flex-row xl:items-start xl:justify-between">
-        <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
-        <div className="absolute -bottom-32 -left-32 h-80 w-80 rounded-full bg-blue-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
+    <div className="space-y-4">
+      {/* 1. Minimalist White Header */}
+      <div className="flex flex-col gap-4 rounded-[1.5rem] border border-slate-200/60 bg-white p-5 shadow-sm xl:flex-row xl:items-center xl:justify-between">
         
-        <Link
-          href="/leads"
-          className="absolute left-6 top-4 inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-800/80 px-3 py-1 text-[11px] font-medium text-slate-300 shadow-[0_8px_18px_rgba(0,0,0,0.1)] transition-colors hover:border-slate-600 hover:text-white"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Back to Leads
-        </Link>
-
-        <div className="flex items-center gap-5 mt-6 xl:mt-0 relative z-10">
-          <Avatar className="h-16 w-16 ring-4 ring-slate-800/50 shadow-xl">
-            <AvatarFallback className="bg-gradient-to-br from-emerald-400 to-emerald-600 text-white text-xl font-bold">
-              {initials}
-            </AvatarFallback>
+        <div className="flex items-center gap-4">
+          <Avatar className="h-16 w-16 bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xl">
+            <AvatarFallback className="bg-transparent">{initials}</AvatarFallback>
+            <AvatarImage src={optimisticLead.assigned_to_profile?.avatar_url ?? undefined} />
           </Avatar>
+          
           <div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">{optimisticLead.name}</h1>
-            <div className="mt-1.5 flex flex-wrap items-center gap-3 text-sm text-emerald-100/70 font-medium">
+            <div className="flex items-center gap-2 mb-1">
               {currentStage && (
-                <span
-                  className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold border"
-                  style={{
-                    backgroundColor: `${currentStage.color}15`,
-                    color: currentStage.color,
-                    borderColor: `${currentStage.color}30`
-                  }}
+                <span 
+                  className="rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-widest uppercase"
+                  style={{ backgroundColor: `${currentStage.color}15`, color: currentStage.color }}
                 >
                   {currentStage.name}
                 </span>
               )}
-              <span className="capitalize">{formatLabel(optimisticLead.source)}</span>
-              <span>·</span>
-              <span>{formatLeadInterest(optimisticLead.interest)}</span>
+            </div>
+            <h1 className="text-xl font-bold text-slate-900 leading-none mb-2">{optimisticLead.name}</h1>
+            <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+              <span>Source: <span className="text-slate-700">{formatLabel(optimisticLead.source)}</span></span>
+              <span className="text-slate-300">•</span>
+              <span><span className="text-slate-700">{formatLeadInterest(optimisticLead.interest)}</span></span>
               {optimisticLead.score !== null && (
                 <>
-                  <span>·</span>
-                  <span className="flex items-center gap-1">
-                    <TrendingUp className="h-3 w-3" /> Score: {optimisticLead.score}
-                  </span>
+                  <span className="text-slate-300">•</span>
+                  <span>Score: <span className={optimisticLead.score >= 70 ? "text-emerald-600" : optimisticLead.score >= 40 ? "text-amber-600" : "text-blue-600"}>{optimisticLead.score} ({optimisticLead.score >= 70 ? "Hot" : optimisticLead.score >= 40 ? "Warm" : "Cold"})</span></span>
                 </>
               )}
             </div>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3 xl:justify-end relative z-10">
-          <div className="rounded-[1rem] border border-slate-700 bg-slate-800/50 px-4 py-2 backdrop-blur-md">
-            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-400/80 mb-0.5">Last touched</p>
-            <p className="text-sm font-bold text-white">{timeAgo(lastTouchAt)}</p>
+
+        <div className="flex flex-wrap items-center gap-8 xl:justify-end">
+          <div className="flex items-center gap-8 border-r border-slate-200 pr-8">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Last touched</p>
+              <p className="text-sm font-bold text-slate-900" suppressHydrationWarning>{timeAgo(lastTouchAt)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Created on</p>
+              <p className="text-sm font-bold text-slate-900" suppressHydrationWarning>{formatDate(optimisticLead.created_at)}</p>
+            </div>
           </div>
-          <div className="rounded-[1rem] border border-slate-700 bg-slate-800/50 px-4 py-2 backdrop-blur-md">
-            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-400/80 mb-0.5">Created</p>
-            <p className="text-sm font-bold text-white">{formatDate(optimisticLead.created_at)}</p>
-          </div>
+          
           <div className="flex items-center gap-2">
             {phoneLink && (
-              <a href={phoneLink} className="inline-flex h-9 items-center justify-center rounded-full border border-slate-600 bg-slate-800/80 px-4 text-xs font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white">
-                <Phone className="mr-2 h-3.5 w-3.5" /> Call
+              <a href={phoneLink} className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50">
+                <Phone className="mr-2 h-3.5 w-3.5 text-slate-400" /> Call
               </a>
             )}
             {waLink && (
-              <a href={waLink} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center justify-center rounded-full border border-slate-600 bg-slate-800/80 px-4 text-xs font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white">
-                <MessageCircle className="mr-2 h-3.5 w-3.5" /> WhatsApp
+              <a href={waLink} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50">
+                <MessageCircle className="mr-2 h-3.5 w-3.5 text-slate-400" /> WhatsApp
               </a>
             )}
             {mailLink && (
-              <a href={mailLink} className="inline-flex h-9 items-center justify-center rounded-full border border-slate-600 bg-slate-800/80 px-4 text-xs font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white">
-                <Mail className="mr-2 h-3.5 w-3.5" /> Email
+              <a href={mailLink} className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50">
+                <Mail className="mr-2 h-3.5 w-3.5 text-slate-400" /> Email
               </a>
             )}
-            <DocumentUploadDialog triggerLabel="Upload Document" entityType="lead" entityId={optimisticLead.id} />
-            {!optimisticLead.assigned_to && canEdit && (
-              <Button size="sm" variant="outline" onClick={handleClaim} disabled={pending} className="h-9 rounded-full border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300">
-                <UserPlus className="mr-2 h-3.5 w-3.5" /> Claim
-              </Button>
-            )}
-            {canManage && (
-              <Button variant="outline" size="sm" className="h-9 rounded-full border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300" onClick={() => setShowDeleteConfirm(true)} disabled={pending}>
-                <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
-              </Button>
-            )}
+            
+            <Dialog>
+              <DialogTrigger render={<Button className="h-9 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4" />}>
+                <ArrowLeft className="mr-2 h-3.5 w-3.5 rotate-90" /> Upload Document
+              </DialogTrigger>
+              <DialogContent>
+                 <DialogHeader><DialogTitle>Upload Document</DialogTitle></DialogHeader>
+                 <p className="text-sm text-slate-500">Document upload logic goes here...</p>
+              </DialogContent>
+            </Dialog>
+
+            <Button variant="outline" className="h-9 w-9 p-0 rounded-lg border-slate-200">
+              <span className="flex flex-col gap-0.5 items-center justify-center">
+                <span className="h-0.5 w-0.5 bg-slate-600 rounded-full"></span>
+                <span className="h-0.5 w-0.5 bg-slate-600 rounded-full"></span>
+                <span className="h-0.5 w-0.5 bg-slate-600 rounded-full"></span>
+              </span>
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Stage workflow - Minimalist Stepper */}
+      {/* 2. Chevron Stepper */}
       {stages.length > 0 && (
-        <div className="flex items-center justify-between overflow-x-auto pb-4 pt-2 hide-scrollbar gap-2">
+        <div className="flex items-center gap-1 overflow-x-auto hide-scrollbar bg-white rounded-xl p-1 border border-slate-100 shadow-sm">
           {workflowStages.map((stage, idx) => {
             const currentIdx = workflowStages.findIndex((s) => s.id === optimisticLead.stage_id);
             const isCurrent = idx === currentIdx;
             const isPassed = currentIdx >= 0 && idx < currentIdx;
             const isEditable = canEdit && !pending;
+            
+            // Define colors
+            let bgColor = "bg-slate-50";
+            let textColor = "text-slate-500";
+            
+            if (isCurrent) {
+              bgColor = ""; // We'll set style inline
+              textColor = "text-white";
+            } else if (isPassed) {
+              bgColor = "bg-slate-100";
+              textColor = "text-slate-700";
+            } else {
+               bgColor = "bg-slate-50/50";
+               textColor = "text-slate-400";
+            }
+
+            const clipPath = idx === 0 
+              ? "polygon(0% 0%, 95% 0%, 100% 50%, 95% 100%, 0% 100%)"
+              : idx === workflowStages.length - 1
+              ? "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%, 5% 50%)"
+              : "polygon(0% 0%, 95% 0%, 100% 50%, 95% 100%, 0% 100%, 5% 50%)";
 
             return (
               <button
                 key={stage.id}
                 onClick={() => isEditable && handleStageChange(stage.id)}
                 disabled={!isEditable}
-                className={`group relative flex flex-1 flex-col items-center gap-2 min-w-[100px] transition-all ${
-                  isEditable ? "cursor-pointer" : "cursor-default opacity-80"
-                }`}
+                style={isCurrent ? { backgroundColor: stage.color, clipPath } : { clipPath }}
+                className={`relative flex-1 flex items-center justify-center h-10 min-w-[120px] transition-all ${bgColor} ${isEditable ? "cursor-pointer hover:brightness-95" : "cursor-default opacity-80"}`}
               >
-                {/* Connecting Line */}
-                {idx !== 0 && (
-                  <div 
-                    className={`absolute left-[calc(-50%+1rem)] top-3 h-[2px] w-[calc(100%-2rem)] transition-colors ${
-                      isPassed || isCurrent ? "bg-emerald-500" : "bg-slate-200"
-                    }`}
-                  />
-                )}
-                
-                {/* Step Circle */}
-                <div 
-                  className={`relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-300 ${
-                    isCurrent 
-                      ? "border-emerald-500 bg-white ring-4 ring-emerald-500/20" 
-                      : isPassed
-                      ? "border-emerald-500 bg-emerald-500"
-                      : "border-slate-200 bg-white group-hover:border-slate-300"
-                  }`}
-                >
-                  {isPassed && <CheckCircle2 className="h-3 w-3 text-white" />}
-                  {isCurrent && <div className="h-2 w-2 rounded-full bg-emerald-500" />}
-                </div>
-
-                {/* Step Label */}
-                <span 
-                  className={`text-center text-[10px] font-bold uppercase tracking-widest transition-colors ${
-                    isCurrent ? "text-emerald-600" : isPassed ? "text-slate-700" : "text-slate-400 group-hover:text-slate-600"
-                  }`}
-                >
+                <div className={`flex items-center gap-2 text-xs font-semibold ${textColor}`}>
+                  {isPassed && <CheckCircle2 className="h-3.5 w-3.5" />}
                   {stage.name}
-                </span>
+                </div>
               </button>
             );
           })}
+          
+          <Button variant="ghost" size="sm" className="ml-2 h-8 text-xs text-slate-500 bg-slate-50 hover:bg-slate-100 rounded-lg">
+            Mark as Lost
+          </Button>
         </div>
       )}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* Left column: details + edit */}
-        <div className="space-y-4 lg:col-span-2">
-          {/* Contact info */}
-          <div className="rounded-[1.5rem] border border-slate-100 bg-white p-5 shadow-sm">
-            <div className="mb-8 flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Lead Details</h3>
-                <p className="text-[11px] font-medium text-slate-400 mt-1 uppercase tracking-wider">Tap the pen icon to edit fields inline.</p>
+
+      {/* Main Grid: 2 columns left, 1 column right */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        
+        {/* LEFT & MIDDLE: Snapshot and Timeline */}
+        <div className="lg:col-span-2 space-y-4">
+          
+          {/* 3. Lead Snapshot Bento */}
+          <div className="bg-white rounded-[1.5rem] border border-slate-200/60 shadow-sm overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-slate-400" />
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">Lead Snapshot</h3>
+                  <p className="text-xs text-slate-500">All key details and preferences in one place.</p>
+                </div>
               </div>
+              <Button variant="outline" size="sm" className="h-8 rounded-lg">
+                <PenLine className="mr-2 h-3.5 w-3.5" /> Edit
+              </Button>
             </div>
             
-            <div className="grid grid-cols-1 gap-x-12 gap-y-6 sm:grid-cols-2">
+            {/* The strict 3-column grid with inner borders */}
+            <div className="grid grid-cols-1 md:grid-cols-3 bg-slate-100 gap-px p-px flex-1">
               {[
-                { label: "Name", kind: "text" as const, value: optimisticLead.name, key: "name", span: "" },
-                { label: "Phone", kind: "text" as const, value: optimisticLead.phone ?? "", key: "phone", span: "" },
-                { label: "Email", kind: "text" as const, value: optimisticLead.email ?? "", key: "email", span: "" },
-                { label: "Interest", kind: "text" as const, value: optimisticLead.interest, key: "interest", span: "" },
-                { label: "Budget Min (AED)", kind: "money" as const, value: optimisticLead.budget_min ? String(optimisticLead.budget_min / 100) : "", key: "budget_min", span: "" },
-                { label: "Budget Max (AED)", kind: "money" as const, value: optimisticLead.budget_max ? String(optimisticLead.budget_max / 100) : "", key: "budget_max", span: "" },
-                { label: "Preferred Areas", kind: "areas" as const, value: optimisticLead.preferred_areas?.length ? optimisticLead.preferred_areas.join(", ") : "", key: "preferred_areas", span: "sm:col-span-2" },
-                { label: "Language", kind: "text" as const, value: optimisticLead.language ?? "", key: "language", span: "" },
-                { label: "Financing", kind: "text" as const, value: optimisticLead.financing ?? "", key: "financing", span: "" },
-                { label: "Timeframe", kind: "text" as const, value: optimisticLead.timeframe ?? "", key: "timeframe", span: "" },
-                { label: "Purpose", kind: "text" as const, value: optimisticLead.purpose ?? "", key: "purpose", span: "" },
-                { label: "Bedrooms", kind: "text" as const, value: optimisticLead.bedrooms ?? "", key: "bedrooms", span: "" },
-                { label: "Category", kind: "text" as const, value: optimisticLead.category ?? "", key: "category", span: "" },
-                { label: "Tags", kind: "tags" as const, value: optimisticLead.tags ?? [], key: "tags", span: "sm:col-span-2" },
-                { label: "Notes", kind: "textarea" as const, value: optimisticLead.notes ?? "", key: "notes", span: "sm:col-span-2" },
-              ].map((field) => {
-                const isEditing = inlineEdit?.key === field.key;
-                const valueText =
-                  field.kind === "areas"
-                    ? field.value || "—"
-                    : field.kind === "tags"
-                    ? field.value.length > 0
-                      ? field.value.map((tag) => formatLeadTag(tag)).join(", ")
-                      : "—"
-                    : field.value || "—";
-                const editState =
-                  field.kind === "areas"
-                    ? { key: field.key, label: field.label, kind: field.kind, value: optimisticLead.preferred_areas ?? [] }
-                    : field.kind === "tags"
-                    ? { key: field.key, label: field.label, kind: field.kind, value: optimisticLead.tags ?? [] }
-                    : { key: field.key, label: field.label, kind: field.kind, value: field.value };
-
-                return isEditing ? (
-                  <div
-                    key={field.key}
-                    className={`rounded-2xl border border-emerald-200 bg-emerald-50/30 p-4 shadow-sm ${field.span}`}
-                  >
-                    {renderInlineEditor()}
+                { label: "Phone", value: optimisticLead.phone || "—", icon: Phone },
+                { label: "Budget Min (AED)", value: optimisticLead.budget_min ? formatAED(optimisticLead.budget_min) : "—", icon: FileText },
+                { label: "Language", value: optimisticLead.language || "EN", icon: ExternalLink },
+                { label: "Email", value: optimisticLead.email || "—", icon: Mail },
+                { label: "Budget Max (AED)", value: optimisticLead.budget_max ? formatAED(optimisticLead.budget_max) : "—", icon: FileText },
+                { label: "Bedrooms", value: optimisticLead.bedrooms || "—", icon: Home },
+                { label: "Interest", value: optimisticLead.interest ? formatLeadInterest(optimisticLead.interest) : "—", icon: Activity },
+                { label: "Financing", value: optimisticLead.financing || "—", icon: Building2 },
+                { label: "Tags", value: optimisticLead.tags?.length ? optimisticLead.tags.join(", ") : "—", icon: Tag },
+                { label: "Preferred Areas", value: optimisticLead.preferred_areas?.join(", ") || "—", icon: UserCog },
+                { label: "Purpose", value: optimisticLead.purpose || "—", icon: Building2 },
+                { label: "Notes", value: optimisticLead.notes || "—", icon: FileText },
+                { label: "Timeframe", value: optimisticLead.timeframe || "—", icon: CalendarClock },
+                { label: "Category", value: optimisticLead.category || "—", icon: Building2 },
+                { label: "", value: "", icon: null } // Empty block to fill 15 cells if needed, but we have 14. Let's pad it out nicely.
+              ].filter(f => f.icon !== null).map((field, idx) => (
+                <div key={idx} className="bg-white p-4 flex gap-3 min-h-[80px]">
+                  {field.icon && <field.icon className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />}
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1">{field.label}</p>
+                    <p className="text-sm font-medium text-slate-900 leading-snug">{field.value}</p>
                   </div>
-                ) : (
-                  <div key={field.key} className={`group flex items-start justify-between gap-4 ${field.span}`}>
-                    <div className="min-w-0 flex-1">
-                      <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">{field.label}</span>
-                      <span className="mt-1.5 block text-sm font-medium text-slate-800 leading-relaxed whitespace-pre-wrap">{valueText}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => startInlineEdit(editState as InlineEditState)}
-                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-50 text-slate-400 opacity-0 transition-all hover:bg-slate-100 hover:text-emerald-600 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-                      aria-label={`Edit ${field.label}`}
-                    >
-                      <PenLine className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Activity timeline */}
-          <div className="rounded-[1.5rem] border border-slate-100 bg-white p-5 shadow-sm">
-            <div className="mb-6 flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
-              <div>
-                <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900 uppercase tracking-wide">
-                  <Activity className="h-4 w-4 text-emerald-500" />
-                  Activity Timeline
-                </h3>
-                <p className="mt-1 text-[11px] font-medium uppercase tracking-wider text-slate-400">
-                  Recent actions, calls, notes, and touchpoints
-                </p>
-              </div>
-              <span className="rounded-full bg-slate-50 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                {optimisticActivities.length} items
-              </span>
+          {/* Activity Timeline */}
+          <div className="bg-white rounded-[1.5rem] border border-slate-200/60 shadow-sm p-5">
+            <div className="flex items-center justify-between mb-6">
+               <div className="flex items-center gap-2">
+                 <Activity className="h-4 w-4 text-slate-400" />
+                 <div>
+                   <h3 className="text-sm font-bold text-slate-900">Activity Timeline</h3>
+                   <p className="text-xs text-slate-500">All interactions and notes in chronological order.</p>
+                 </div>
+               </div>
+               <Select value="all">
+                 <SelectTrigger className="h-8 w-32 text-xs bg-slate-50 border-slate-200 rounded-lg"><SelectValue placeholder="All Activities" /></SelectTrigger>
+                 <SelectContent><SelectItem value="all">All Activities</SelectItem></SelectContent>
+               </Select>
             </div>
 
-            {/* Quick add activity */}
-            {canEdit && (
-              <div className="mb-4 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-slate-50/70 p-3 lg:flex-row lg:items-center">
-                <Select value={activityType} onValueChange={(v) => setActivityType(v ?? "note")}>
-                  <SelectTrigger className="w-36 bg-white"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="note">Note</SelectItem>
-                    <SelectItem value="call">Call</SelectItem>
-                    <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                    <SelectItem value="email">Email</SelectItem>
-                    <SelectItem value="meeting">Meeting</SelectItem>
-                    <SelectItem value="viewing">Viewing</SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="flex flex-wrap gap-2">
-                  <Button type="button" variant="outline" size="sm" onClick={() => { setActivityType("call"); setActivityText(`Called ${optimisticLead.phone ?? optimisticLead.name}`); }}>
-                    <Phone className="mr-2 h-4 w-4" />
-                    Call log
-                  </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => { setActivityType("whatsapp"); setActivityText(`WhatsApped ${optimisticLead.name}`); }}>
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    WhatsApp log
-                  </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => { setActivityType("email"); setActivityText(`Emailed ${optimisticLead.email ?? optimisticLead.name}`); }}>
-                    <Mail className="mr-2 h-4 w-4" />
-                    Email log
-                  </Button>
-                </div>
-                <Input
-                  placeholder="Log activity..."
-                  value={activityText}
-                  onChange={(e) => setActivityText(e.target.value)}
-                  className="flex-1"
-                  onKeyDown={(e) => e.key === "Enter" && handleAddActivity()}
-                />
-                <Button size="sm" onClick={handleAddActivity} disabled={pending || !activityText.trim()}>
-                  Add
-                </Button>
+            <div className="space-y-0">
+               {optimisticActivities.length === 0 ? (
+                  <div className="text-center py-6 text-sm text-slate-500">No activities yet.</div>
+               ) : (
+                 optimisticActivities.map((a, idx) => {
+                   const isLast = idx === optimisticActivities.length - 1;
+                   const isWhatsApp = a.type === 'whatsapp';
+                   const isCall = a.type === 'call';
+                   const isViewing = a.type === 'viewing';
+                   
+                   let Icon = Activity;
+                   let iconBg = "bg-blue-500";
+                   
+                   if (isWhatsApp) { Icon = MessageCircle; iconBg = "bg-green-500"; }
+                   else if (isCall) { Icon = Phone; iconBg = "bg-blue-500"; }
+                   else if (isViewing) { Icon = Home; iconBg = "bg-purple-500"; }
+                   else { Icon = FileText; iconBg = "bg-blue-400"; }
+
+                   return (
+                     <div key={a.id} className={`flex gap-4 py-4 ${!isLast ? 'border-b border-slate-100' : ''}`}>
+                       <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconBg} text-white shadow-sm`}>
+                         <Icon className="h-4 w-4" />
+                       </div>
+                       <div className="flex-1 min-w-0">
+                         <div className="flex items-center justify-between">
+                           <p className="text-sm font-bold text-slate-900 capitalize">{a.type.replace(/_/g, " ")}</p>
+                           <p className="text-xs text-slate-400 shrink-0" suppressHydrationWarning>{formatDate(a.occurred_at)}, {new Date(a.occurred_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                         </div>
+                         {a.summary && <p className="text-sm text-slate-500 mt-1">{a.summary}</p>}
+                       </div>
+                     </div>
+                   );
+                 })
+               )}
+            </div>
+            
+            {optimisticActivities.length > 0 && (
+              <div className="mt-4 text-center border-t border-slate-100 pt-4">
+                <Button variant="ghost" size="sm" className="text-xs font-bold text-slate-600 bg-slate-50 rounded-lg h-9 px-6">View All Activities</Button>
               </div>
             )}
-
-            {/* Timeline */}
-            <div className="space-y-3">
-              {optimisticActivities.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-4 text-center">
-                  <p className="text-sm font-medium text-slate-500">No activities yet.</p>
-                  <p className="mt-1 text-xs text-slate-400">Log the first call, note, or follow-up to start the trail.</p>
-                </div>
-              ) : (
-                optimisticActivities.map((a) => {
-                  const Icon = ACTIVITY_ICONS[a.type] ?? Activity;
-                  return (
-                    <div key={a.id} className="flex gap-3 rounded-2xl border border-slate-100 bg-gradient-to-r from-white to-slate-50/80 p-3 shadow-[0_8px_18px_rgba(15,23,42,0.04)]">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 ring-1 ring-emerald-100">
-                        <Icon className="h-4 w-4 text-slate-500" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium text-slate-700 capitalize">
-                            {a.type.replace(/_/g, " ")}
-                            {a.author && (
-                              <span className="text-slate-400 font-normal ml-1">· {a.author.full_name}</span>
-                            )}
-                          </span>
-                          <span className="text-xs font-medium text-slate-400">{timeAgo(a.occurred_at)}</span>
-                        </div>
-                        {a.summary && (
-                          <p className="mt-1 text-sm text-slate-600">{a.summary}</p>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
           </div>
         </div>
 
-        {/* Right column: assignment + actions */}
+        {/* RIGHT COLUMN */}
         <div className="space-y-4">
-          {duplicateMatches.length > 0 && (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
-              <div className="mb-2 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Possible Duplicates</p>
-                  <p className="text-xs text-amber-700/80">Matched by email or phone.</p>
-                </div>
-                <span className="rounded-full bg-white px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
-                  {duplicateMatches.length}
-                </span>
+          
+          {/* Assigned To */}
+          <div className="bg-white rounded-[1.5rem] border border-slate-200/60 shadow-sm p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <UserCog className="h-4 w-4 text-slate-400" />
+                <span className="text-sm font-bold text-slate-900">Assigned To</span>
               </div>
-              <div className="space-y-2">
-                {duplicateMatches.map((dup) => {
-                  const dupPhoneLink = dup.phone ? `tel:${dup.phone}` : null;
-                  const dupMailLink = dup.email ? `mailto:${dup.email}` : null;
-                  const dupWaLink = dup.phone ? whatsappLink(dup.phone) : null;
-                  return (
-                    <div key={dup.id} className="rounded-xl border border-amber-200 bg-white p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <Link href={`/leads/${dup.id}`} className="font-medium text-slate-900 hover:underline">
-                            {dup.name}
-                          </Link>
-                          <p className="text-xs text-slate-500">Updated {formatDate(dup.updated_at)}</p>
-                          <p className="text-xs text-slate-400">
-                            {dup.phone ?? "—"} {dup.email ? `· ${dup.email}` : ""}
-                          </p>
-                        </div>
-                        <Link href={`/leads/${dup.id}`} className={buttonVariants({ variant: "ghost", size: "sm" })}>
-                          Open
-                        </Link>
-                      </div>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {dupPhoneLink && <a href={dupPhoneLink} className={buttonVariants({ variant: "outline", size: "xs" })}>Call</a>}
-                        {dupWaLink && <a href={dupWaLink} target="_blank" rel="noopener noreferrer" className={buttonVariants({ variant: "outline", size: "xs" })}>WhatsApp</a>}
-                        {dupMailLink && <a href={dupMailLink} className={buttonVariants({ variant: "outline", size: "xs" })}>Email</a>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Agent</span>
             </div>
-          )}
-
-          {/* Assignment + Follow-up combined */}
-          <div className="rounded-[1.5rem] bg-white p-5 shadow-sm border border-slate-100 space-y-5">
-            {/* Assignment */}
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Assigned To</span>
-                {optimisticLead.assigned_to_profile && (
-                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">{optimisticLead.assigned_to_profile.role}</span>
-                )}
-              </div>
-              {optimisticLead.assigned_to_profile ? (
-                <div className="flex items-center gap-2 mb-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={optimisticLead.assigned_to_profile.avatar_url ?? undefined} />
-                    <AvatarFallback className="bg-emerald-100 text-emerald-700 text-xs">
-                      {optimisticLead.assigned_to_profile.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <p className="text-sm font-medium text-slate-900">{optimisticLead.assigned_to_profile.full_name}</p>
-                </div>
-              ) : (
-                <p className="text-sm text-slate-400 mb-2">Unassigned</p>
-              )}
-              {canManage && (
-                <Select
-                  value={optimisticLead.assigned_to ?? "unassigned"}
-                  onValueChange={(v) => handleAssign(v === "unassigned" ? null : v ?? null)}
-                >
-                  <SelectTrigger className="h-8 text-xs">
-                    {optimisticLead.assigned_to_profile ? (
-                      <span className="text-sm">{optimisticLead.assigned_to_profile.full_name}</span>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">Assign to agent</span>
-                    )}
+            
+            <div className="flex items-center gap-3 mb-6">
+              <Avatar className="h-10 w-10 bg-emerald-100 text-emerald-800 text-xs font-bold">
+                 <AvatarFallback>{optimisticLead.assigned_to_profile?.full_name.substring(0,2).toUpperCase() || "??"}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <Select value={optimisticLead.assigned_to ?? "unassigned"} onValueChange={(v) => handleAssign(v === "unassigned" ? null : v ?? null)}>
+                  <SelectTrigger className="h-9 border-none bg-transparent shadow-none px-0 text-sm font-medium focus:ring-0">
+                    <SelectValue placeholder="Assign agent" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="unassigned">Unassigned</SelectItem>
                     {agents.map((a) => (
-                      <SelectItem key={a.id} value={a.id}>{a.full_name} ({a.role})</SelectItem>
+                      <SelectItem key={a.id} value={a.id}>{a.full_name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              )}
+              </div>
             </div>
 
-            {/* Follow-up */}
-            <div className="pt-4 border-t border-slate-100">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Follow-up</span>
-                {optimisticLead.next_follow_up_at && !followUpDate && (
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-500">{formatDate(optimisticLead.next_follow_up_at)}</span>
-                )}
-              </div>
-              {canEdit && (
-                <div className="flex gap-2">
-                  <Input
-                    type="datetime-local"
-                    value={followUpDate}
-                    onChange={(e) => setFollowUpDate(e.target.value)}
-                    className="h-8 text-xs flex-1"
+            <div className="mb-4">
+              <p className="text-sm font-bold text-slate-900 mb-2">Follow Up</p>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Input 
+                    type="datetime-local" 
+                    value={followUpDate} 
+                    onChange={(e) => setFollowUpDate(e.target.value)} 
+                    className="h-10 text-xs rounded-lg pl-3 pr-10 bg-white border-slate-200" 
                   />
-                  <Button size="sm" className="h-8" onClick={handleScheduleFollowUp} disabled={pending || !followUpDate}>
-                    {pending && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
-                    Set
-                  </Button>
+                  <CalendarClock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 </div>
-              )}
-              {canEdit && followUpDate && (
-                <Input
-                  placeholder="Notes (optional)"
-                  value={followUpNotes}
-                  onChange={(e) => setFollowUpNotes(e.target.value)}
-                  className="h-8 text-xs mt-2"
-                />
-              )}
+                <Button size="sm" className="h-10 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-700" onClick={handleScheduleFollowUp} disabled={!followUpDate || pending}>
+                  Set
+                </Button>
+              </div>
             </div>
+
+            <Button className="w-full h-11 rounded-lg bg-emerald-600 hover:bg-emerald-700 font-bold text-sm shadow-sm" onClick={() => setConverting(true)}>
+              <UserPlus className="mr-2 h-4 w-4" /> Convert to Deal
+            </Button>
           </div>
 
-          {/* Convert action — compact */}
-          {currentStage?.kind !== "won" && currentStage?.kind !== "lost" && currentStage?.kind !== "junk" && canEdit && (
-            <div className="rounded-[1.5rem] bg-white p-5 shadow-sm border border-slate-100 text-center">
-              {converting ? (
-                <div className="space-y-4">
-                  <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Creates a prospect customer and pipeline deal.</p>
-                  <Button className="w-full h-11 rounded-full font-bold bg-emerald-500 hover:bg-emerald-600 shadow-sm" onClick={() => confirmConvert()} disabled={pending}>
-                    {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                    Confirm Conversion
-                  </Button>
-                  <Button variant="ghost" className="w-full h-11 rounded-full font-bold text-slate-500 hover:bg-slate-50" onClick={() => setConverting(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center space-y-3">
-                  <div className="h-12 w-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 mb-2">
-                    <Briefcase className="h-5 w-5" />
-                  </div>
-                  <Button className="w-full h-11 rounded-full font-bold bg-emerald-500 hover:bg-emerald-600 shadow-sm" onClick={() => setConverting(true)}>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Convert to Deal
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Conversion info — compact */}
-          {currentStage?.kind === "won" && (
-            <div className="rounded-2xl bg-emerald-50 p-4 border border-emerald-200 space-y-1">
-              <div className="flex items-center gap-2 text-sm font-semibold text-emerald-900 mb-1">
-                <CheckCircle2 className="h-4 w-4" />
-                Converted
-              </div>
-              {customer && (
-                <Link href={`/customers/${customer.id}`} className="flex items-center gap-2 text-sm text-emerald-700 hover:text-emerald-800">
-                  <ExternalLink className="h-3 w-3" />
-                  {customer.name}
-                </Link>
-              )}
-              {deal && (
-                <Link href={`/pipeline/${deal.id}`} className="flex items-center gap-2 text-sm text-emerald-700 hover:text-emerald-800">
-                  <Briefcase className="h-3 w-3" />
-                  {deal.title} ({deal.stage})
-                </Link>
-              )}
-            </div>
-          )}
-
-          {/* Score — inline, no big card */}
-          {optimisticLead.score !== null && (
-            <div className="rounded-[1.5rem] bg-white p-4 shadow-sm border border-slate-200/60">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Lead Score</span>
-                <div className="flex items-baseline gap-1">
-                  <span className={`text-2xl font-bold ${optimisticLead.score >= 70 ? "text-emerald-500" : optimisticLead.score >= 40 ? "text-amber-500" : "text-slate-400"}`}>
-                    {optimisticLead.score}
-                  </span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                    {optimisticLead.score >= 70 ? "Hot" : optimisticLead.score >= 40 ? "Warm" : "Cold"}
-                  </span>
-                </div>
-              </div>
-              {optimisticLead.score_reason && (
-                <p className="text-xs text-slate-500 mt-2">{optimisticLead.score_reason}</p>
-              )}
-            </div>
-          )}
-
-          {/* Documents — compact */}
-          <div className="rounded-[1.5rem] bg-white p-5 shadow-sm border border-slate-100">
-            <div className="flex items-center justify-between mb-5">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Documents</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{documents.length}</span>
-            </div>
-            <div className="mb-3">
-              <DocumentUploadDialog triggerLabel="Attach Document" entityType="lead" entityId={optimisticLead.id} />
-            </div>
-            {documents.length === 0 ? (
-              <p className="text-xs text-slate-400">No documents yet.</p>
-            ) : (
-              <div className="space-y-1">
-                {documents.map((doc) => (
-                  <a
-                    key={doc.id}
-                    href={doc.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-50"
-                  >
-                    <FileText className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                    <span className="text-xs font-medium text-slate-700 truncate flex-1">{doc.file_name}</span>
-                    <ExternalLink className="h-3 w-3 text-slate-300 shrink-0" />
-                  </a>
-                ))}
-              </div>
-            )}
+          {/* Lead Score */}
+          <div className="bg-white rounded-[1.5rem] border border-slate-200/60 shadow-sm p-5">
+             <div className="flex items-center justify-between mb-2">
+               <div className="flex items-center gap-2">
+                 <Activity className="h-4 w-4 text-blue-500" />
+                 <span className="text-sm font-bold text-slate-900">Lead Score</span>
+               </div>
+               <div className="flex items-baseline gap-1.5">
+                 <span className="text-2xl font-bold text-slate-700">{optimisticLead.score ?? 0}</span>
+                 <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded-sm">{optimisticLead.score && optimisticLead.score >= 70 ? "Hot" : optimisticLead.score && optimisticLead.score >= 40 ? "Warm" : "Cold"}</span>
+               </div>
+             </div>
+             <p className="text-xs text-slate-500 mb-4">Score based on engagement and budget</p>
+             <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+               <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(100, Math.max(0, optimisticLead.score ?? 0))}%` }}></div>
+             </div>
           </div>
+
+          {/* Documents */}
+          <div className="bg-white rounded-[1.5rem] border border-slate-200/60 shadow-sm p-5">
+             <div className="flex items-center justify-between mb-4">
+               <div className="flex items-center gap-2">
+                 <FileText className="h-4 w-4 text-slate-700" />
+                 <span className="text-sm font-bold text-slate-900">Documents</span>
+               </div>
+               <span className="text-sm font-bold text-slate-700">{documents.length}</span>
+             </div>
+             
+             <Dialog>
+               <DialogTrigger render={<button className="w-full h-12 flex items-center justify-center gap-2 rounded-lg border border-dashed border-emerald-300 bg-emerald-50/50 text-emerald-600 text-sm font-medium hover:bg-emerald-50 transition-colors" />}>
+                 <ArrowLeft className="h-3.5 w-3.5 rotate-90" /> Attach Document
+               </DialogTrigger>
+               <DialogContent>
+                 <DialogHeader><DialogTitle>Upload Document</DialogTitle></DialogHeader>
+                 <p className="text-sm text-slate-500">Document logic goes here...</p>
+               </DialogContent>
+             </Dialog>
+             
+             {documents.length === 0 ? (
+                <p className="text-xs text-slate-400 text-center mt-4">No documents yet.</p>
+             ) : (
+                <div className="mt-4 space-y-2">
+                  {documents.map(d => (
+                    <div key={d.id} className="flex items-center justify-between text-sm p-2 rounded-lg bg-slate-50">
+                      <span className="truncate">{d.file_name}</span>
+                      <a href={d.file_url} target="_blank" className="text-emerald-600"><ExternalLink className="h-3.5 w-3.5" /></a>
+                    </div>
+                  ))}
+                </div>
+             )}
+          </div>
+
+          {/* Lead Insights */}
+          <div className="bg-white rounded-[1.5rem] border border-slate-200/60 shadow-sm p-5">
+             <div className="flex items-center gap-2 mb-5">
+                <Activity className="h-4 w-4 text-slate-700" />
+                <span className="text-sm font-bold text-slate-900">Lead Insights</span>
+             </div>
+             <div className="space-y-4">
+               <div className="flex items-center justify-between text-xs">
+                 <div className="flex items-center gap-2 text-slate-500"><Activity className="h-3.5 w-3.5" /> Engagement Level</div>
+                 <span className="font-bold text-slate-900">Low</span>
+               </div>
+               <div className="flex items-center justify-between text-xs">
+                 <div className="flex items-center gap-2 text-slate-500"><CalendarClock className="h-3.5 w-3.5" /> Last Activity</div>
+                 <span className="font-bold text-slate-900" suppressHydrationWarning>{timeAgo(lastTouchAt)}</span>
+               </div>
+               <div className="flex items-center justify-between text-xs">
+                 <div className="flex items-center gap-2 text-slate-500"><CalendarClock className="h-3.5 w-3.5" /> First Contact</div>
+                 <span className="font-bold text-slate-900" suppressHydrationWarning>{formatDate(optimisticLead.created_at)}</span>
+               </div>
+               <div className="flex items-center justify-between text-xs">
+                 <div className="flex items-center gap-2 text-slate-500"><FileText className="h-3.5 w-3.5" /> Total Activities</div>
+                 <span className="font-bold text-slate-900">{optimisticActivities.length}</span>
+               </div>
+             </div>
+          </div>
+
         </div>
       </div>
 
-      {/* Reason dialog for Lost / Junk stage changes */}
+      {/* Dialogs */}
       <Dialog open={reasonDialog !== null} onOpenChange={(open) => { if (!open) setReasonDialog(null); }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -1193,20 +1042,18 @@ export function LeadDetail({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Delete confirmation dialog */}
+      
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Delete Lead</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-slate-500">
-            Are you sure you want to delete <strong>{optimisticLead.name}</strong>? This will soft-delete the lead — it will be hidden from all views but can be restored if needed.
+            Are you sure you want to delete <strong>{optimisticLead.name}</strong>?
           </p>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
             <Button variant="destructive" size="sm" onClick={handleDelete} disabled={pending}>
-              {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Delete Lead
             </Button>
           </DialogFooter>
