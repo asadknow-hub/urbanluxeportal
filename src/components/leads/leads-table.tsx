@@ -130,14 +130,14 @@ export function LeadsTable({
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3 bg-white p-4 rounded-[1.5rem] shadow-sm border border-slate-200/60">
         <form onSubmit={handleSearch} className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
-            placeholder="Search name, phone, email..."
+            placeholder="Search leads..."
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
-            className="w-64 pl-9"
+            className="w-56 pl-10 bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500 rounded-xl transition-all"
           />
         </form>
 
@@ -145,10 +145,10 @@ export function LeadsTable({
           value={currentFilters.status ?? "all"}
           onValueChange={(v) => updateFilter("status", v ?? "all")}
         >
-          <SelectTrigger className="w-36">
+          <SelectTrigger className="w-36 bg-slate-50/50 border-slate-200 focus:ring-emerald-500 rounded-xl">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="rounded-xl">
             <SelectItem value="all">All Status</SelectItem>
             <SelectItem value="new">New</SelectItem>
             <SelectItem value="contacted">Contacted</SelectItem>
@@ -163,10 +163,10 @@ export function LeadsTable({
             value={currentFilters.stage ?? "all"}
             onValueChange={(v) => updateFilter("stage", v ?? "all")}
           >
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-40 bg-slate-50/50 border-slate-200 focus:ring-emerald-500 rounded-xl">
               <SelectValue placeholder="Stage" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-xl">
               <SelectItem value="all">All Stages</SelectItem>
               {stages.map((s) => (
                 <SelectItem key={s.id} value={s.id}>
@@ -181,10 +181,10 @@ export function LeadsTable({
           value={currentFilters.source ?? "all"}
           onValueChange={(v) => updateFilter("source", v ?? "all")}
         >
-          <SelectTrigger className="w-36">
+          <SelectTrigger className="w-36 bg-slate-50/50 border-slate-200 focus:ring-emerald-500 rounded-xl">
             <SelectValue placeholder="Source" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="rounded-xl">
             <SelectItem value="all">All Sources</SelectItem>
             {Object.entries(SOURCE_LABELS).map(([key, label]) => (
               <SelectItem key={key} value={key}>
@@ -199,10 +199,10 @@ export function LeadsTable({
             value={currentFilters.assigned ?? "all"}
             onValueChange={(v) => updateFilter("assigned", v ?? "all")}
           >
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-40 bg-slate-50/50 border-slate-200 focus:ring-emerald-500 rounded-xl">
               <SelectValue placeholder="Assigned" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-xl">
               <SelectItem value="all">All Agents</SelectItem>
               <SelectItem value="unassigned">Unassigned</SelectItem>
               {agents.map((a) => (
@@ -217,63 +217,67 @@ export function LeadsTable({
 
       {/* Bulk assign bar */}
       {canBulkAssign && selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-200 p-3">
-          <span className="text-sm font-medium text-emerald-700">
+        <div className="flex items-center gap-4 rounded-[1.5rem] bg-emerald-50 border border-emerald-200 p-3 px-5 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
+          <span className="text-sm font-bold text-emerald-800 bg-emerald-100/50 px-3 py-1 rounded-lg">
             {selectedIds.size} selected
           </span>
           <Select value={bulkAgent} onValueChange={(v) => setBulkAgent(v ?? "")}>
-            <SelectTrigger className="w-48 bg-white">
-              <SelectValue placeholder="Assign to..." />
+            <SelectTrigger className="w-56 bg-white border-emerald-200 focus:ring-emerald-500 rounded-xl">
+              <SelectValue placeholder="Assign to agent..." />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-xl">
               <SelectItem value="unassigned">Unassigned</SelectItem>
               {agents.map((a) => (
                 <SelectItem key={a.id} value={a.id}>{a.full_name} ({a.role})</SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <Button size="sm" onClick={handleBulkAssign} disabled={pending || !bulkAgent}>
+          <Button size="sm" onClick={handleBulkAssign} disabled={pending || !bulkAgent} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg h-9 px-4">
             {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserCog className="mr-2 h-4 w-4" />}
-            Assign
+            Assign Selected
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
+          <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())} className="text-emerald-700 hover:text-emerald-800 hover:bg-emerald-100 rounded-lg h-9">
             Clear
           </Button>
         </div>
       )}
 
       {/* Table */}
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-200">
+      <div className="overflow-hidden rounded-[2rem] bg-white shadow-sm border border-slate-200/60">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/50 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+              <tr className="border-b border-slate-200/80 bg-slate-50/50 text-left text-xs font-bold uppercase tracking-widest text-slate-500">
                 {canBulkAssign && (
-                  <th className="px-4 py-3 w-10">
+                  <th className="px-5 py-4 w-12">
                     <input
                       type="checkbox"
                       checked={selectedIds.size === leads.length && leads.length > 0}
                       onChange={toggleSelectAll}
-                      className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                      className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 transition-colors cursor-pointer"
                     />
                   </th>
                 )}
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Phone</th>
-                <th className="px-4 py-3">Source</th>
-                <th className="px-4 py-3">Interest</th>
-                <th className="px-4 py-3">Budget</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Score</th>
-                <th className="px-4 py-3">Agent</th>
-                <th className="px-4 py-3">Follow-up</th>
+                <th className="px-5 py-4">Name</th>
+                <th className="px-5 py-4">Phone</th>
+                <th className="px-5 py-4">Source</th>
+                <th className="px-5 py-4">Interest</th>
+                <th className="px-5 py-4">Budget</th>
+                <th className="px-5 py-4">Status</th>
+                <th className="px-5 py-4">Score</th>
+                <th className="px-5 py-4">Agent</th>
+                <th className="px-5 py-4">Follow-up</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100">
               {leads.length === 0 ? (
                 <tr>
-                  <td colSpan={canBulkAssign ? 10 : 9} className="px-4 py-12 text-center text-slate-400">
-                    No leads found. Try adjusting filters or create a new lead.
+                  <td colSpan={canBulkAssign ? 10 : 9} className="px-5 py-16 text-center text-slate-400">
+                    <div className="flex flex-col items-center justify-center">
+                      <Search className="h-8 w-8 text-slate-300 mb-3" />
+                      <p className="font-medium text-slate-600">No leads found</p>
+                      <p className="text-sm mt-1">Try adjusting your filters or create a new lead.</p>
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -284,30 +288,30 @@ export function LeadsTable({
                   return (
                     <tr
                       key={lead.id}
-                      className={`hover:bg-slate-50 ${isSelected ? "bg-emerald-50/50" : ""}`}
+                      className={`hover:bg-slate-50/80 transition-colors group ${isSelected ? "bg-emerald-50/50" : ""}`}
                     >
                       {canBulkAssign && (
-                        <td className="px-4 py-3">
+                        <td className="px-5 py-3.5">
                           <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => toggleSelect(lead.id)}
-                            className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                            className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                           />
                         </td>
                       )}
-                      <td className="px-4 py-3 font-medium text-slate-900">
-                        <Link href={`/leads/${lead.id}`} className="hover:text-emerald-600">
+                      <td className="px-5 py-3.5 font-semibold text-slate-900">
+                        <Link href={`/leads/${lead.id}`} className="hover:text-emerald-600 group-hover:underline decoration-emerald-500/30 underline-offset-4">
                           {lead.name}
                         </Link>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-5 py-3.5">
                         {lead.phone ? (
                           <a
                             href={waLink ?? "#"}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-emerald-600 hover:text-emerald-700"
+                            className="inline-flex items-center gap-1.5 text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md font-medium"
                           >
                             <MessageCircle className="h-3.5 w-3.5" />
                             {lead.phone}
@@ -316,39 +320,41 @@ export function LeadsTable({
                           <span className="text-slate-300">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-5 py-3.5 text-slate-600 font-medium">
                         {SOURCE_LABELS[lead.source] ?? lead.source}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-5 py-3.5 text-slate-600 font-medium">
                         {INTEREST_LABELS[lead.interest] ?? lead.interest}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
+                      <td className="px-5 py-3.5 text-slate-600">
                         {lead.budget_min || lead.budget_max
-                          ? `${lead.budget_min ? formatAED(lead.budget_min) : "?"} – ${lead.budget_max ? formatAED(lead.budget_max) : "?"}`
+                          ? <span className="font-medium text-slate-700">{lead.budget_min ? formatAED(lead.budget_min) : "?"} – {lead.budget_max ? formatAED(lead.budget_max) : "?"}</span>
                           : "—"}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-5 py-3.5">
                         <Link href={`/leads/${lead.id}`}>
-                          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${colors.bg} ${colors.text}`}>
+                          <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${colors.bg} ${colors.text} ring-1 ring-inset ${colors.border}`}>
                             {lead.status}
                           </span>
                         </Link>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-5 py-3.5">
                         {lead.score !== null ? (
-                          <span className={`text-xs font-bold ${lead.score >= 70 ? "text-emerald-600" : lead.score >= 40 ? "text-amber-600" : "text-slate-400"}`}>
+                          <span className={`inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-bold ${lead.score >= 70 ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200" : lead.score >= 40 ? "bg-amber-100 text-amber-700 ring-1 ring-amber-200" : "bg-slate-100 text-slate-600 ring-1 ring-slate-200"}`}>
                             {lead.score}
                           </span>
                         ) : (
                           <span className="text-slate-300">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-slate-600">
-                        {lead.assigned_to_profile?.full_name ?? (
-                          <span className="text-slate-300">Unassigned</span>
+                      <td className="px-5 py-3.5 text-slate-600">
+                        {lead.assigned_to_profile?.full_name ? (
+                          <span className="font-medium text-slate-700">{lead.assigned_to_profile.full_name}</span>
+                        ) : (
+                          <span className="text-slate-400 italic">Unassigned</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-slate-500">
+                      <td className="px-5 py-3.5 text-slate-500 font-medium">
                         {lead.next_follow_up_at ? formatDate(lead.next_follow_up_at) : "—"}
                       </td>
                     </tr>
