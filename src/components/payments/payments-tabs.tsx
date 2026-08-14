@@ -126,7 +126,7 @@ export function PaymentsTabs({
 
 function PaymentsList({ payments }: { payments: PaymentRow[] }) {
   return (
-    <div className="overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-slate-200/40 border border-slate-100 relative">
+    <div className="overflow-hidden rounded-[1.5rem] bg-white shadow-xl shadow-slate-200/40 border border-slate-100 relative">
       <div className="absolute inset-0 bg-gradient-to-br from-white via-slate-50/30 to-slate-100/20 pointer-events-none"></div>
       <div className="overflow-x-auto relative z-10">
         <table className="w-full text-sm">
@@ -150,9 +150,9 @@ function PaymentsList({ payments }: { payments: PaymentRow[] }) {
             ) : (
               payments.map((pay) => (
                 <tr key={pay.id} className="group hover:bg-emerald-50/30 transition-colors duration-200">
-                  <td className="px-6 py-4 text-slate-500 font-medium whitespace-nowrap group-hover:text-emerald-700 transition-colors">{formatDate(pay.received_date)}</td>
-                  <td className="px-6 py-4 text-slate-700 font-semibold group-hover:text-emerald-800 transition-colors">{getCustomerName(pay.customer)}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3 text-slate-500 font-medium whitespace-nowrap group-hover:text-emerald-700 transition-colors">{formatDate(pay.received_date)}</td>
+                  <td className="px-4 py-3 text-slate-700 font-semibold group-hover:text-emerald-800 transition-colors">{getCustomerName(pay.customer)}</td>
+                  <td className="px-4 py-3">
                     {pay.invoice ? (
                       <Link href={`/invoices/${pay.invoice.id}`} className="inline-flex items-center px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-600 font-medium hover:bg-emerald-100 transition-colors">
                         {pay.invoice.invoice_no}
@@ -161,13 +161,13 @@ function PaymentsList({ payments }: { payments: PaymentRow[] }) {
                       <span className="text-slate-300">—</span>
                     )}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3">
                     <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600">
                       {pay.method.replace(/_/g, " ")}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-slate-500 text-xs font-mono">{pay.reference ?? "—"}</td>
-                  <td className="px-6 py-4 text-right font-bold text-emerald-600">{formatAED(pay.amount)}</td>
+                  <td className="px-4 py-3 text-slate-500 text-xs font-mono">{pay.reference ?? "—"}</td>
+                  <td className="px-4 py-3 text-right font-bold text-emerald-600">{formatAED(pay.amount)}</td>
                 </tr>
               ))
             )}
@@ -195,7 +195,7 @@ function ChequesList({
         </div>
       )}
 
-      <div className="overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-slate-200/40 border border-slate-100 relative">
+      <div className="overflow-hidden rounded-[1.5rem] bg-white shadow-xl shadow-slate-200/40 border border-slate-100 relative">
         <div className="absolute inset-0 bg-gradient-to-br from-white via-slate-50/30 to-slate-100/20 pointer-events-none"></div>
         <div className="overflow-x-auto relative z-10">
           <table className="w-full text-sm">
@@ -223,25 +223,25 @@ function ChequesList({
                   const colors = getStatusColor(cheque.status);
                   return (
                     <tr key={cheque.id} className="group hover:bg-emerald-50/30 transition-colors duration-200">
-                      <td className="px-6 py-4 font-bold text-slate-700 font-mono group-hover:text-emerald-800 transition-colors">{cheque.cheque_no}</td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3 font-bold text-slate-700 font-mono group-hover:text-emerald-800 transition-colors">{cheque.cheque_no}</td>
+                      <td className="px-4 py-3">
                         <span className={`inline-flex rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest ${cheque.direction === "incoming" ? "bg-emerald-50 text-emerald-600" : "bg-orange-50 text-orange-600"}`}>
                           {cheque.direction}
                         </span>
                       </td>
-                      <td className="px-6 py-4 font-semibold text-slate-700 group-hover:text-emerald-800 transition-colors">
+                      <td className="px-4 py-3 font-semibold text-slate-700 group-hover:text-emerald-800 transition-colors">
                         {cheque.direction === "incoming" ? getCustomerName(cheque.customer) : cheque.payee ?? "—"}
                       </td>
-                      <td className="px-6 py-4 text-slate-500 font-medium">{cheque.bank_name}</td>
-                      <td className="px-6 py-4 text-slate-500 font-medium whitespace-nowrap group-hover:text-emerald-700 transition-colors">{formatDate(cheque.due_date)}</td>
-                      <td className="px-6 py-4 text-right font-extrabold text-slate-800">{formatAED(cheque.amount)}</td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-4 py-3 text-slate-500 font-medium">{cheque.bank_name}</td>
+                      <td className="px-4 py-3 text-slate-500 font-medium whitespace-nowrap group-hover:text-emerald-700 transition-colors">{formatDate(cheque.due_date)}</td>
+                      <td className="px-4 py-3 text-right font-extrabold text-slate-800">{formatAED(cheque.amount)}</td>
+                      <td className="px-4 py-3 text-center">
                         <span className={`inline-flex rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest ${colors.bg} ${colors.text}`}>
                           {cheque.status}
                         </span>
                       </td>
                       {canManage && (
-                        <td className="px-6 py-4">
+                        <td className="px-4 py-3">
                           <ChequeActions cheque={cheque} />
                         </td>
                       )}
@@ -421,17 +421,17 @@ function ChequeCreateDialog({
         )}
       />
       <DialogContent 
-        className="max-w-2xl sm:max-w-2xl w-[95vw] sm:w-[90vw] md:w-[60vw] overflow-hidden p-0 border-0 rounded-[2rem] shadow-2xl"
+        className="max-w-2xl sm:max-w-2xl w-[95vw] sm:w-[90vw] md:w-[60vw] overflow-hidden p-0 border-0 rounded-[1.5rem] shadow-2xl"
         closeClassName="text-slate-300 hover:text-white hover:bg-slate-800/50"
       >
-        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-6 sm:p-8 text-white relative">
-          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
+        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-4 sm:p-5 text-white relative">
+          <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
           <DialogHeader className="relative z-10">
             <DialogTitle className="text-2xl font-bold tracking-tight">Record New Cheque</DialogTitle>
           </DialogHeader>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2.5">
               <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Direction</Label>
               <Select value={form.direction} onValueChange={(v) => set("direction", v ?? "incoming")}>
@@ -485,7 +485,7 @@ function ChequeCreateDialog({
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2.5">
               <Label htmlFor="bank_name" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Bank *</Label>
               <Input
@@ -539,7 +539,7 @@ function ChequeCreateDialog({
             <Button type="button" variant="outline" onClick={() => setOpen(false)} className="rounded-full px-6 font-medium shadow-sm">
               Cancel
             </Button>
-            <Button type="submit" disabled={pending || !form.bank_name || !form.cheque_no || !form.amount} className="rounded-full px-8 bg-emerald-500 hover:bg-emerald-600 font-medium shadow-sm">
+            <Button type="submit" disabled={pending || !form.bank_name || !form.cheque_no || !form.amount} className="rounded-full px-5 bg-emerald-500 hover:bg-emerald-600 font-medium shadow-sm">
               {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Add Cheque
             </Button>
