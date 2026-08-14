@@ -27,7 +27,7 @@ export default async function StaffDetailPage({
 
   if (error || !staff) {
     return (
-      <div className="p-6">
+      <div className="p-4">
         <p className="text-sm text-slate-500">Staff member not found.</p>
       </div>
     );
@@ -36,7 +36,7 @@ export default async function StaffDetailPage({
   // Managers can't view admin profiles
   if (user.role === "manager" && staff.role === "admin") {
     return (
-      <div className="p-6">
+      <div className="p-4">
         <p className="text-sm text-slate-500">You don't have permission to view this profile.</p>
       </div>
     );
