@@ -136,16 +136,16 @@ export function PropertyCreateDialog({
         )}
       />
       <DialogContent 
-        className="max-w-4xl sm:max-w-4xl w-[95vw] sm:w-[90vw] md:w-[60vw] max-h-[90vh] overflow-y-auto p-0 border-0 rounded-[2rem] shadow-2xl"
+        className="max-w-4xl sm:max-w-4xl w-[95vw] sm:w-[90vw] md:w-[60vw] max-h-[90vh] overflow-y-auto p-0 border-0 rounded-[1.5rem] shadow-2xl"
         closeClassName="text-slate-300 hover:text-white hover:bg-slate-800/50"
       >
-        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-6 sm:p-8 text-white relative overflow-hidden">
-          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
+        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-4 sm:p-5 text-white relative overflow-hidden">
+          <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
           <DialogHeader className="relative z-10">
             <DialogTitle className="text-2xl font-bold tracking-tight">Record New Property</DialogTitle>
           </DialogHeader>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-6">
           <div className="space-y-2.5">
             <Label htmlFor="title" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Title *</Label>
             <Input
@@ -170,7 +170,7 @@ export function PropertyCreateDialog({
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2.5">
               <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Purpose</Label>
               <Select value={form.purpose} onValueChange={(v) => set("purpose", v ?? "sale")}>
@@ -200,7 +200,7 @@ export function PropertyCreateDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2.5">
               <Label htmlFor="community" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Community</Label>
               <Input
@@ -223,7 +223,7 @@ export function PropertyCreateDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="space-y-2.5">
               <Label htmlFor="bedrooms" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Beds</Label>
               <Input
@@ -270,7 +270,7 @@ export function PropertyCreateDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2.5">
               <Label htmlFor="price" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Price (AED) *</Label>
               <Input
@@ -296,7 +296,7 @@ export function PropertyCreateDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2.5">
               <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Owner</Label>
               <Select value={form.owner_id} onValueChange={(v) => set("owner_id", v ?? "")}>
@@ -329,7 +329,7 @@ export function PropertyCreateDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2.5">
               <Label htmlFor="trakheesi_permit_no" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Trakheesi Permit</Label>
               <Input
@@ -359,7 +359,7 @@ export function PropertyCreateDialog({
             <Button type="button" variant="outline" onClick={() => setOpen(false)} className="rounded-full px-6 font-medium shadow-sm">
               Cancel
             </Button>
-            <Button type="submit" disabled={pending || !form.title || !form.price} className="rounded-full px-8 bg-emerald-500 hover:bg-emerald-600 font-medium shadow-sm">
+            <Button type="submit" disabled={pending || !form.title || !form.price} className="rounded-full px-5 bg-emerald-500 hover:bg-emerald-600 font-medium shadow-sm">
               {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Property
             </Button>
