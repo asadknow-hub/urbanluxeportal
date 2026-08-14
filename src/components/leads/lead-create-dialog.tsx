@@ -141,15 +141,15 @@ export function LeadCreateDialog({
         )}
       />
       <DialogContent 
-        className="sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto p-0 border-0 rounded-[2rem] shadow-2xl"
+        className="sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto p-0 border-0 rounded-[1.5rem] shadow-2xl"
         closeClassName="text-slate-400 hover:text-white hover:bg-slate-800/50 z-50 right-4 top-4"
       >
-        <DialogHeader className="p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 rounded-t-[2rem] relative overflow-hidden">
-          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
+        <DialogHeader className="p-4 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 rounded-t-[2rem] relative overflow-hidden">
+          <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
           <DialogTitle className="text-2xl font-extrabold text-white">New Lead</DialogTitle>
           <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest mt-1">Capture prospect details</p>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 space-y-6">
           {/* Required fields row */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -352,7 +352,7 @@ export function LeadCreateDialog({
             <Button type="button" variant="outline" className="rounded-full px-6 h-11" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" className="rounded-full px-8 h-11 bg-emerald-500 hover:bg-emerald-600 font-bold shadow-sm" disabled={pending || !form.name || !form.phone}>
+            <Button type="submit" className="rounded-full px-5 h-11 bg-emerald-500 hover:bg-emerald-600 font-bold shadow-sm" disabled={pending || !form.name || !form.phone}>
               {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Lead
             </Button>
