@@ -296,11 +296,11 @@ export function DealDetail({
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Left: Deal info + edit */}
         <div className="space-y-6">
           {/* Deal details */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <h2 className="mb-4 text-sm font-semibold text-slate-700">Deal Details</h2>
             {editMode ? (
               <div className="space-y-3">
@@ -365,7 +365,7 @@ export function DealDetail({
 
           {/* Assignment */}
           {canManage && (
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+            <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
               <h2 className="mb-4 text-sm font-semibold text-slate-700">Assignment</h2>
               <Select
                 value={deal.assigned_to ?? "unassigned"}
@@ -385,7 +385,7 @@ export function DealDetail({
           )}
 
           {/* Documents */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <h2 className="mb-4 text-sm font-semibold text-slate-700">Documents ({documents.length})</h2>
             {documents.length === 0 ? (
               <p className="text-sm text-slate-400">No documents uploaded yet.</p>
@@ -416,7 +416,7 @@ export function DealDetail({
         <div className="space-y-6 lg:col-span-2">
           {/* Customer info */}
           {deal.customer && (
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+            <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-semibold text-slate-700">Customer</h2>
                 <Link href={`/customers/${deal.customer.id}`} className="inline-flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700">
@@ -466,7 +466,7 @@ export function DealDetail({
 
           {/* Originating lead */}
           {deal.lead && (
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+            <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-sm font-semibold text-slate-700">Originating Lead</h2>
                 <Link href={`/leads/${deal.lead.id}`} className="inline-flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700">
@@ -500,7 +500,7 @@ export function DealDetail({
 
           {/* Invoices (if won) */}
           {deal.stage === "won" && invoices.length > 0 && (
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+            <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
               <h2 className="mb-4 text-sm font-semibold text-slate-700">Invoices ({invoices.length})</h2>
               <div className="space-y-2">
                 {invoices.map((inv) => {
@@ -528,7 +528,7 @@ export function DealDetail({
           )}
 
           {/* Activity timeline */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <h2 className="mb-4 text-sm font-semibold text-slate-700">Activity Timeline</h2>
 
             {/* Quick add */}
@@ -567,7 +567,7 @@ export function DealDetail({
                   const Icon = ACTIVITY_ICONS[act.type] ?? Activity;
                   return (
                     <div key={act.id} className="flex items-start gap-3 text-sm">
-                      <div className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-slate-100">
+                      <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-slate-100">
                         <Icon className="h-3.5 w-3.5 text-slate-500" />
                       </div>
                       <div className="flex-1">
