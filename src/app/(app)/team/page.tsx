@@ -60,12 +60,31 @@ export default async function TeamPage({
   });
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Team</h1>
-        <p className="text-sm text-slate-500">
-          {staff?.length ?? 0} members · Manage staff accounts, roles, documents & logins
-        </p>
+    <div className="space-y-8 max-w-[1600px] mx-auto">
+      {/* Premium Header Banner */}
+      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-950 p-8 sm:p-10 text-white shadow-xl shadow-emerald-900/10">
+        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/20 blur-3xl mix-blend-overlay pointer-events-none"></div>
+        <div className="absolute -bottom-32 -left-10 h-80 w-80 rounded-full bg-emerald-400/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
+        
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2">Team Directory</h1>
+            <p className="text-emerald-100/80 text-sm sm:text-base max-w-xl font-medium leading-relaxed">
+              Manage your agency's staff accounts, oversee performance metrics, and assign roles effortlessly.
+            </p>
+          </div>
+          <div className="hidden lg:flex items-center gap-6 rounded-2xl bg-white/10 p-5 backdrop-blur-md border border-white/20 shadow-inner">
+             <div className="text-center">
+               <p className="text-3xl font-bold">{staff?.length ?? 0}</p>
+               <p className="text-[10px] uppercase tracking-wider text-emerald-200 font-bold mt-1">Total Members</p>
+             </div>
+             <div className="w-[1px] h-10 bg-white/20"></div>
+             <div className="text-center">
+               <p className="text-3xl font-bold">{staff?.filter(s => s.role === 'agent').length ?? 0}</p>
+               <p className="text-[10px] uppercase tracking-wider text-emerald-200 font-bold mt-1">Active Agents</p>
+             </div>
+          </div>
+        </div>
       </div>
 
       <TeamList
