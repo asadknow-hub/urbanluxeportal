@@ -1161,3 +1161,122 @@ export async function updateLeadSourceMapping(
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
   }
 }
+
+
+// ─── STAGE MANAGEMENT ─────────────────────────────────────────────
+
+export async function createLeadStage(
+  name: string,
+  color: string
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    if (!["admin", "manager"].includes(user.role)) {
+      return { ok: false, error: "Not authorized" };
+    }
+
+    const supabase = createSupabaseServiceClient();
+
+    // Get max sort for open stages to append
+    const { data: maxSortData } = await supabase
+      .from("lead_stages")
+      .select("sort")
+      .eq("kind", "open")
+      .order("sort", { ascending: false })
+      .limit(1)
+      .single();
+
+    const newSort = (maxSortData?.sort ?? 0) + 1;
+
+    const { error } = await supabase.from("lead_stages").insert({
+      name,
+      color,
+      kind: "open",
+      sort: newSort,
+      is_active: true,
+      required_fields: [],
+    });
+
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath("/leads");
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function updateLeadStageName(
+  id: string,
+  name: string
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    if (!["admin", "manager"].includes(user.role)) {
+      return { ok: false, error: "Not authorized" };
+    }
+
+    const supabase = createSupabaseServiceClient();
+    
+    // Check if it's a system stage (kind won/lost/junk)
+    const { data: stage } = await supabase.from("lead_stages").select("kind").eq("id", id).single();
+    if (stage && ["won", "lost", "junk"].includes(stage.kind)) {
+       return { ok: false, error: "Cannot rename system stages" };
+    }
+
+    const { error } = await supabase
+      .from("lead_stages")
+      .update({ name })
+      .eq("id", id);
+
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath("/leads");
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function deleteLeadStage(id: string): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    if (!["admin", "manager"].includes(user.role)) {
+      return { ok: false, error: "Not authorized" };
+    }
+
+    const supabase = createSupabaseServiceClient();
+    
+    // Check if it's a system stage
+    const { data: stage } = await supabase.from("lead_stages").select("kind").eq("id", id).single();
+    if (stage && ["won", "lost", "junk"].includes(stage.kind)) {
+       return { ok: false, error: "Cannot delete system stages" };
+    }
+
+    // Check if any leads are in this stage
+    const { count } = await supabase
+      .from("leads")
+      .select("id", { count: "exact", head: true })
+      .eq("stage_id", id)
+      .is("deleted_at", null);
+
+    if (count && count > 0) {
+      return { ok: false, error: "Cannot delete stage because it contains leads." };
+    }
+
+    const { error } = await supabase
+      .from("lead_stages")
+      .update({ is_active: false })
+      .eq("id", id);
+
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath("/leads");
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
