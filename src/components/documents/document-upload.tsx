@@ -98,7 +98,7 @@ export function DocumentUpload({
     <div className="space-y-3">
       <Label>{label}</Label>
       <div
-        className="rounded-xl border-2 border-dashed border-slate-200 p-6 text-center transition-colors hover:border-emerald-300"
+        className="rounded-xl border-2 border-dashed border-slate-200 p-4 text-center transition-colors hover:border-emerald-300"
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
