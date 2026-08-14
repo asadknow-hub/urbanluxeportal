@@ -138,7 +138,7 @@ export function PropertiesGrid({
           No properties found. Try adjusting filters or create a new property.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {properties.map((prop) => {
             const colors = getStatusColor(prop.status);
             // Convert 'bg-emerald-50' to 'bg-emerald-500' for a solid badge
@@ -149,12 +149,12 @@ export function PropertiesGrid({
               <Link
                 key={prop.id}
                 href={`/properties/${prop.id}`}
-                className="group flex flex-col overflow-hidden rounded-[2rem] bg-white shadow-sm border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-emerald-200"
+                className="group flex flex-col overflow-hidden rounded-[1.5rem] bg-white shadow-sm border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-emerald-200"
               >
                 {/* Image placeholder with clean, premium light gradient */}
                 <div className="relative flex h-48 items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden border-b border-slate-100">
                   <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] mix-blend-overlay"></div>
-                  <Building2 className="h-14 w-14 text-slate-200 group-hover:scale-110 group-hover:text-emerald-200 transition-all duration-500" />
+                  <Building2 className="h-10 w-10 text-slate-200 group-hover:scale-110 group-hover:text-emerald-200 transition-all duration-500" />
                   
                   {/* Status Badge */}
                   <div className="absolute top-4 right-4">
@@ -171,7 +171,7 @@ export function PropertiesGrid({
                   </div>
                 </div>
 
-                <div className="flex flex-col flex-1 p-6">
+                <div className="flex flex-col flex-1 p-4">
                   <div className="mb-4">
                     <h3 className="text-lg font-bold text-slate-900 line-clamp-1 group-hover:text-emerald-600 transition-colors">
                       {prop.title}
