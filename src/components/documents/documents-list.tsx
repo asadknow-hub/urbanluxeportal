@@ -77,14 +77,14 @@ export function DocumentsList({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3 p-2 bg-slate-100/80 backdrop-blur-md rounded-[1.25rem] w-fit border border-slate-200/60 shadow-sm mb-6">
         <form onSubmit={handleSearch} className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
             placeholder="Search documents..."
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
-            className="w-56 pl-9"
+            className="w-56 pl-10 h-10 rounded-xl bg-white border-slate-200 shadow-sm focus-visible:ring-emerald-500/20"
           />
         </form>
 
@@ -92,10 +92,10 @@ export function DocumentsList({
           value={currentFilters.category ?? "all"}
           onValueChange={(v) => updateFilter("category", v ?? "all")}
         >
-          <SelectTrigger className="w-36">
+          <SelectTrigger className="w-36 h-10 rounded-xl bg-white border-slate-200 shadow-sm focus:ring-emerald-500/20">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="rounded-xl shadow-xl">
             <SelectItem value="all">All Categories</SelectItem>
             {CATEGORIES.map((c) => (
               <SelectItem key={c} value={c}>
@@ -109,10 +109,10 @@ export function DocumentsList({
           value={currentFilters.entity_type ?? "all"}
           onValueChange={(v) => updateFilter("entity_type", v ?? "all")}
         >
-          <SelectTrigger className="w-36">
+          <SelectTrigger className="w-36 h-10 rounded-xl bg-white border-slate-200 shadow-sm focus:ring-emerald-500/20">
             <SelectValue placeholder="Entity" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="rounded-xl shadow-xl">
             <SelectItem value="all">All Entities</SelectItem>
             {ENTITY_TYPES.map((e) => (
               <SelectItem key={e} value={e}>
@@ -123,21 +123,21 @@ export function DocumentsList({
         </Select>
       </div>
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-200">
-        <div className="overflow-x-auto">
+      <div className="overflow-hidden rounded-[2rem] bg-white shadow-sm border border-slate-200/60 p-2">
+        <div className="overflow-x-auto rounded-[1.5rem] border border-slate-100 bg-white">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/50 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Category</th>
-                <th className="px-4 py-3">Entity</th>
-                <th className="px-4 py-3">Size</th>
-                <th className="px-4 py-3">Uploaded</th>
-                <th className="px-4 py-3">Expiry</th>
-                <th className="px-4 py-3"></th>
+              <tr className="border-b border-slate-100 bg-slate-50/50 text-left text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                <th className="px-6 py-4 rounded-tl-[1.5rem]">Name</th>
+                <th className="px-6 py-4">Category</th>
+                <th className="px-6 py-4">Entity</th>
+                <th className="px-6 py-4">Size</th>
+                <th className="px-6 py-4">Uploaded</th>
+                <th className="px-6 py-4">Expiry</th>
+                <th className="px-6 py-4 rounded-tr-[1.5rem]"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-50">
               {documents.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-12 text-center text-slate-400">
@@ -187,48 +187,50 @@ function DocumentRowItem({ doc }: { doc: DocumentRow }) {
   const expiringSoon = doc.expiry_date && isExpiringSoon(doc.expiry_date);
 
   return (
-    <tr className="group hover:bg-slate-50">
-      <td className="px-4 py-3">
-        <div className="flex items-center gap-2">
-          {isImage ? (
-            <ImageIcon className="h-4 w-4 text-slate-400" />
-          ) : (
-            <FileText className="h-4 w-4 text-slate-400" />
-          )}
-          <span className="font-medium text-slate-900">{doc.name}</span>
+    <tr className="group hover:bg-slate-50/50 transition-colors duration-200">
+      <td className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-xl ${isImage ? 'bg-blue-50 text-blue-500' : 'bg-emerald-50 text-emerald-500'}`}>
+            {isImage ? (
+              <ImageIcon className="h-5 w-5" />
+            ) : (
+              <FileText className="h-5 w-5" />
+            )}
+          </div>
+          <span className="font-semibold text-slate-900 line-clamp-1">{doc.name}</span>
         </div>
       </td>
-      <td className="px-4 py-3">
-        <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-600 capitalize">
+      <td className="px-6 py-4">
+        <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600">
           {doc.category.replace(/_/g, " ")}
         </span>
       </td>
-      <td className="px-4 py-3 text-slate-500 capitalize">
+      <td className="px-6 py-4 text-slate-500 font-medium capitalize">
         {doc.entity_type ?? "—"}
       </td>
-      <td className="px-4 py-3 text-slate-400">{formatBytes(doc.size_bytes)}</td>
-      <td className="px-4 py-3 text-slate-500">{formatDate(doc.created_at)}</td>
-      <td className="px-4 py-3">
+      <td className="px-6 py-4 text-slate-400 font-medium">{formatBytes(doc.size_bytes)}</td>
+      <td className="px-6 py-4 text-slate-500 font-medium">{formatDate(doc.created_at)}</td>
+      <td className="px-6 py-4">
         {doc.expiry_date ? (
-          <div className="flex items-center gap-1">
-            <span className={overdue ? "text-red-600 font-medium" : expiringSoon ? "text-amber-600 font-medium" : "text-slate-500"}>
+          <div className="flex items-center gap-2">
+            <span className={`px-2.5 py-1 rounded-md text-xs font-bold shadow-sm ${overdue ? "bg-red-50 text-red-600 border border-red-100" : expiringSoon ? "bg-amber-50 text-amber-600 border border-amber-100" : "bg-slate-50 text-slate-500 border border-slate-100"}`}>
               {formatDate(doc.expiry_date)}
             </span>
             {(overdue || expiringSoon) && (
-              <AlertTriangle className={`h-3.5 w-3.5 ${overdue ? "text-red-500" : "text-amber-500"}`} />
+              <AlertTriangle className={`h-4 w-4 ${overdue ? "text-red-500" : "text-amber-500"}`} />
             )}
           </div>
         ) : (
-          <span className="text-slate-300">—</span>
+          <span className="text-slate-300 font-medium">—</span>
         )}
       </td>
-      <td className="px-4 py-3">
-        <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-          <Button size="sm" variant="ghost" onClick={handleView} disabled={pending}>
-            {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4 text-slate-400" />}
+      <td className="px-6 py-4 text-right">
+        <div className="flex justify-end items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+          <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-slate-200/50 hover:text-slate-900 rounded-full" onClick={handleView} disabled={pending}>
+            {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
           </Button>
-          <Button size="sm" variant="ghost" onClick={handleDelete} disabled={pending}>
-            <Trash2 className="h-4 w-4 text-red-400" />
+          <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-red-50 hover:text-red-600 rounded-full" onClick={handleDelete} disabled={pending}>
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       </td>
