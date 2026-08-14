@@ -134,7 +134,7 @@ export function LeadCreateDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={(props) => (
-          <Button {...props} className="bg-emerald-500 hover:bg-emerald-600">
+          <Button {...props} className="bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20 border-0 h-11 px-6 rounded-xl font-bold transition-all">
             <Plus className="mr-2 h-4 w-4" />
             Add Lead
           </Button>
