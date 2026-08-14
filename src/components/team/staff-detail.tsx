@@ -137,7 +137,7 @@ export function StaffDetail({
       </Link>
 
       {/* Header card */}
-      <div className="flex items-center gap-4 rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+      <div className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
         <Avatar className="h-16 w-16">
           <AvatarImage src={staff.avatar_url ?? undefined} />
           <AvatarFallback className="bg-emerald-100 text-emerald-700 text-lg font-medium">
@@ -417,7 +417,7 @@ function ProfileTab({ staff, currentUserRole }: { staff: Staff; currentUserRole:
   const canEditRole = currentUserRole === "admin";
 
   return (
-    <form onSubmit={handleSave} className="max-w-2xl space-y-4 rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+    <form onSubmit={handleSave} className="max-w-2xl space-y-4 rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="p_name">Full Name *</Label>
@@ -735,7 +735,7 @@ function PasswordTab({ staff }: { staff: Staff }) {
   return (
     <div className="max-w-lg space-y-4">
       {/* Set password directly */}
-      <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+      <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
         <h3 className="text-sm font-semibold text-slate-900">Set Password Directly</h3>
         <p className="mt-1 text-xs text-slate-400">
           Set a new password for this user. They can use it to log in immediately.
@@ -772,7 +772,7 @@ function PasswordTab({ staff }: { staff: Staff }) {
       </div>
 
       {/* Send reset link */}
-      <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+      <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
         <h3 className="text-sm font-semibold text-slate-900">Send Password Reset Link</h3>
         <p className="mt-1 text-xs text-slate-400">
           Generate a secure recovery link that you can share with the user. They'll set their own password.

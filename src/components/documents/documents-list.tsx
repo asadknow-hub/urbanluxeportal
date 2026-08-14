@@ -123,18 +123,18 @@ export function DocumentsList({
         </Select>
       </div>
 
-      <div className="overflow-hidden rounded-[2rem] bg-white shadow-sm border border-slate-200/60 p-2">
+      <div className="overflow-hidden rounded-[1.5rem] bg-white shadow-sm border border-slate-200/60 p-2">
         <div className="overflow-x-auto rounded-[1.5rem] border border-slate-100 bg-white">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50 text-left text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                <th className="px-6 py-4 rounded-tl-[1.5rem]">Name</th>
-                <th className="px-6 py-4">Category</th>
-                <th className="px-6 py-4">Entity</th>
-                <th className="px-6 py-4">Size</th>
-                <th className="px-6 py-4">Uploaded</th>
-                <th className="px-6 py-4">Expiry</th>
-                <th className="px-6 py-4 rounded-tr-[1.5rem]"></th>
+                <th className="px-4 py-3 rounded-tl-[1.5rem]">Name</th>
+                <th className="px-4 py-3">Category</th>
+                <th className="px-4 py-3">Entity</th>
+                <th className="px-4 py-3">Size</th>
+                <th className="px-4 py-3">Uploaded</th>
+                <th className="px-4 py-3">Expiry</th>
+                <th className="px-4 py-3 rounded-tr-[1.5rem]"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -188,7 +188,7 @@ function DocumentRowItem({ doc }: { doc: DocumentRow }) {
 
   return (
     <tr className="group hover:bg-slate-50/50 transition-colors duration-200">
-      <td className="px-6 py-4">
+      <td className="px-4 py-3">
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-xl ${isImage ? 'bg-blue-50 text-blue-500' : 'bg-emerald-50 text-emerald-500'}`}>
             {isImage ? (
@@ -200,17 +200,17 @@ function DocumentRowItem({ doc }: { doc: DocumentRow }) {
           <span className="font-semibold text-slate-900 line-clamp-1">{doc.name}</span>
         </div>
       </td>
-      <td className="px-6 py-4">
+      <td className="px-4 py-3">
         <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600">
           {doc.category.replace(/_/g, " ")}
         </span>
       </td>
-      <td className="px-6 py-4 text-slate-500 font-medium capitalize">
+      <td className="px-4 py-3 text-slate-500 font-medium capitalize">
         {doc.entity_type ?? "—"}
       </td>
-      <td className="px-6 py-4 text-slate-400 font-medium">{formatBytes(doc.size_bytes)}</td>
-      <td className="px-6 py-4 text-slate-500 font-medium">{formatDate(doc.created_at)}</td>
-      <td className="px-6 py-4">
+      <td className="px-4 py-3 text-slate-400 font-medium">{formatBytes(doc.size_bytes)}</td>
+      <td className="px-4 py-3 text-slate-500 font-medium">{formatDate(doc.created_at)}</td>
+      <td className="px-4 py-3">
         {doc.expiry_date ? (
           <div className="flex items-center gap-2">
             <span className={`px-2.5 py-1 rounded-md text-xs font-bold shadow-sm ${overdue ? "bg-red-50 text-red-600 border border-red-100" : expiringSoon ? "bg-amber-50 text-amber-600 border border-amber-100" : "bg-slate-50 text-slate-500 border border-slate-100"}`}>
@@ -224,7 +224,7 @@ function DocumentRowItem({ doc }: { doc: DocumentRow }) {
           <span className="text-slate-300 font-medium">—</span>
         )}
       </td>
-      <td className="px-6 py-4 text-right">
+      <td className="px-4 py-3 text-right">
         <div className="flex justify-end items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
           <Button size="icon" variant="ghost" className="h-8 w-8 hover:bg-slate-200/50 hover:text-slate-900 rounded-full" onClick={handleView} disabled={pending}>
             {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}

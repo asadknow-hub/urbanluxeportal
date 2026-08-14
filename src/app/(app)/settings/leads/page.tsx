@@ -98,10 +98,10 @@ export default async function LeadsSettingsPage({
   const inactiveFields = fieldDefs.length - activeFields;
 
   return (
-    <div className="space-y-8 max-w-[1600px] mx-auto">
+    <div className="space-y-5 max-w-[1600px] mx-auto">
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-8 text-white shadow-xl">
-        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
+      <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-5 text-white shadow-xl">
+        <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
         <div className="relative z-10 flex flex-col gap-4">
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-300/80 mb-2">
             <Link href="/settings" className="hover:text-white transition-colors">Settings</Link>
@@ -109,7 +109,7 @@ export default async function LeadsSettingsPage({
             <span className="text-white">Leads</span>
           </div>
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight mb-2">Lead Settings Hub</h1>
+            <h1 className="text-2xl font-bold tracking-tight mb-2">Lead Settings Hub</h1>
             <p className="max-w-2xl text-sm text-slate-300 font-medium leading-relaxed">
               Control center for the lead lifecycle: configure capture sources, field mapping, activation stages, intelligent routing, and documentation rules.
             </p>
@@ -139,7 +139,7 @@ export default async function LeadsSettingsPage({
         <div className="space-y-6">
           {/* Top Metrics Bento Grid */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="group rounded-[2rem] bg-white p-6 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
+            <div className="group rounded-[1.5rem] bg-white p-4 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
                <div className="flex items-center gap-3 mb-4">
                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
                    <Route className="h-5 w-5" />
@@ -150,7 +150,7 @@ export default async function LeadsSettingsPage({
                <p className="mt-2 text-xs font-medium text-slate-400">Active capture channels</p>
             </div>
             
-            <div className="group rounded-[2rem] bg-white p-6 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
+            <div className="group rounded-[1.5rem] bg-white p-4 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
                <div className="flex items-center gap-3 mb-4">
                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
                    <Layers3 className="h-5 w-5" />
@@ -161,7 +161,7 @@ export default async function LeadsSettingsPage({
                <p className="mt-2 text-xs font-medium text-slate-400">Flow states</p>
             </div>
             
-            <div className="group rounded-[2rem] bg-white p-6 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
+            <div className="group rounded-[1.5rem] bg-white p-4 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
                <div className="flex items-center gap-3 mb-4">
                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
                    <Settings2 className="h-5 w-5" />
@@ -172,7 +172,7 @@ export default async function LeadsSettingsPage({
                <p className="mt-2 text-xs font-medium text-slate-400">Routing & SLAs</p>
             </div>
             
-            <div className="group rounded-[2rem] bg-white p-6 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
+            <div className="group rounded-[1.5rem] bg-white p-4 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
                <div className="flex items-center gap-3 mb-4">
                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
                    <FileText className="h-5 w-5" />
@@ -184,8 +184,8 @@ export default async function LeadsSettingsPage({
             </div>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="rounded-[2rem] bg-white p-8 shadow-sm border border-slate-200/60 lg:col-span-2">
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="rounded-[1.5rem] bg-white p-5 shadow-sm border border-slate-200/60 lg:col-span-2">
               <div className="flex items-center gap-3 mb-6">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
                   <Layers3 className="h-4 w-4" />
@@ -216,7 +216,7 @@ export default async function LeadsSettingsPage({
               </div>
             </div>
 
-            <div className="rounded-[2rem] bg-white p-8 shadow-sm border border-slate-200/60">
+            <div className="rounded-[1.5rem] bg-white p-5 shadow-sm border border-slate-200/60">
               <div className="flex items-center gap-3 mb-6">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
                   <Settings2 className="h-4 w-4" />
@@ -247,7 +247,7 @@ export default async function LeadsSettingsPage({
       )}
 
       {(tab === "sources" || tab === "fields" || tab === "mapping") && (
-        <div className="rounded-[2rem] bg-white p-8 shadow-sm border border-slate-200/60 flex flex-col">
+        <div className="rounded-[1.5rem] bg-white p-5 shadow-sm border border-slate-200/60 flex flex-col">
           <div className="flex items-center gap-3 mb-6">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
               <Route className="h-4 w-4" />
@@ -267,7 +267,7 @@ export default async function LeadsSettingsPage({
 
       {tab === "stages" && (
         <div className="space-y-6">
-          <div className="rounded-[2rem] bg-white p-8 shadow-sm border border-slate-200/60">
+          <div className="rounded-[1.5rem] bg-white p-5 shadow-sm border border-slate-200/60">
             <div className="flex items-center gap-3 mb-6">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
                 <Layers3 className="h-4 w-4" />
@@ -307,11 +307,11 @@ export default async function LeadsSettingsPage({
             </div>
           </div>
 
-          <div className="rounded-[2rem] bg-white p-8 shadow-sm border border-slate-200/60">
+          <div className="rounded-[1.5rem] bg-white p-5 shadow-sm border border-slate-200/60">
             <h2 className="text-xl font-bold text-slate-900 mb-6">Lost and Junk Reasons</h2>
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2">
               {(["lost", "junk"] as const).map((kind) => (
-                <div key={kind} className="rounded-2xl border border-slate-100 bg-slate-50 p-6">
+                <div key={kind} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
                   <p className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">{kind}</p>
                   <div className="flex flex-wrap gap-2">
                     {lostReasons.filter((reason: { kind: string }) => reason.kind === kind).map((reason: { label: string; kind: string }) => (
@@ -328,7 +328,7 @@ export default async function LeadsSettingsPage({
       )}
 
       {tab === "routing" && (
-        <div className="rounded-[2rem] bg-white p-8 shadow-sm border border-slate-200/60">
+        <div className="rounded-[1.5rem] bg-white p-5 shadow-sm border border-slate-200/60">
           <div className="flex items-center gap-3 mb-6">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
               <Route className="h-4 w-4" />
@@ -341,7 +341,7 @@ export default async function LeadsSettingsPage({
             ) : (
               <div className="grid gap-4">
                 {routingRules.map((rule: { id: string; sort: number; conditions: Record<string, unknown>; action: Record<string, unknown>; is_active: boolean }) => (
-                  <div key={rule.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-6 hover:border-slate-200 transition-colors">
+                  <div key={rule.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 hover:border-slate-200 transition-colors">
                     <div className="flex items-center justify-between gap-3 mb-4">
                       <div className="flex items-center gap-4">
                         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm border border-slate-200/60 text-sm font-bold text-slate-700">
@@ -381,7 +381,7 @@ export default async function LeadsSettingsPage({
       )}
 
       {tab === "documents" && (
-        <div className="rounded-[2rem] bg-white p-8 shadow-sm border border-slate-200/60">
+        <div className="rounded-[1.5rem] bg-white p-5 shadow-sm border border-slate-200/60">
           <div className="flex items-center gap-3 mb-6">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
               <FileText className="h-4 w-4" />
@@ -390,7 +390,7 @@ export default async function LeadsSettingsPage({
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {docReqs.map((req: { id: string; name: string; slots: Array<{ key: string; label: string }> | null; applies_when: Record<string, unknown>; required: boolean; allowed_types: string[]; max_mb: number }) => (
-              <div key={req.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-6 hover:border-slate-200 transition-colors flex flex-col">
+              <div key={req.id} className="rounded-2xl border border-slate-100 bg-slate-50 p-4 hover:border-slate-200 transition-colors flex flex-col">
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div>
                     <p className="text-base font-bold text-slate-900">{req.name}</p>

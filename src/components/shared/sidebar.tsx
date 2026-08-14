@@ -5,6 +5,20 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS } from "@/lib/permissions";
 import type { UserRole } from "@/lib/permissions";
+import type { SessionUser } from "@/lib/auth";
+import { NotificationBell } from "@/components/shared/notification-bell";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
@@ -45,11 +59,13 @@ export const ICON_MAP: Record<string, React.ComponentType<{ className?: string }
   Settings2,
 };
 
-export function Sidebar({ role }: { role: UserRole }) {
+export function Sidebar({ user }: { user: SessionUser }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
 
-  const items = NAV_ITEMS.filter((item) => item.roles.includes(role));
+  const role = user.role;
+  const items = NAV_ITEMS.filter((item) => item.roles.includes(role as UserRole));
   const groups = [...new Set(items.map((i) => i.group))];
 
   return (
@@ -135,6 +151,51 @@ export function Sidebar({ role }: { role: UserRole }) {
           </div>
         ))}
       </nav>
+
+      <div className="mt-auto border-t border-slate-100/80 p-3 pb-4">
+        <div className="flex items-center justify-between gap-2 px-1">
+          <DropdownMenu>
+            <DropdownMenuTrigger className="group flex flex-1 items-center gap-3 rounded-full bg-transparent p-1 transition-all hover:bg-slate-100/50 focus:outline-none text-left">
+              <Avatar className="h-9 w-9 border-2 border-white shadow-sm transition-transform group-hover:scale-105">
+                <AvatarImage src={user.avatar_url ?? undefined} />
+                <AvatarFallback className="bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-800 text-xs font-bold">
+                  {user.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+              {!collapsed && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-slate-700 group-hover:text-emerald-700 transition-colors leading-none mb-1 truncate">{user.full_name}</p>
+                  <p className="text-[11px] font-semibold tracking-wide text-slate-400 capitalize truncate">{user.role}</p>
+                </div>
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56 rounded-xl border-slate-200/60 p-2 shadow-xl mb-2 ml-2">
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="px-2 py-1.5 text-[10px] text-slate-400 font-bold tracking-wider uppercase">Signed in as</DropdownMenuLabel>
+                <div className="px-2 pb-2 text-sm font-bold text-slate-700 truncate">{user.email}</div>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator className="bg-slate-100" />
+              <DropdownMenuItem 
+                onClick={async () => {
+                  const supabase = createSupabaseBrowserClient();
+                  await supabase.auth.signOut();
+                  router.push("/login");
+                  router.refresh();
+                }} 
+                className="rounded-lg text-rose-600 font-medium focus:bg-rose-50 focus:text-rose-700 cursor-pointer mt-1"
+              >
+                Sign out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {!collapsed && (
+            <div className="shrink-0 flex items-center justify-center">
+              <NotificationBell />
+            </div>
+          )}
+        </div>
+      </div>
     </aside>
   );
 }

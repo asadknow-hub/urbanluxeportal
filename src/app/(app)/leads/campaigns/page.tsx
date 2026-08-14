@@ -16,10 +16,10 @@ export default async function CampaignsPage() {
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
       {/* Glossy Header Banner */}
-      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-6 sm:p-8 text-white shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
+      <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-4 sm:p-5 text-white shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
         <div className="relative z-10">
-          <h1 className="text-3xl font-extrabold tracking-tight mb-2">Marketing Campaigns</h1>
+          <h1 className="text-2xl font-bold tracking-tight mb-2">Marketing Campaigns</h1>
           <p className="text-sm text-slate-300 font-medium">
             Track lead sources, manage budgets, and analyze marketing ROI
           </p>
@@ -27,7 +27,7 @@ export default async function CampaignsPage() {
       </div>
 
       {campaigns && campaigns.length === 0 ? (
-        <div className="relative overflow-hidden flex h-80 flex-col items-center justify-center rounded-[2rem] border border-dashed border-slate-300 bg-slate-50/50 group hover:bg-slate-50 transition-colors">
+        <div className="relative overflow-hidden flex h-80 flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50/50 group hover:bg-slate-50 transition-colors">
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-100/50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
           <div className="relative z-10 text-center flex flex-col items-center">
             <div className="h-16 w-16 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-200/60 mb-4">
@@ -43,7 +43,7 @@ export default async function CampaignsPage() {
           </div>
         </div>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {campaigns?.map((c: any) => (
             <div key={c.id} className="group relative overflow-hidden rounded-[1.5rem] border border-slate-200/60 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:border-emerald-200/60">
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-slate-50 to-transparent rounded-bl-full opacity-50 pointer-events-none"></div>

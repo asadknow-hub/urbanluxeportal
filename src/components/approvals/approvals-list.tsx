@@ -85,7 +85,7 @@ function PendingApprovals({ approvals }: { approvals: ApprovalRow[] }) {
   return (
     <div className="space-y-4">
       {approvals.length === 0 ? (
-        <div className="rounded-[2rem] bg-white p-12 text-center shadow-sm border border-slate-200/60 flex flex-col items-center justify-center">
+        <div className="rounded-[1.5rem] bg-white p-12 text-center shadow-sm border border-slate-200/60 flex flex-col items-center justify-center">
           <div className="h-16 w-16 rounded-full bg-slate-50 flex items-center justify-center mb-4">
             <Clock className="h-8 w-8 text-slate-300" />
           </div>
@@ -104,7 +104,7 @@ function MyRequests({ requests }: { requests: ApprovalRow[] }) {
   return (
     <div className="space-y-4">
       {requests.length === 0 ? (
-        <div className="rounded-[2rem] bg-white p-12 text-center shadow-sm border border-slate-200/60 flex flex-col items-center justify-center">
+        <div className="rounded-[1.5rem] bg-white p-12 text-center shadow-sm border border-slate-200/60 flex flex-col items-center justify-center">
           <div className="h-16 w-16 rounded-full bg-slate-50 flex items-center justify-center mb-4">
             <Clock className="h-8 w-8 text-slate-300" />
           </div>
@@ -158,7 +158,7 @@ function ApprovalCard({
   );
 
   return (
-    <div className="group rounded-[2rem] bg-white p-6 sm:p-8 shadow-sm border border-slate-200/60 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-emerald-200">
+    <div className="group rounded-[1.5rem] bg-white p-4 sm:p-5 shadow-sm border border-slate-200/60 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-emerald-200">
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div className="space-y-2.5">
           <div className="flex flex-wrap items-center gap-3">
@@ -223,7 +223,7 @@ function ApprovalCard({
         <div className="mt-6 ml-0 sm:ml-11 flex gap-3 pt-4 border-t border-slate-100">
           <Button
             size="lg"
-            className="rounded-full bg-emerald-500 hover:bg-emerald-600 px-8 font-bold shadow-sm"
+            className="rounded-full bg-emerald-500 hover:bg-emerald-600 px-5 font-bold shadow-sm"
             onClick={() => openDecision("approved")}
           >
             <Check className="mr-2 h-4 w-4" />
@@ -232,7 +232,7 @@ function ApprovalCard({
           <Button
             size="lg"
             variant="outline"
-            className="rounded-full text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 font-bold shadow-sm px-8"
+            className="rounded-full text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 font-bold shadow-sm px-5"
             onClick={() => openDecision("rejected")}
           >
             <X className="mr-2 h-4 w-4" />
@@ -243,11 +243,11 @@ function ApprovalCard({
 
       <Dialog open={decisionOpen} onOpenChange={(v) => !v && setDecisionOpen(false)}>
         <DialogContent 
-          className="max-w-md overflow-hidden p-0 border-0 rounded-[2rem] shadow-2xl"
+          className="max-w-md overflow-hidden p-0 border-0 rounded-[1.5rem] shadow-2xl"
           closeClassName="text-slate-300 hover:text-white hover:bg-slate-800/50"
         >
-          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-6 sm:p-8 text-white relative overflow-hidden">
-            <div className={`absolute -right-20 -top-20 h-64 w-64 rounded-full blur-3xl mix-blend-overlay pointer-events-none ${decision === "approved" ? "bg-emerald-500/20" : "bg-red-500/20"}`}></div>
+          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-4 sm:p-5 text-white relative overflow-hidden">
+            <div className={`absolute -right-20 -top-20 h-48 w-48 rounded-full blur-3xl mix-blend-overlay pointer-events-none ${decision === "approved" ? "bg-emerald-500/20" : "bg-red-500/20"}`}></div>
             <DialogHeader className="relative z-10">
               <DialogTitle className="text-2xl font-bold tracking-tight">
                 {decision === "approved" ? "Approve Request" : "Reject Request"}
@@ -255,7 +255,7 @@ function ApprovalCard({
             </DialogHeader>
           </div>
           
-          <div className="p-6 sm:p-8 space-y-6 bg-white">
+          <div className="p-4 sm:p-5 space-y-6 bg-white">
             <div className="space-y-2.5">
               <Label htmlFor="decision_note" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Note (optional)</Label>
               <Textarea
@@ -273,7 +273,7 @@ function ApprovalCard({
                 Cancel
               </Button>
               <Button
-                className={`rounded-full px-8 font-medium shadow-sm ${decision === "approved" ? "bg-emerald-500 hover:bg-emerald-600" : "bg-red-500 hover:bg-red-600"}`}
+                className={`rounded-full px-5 font-medium shadow-sm ${decision === "approved" ? "bg-emerald-500 hover:bg-emerald-600" : "bg-red-500 hover:bg-red-600"}`}
                 onClick={handleDecide}
                 disabled={isPending}
               >

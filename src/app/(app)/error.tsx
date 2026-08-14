@@ -8,8 +8,8 @@ export default function AppError({
   reset: () => void;
 }) {
   return (
-    <div className="flex min-h-[60vh] items-center justify-center p-6">
-      <div className="max-w-md rounded-2xl bg-white p-8 shadow-sm border border-slate-200 text-center">
+    <div className="flex min-h-[60vh] items-center justify-center p-4">
+      <div className="max-w-md rounded-2xl bg-white p-5 shadow-sm border border-slate-200 text-center">
         <h2 className="text-lg font-bold text-slate-900">Something went wrong</h2>
         <p className="mt-2 text-sm text-slate-500">
           {error.message || "An unexpected error occurred while loading this page."}

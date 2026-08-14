@@ -32,7 +32,7 @@ export default async function LeadDetailPage({
 
   if (error || !lead) {
     return (
-      <div className="p-6">
+      <div className="p-4">
         <p className="text-sm text-slate-500">Lead not found.</p>
       </div>
     );
@@ -56,7 +56,7 @@ export default async function LeadDetailPage({
   // Agents can only see their own + unassigned
   if (user.role === "agent" && lead.assigned_to !== user.id && lead.assigned_to !== null) {
     return (
-      <div className="p-6">
+      <div className="p-4">
         <p className="text-sm text-slate-500">You don't have access to this lead.</p>
       </div>
     );

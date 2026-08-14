@@ -114,7 +114,7 @@ export function ExpensesList({
         </Select>
       </div>
 
-      <div className="overflow-hidden rounded-[2rem] bg-white shadow-xl shadow-slate-200/40 border border-slate-100 relative">
+      <div className="overflow-hidden rounded-[1.5rem] bg-white shadow-xl shadow-slate-200/40 border border-slate-100 relative">
         <div className="absolute inset-0 bg-gradient-to-br from-white via-slate-50/30 to-slate-100/20 pointer-events-none"></div>
         <div className="overflow-x-auto relative z-10">
           <table className="w-full text-sm">
@@ -140,23 +140,23 @@ export function ExpensesList({
               ) : (
                 expenses.map((exp) => (
                   <tr key={exp.id} className="group hover:bg-red-50/30 transition-colors duration-200">
-                    <td className="px-6 py-4 text-slate-500 font-medium whitespace-nowrap group-hover:text-red-700 transition-colors">{formatDate(exp.expense_date)}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3 text-slate-500 font-medium whitespace-nowrap group-hover:text-red-700 transition-colors">{formatDate(exp.expense_date)}</td>
+                    <td className="px-4 py-3">
                       <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600">
                         {exp.category}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-700 font-semibold group-hover:text-red-800 transition-colors">{exp.description}</td>
-                    <td className="px-6 py-4 text-slate-500 font-medium">{exp.vendor ?? "—"}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-3 text-slate-700 font-semibold group-hover:text-red-800 transition-colors">{exp.description}</td>
+                    <td className="px-4 py-3 text-slate-500 font-medium">{exp.vendor ?? "—"}</td>
+                    <td className="px-4 py-3">
                       <span className="inline-flex rounded-full bg-slate-50 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 border border-slate-100">
                         {exp.payment_method?.replace(/_/g, " ") ?? "—"}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right font-extrabold text-red-600">
+                    <td className="px-4 py-3 text-right font-extrabold text-red-600">
                       {formatAED(exp.amount)}
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-4 py-3 text-center">
                       {exp.receipt_path ? (
                         <div className="flex justify-center">
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 cursor-pointer transition-colors">
@@ -168,7 +168,7 @@ export function ExpensesList({
                       )}
                     </td>
                     {canManage && (
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-4 py-3 text-right">
                         <Button
                           size="icon"
                           variant="ghost"

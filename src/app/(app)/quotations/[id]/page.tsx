@@ -63,10 +63,10 @@ export default async function QuotationDetailPage({
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Left: Line items */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <h2 className="mb-4 text-sm font-semibold text-slate-700">Line Items</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -118,13 +118,13 @@ export default async function QuotationDetailPage({
           {(quotation.notes || quotation.terms) && (
             <div className="grid grid-cols-2 gap-4">
               {quotation.notes && (
-                <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+                <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
                   <h2 className="mb-2 text-sm font-semibold text-slate-700">Notes</h2>
                   <p className="text-sm text-slate-600">{quotation.notes}</p>
                 </div>
               )}
               {quotation.terms && (
-                <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+                <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
                   <h2 className="mb-2 text-sm font-semibold text-slate-700">Terms & Conditions</h2>
                   <p className="text-sm text-slate-600">{quotation.terms}</p>
                 </div>
@@ -137,7 +137,7 @@ export default async function QuotationDetailPage({
         <div className="space-y-6">
           {/* Customer */}
           {customer && (
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+            <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
               <h2 className="mb-3 text-sm font-semibold text-slate-700">Customer</h2>
               <Link
                 href={`/customers/${customer.id}`}
@@ -151,7 +151,7 @@ export default async function QuotationDetailPage({
           )}
 
           {/* Actions */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <h2 className="mb-3 text-sm font-semibold text-slate-700">Actions</h2>
             <QuotationActions
               quotationId={quotation.id}

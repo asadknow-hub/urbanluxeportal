@@ -103,11 +103,11 @@ export default async function PropertyDetailPage({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Left: Gallery + Specs */}
         <div className="space-y-6 lg:col-span-2">
           {/* Gallery */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <h2 className="mb-4 text-sm font-semibold text-slate-700">Gallery</h2>
             <PropertyGallery
               propertyId={property.id}
@@ -117,7 +117,7 @@ export default async function PropertyDetailPage({
           </div>
 
           {/* Specs */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <h2 className="mb-4 text-sm font-semibold text-slate-700">Specifications</h2>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               {property.bedrooms !== null && (
@@ -179,7 +179,7 @@ export default async function PropertyDetailPage({
           </div>
 
           {/* Linked deals */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <h2 className="mb-4 text-sm font-semibold text-slate-700">
               Linked Deals ({deals?.length ?? 0})
             </h2>
@@ -216,9 +216,9 @@ export default async function PropertyDetailPage({
         {/* Right: Price, Owner, Permits */}
         <div className="space-y-6">
           {/* Price */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <p className="text-xs text-slate-400">{property.purpose === "sale" ? "Sale Price" : "Annual Rent"}</p>
-            <p className="text-3xl font-bold text-slate-900">{formatAED(property.price)}</p>
+            <p className="text-xl font-bold text-slate-900">{formatAED(property.price)}</p>
             {property.service_charge && (
               <p className="mt-2 text-sm text-slate-500">
                 Service charge: {formatAED(property.service_charge)}/yr
@@ -227,7 +227,7 @@ export default async function PropertyDetailPage({
           </div>
 
           {/* Location */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <h2 className="mb-3 text-sm font-semibold text-slate-700">Location</h2>
             <div className="space-y-2 text-sm">
               {property.community && (
@@ -248,7 +248,7 @@ export default async function PropertyDetailPage({
 
           {/* Owner */}
           {property.owner && (
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+            <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
               <h2 className="mb-3 text-sm font-semibold text-slate-700">Owner</h2>
               <div className="space-y-1 text-sm">
                 <p className="font-medium text-slate-900">{property.owner.name}</p>
@@ -263,7 +263,7 @@ export default async function PropertyDetailPage({
           )}
 
           {/* Permits */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <h2 className="mb-3 text-sm font-semibold text-slate-700">Permits</h2>
             <div className="space-y-2 text-sm">
               <div>
@@ -289,7 +289,7 @@ export default async function PropertyDetailPage({
 
           {/* Assigned agent */}
           {property.assigned_to_profile && (
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+            <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
               <h2 className="mb-3 text-sm font-semibold text-slate-700">Assigned Agent</h2>
               <p className="text-sm font-medium text-slate-900">{property.assigned_to_profile.full_name}</p>
             </div>
