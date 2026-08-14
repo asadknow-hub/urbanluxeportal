@@ -39,16 +39,16 @@ export default async function DocumentsPage({
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-8 sm:p-10 shadow-2xl">
+      <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-5 sm:p-10 shadow-2xl">
         <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
         <div className="absolute -bottom-32 -left-32 h-80 w-80 rounded-full bg-blue-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
 
-        <div className="relative z-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+        <div className="relative z-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div className="max-w-2xl">
             <div className="mb-2 inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-300 backdrop-blur-md">
               Secure Vault
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+            <h1 className="text-2xl font-bold tracking-tight text-white sm:text-4xl">
               Documents
             </h1>
             <p className="mt-4 text-base text-slate-300 leading-relaxed max-w-xl">
