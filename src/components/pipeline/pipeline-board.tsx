@@ -286,14 +286,14 @@ export function PipelineBoard({
 
       {/* Won dialog */}
       <Dialog open={!!wonDialog} onOpenChange={(v) => !v && setWonDialog(null)}>
-        <DialogContent className="sm:max-w-md rounded-[2rem] border-0 p-0 overflow-hidden shadow-2xl">
-          <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 text-white">
+        <DialogContent className="sm:max-w-md rounded-[1.5rem] border-0 p-0 overflow-hidden shadow-2xl">
+          <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-4 text-white">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold tracking-tight text-white">Deal Won!</DialogTitle>
             </DialogHeader>
             <p className="text-sm text-emerald-100 mt-1">{wonDialog?.title}</p>
           </div>
-          <div className="p-6 space-y-5">
+          <div className="p-4 space-y-5">
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Final Deal Value (AED)</Label>
               <Input
@@ -328,14 +328,14 @@ export function PipelineBoard({
 
       {/* Lost dialog */}
       <Dialog open={!!lostDialog} onOpenChange={(v) => !v && setLostDialog(null)}>
-        <DialogContent className="sm:max-w-md rounded-[2rem] border-0 p-0 overflow-hidden shadow-2xl">
-          <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white">
+        <DialogContent className="sm:max-w-md rounded-[1.5rem] border-0 p-0 overflow-hidden shadow-2xl">
+          <div className="bg-gradient-to-r from-red-500 to-red-600 p-4 text-white">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold tracking-tight text-white">Deal Lost</DialogTitle>
             </DialogHeader>
             <p className="text-sm text-red-100 mt-1">{lostDialog?.title}</p>
           </div>
-          <div className="p-6 space-y-5">
+          <div className="p-4 space-y-5">
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Reason for Loss *</Label>
               <Textarea
