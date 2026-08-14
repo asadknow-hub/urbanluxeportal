@@ -243,7 +243,7 @@ export function LeadsTable({
       )}
 
       {/* Table */}
-      <div className="overflow-hidden rounded-[2rem] bg-white shadow-sm border border-slate-200/60">
+      <div className="overflow-hidden rounded-[1.5rem] bg-white shadow-sm border border-slate-200/60">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
