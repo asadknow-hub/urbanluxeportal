@@ -52,14 +52,18 @@ export default async function FollowUpsPage() {
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
-      {/* Glossy Header Banner */}
-      <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-4 sm:p-5 text-white shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
-        <div className="relative z-10">
-          <h1 className="text-2xl font-bold tracking-tight mb-2">Follow-ups</h1>
-          <p className="text-sm text-slate-300 font-medium">
-            {leads.length} lead{leads.length !== 1 ? "s" : ""} with scheduled follow-ups
-          </p>
+      {/* Minimalist White Header */}
+      <div className="flex flex-col gap-4 rounded-2xl border border-slate-200/60 bg-white p-4 shadow-sm xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-calendar-clock"><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h5"/><path d="M17.5 17.5 16 16.3V14"/><circle cx="16" cy="16" r="6"/></svg>
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-slate-900 leading-none mb-1">Follow-ups</h1>
+            <p className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">
+              {leads.length} lead{leads.length !== 1 ? "s" : ""} with scheduled follow-ups
+            </p>
+          </div>
         </div>
       </div>
 
