@@ -101,133 +101,171 @@ export default async function DashboardPage() {
       label: "Total Properties",
       value: totalProperties.toString(),
       icon: Building2,
-      color: "bg-emerald-100 text-emerald-600",
+      theme: "emerald",
     },
     {
       label: "Active Deals",
       value: `${activeDeals.length}`,
       subValue: formatAED(pipelineValue),
       icon: KanbanSquare,
-      color: "bg-blue-100 text-blue-600",
+      theme: "blue",
     },
     {
       label: "Revenue (This Month)",
       value: formatAED(revenueThisMonth),
       icon: DollarSign,
-      color: "bg-purple-100 text-purple-600",
+      theme: "purple",
     },
     {
       label: "Overdue Invoices",
       value: `${overdueInvoices.length}`,
       subValue: formatAED(overdueAmount),
       icon: AlertCircle,
-      color: "bg-red-100 text-red-600",
+      theme: "rose",
     },
   ];
 
+  const themes: Record<string, { bg: string, text: string, lightBg: string }> = {
+    emerald: { bg: "bg-emerald-500", text: "text-emerald-600", lightBg: "bg-emerald-100" },
+    blue: { bg: "bg-blue-500", text: "text-blue-600", lightBg: "bg-blue-100" },
+    purple: { bg: "bg-purple-500", text: "text-purple-600", lightBg: "bg-purple-100" },
+    rose: { bg: "bg-rose-500", text: "text-rose-600", lightBg: "bg-rose-100" },
+  };
+
   const quickActions = [
-    { label: "Add Lead", href: "/leads", icon: UserPlus, color: "from-emerald-500 to-emerald-600" },
-    { label: "Add Property", href: "/properties", icon: Building2, color: "from-blue-500 to-blue-600" },
-    { label: "New Quotation", href: "/quotations", icon: FileText, color: "from-purple-500 to-purple-600" },
+    { label: "Add Lead", href: "/leads", icon: UserPlus },
+    { label: "Add Property", href: "/properties", icon: Building2 },
+    { label: "New Quotation", href: "/quotations", icon: FileText },
   ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-        <p className="text-sm text-slate-500">
-          Welcome back, {user?.full_name}
-        </p>
+    <div className="space-y-8 pb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
+      {/* 1. Header & Welcome Area - Glassy Banner */}
+      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-emerald-900 via-emerald-800 to-slate-900 p-8 text-white shadow-xl lg:p-12">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+CgkJPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMSIgZmlsbD0icmdiYSgyNTUsIDI1NSwgMjU1LCAwLjEpIi8+Cjwvc3ZnPg==')] opacity-20 pointer-events-none" />
+        <div className="absolute -right-10 -top-24 h-64 w-64 rounded-full bg-emerald-500/20 blur-3xl" />
+        <div className="absolute -bottom-10 right-20 h-40 w-40 rounded-full bg-emerald-400/20 blur-2xl" />
+        
+        <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-2xl">
+            <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl mb-3">
+              Dashboard
+            </h1>
+            <p className="text-emerald-50/90 text-lg font-medium leading-relaxed">
+              Welcome back, {user?.full_name}. Here's a quick overview of your operations today. Let's make it a productive one!
+            </p>
+          </div>
+          
+          <div className="flex flex-wrap gap-3">
+             {quickActions.map((action) => {
+               const Icon = action.icon;
+               return (
+                 <Link
+                   key={action.label}
+                   href={action.href}
+                   className="inline-flex items-center gap-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-white/20 hover:scale-[1.02] shadow-sm active:scale-95"
+                 >
+                   <Icon className="h-4 w-4" />
+                   {action.label}
+                 </Link>
+               );
+             })}
+          </div>
+        </div>
       </div>
 
-      {/* KPI cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* 2. Cheque Alert Banner */}
+      {(chequesDue30.length > 0 || chequesOverdue.length > 0) && (
+        <Link
+          href="/payments?tab=cheques"
+          className="group block overflow-hidden rounded-[2rem] bg-white border border-rose-100 shadow-sm transition-all hover:shadow-md hover:border-rose-200"
+        >
+          <div className="flex items-center justify-between p-6 relative">
+            <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-rose-400 to-rose-600 rounded-l-[2rem]" />
+            <div className="flex items-center gap-5 pl-4">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 group-hover:scale-110 group-hover:rotate-3 transition-transform shadow-sm">
+                <AlertCircle className="h-7 w-7" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2 mb-1">
+                  Action Required: Cheque Tracker
+                  <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.6)]" />
+                </h3>
+                <p className="text-sm font-medium text-slate-500">
+                  <span className="text-rose-600 font-bold">{chequesDue30.length} due in 30 days</span>
+                  <span className="mx-2 text-slate-300">•</span>
+                  <span className="text-rose-600 font-bold">{chequesOverdue.length} overdue/bounced</span>
+                  {(chequesDue30Amount > 0 || chequesOverdueAmount > 0) && (
+                    <span className="ml-2 text-slate-400">
+                      ({formatAEDCompact(chequesDue30Amount)} due <span className="mx-1">•</span> {formatAEDCompact(chequesOverdueAmount)} overdue)
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-400 group-hover:bg-rose-50 group-hover:text-rose-500 transition-colors">
+              <ChevronRight className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
+            </div>
+          </div>
+        </Link>
+      )}
+
+      {/* 3. Primary KPI Bento Grid */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => {
           const Icon = stat.icon;
+          const theme = themes[stat.theme];
           return (
-            <Card key={stat.label} className="rounded-2xl">
-              <CardHeader className="flex flex-row items-center gap-3 pb-2">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${stat.color}`}>
-                  <Icon className="h-5 w-5" />
+            <Card key={stat.label} className="group relative overflow-hidden rounded-[2rem] border-0 shadow-sm ring-1 ring-slate-100 transition-all hover:shadow-xl hover:-translate-y-1 hover:ring-slate-200 bg-white">
+              <div className={`absolute -right-6 -top-6 h-32 w-32 rounded-full opacity-5 transition-transform duration-700 ease-out group-hover:scale-[2] ${theme.bg}`} />
+              <CardContent className="p-8 relative z-10">
+                <div className="flex items-center justify-between mb-6">
+                  <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${theme.lightBg} ${theme.text} shadow-sm transition-transform duration-300 group-hover:-translate-y-1 group-hover:scale-110`}>
+                    <Icon className="h-7 w-7" />
+                  </div>
                 </div>
-                <CardTitle className="text-sm font-medium text-slate-500">
-                  {stat.label}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-                {stat.subValue && (
-                  <p className="text-sm text-slate-400">{stat.subValue}</p>
-                )}
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    {stat.label}
+                  </p>
+                  <div className="flex items-baseline gap-2">
+                    <h3 className="text-4xl font-black text-slate-900 tracking-tight">{stat.value}</h3>
+                  </div>
+                  {stat.subValue && (
+                    <p className="mt-2 text-sm font-semibold text-slate-500 bg-slate-50 inline-block px-3 py-1 rounded-full">{stat.subValue}</p>
+                  )}
+                </div>
               </CardContent>
             </Card>
           );
         })}
       </div>
 
-      {/* Quick actions */}
-      <div className="flex flex-wrap gap-3">
-        {quickActions.map((action) => {
-          const Icon = action.icon;
-          return (
-            <Link
-              key={action.label}
-              href={action.href}
-              className={`inline-flex items-center gap-2 rounded-xl bg-gradient-to-r ${action.color} px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90`}
-            >
-              <Icon className="h-4 w-4" />
-              {action.label}
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* Cheque alert banner */}
-      <Link
-        href="/payments?tab=cheques"
-        className="block rounded-2xl bg-gradient-to-r from-purple-600 to-purple-700 p-5 text-white shadow-sm transition-opacity hover:opacity-95"
-      >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <AlertCircle className="h-5 w-5" />
-            <span className="text-sm font-medium">
-              Cheque tracker —{" "}
-              <span className="text-pink-200">{chequesDue30.length} due in 30 days</span>
-              {" · "}
-              <span className="text-pink-200">{chequesOverdue.length} overdue/bounced</span>
-              {chequesDue30Amount > 0 && (
-                <span className="ml-2 text-xs text-purple-200">
-                  ({formatAEDCompact(chequesDue30Amount)} due · {formatAEDCompact(chequesOverdueAmount)} overdue)
-                </span>
-              )}
-            </span>
-          </div>
-          <ChevronRight className="h-5 w-5" />
-        </div>
-      </Link>
-
-      {/* Activity + Follow-ups */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <Card className="rounded-2xl lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base">Recent Activity</CardTitle>
+      {/* 4. Lists (Activity & Follow-ups) */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <Card className="rounded-[2rem] border-0 shadow-sm ring-1 ring-slate-100 lg:col-span-2 overflow-hidden bg-white">
+          <CardHeader className="border-b border-slate-50/50 bg-white px-8 py-6">
+            <CardTitle className="text-xl font-black text-slate-800 tracking-tight">Recent Activity</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {activities.length === 0 ? (
-              <p className="text-sm text-slate-400">No recent activity.</p>
+              <div className="p-12 text-center text-slate-400 font-medium">No recent activity.</div>
             ) : (
-              <div className="space-y-3">
+              <div className="divide-y divide-slate-50/50">
                 {activities.map((act) => (
-                  <div key={act.id} className="flex items-start gap-3 text-sm">
-                    <div className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-emerald-400" />
-                    <div className="flex-1">
-                      <p className="text-slate-700">
-                        <span className="font-medium">{act.actor?.full_name ?? "System"}</span>{" "}
-                        <span className="text-slate-500">{act.action.replace(/_/g, " ")}</span>
-                        {" "}
-                        <span className="text-slate-400">{act.entity_type}</span>
+                  <div key={act.id} className="group flex items-start gap-5 px-8 py-5 hover:bg-slate-50/50 transition-colors">
+                    <div className="mt-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600 ring-4 ring-white shadow-sm transition-transform group-hover:scale-105">
+                       <span className="font-bold text-lg">
+                         {act.actor?.full_name ? act.actor.full_name.charAt(0).toUpperCase() : "S"}
+                       </span>
+                    </div>
+                    <div className="flex-1 space-y-1.5 pt-1">
+                      <p className="text-[15px] text-slate-600 leading-relaxed">
+                        <span className="font-bold text-slate-900">{act.actor?.full_name ?? "System"}</span>{" "}
+                        <span className="text-slate-500">{act.action.replace(/_/g, " ")}</span>{" "}
+                        <span className="font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-md ml-1">{act.entity_type}</span>
                       </p>
-                      <p className="text-xs text-slate-400">{timeAgo(act.created_at)}</p>
+                      <p className="text-xs font-semibold text-slate-400 tracking-wide uppercase">{timeAgo(act.created_at)}</p>
                     </div>
                   </div>
                 ))}
@@ -236,26 +274,38 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl">
-          <CardHeader>
-            <CardTitle className="text-base">Upcoming Follow-ups</CardTitle>
+        <Card className="rounded-[2rem] border-0 shadow-sm ring-1 ring-slate-100 overflow-hidden bg-white flex flex-col">
+          <CardHeader className="border-b border-slate-50/50 bg-white px-8 py-6 shrink-0">
+            <CardTitle className="text-xl font-black text-slate-800 tracking-tight flex items-center justify-between">
+               Upcoming Follow-ups
+               <span className="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full shadow-sm">{followUps.length}</span>
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-5 flex-1 bg-slate-50/30">
             {followUps.length === 0 ? (
-              <p className="text-sm text-slate-400">No scheduled follow-ups.</p>
+              <div className="flex h-full items-center justify-center p-8 text-center text-sm font-medium text-slate-400">
+                No scheduled follow-ups.
+              </div>
             ) : (
               <div className="space-y-3">
                 {followUps.map((lead) => (
                   <Link
                     key={lead.id}
-                    href="/leads"
-                    className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 hover:bg-slate-50"
+                    href={`/leads`} 
+                    className="group flex items-center justify-between rounded-[1.5rem] border border-slate-100/80 bg-white p-4 shadow-sm transition-all hover:border-emerald-200 hover:shadow-md hover:-translate-y-0.5"
                   >
-                    <div>
-                      <p className="text-sm font-medium text-slate-900">{lead.name}</p>
-                      <p className="text-xs text-slate-400">{formatDate(lead.next_follow_up_at)}</p>
+                    <div className="flex items-center gap-4">
+                       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 transition-colors group-hover:bg-emerald-100 group-hover:text-emerald-700">
+                          <UserPlus className="h-5 w-5" />
+                       </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">{lead.name}</p>
+                        <p className="text-xs font-semibold text-slate-400 mt-1 uppercase tracking-wide">{formatDate(lead.next_follow_up_at)}</p>
+                      </div>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-slate-300" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
+                       <ChevronRight className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
+                    </div>
                   </Link>
                 ))}
               </div>
