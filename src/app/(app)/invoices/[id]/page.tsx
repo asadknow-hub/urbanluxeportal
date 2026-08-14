@@ -68,10 +68,10 @@ export default async function InvoiceDetailPage({
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-6">
           {/* Line items */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <h2 className="mb-4 text-sm font-semibold text-slate-700">Line Items</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -129,7 +129,7 @@ export default async function InvoiceDetailPage({
           </div>
 
           {/* Payment history */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <h2 className="mb-4 text-sm font-semibold text-slate-700">
               Payment History ({payments?.length ?? 0})
             </h2>
@@ -159,7 +159,7 @@ export default async function InvoiceDetailPage({
         {/* Right: Customer + Actions */}
         <div className="space-y-6">
           {customer && (
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+            <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
               <h2 className="mb-3 text-sm font-semibold text-slate-700">Customer</h2>
               <Link
                 href={`/customers/${customer.id}`}
@@ -172,7 +172,7 @@ export default async function InvoiceDetailPage({
             </div>
           )}
 
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <h2 className="mb-3 text-sm font-semibold text-slate-700">Actions</h2>
             <InvoiceActions
               invoiceId={invoice.id}
