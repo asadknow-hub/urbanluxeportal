@@ -94,20 +94,20 @@ export function InvoicesTable({
         </Select>
       </div>
 
-      <div className="overflow-hidden rounded-[2rem] bg-white shadow-sm border border-slate-200/60">
+      <div className="overflow-hidden rounded-[1.5rem] bg-white shadow-sm border border-slate-200/60">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50 text-left text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                <th className="px-6 py-4 rounded-tl-[2rem]">Invoice No</th>
-                <th className="px-6 py-4">Customer</th>
-                <th className="px-6 py-4">Issue Date</th>
-                <th className="px-6 py-4">Due Date</th>
-                <th className="px-6 py-4">Total</th>
-                <th className="px-6 py-4">Paid</th>
-                <th className="px-6 py-4">Balance</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 rounded-tr-[2rem]"></th>
+                <th className="px-4 py-3 rounded-tl-[2rem]">Invoice No</th>
+                <th className="px-4 py-3">Customer</th>
+                <th className="px-4 py-3">Issue Date</th>
+                <th className="px-4 py-3">Due Date</th>
+                <th className="px-4 py-3">Total</th>
+                <th className="px-4 py-3">Paid</th>
+                <th className="px-4 py-3">Balance</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3 rounded-tr-[2rem]"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -125,7 +125,7 @@ export function InvoicesTable({
                   const balance = inv.total - inv.amount_paid;
                   return (
                     <tr key={inv.id} className="group transition-colors hover:bg-emerald-50/30">
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-slate-400 group-hover:text-emerald-500 transition-colors" />
                           <Link href={`/invoices/${inv.id}`} className="font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
@@ -133,20 +133,20 @@ export function InvoicesTable({
                           </Link>
                         </div>
                       </td>
-                      <td className="px-6 py-4 font-medium text-slate-600">{getCustomerName(inv.customer)}</td>
-                      <td className="px-6 py-4 font-medium text-slate-500">{formatDate(inv.issue_date)}</td>
-                      <td className="px-6 py-4 font-medium text-slate-500">{formatDate(inv.due_date)}</td>
-                      <td className="px-6 py-4 font-extrabold text-slate-800">{formatAED(inv.total)}</td>
-                      <td className="px-6 py-4 font-bold text-emerald-600">{formatAED(inv.amount_paid)}</td>
-                      <td className={`px-6 py-4 font-bold ${balance > 0 ? "text-red-600" : "text-slate-400"}`}>
+                      <td className="px-4 py-3 font-medium text-slate-600">{getCustomerName(inv.customer)}</td>
+                      <td className="px-4 py-3 font-medium text-slate-500">{formatDate(inv.issue_date)}</td>
+                      <td className="px-4 py-3 font-medium text-slate-500">{formatDate(inv.due_date)}</td>
+                      <td className="px-4 py-3 font-extrabold text-slate-800">{formatAED(inv.total)}</td>
+                      <td className="px-4 py-3 font-bold text-emerald-600">{formatAED(inv.amount_paid)}</td>
+                      <td className={`px-4 py-3 font-bold ${balance > 0 ? "text-red-600" : "text-slate-400"}`}>
                         {formatAED(balance)}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <span className={`inline-flex rounded-md border border-slate-200/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${colors.bg} ${colors.text}`}>
                           {inv.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-4 py-3 text-right">
                         <Link
                           href={`/invoices/${inv.id}`}
                           className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white border border-slate-200/60 text-slate-400 opacity-0 transition-all group-hover:opacity-100 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 shadow-sm"
