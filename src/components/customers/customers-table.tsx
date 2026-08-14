@@ -85,19 +85,19 @@ export function CustomersTable({
         </Select>
       </div>
 
-      <div className="overflow-hidden rounded-[2rem] bg-white shadow-sm border border-slate-200/60">
+      <div className="overflow-hidden rounded-[1.5rem] bg-white shadow-sm border border-slate-200/60">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50 text-left text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                <th className="px-6 py-4 rounded-tl-[2rem]">Name</th>
-                <th className="px-6 py-4">Type</th>
-                <th className="px-6 py-4">Phone</th>
-                <th className="px-6 py-4">Email</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Agent</th>
-                <th className="px-6 py-4">Created</th>
-                <th className="px-6 py-4 rounded-tr-[2rem]"></th>
+                <th className="px-4 py-3 rounded-tl-[2rem]">Name</th>
+                <th className="px-4 py-3">Type</th>
+                <th className="px-4 py-3">Phone</th>
+                <th className="px-4 py-3">Email</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Agent</th>
+                <th className="px-4 py-3">Created</th>
+                <th className="px-4 py-3 rounded-tr-[2rem]"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
@@ -118,17 +118,17 @@ export function CustomersTable({
                       key={customer.id}
                       className="group transition-colors hover:bg-emerald-50/30"
                     >
-                      <td className="px-6 py-4 font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
+                      <td className="px-4 py-3 font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">
                         <Link href={`/customers/${customer.id}`}>
                           {customer.name}
                         </Link>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <span className={`inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border ${customer.type === "company" ? "bg-purple-50 text-purple-700 border-purple-200/60" : "bg-blue-50 text-blue-700 border-blue-200/60"}`}>
                           {customer.type}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         {customer.phone ? (
                           <a
                             href={waLink ?? "#"}
@@ -143,10 +143,10 @@ export function CustomersTable({
                           <span className="text-slate-300 font-medium">—</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 font-medium text-slate-600">
+                      <td className="px-4 py-3 font-medium text-slate-600">
                         {customer.email ?? <span className="text-slate-300">—</span>}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <span className={`inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border ${
                           customer.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200/60' :
                           customer.status === 'prospect' ? 'bg-amber-50 text-amber-700 border-amber-200/60' :
@@ -155,15 +155,15 @@ export function CustomersTable({
                           {customer.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 font-medium text-slate-600">
+                      <td className="px-4 py-3 font-medium text-slate-600">
                         {customer.assigned_to_profile?.full_name ?? (
                           <span className="text-slate-400 italic">Unassigned</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 font-medium text-slate-500">
+                      <td className="px-4 py-3 font-medium text-slate-500">
                         {formatDate(customer.created_at)}
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-4 py-3 text-right">
                         <Link
                           href={`/customers/${customer.id}`}
                           className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white border border-slate-200/60 text-slate-400 opacity-0 transition-all group-hover:opacity-100 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 shadow-sm"
