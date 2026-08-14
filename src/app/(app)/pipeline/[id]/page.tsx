@@ -37,7 +37,7 @@ export default async function DealDetailPage({
   // Agents can only see their own deals
   if (user.role === "agent" && deal.assigned_to !== user.id) {
     return (
-      <div className="p-6">
+      <div className="p-4">
         <p className="text-sm text-slate-500">You don&apos;t have access to this deal.</p>
       </div>
     );
