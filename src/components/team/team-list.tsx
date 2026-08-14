@@ -174,8 +174,8 @@ export function TeamList({
             )}
           />
           <DialogContent className="max-w-md sm:max-w-lg rounded-3xl p-0 overflow-hidden border-slate-200/60 shadow-2xl">
-            <div className="bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-950 p-6 sm:p-8 text-white relative">
-              <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-emerald-500/20 blur-2xl mix-blend-overlay"></div>
+            <div className="bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-950 p-4 sm:p-5 text-white relative">
+              <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-emerald-500/20 blur-2xl mix-blend-overlay"></div>
               <DialogHeader>
                 <DialogTitle className="text-2xl font-bold flex items-center gap-3 relative z-10">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 backdrop-blur-md shadow-inner border border-white/20">
@@ -189,8 +189,8 @@ export function TeamList({
               </p>
             </div>
             
-            <form onSubmit={handleInvite} className="p-6 sm:p-8 space-y-6 bg-white">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <form onSubmit={handleInvite} className="p-4 sm:p-5 space-y-6 bg-white">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2.5">
                   <Label htmlFor="inv_name" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Full Name <span className="text-rose-500">*</span></Label>
                   <Input
@@ -215,7 +215,7 @@ export function TeamList({
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2.5">
                   <Label htmlFor="inv_phone" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Phone Number</Label>
                   <Input
@@ -246,7 +246,7 @@ export function TeamList({
                 <Button type="button" variant="ghost" onClick={() => setInviteOpen(false)} className="rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 h-11 px-6">
                   Cancel
                 </Button>
-                <Button type="submit" disabled={pending || !inviteEmail || !inviteName} className="rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-sm h-11 px-8">
+                <Button type="submit" disabled={pending || !inviteEmail || !inviteName} className="rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-sm h-11 px-5">
                   {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Send Invitation
                 </Button>
@@ -257,7 +257,7 @@ export function TeamList({
       </div>
 
       {/* Staff cards */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {staff.length === 0 ? (
           <div className="col-span-full rounded-3xl bg-white p-12 text-center shadow-sm border border-slate-200/60">
             <User className="mx-auto h-10 w-10 text-slate-300" />
@@ -278,7 +278,7 @@ export function TeamList({
             return (
               <div
                 key={s.id}
-                className="group relative overflow-hidden rounded-[2rem] bg-white shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-slate-200/40 hover:-translate-y-1 transition-all duration-300 flex flex-col"
+                className="group relative overflow-hidden rounded-[1.5rem] bg-white shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-slate-200/40 hover:-translate-y-1 transition-all duration-300 flex flex-col"
               >
                 {/* Cover Background */}
                 <div className={cn(
