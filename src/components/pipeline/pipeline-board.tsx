@@ -28,16 +28,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, User as UserIcon } from "lucide-react";
 
 const STAGES = [
-  { key: "inquiry", label: "Inquiry", color: "bg-blue-500" },
-  { key: "viewing", label: "Viewing", color: "bg-cyan-500" },
-  { key: "negotiation", label: "Negotiation", color: "bg-amber-500" },
-  { key: "offer", label: "Offer", color: "bg-purple-500" },
-  { key: "contract", label: "Contract", color: "bg-indigo-500" },
-  { key: "won", label: "Won", color: "bg-emerald-500" },
-  { key: "lost", label: "Lost", color: "bg-red-500" },
+  { key: "inquiry", label: "Inquiry", color: "bg-blue-500", grad: "from-blue-500 to-blue-600" },
+  { key: "viewing", label: "Viewing", color: "bg-cyan-500", grad: "from-cyan-500 to-cyan-600" },
+  { key: "negotiation", label: "Negotiation", color: "bg-amber-500", grad: "from-amber-500 to-amber-600" },
+  { key: "offer", label: "Offer", color: "bg-purple-500", grad: "from-purple-500 to-purple-600" },
+  { key: "contract", label: "Contract", color: "bg-indigo-500", grad: "from-indigo-500 to-indigo-600" },
+  { key: "won", label: "Won", color: "bg-emerald-500", grad: "from-emerald-500 to-emerald-600" },
+  { key: "lost", label: "Lost", color: "bg-red-500", grad: "from-red-500 to-red-600" },
 ] as const;
 
 export type DealCard = {
@@ -55,29 +55,43 @@ export type DealCard = {
 
 function DealCardItem({ deal, isDragging }: { deal: DealCard; isDragging?: boolean }) {
   const days = deal.stage_changed_at ? daysSince(deal.stage_changed_at) : 0;
-  const dayColor = days > 30 ? "text-red-600 bg-red-50" : days > 14 ? "text-amber-600 bg-amber-50" : "text-slate-500 bg-slate-50";
+  const dayColor = days > 30 ? "text-red-700 bg-red-100 border-red-200/60" : days > 14 ? "text-amber-700 bg-amber-100 border-amber-200/60" : "text-slate-600 bg-slate-100 border-slate-200/60";
 
   return (
     <Link
       href={`/pipeline/${deal.id}`}
-      className={`block rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-shadow ${isDragging ? "shadow-lg opacity-75" : "hover:shadow-md"}`}
+      className={`group block rounded-[1.25rem] border border-slate-200/60 bg-white p-4 transition-all duration-300 ${isDragging ? "shadow-xl opacity-75 scale-[1.02] ring-2 ring-emerald-500" : "hover:-translate-y-1 hover:shadow-md hover:border-emerald-200/60"}`}
     >
       <div className="flex items-start justify-between">
-        <p className="text-sm font-medium text-slate-900 line-clamp-1 flex-1">{deal.title}</p>
-        <ExternalLink className="h-3 w-3 text-slate-300 flex-shrink-0 ml-1" />
+        <p className="text-[15px] font-bold text-slate-900 line-clamp-1 flex-1 group-hover:text-emerald-600 transition-colors">{deal.title}</p>
       </div>
       {deal.customer && (
-        <p className="text-xs text-slate-500 mt-0.5">{deal.customer.name}</p>
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mt-1">{deal.customer.name}</p>
       )}
-      <div className="mt-2 flex items-center justify-between">
-        <span className="text-sm font-semibold text-slate-700">{formatAEDCompact(deal.value)}</span>
-        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${dayColor}`}>
-          {days}d
-        </span>
+      
+      <div className="mt-3 mb-3 border-t border-slate-100"></div>
+
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-extrabold text-slate-800">{formatAEDCompact(deal.value)}</span>
+          <span className={`inline-flex rounded-md border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest ${dayColor}`}>
+            {days}d
+          </span>
+        </div>
+        
+        {deal.assigned_to_profile && (
+          <div className="flex items-center gap-2">
+             {deal.assigned_to_profile.avatar_url ? (
+               <img src={deal.assigned_to_profile.avatar_url} className="w-5 h-5 rounded-full object-cover" />
+             ) : (
+               <div className="w-5 h-5 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center">
+                 <UserIcon className="h-3 w-3 text-slate-400" />
+               </div>
+             )}
+            <span className="text-xs font-medium text-slate-600 truncate">{deal.assigned_to_profile.full_name}</span>
+          </div>
+        )}
       </div>
-      {deal.assigned_to_profile && (
-        <p className="mt-1.5 text-xs text-slate-400">{deal.assigned_to_profile.full_name}</p>
-      )}
     </Link>
   );
 }
@@ -99,7 +113,7 @@ function DroppableColumn({
   deals,
   onDrop,
 }: {
-  stage: { key: string; label: string; color: string };
+  stage: { key: string; label: string; color: string; grad: string };
   deals: DealCard[];
   onDrop: (dealId: string, newStage: string) => void;
 }) {
@@ -107,21 +121,22 @@ function DroppableColumn({
   const total = deals.reduce((sum, d) => sum + (d.value ?? 0), 0);
 
   return (
-    <div className="flex flex-col min-w-[220px] w-72">
-      <div className="mb-3 flex items-center justify-between">
+    <div className="flex flex-col min-w-[320px] w-80 shrink-0">
+      <div className={`mb-4 flex items-center justify-between rounded-t-[1.5rem] bg-gradient-to-r ${stage.grad} p-4 shadow-sm text-white`}>
         <div className="flex items-center gap-2">
-          <span className={`h-2.5 w-2.5 rounded-full ${stage.color}`} />
-          <h3 className="text-sm font-semibold text-slate-700">{stage.label}</h3>
-          <span className="text-xs text-slate-400">({deals.length})</span>
+          <h3 className="text-sm font-bold uppercase tracking-wider">{stage.label}</h3>
+          <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold shadow-inner">
+            {deals.length}
+          </span>
         </div>
-        <span className="text-xs font-medium text-slate-500">{formatAEDCompact(total)}</span>
+        <span className="text-xs font-bold opacity-90">{formatAEDCompact(total)}</span>
       </div>
       <div
         ref={setNodeRef}
-        className={`flex-1 space-y-2 rounded-xl p-2 min-h-[200px] transition-colors ${isOver ? "bg-emerald-50 border-2 border-dashed border-emerald-300" : "bg-slate-50/50"}`}
+        className={`flex-1 space-y-3 rounded-b-[1.5rem] p-3 min-h-[500px] transition-colors border-x border-b border-slate-200/60 shadow-sm ${isOver ? "bg-emerald-50 border-emerald-200" : "bg-slate-50/50"}`}
       >
         {deals.length === 0 ? (
-          <div className="flex h-32 items-center justify-center text-xs text-slate-300">
+          <div className="flex h-32 items-center justify-center text-xs font-bold uppercase tracking-wider text-slate-400">
             {isOver ? "Drop here" : "Empty"}
           </div>
         ) : (
@@ -271,35 +286,40 @@ export function PipelineBoard({
 
       {/* Won dialog */}
       <Dialog open={!!wonDialog} onOpenChange={(v) => !v && setWonDialog(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Move to Won — {wonDialog?.title}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
+        <DialogContent className="sm:max-w-md rounded-[2rem] border-0 p-0 overflow-hidden shadow-2xl">
+          <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 text-white">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold tracking-tight text-white">Deal Won!</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-emerald-100 mt-1">{wonDialog?.title}</p>
+          </div>
+          <div className="p-6 space-y-5">
             <div className="space-y-2">
-              <Label>Deal Value (AED)</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Final Deal Value (AED)</Label>
               <Input
                 type="number"
                 value={wonValue}
                 onChange={(e) => setWonValue(e.target.value)}
                 placeholder="Deal value"
+                className="rounded-xl border-slate-200/60 bg-slate-50/50 focus:bg-white"
               />
             </div>
             <div className="space-y-2">
-              <Label>Commission Amount (AED)</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Commission Amount (AED)</Label>
               <Input
                 type="number"
                 value={wonCommission}
                 onChange={(e) => setWonCommission(e.target.value)}
                 placeholder="Commission"
+                className="rounded-xl border-slate-200/60 bg-slate-50/50 focus:bg-white"
               />
             </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setWonDialog(null)}>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="ghost" className="rounded-xl font-bold hover:bg-slate-100" onClick={() => setWonDialog(null)}>
                 Cancel
               </Button>
-              <Button className="bg-emerald-500 hover:bg-emerald-600" onClick={confirmWon} disabled={pending}>
-                Confirm Won
+              <Button className="rounded-xl bg-emerald-500 hover:bg-emerald-600 font-bold" onClick={confirmWon} disabled={pending}>
+                Confirm Win 🚀
               </Button>
             </div>
           </div>
@@ -308,26 +328,30 @@ export function PipelineBoard({
 
       {/* Lost dialog */}
       <Dialog open={!!lostDialog} onOpenChange={(v) => !v && setLostDialog(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Move to Lost — {lostDialog?.title}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
+        <DialogContent className="sm:max-w-md rounded-[2rem] border-0 p-0 overflow-hidden shadow-2xl">
+          <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold tracking-tight text-white">Deal Lost</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-red-100 mt-1">{lostDialog?.title}</p>
+          </div>
+          <div className="p-6 space-y-5">
             <div className="space-y-2">
-              <Label>Lost Reason *</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Reason for Loss *</Label>
               <Textarea
                 value={lostReason}
                 onChange={(e) => setLostReason(e.target.value)}
                 placeholder="Why was this deal lost?"
                 rows={3}
+                className="rounded-xl border-slate-200/60 bg-slate-50/50 focus:bg-white resize-none"
               />
             </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setLostDialog(null)}>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="ghost" className="rounded-xl font-bold hover:bg-slate-100" onClick={() => setLostDialog(null)}>
                 Cancel
               </Button>
-              <Button variant="destructive" onClick={confirmLost} disabled={pending || !lostReason.trim()}>
-                Confirm Lost
+              <Button variant="destructive" className="rounded-xl font-bold" onClick={confirmLost} disabled={pending || !lostReason.trim()}>
+                Confirm Loss
               </Button>
             </div>
           </div>
