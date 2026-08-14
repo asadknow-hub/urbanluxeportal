@@ -9,7 +9,7 @@ export default async function AutomationsPage() {
   if (!user) throw new Error("Unauthorized");
   if (user.role !== "admin") {
     return (
-      <div className="p-6">
+      <div className="p-4">
         <p className="text-sm text-slate-500">Admin access required.</p>
       </div>
     );
