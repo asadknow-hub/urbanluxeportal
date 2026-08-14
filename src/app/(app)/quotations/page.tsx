@@ -46,13 +46,19 @@ export default async function QuotationsPage({
     .order("name");
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Quotations</h1>
-          <p className="text-sm text-slate-500">{count ?? 0} total quotations</p>
+    <div className="space-y-6 max-w-[1600px] mx-auto">
+      {/* Glossy Header Banner */}
+      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-6 sm:p-8 text-white shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
+        <div className="relative z-10">
+          <h1 className="text-3xl font-extrabold tracking-tight mb-2">Quotations</h1>
+          <p className="text-sm text-slate-300 font-medium">
+            Manage your {count ?? 0} total quotations and proposals
+          </p>
         </div>
-        <QuotationCreateDialog customers={customers ?? []} />
+        <div className="relative z-10">
+          <QuotationCreateDialog customers={customers ?? []} />
+        </div>
       </div>
 
       <QuotationsTable quotations={quotations ?? []} currentFilters={params} />
