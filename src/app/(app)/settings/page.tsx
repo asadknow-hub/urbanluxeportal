@@ -24,16 +24,16 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-8 sm:p-10 shadow-2xl">
+      <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-5 sm:p-10 shadow-2xl">
         <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
         <div className="absolute -bottom-32 -left-32 h-80 w-80 rounded-full bg-blue-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
 
-        <div className="relative z-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+        <div className="relative z-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div className="max-w-2xl">
             <div className="mb-2 inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-300 backdrop-blur-md">
               System Configuration
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+            <h1 className="text-2xl font-bold tracking-tight text-white sm:text-4xl">
               Settings & Preferences
             </h1>
             <p className="mt-4 text-base text-slate-300 leading-relaxed max-w-xl">
@@ -44,7 +44,7 @@ export default async function SettingsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Link href="/settings/leads" className="group rounded-[2rem] bg-white p-6 shadow-sm border border-slate-200/60 hover:shadow-xl hover:-translate-y-1 hover:border-emerald-200 transition-all duration-300 flex flex-col">
+        <Link href="/settings/leads" className="group rounded-[1.5rem] bg-white p-4 shadow-sm border border-slate-200/60 hover:shadow-xl hover:-translate-y-1 hover:border-emerald-200 transition-all duration-300 flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <div className="rounded-[1.5rem] bg-emerald-50/50 border border-emerald-100 p-3 transition-transform group-hover:scale-110">
               <Route className="h-6 w-6 text-emerald-600" />
@@ -57,7 +57,7 @@ export default async function SettingsPage() {
           </div>
         </Link>
 
-        <Link href="/settings/users" className="group rounded-[2rem] bg-white p-6 shadow-sm border border-slate-200/60 hover:shadow-xl hover:-translate-y-1 hover:border-blue-200 transition-all duration-300 flex flex-col">
+        <Link href="/settings/users" className="group rounded-[1.5rem] bg-white p-4 shadow-sm border border-slate-200/60 hover:shadow-xl hover:-translate-y-1 hover:border-blue-200 transition-all duration-300 flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <div className="rounded-[1.5rem] bg-blue-50/50 border border-blue-100 p-3 transition-transform group-hover:scale-110">
               <Users className="h-6 w-6 text-blue-600" />
@@ -70,7 +70,7 @@ export default async function SettingsPage() {
           </div>
         </Link>
 
-        <Link href="/settings/automations" className="group rounded-[2rem] bg-white p-6 shadow-sm border border-slate-200/60 hover:shadow-xl hover:-translate-y-1 hover:border-amber-200 transition-all duration-300 flex flex-col">
+        <Link href="/settings/automations" className="group rounded-[1.5rem] bg-white p-4 shadow-sm border border-slate-200/60 hover:shadow-xl hover:-translate-y-1 hover:border-amber-200 transition-all duration-300 flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <div className="rounded-[1.5rem] bg-amber-50/50 border border-amber-100 p-3 transition-transform group-hover:scale-110">
               <Zap className="h-6 w-6 text-amber-600" />
@@ -83,7 +83,7 @@ export default async function SettingsPage() {
           </div>
         </Link>
 
-        <Link href="/settings/email-templates" className="group rounded-[2rem] bg-white p-6 shadow-sm border border-slate-200/60 hover:shadow-xl hover:-translate-y-1 hover:border-purple-200 transition-all duration-300 flex flex-col">
+        <Link href="/settings/email-templates" className="group rounded-[1.5rem] bg-white p-4 shadow-sm border border-slate-200/60 hover:shadow-xl hover:-translate-y-1 hover:border-purple-200 transition-all duration-300 flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <div className="rounded-[1.5rem] bg-purple-50/50 border border-purple-100 p-3 transition-transform group-hover:scale-110">
               <Mail className="h-6 w-6 text-purple-600" />
@@ -97,14 +97,14 @@ export default async function SettingsPage() {
         </Link>
       </div>
 
-      <div className="rounded-[2rem] bg-white p-8 shadow-sm border border-slate-200/60 mt-8">
+      <div className="rounded-[1.5rem] bg-white p-5 shadow-sm border border-slate-200/60 mt-8">
         <div className="mb-8">
           <h2 className="text-xl font-extrabold tracking-tight text-slate-900">Company Profile</h2>
           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">Official details used in documents</p>
         </div>
         
         <div className="space-y-6">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2.5">
               <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Company Name</Label>
               <Input 
@@ -180,7 +180,7 @@ export default async function SettingsPage() {
           </div>
           
           <div className="pt-6 border-t border-slate-100 flex justify-end">
-            <Button size="lg" className="rounded-full px-8 bg-emerald-500 hover:bg-emerald-600 font-bold shadow-sm">
+            <Button size="lg" className="rounded-full px-5 bg-emerald-500 hover:bg-emerald-600 font-bold shadow-sm">
               Save Profile Changes
             </Button>
           </div>
