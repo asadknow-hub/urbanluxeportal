@@ -122,10 +122,10 @@ export default async function CustomerDetailPage({
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Left: Profile + KYC */}
         <div className="space-y-6">
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <h2 className="mb-4 text-sm font-semibold text-slate-700">Contact</h2>
             <div className="space-y-3 text-sm">
               {customer.phone && (
@@ -171,7 +171,7 @@ export default async function CustomerDetailPage({
           </div>
 
           {/* KYC Panel */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <h2 className="mb-4 text-sm font-semibold text-slate-700">KYC</h2>
             <dl className="space-y-3 text-sm">
               {customer.nationality && (
@@ -207,7 +207,7 @@ export default async function CustomerDetailPage({
           </div>
 
           {/* Balance card */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <h2 className="mb-4 text-sm font-semibold text-slate-700">Balance</h2>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
@@ -231,7 +231,7 @@ export default async function CustomerDetailPage({
         {/* Right: Deals, Invoices, Activity */}
         <div className="space-y-6 lg:col-span-2">
           {/* Deals */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <h2 className="mb-4 text-sm font-semibold text-slate-700">
               Deals ({deals?.length ?? 0})
             </h2>
@@ -266,7 +266,7 @@ export default async function CustomerDetailPage({
 
           {/* Originating Lead */}
           {originatingLead && (
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+            <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
               <h2 className="mb-4 text-sm font-semibold text-slate-700">Originating Lead</h2>
               <Link
                 href={`/leads/${originatingLead.id}`}
@@ -295,7 +295,7 @@ export default async function CustomerDetailPage({
           )}
 
           {/* Invoices */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <h2 className="mb-4 text-sm font-semibold text-slate-700">
               Invoices ({invoices?.length ?? 0})
             </h2>
@@ -331,7 +331,7 @@ export default async function CustomerDetailPage({
           </div>
 
           {/* Activity */}
-          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-200">
+          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
             <h2 className="mb-4 text-sm font-semibold text-slate-700">Recent Activity</h2>
             <div className="space-y-3">
               {(activities ?? []).length === 0 ? (
