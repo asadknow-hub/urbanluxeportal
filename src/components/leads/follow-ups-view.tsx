@@ -451,7 +451,7 @@ export function FollowUpsView({
           )}
         </div>
       ) : viewMode === "grouped" ? (
-        <div className="space-y-8">
+        <div className="space-y-5">
           {GROUP_ORDER.map((group) => {
             const items = groupedLeads[group];
             if (items.length === 0) return null;
@@ -474,7 +474,7 @@ export function FollowUpsView({
           })}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-[2rem] border border-slate-200/60 shadow-sm bg-white">
+        <div className="overflow-hidden rounded-[1.5rem] border border-slate-200/60 shadow-sm bg-white">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-b border-slate-200/80 bg-slate-50/50">
