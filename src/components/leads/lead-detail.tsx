@@ -628,32 +628,36 @@ export function LeadDetail({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="relative flex flex-col gap-5 rounded-[2rem] border border-slate-200/80 bg-gradient-to-br from-white via-slate-50 to-slate-100 p-6 pt-10 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur xl:flex-row xl:items-start xl:justify-between">
+      <div className="relative flex flex-col gap-6 overflow-hidden rounded-[2rem] border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-8 shadow-2xl xl:flex-row xl:items-start xl:justify-between">
+        <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
+        <div className="absolute -bottom-32 -left-32 h-80 w-80 rounded-full bg-blue-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
+        
         <Link
           href="/leads"
-          className="absolute left-6 top-4 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/85 px-3 py-1 text-[11px] font-medium text-slate-500 shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition-colors hover:border-slate-300 hover:text-slate-700"
+          className="absolute left-6 top-4 inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-800/80 px-3 py-1 text-[11px] font-medium text-slate-300 shadow-[0_8px_18px_rgba(0,0,0,0.1)] transition-colors hover:border-slate-600 hover:text-white"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Back to Leads
         </Link>
 
-        <div className="flex items-center gap-4">
-          <Avatar className="h-14 w-14">
-            <AvatarFallback className="bg-emerald-100 text-emerald-700 text-lg font-medium">
+        <div className="flex items-center gap-5 mt-6 xl:mt-0 relative z-10">
+          <Avatar className="h-16 w-16 ring-4 ring-slate-800/50 shadow-xl">
+            <AvatarFallback className="bg-gradient-to-br from-emerald-400 to-emerald-600 text-white text-xl font-bold">
               {initials}
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-xl font-bold text-slate-900">{optimisticLead.name}</h1>
-            <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <h1 className="text-2xl font-extrabold text-white tracking-tight">{optimisticLead.name}</h1>
+            <div className="mt-1.5 flex flex-wrap items-center gap-3 text-sm text-emerald-100/70 font-medium">
               {currentStage && (
                 <span
-                  className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium"
+                  className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold border"
                   style={{
                     backgroundColor: `${currentStage.color}15`,
                     color: currentStage.color,
+                    borderColor: `${currentStage.color}30`
                   }}
                 >
                   {currentStage.name}
@@ -673,104 +677,113 @@ export function LeadDetail({
             </div>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-          <div className="rounded-2xl border border-slate-200 bg-white/90 px-3 py-2 shadow-[0_10px_20px_rgba(15,23,42,0.05)]">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Last touched</p>
-            <p className="text-sm font-semibold text-slate-900">{timeAgo(lastTouchAt)}</p>
+        <div className="flex flex-wrap items-center gap-3 xl:justify-end relative z-10">
+          <div className="rounded-[1rem] border border-slate-700 bg-slate-800/50 px-4 py-2 backdrop-blur-md">
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-400/80 mb-0.5">Last touched</p>
+            <p className="text-sm font-bold text-white">{timeAgo(lastTouchAt)}</p>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white/90 px-3 py-2 shadow-[0_10px_20px_rgba(15,23,42,0.05)]">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Created</p>
-            <p className="text-sm font-semibold text-slate-900">{formatDate(optimisticLead.created_at)}</p>
+          <div className="rounded-[1rem] border border-slate-700 bg-slate-800/50 px-4 py-2 backdrop-blur-md">
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-400/80 mb-0.5">Created</p>
+            <p className="text-sm font-bold text-white">{formatDate(optimisticLead.created_at)}</p>
           </div>
-          {phoneLink && (
-            <a href={phoneLink} className={buttonVariants({ variant: "outline", size: "sm" })}>
-              <Phone className="mr-2 h-4 w-4" />
-              Call
-            </a>
-          )}
-          {waLink && (
-            <a href={waLink} target="_blank" rel="noopener noreferrer" className={buttonVariants({ variant: "outline", size: "sm" })}>
-              <MessageCircle className="mr-2 h-4 w-4" />
-              WhatsApp
-            </a>
-          )}
-          {mailLink && (
-            <a href={mailLink} className={buttonVariants({ variant: "outline", size: "sm" })}>
-              <Mail className="mr-2 h-4 w-4" />
-              Email
-            </a>
-          )}
-          <DocumentUploadDialog triggerLabel="Upload Lead Document" entityType="lead" entityId={optimisticLead.id} />
-          {!optimisticLead.assigned_to && canEdit && (
-            <Button size="sm" variant="outline" onClick={handleClaim} disabled={pending}>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Claim
-            </Button>
-          )}
-          {canManage && (
-            <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => setShowDeleteConfirm(true)} disabled={pending}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {phoneLink && (
+              <a href={phoneLink} className="inline-flex h-9 items-center justify-center rounded-full border border-slate-600 bg-slate-800/80 px-4 text-xs font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white">
+                <Phone className="mr-2 h-3.5 w-3.5" /> Call
+              </a>
+            )}
+            {waLink && (
+              <a href={waLink} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center justify-center rounded-full border border-slate-600 bg-slate-800/80 px-4 text-xs font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white">
+                <MessageCircle className="mr-2 h-3.5 w-3.5" /> WhatsApp
+              </a>
+            )}
+            {mailLink && (
+              <a href={mailLink} className="inline-flex h-9 items-center justify-center rounded-full border border-slate-600 bg-slate-800/80 px-4 text-xs font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white">
+                <Mail className="mr-2 h-3.5 w-3.5" /> Email
+              </a>
+            )}
+            <DocumentUploadDialog triggerLabel="Upload Document" entityType="lead" entityId={optimisticLead.id} />
+            {!optimisticLead.assigned_to && canEdit && (
+              <Button size="sm" variant="outline" onClick={handleClaim} disabled={pending} className="h-9 rounded-full border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-300">
+                <UserPlus className="mr-2 h-3.5 w-3.5" /> Claim
+              </Button>
+            )}
+            {canManage && (
+              <Button variant="outline" size="sm" className="h-9 rounded-full border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300" onClick={() => setShowDeleteConfirm(true)} disabled={pending}>
+                <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Stage workflow */}
+      {/* Stage workflow - Minimalist Stepper */}
       {stages.length > 0 && (
-        <div className="overflow-hidden rounded-[1.35rem] border border-slate-200 bg-white p-2 shadow-[0_10px_28px_rgba(15,23,42,0.06)]">
-          <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${workflowStages.length}, minmax(0, 1fr))` }}>
-            {workflowStages.map((stage, idx) => {
-              const currentIdx = workflowStages.findIndex((s) => s.id === optimisticLead.stage_id);
-              const isCurrent = idx === currentIdx;
-              const isPassed = currentIdx >= 0 && idx < currentIdx;
-              const isEditable = canEdit && !pending;
-              const stageColor = stage.color || WORKFLOW_STAGE_COLORS[idx % WORKFLOW_STAGE_COLORS.length];
-              const softFill = mixHexWithWhite(stageColor, isCurrent ? 0.88 : isPassed ? 0.22 : 0.16);
-              const softBorder = mixHexWithWhite(stageColor, 0.42);
-              const accentLine = mixHexWithWhite(stageColor, isCurrent ? 1 : 0.78);
+        <div className="flex items-center justify-between overflow-x-auto pb-4 pt-2 hide-scrollbar gap-2">
+          {workflowStages.map((stage, idx) => {
+            const currentIdx = workflowStages.findIndex((s) => s.id === optimisticLead.stage_id);
+            const isCurrent = idx === currentIdx;
+            const isPassed = currentIdx >= 0 && idx < currentIdx;
+            const isEditable = canEdit && !pending;
 
-              return (
-                <button
-                  key={stage.id}
-                  onClick={() => isEditable && handleStageChange(stage.id)}
-                  disabled={!isEditable}
-                  className={`relative h-9 min-w-0 overflow-hidden rounded-[0.85rem] px-3 text-left text-[11px] font-medium leading-none transition-all ${
-                    isEditable ? "cursor-pointer hover:-translate-y-[1px]" : "cursor-default"
-                  } ${isCurrent ? "shadow-[0_10px_18px_rgba(15,23,42,0.10)]" : ""}`}
-                  style={{
-                    background: isCurrent
-                      ? `linear-gradient(180deg, ${stageColor}, ${mixHexWithWhite(stageColor, 0.68)})`
-                      : `linear-gradient(180deg, ${softFill}, ${mixHexWithWhite(stageColor, 0.1)})`,
-                    border: `1px solid ${softBorder}`,
-                    color: isCurrent ? "#ffffff" : "#334155",
-                  }}
-                >
-                  <span className="block truncate pr-6">{stage.name}</span>
-                  <span
-                    className="absolute inset-x-0 bottom-0 h-[2px]"
-                    style={{ backgroundColor: accentLine }}
+            return (
+              <button
+                key={stage.id}
+                onClick={() => isEditable && handleStageChange(stage.id)}
+                disabled={!isEditable}
+                className={`group relative flex flex-1 flex-col items-center gap-2 min-w-[100px] transition-all ${
+                  isEditable ? "cursor-pointer" : "cursor-default opacity-80"
+                }`}
+              >
+                {/* Connecting Line */}
+                {idx !== 0 && (
+                  <div 
+                    className={`absolute left-[calc(-50%+1rem)] top-3 h-[2px] w-[calc(100%-2rem)] transition-colors ${
+                      isPassed || isCurrent ? "bg-emerald-500" : "bg-slate-200"
+                    }`}
                   />
-                  {isCurrent && <span className="absolute right-2 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-white/90" />}
-                </button>
-              );
-            })}
-          </div>
+                )}
+                
+                {/* Step Circle */}
+                <div 
+                  className={`relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-300 ${
+                    isCurrent 
+                      ? "border-emerald-500 bg-white ring-4 ring-emerald-500/20" 
+                      : isPassed
+                      ? "border-emerald-500 bg-emerald-500"
+                      : "border-slate-200 bg-white group-hover:border-slate-300"
+                  }`}
+                >
+                  {isPassed && <CheckCircle2 className="h-3 w-3 text-white" />}
+                  {isCurrent && <div className="h-2 w-2 rounded-full bg-emerald-500" />}
+                </div>
+
+                {/* Step Label */}
+                <span 
+                  className={`text-center text-[10px] font-bold uppercase tracking-widest transition-colors ${
+                    isCurrent ? "text-emerald-600" : isPassed ? "text-slate-700" : "text-slate-400 group-hover:text-slate-600"
+                  }`}
+                >
+                  {stage.name}
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
-
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left column: details + edit */}
         <div className="space-y-4 lg:col-span-2">
           {/* Contact info */}
-          <div className="rounded-[1.75rem] border border-slate-200/80 bg-white p-4 shadow-[0_16px_38px_rgba(15,23,42,0.08)]">
-            <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="rounded-[2rem] border border-slate-100 bg-white p-8 shadow-sm">
+            <div className="mb-8 flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
-                <h3 className="text-sm font-semibold text-slate-900">Lead Snapshot</h3>
-                <p className="text-xs text-slate-400">Compact grid view. Tap the pen to edit a field inline.</p>
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Lead Details</h3>
+                <p className="text-[11px] font-medium text-slate-400 mt-1 uppercase tracking-wider">Tap the pen icon to edit fields inline.</p>
               </div>
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            
+            <div className="grid grid-cols-1 gap-x-12 gap-y-6 sm:grid-cols-2">
               {[
                 { label: "Name", kind: "text" as const, value: optimisticLead.name, key: "name", span: "" },
                 { label: "Phone", kind: "text" as const, value: optimisticLead.phone ?? "", key: "phone", span: "" },
@@ -778,15 +791,15 @@ export function LeadDetail({
                 { label: "Interest", kind: "text" as const, value: optimisticLead.interest, key: "interest", span: "" },
                 { label: "Budget Min (AED)", kind: "money" as const, value: optimisticLead.budget_min ? String(optimisticLead.budget_min / 100) : "", key: "budget_min", span: "" },
                 { label: "Budget Max (AED)", kind: "money" as const, value: optimisticLead.budget_max ? String(optimisticLead.budget_max / 100) : "", key: "budget_max", span: "" },
-                { label: "Preferred Areas", kind: "areas" as const, value: optimisticLead.preferred_areas?.length ? optimisticLead.preferred_areas.join(", ") : "", key: "preferred_areas", span: "" },
+                { label: "Preferred Areas", kind: "areas" as const, value: optimisticLead.preferred_areas?.length ? optimisticLead.preferred_areas.join(", ") : "", key: "preferred_areas", span: "sm:col-span-2" },
                 { label: "Language", kind: "text" as const, value: optimisticLead.language ?? "", key: "language", span: "" },
                 { label: "Financing", kind: "text" as const, value: optimisticLead.financing ?? "", key: "financing", span: "" },
                 { label: "Timeframe", kind: "text" as const, value: optimisticLead.timeframe ?? "", key: "timeframe", span: "" },
                 { label: "Purpose", kind: "text" as const, value: optimisticLead.purpose ?? "", key: "purpose", span: "" },
                 { label: "Bedrooms", kind: "text" as const, value: optimisticLead.bedrooms ?? "", key: "bedrooms", span: "" },
                 { label: "Category", kind: "text" as const, value: optimisticLead.category ?? "", key: "category", span: "" },
-                { label: "Tags", kind: "tags" as const, value: optimisticLead.tags ?? [], key: "tags", span: "" },
-                { label: "Notes", kind: "textarea" as const, value: optimisticLead.notes ?? "", key: "notes", span: "sm:col-span-2 xl:col-span-3" },
+                { label: "Tags", kind: "tags" as const, value: optimisticLead.tags ?? [], key: "tags", span: "sm:col-span-2" },
+                { label: "Notes", kind: "textarea" as const, value: optimisticLead.notes ?? "", key: "notes", span: "sm:col-span-2" },
               ].map((field) => {
                 const isEditing = inlineEdit?.key === field.key;
                 const valueText =
@@ -807,51 +820,43 @@ export function LeadDetail({
                 return isEditing ? (
                   <div
                     key={field.key}
-                    className={`rounded-2xl border border-emerald-200 bg-emerald-50/40 p-3 shadow-[0_10px_24px_rgba(15,23,42,0.05)] ${field.span}`}
+                    className={`rounded-2xl border border-emerald-200 bg-emerald-50/30 p-4 shadow-sm ${field.span}`}
                   >
                     {renderInlineEditor()}
                   </div>
                 ) : (
-                  <button
-                    key={field.key}
-                    type="button"
-                    onClick={() => startInlineEdit(editState as InlineEditState)}
-                    className={`group flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white/90 px-3 py-2.5 text-left shadow-[0_8px_18px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-emerald-200 ${field.span}`}
-                  >
+                  <div key={field.key} className={`group flex items-start justify-between gap-4 ${field.span}`}>
                     <div className="min-w-0 flex-1">
-                      <span className="block text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400">{field.label}</span>
-                      <span className="mt-0.5 block truncate text-[12px] font-medium text-slate-700 group-hover:text-slate-900">{valueText}</span>
+                      <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">{field.label}</span>
+                      <span className="mt-1.5 block text-sm font-medium text-slate-800 leading-relaxed whitespace-pre-wrap">{valueText}</span>
                     </div>
-                    <span
-                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition ${
-                        isEditing
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-600"
-                          : "border-slate-200 bg-white text-slate-400 group-hover:border-slate-300 group-hover:text-slate-600"
-                      }`}
-                      aria-hidden="true"
+                    <button
+                      type="button"
+                      onClick={() => startInlineEdit(editState as InlineEditState)}
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-50 text-slate-400 opacity-0 transition-all hover:bg-slate-100 hover:text-emerald-600 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                      aria-label={`Edit ${field.label}`}
                     >
-                      <PenLine className="h-3 w-3" />
-                    </span>
-                  </button>
+                      <PenLine className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 );
               })}
             </div>
-
           </div>
 
           {/* Activity timeline */}
-          <div className="rounded-[1.75rem] border border-slate-200/80 bg-white p-5 shadow-[0_16px_38px_rgba(15,23,42,0.08)]">
-            <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="rounded-[2rem] border border-slate-100 bg-white p-8 shadow-sm">
+            <div className="mb-6 flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
-                <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                  <Activity className="h-4 w-4" />
+                <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900 uppercase tracking-wide">
+                  <Activity className="h-4 w-4 text-emerald-500" />
                   Activity Timeline
                 </h3>
-                <p className="mt-1 text-xs text-slate-400">
-                  Recent actions, calls, notes, and touchpoints stay in one place.
+                <p className="mt-1 text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                  Recent actions, calls, notes, and touchpoints
                 </p>
               </div>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
+              <span className="rounded-full bg-slate-50 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-500">
                 {optimisticActivities.length} items
               </span>
             </div>
@@ -981,13 +986,13 @@ export function LeadDetail({
           )}
 
           {/* Assignment + Follow-up combined */}
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200 space-y-3">
+          <div className="rounded-[2rem] bg-white p-8 shadow-sm border border-slate-100 space-y-5">
             {/* Assignment */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Assigned To</span>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Assigned To</span>
                 {optimisticLead.assigned_to_profile && (
-                  <span className="text-xs text-slate-400 capitalize">{optimisticLead.assigned_to_profile.role}</span>
+                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">{optimisticLead.assigned_to_profile.role}</span>
                 )}
               </div>
               {optimisticLead.assigned_to_profile ? (
@@ -1026,11 +1031,11 @@ export function LeadDetail({
             </div>
 
             {/* Follow-up */}
-            <div className="pt-3 border-t border-slate-100">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Follow-up</span>
+            <div className="pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Follow-up</span>
                 {optimisticLead.next_follow_up_at && !followUpDate && (
-                  <span className="text-xs text-amber-600">{formatDate(optimisticLead.next_follow_up_at)}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-500">{formatDate(optimisticLead.next_follow_up_at)}</span>
                 )}
               </div>
               {canEdit && (
@@ -1060,23 +1065,28 @@ export function LeadDetail({
 
           {/* Convert action — compact */}
           {currentStage?.kind !== "won" && currentStage?.kind !== "lost" && currentStage?.kind !== "junk" && canEdit && (
-            <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
+            <div className="rounded-[2rem] bg-white p-8 shadow-sm border border-slate-100 text-center">
               {converting ? (
-                <div className="space-y-2">
-                  <p className="text-xs text-slate-600">Creates a prospect customer and pipeline deal.</p>
-                  <Button size="sm" className="w-full bg-emerald-500 hover:bg-emerald-600" onClick={() => confirmConvert()} disabled={pending}>
+                <div className="space-y-4">
+                  <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Creates a prospect customer and pipeline deal.</p>
+                  <Button className="w-full h-11 rounded-full font-bold bg-emerald-500 hover:bg-emerald-600 shadow-sm" onClick={() => confirmConvert()} disabled={pending}>
                     {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Confirm Conversion
                   </Button>
-                  <Button size="sm" variant="ghost" className="w-full text-xs" onClick={() => setConverting(false)}>
+                  <Button variant="ghost" className="w-full h-11 rounded-full font-bold text-slate-500 hover:bg-slate-50" onClick={() => setConverting(false)}>
                     Cancel
                   </Button>
                 </div>
               ) : (
-                <Button className="w-full bg-emerald-500 hover:bg-emerald-600" size="sm" onClick={() => setConverting(true)}>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Convert to Deal
-                </Button>
+                <div className="flex flex-col items-center justify-center space-y-3">
+                  <div className="h-12 w-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 mb-2">
+                    <Briefcase className="h-5 w-5" />
+                  </div>
+                  <Button className="w-full h-11 rounded-full font-bold bg-emerald-500 hover:bg-emerald-600 shadow-sm" onClick={() => setConverting(true)}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Convert to Deal
+                  </Button>
+                </div>
               )}
             </div>
           )}
@@ -1105,29 +1115,29 @@ export function LeadDetail({
 
           {/* Score — inline, no big card */}
           {optimisticLead.score !== null && (
-            <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
+            <div className="rounded-[2rem] bg-white p-6 shadow-sm border border-slate-200/60">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Lead Score</span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Lead Score</span>
                 <div className="flex items-baseline gap-1">
-                  <span className={`text-2xl font-bold ${optimisticLead.score >= 70 ? "text-emerald-600" : optimisticLead.score >= 40 ? "text-amber-600" : "text-slate-400"}`}>
+                  <span className={`text-3xl font-extrabold ${optimisticLead.score >= 70 ? "text-emerald-500" : optimisticLead.score >= 40 ? "text-amber-500" : "text-slate-400"}`}>
                     {optimisticLead.score}
                   </span>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                     {optimisticLead.score >= 70 ? "Hot" : optimisticLead.score >= 40 ? "Warm" : "Cold"}
                   </span>
                 </div>
               </div>
               {optimisticLead.score_reason && (
-                <p className="text-xs text-slate-400 mt-1">{optimisticLead.score_reason}</p>
+                <p className="text-xs text-slate-500 mt-2">{optimisticLead.score_reason}</p>
               )}
             </div>
           )}
 
           {/* Documents — compact */}
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Documents</span>
-              <span className="text-xs text-slate-400">{documents.length}</span>
+          <div className="rounded-[2rem] bg-white p-8 shadow-sm border border-slate-100">
+            <div className="flex items-center justify-between mb-5">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Documents</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{documents.length}</span>
             </div>
             <div className="mb-3">
               <DocumentUploadDialog triggerLabel="Attach Document" entityType="lead" entityId={optimisticLead.id} />
