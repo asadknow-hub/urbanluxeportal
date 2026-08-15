@@ -21,4 +21,4 @@ This is **UrbanLuxe Portal**, a CRM/ERP for Dubai real estate. Owner: Asad (soft
 - Database/API changes: migrations + typed clients in `src/lib/supabase/` and `src/types/database.ts`.
 - Do not assume a separate custom backend. Server logic is Next.js route handlers / server actions talking to Supabase.
 - After UI/UX work, follow `.cursor/skills/ui-ux-pro-max/SKILL.md` (stack: Next.js + shadcn/ui).
-- Do not push, force-push, or open PRs unless Asad asks. Do not commit unless asked.
+- After a finished change, **commit on `main` and `git push origin HEAD`** so Vercel can deploy. Do not wait for Asad to ask. Do not force-push. Do not open PRs unless asked. Never commit `.env*` or secrets.

@@ -12,6 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getStatusColor } from "@/lib/status-colors";
+import { leadInterestPillClass } from "@/lib/lead-format";
+import { cn } from "@/lib/utils";
 import { whatsappLink } from "@/lib/phone";
 import { formatAEDRange } from "@/lib/money";
 import { formatDate } from "@/lib/dates";
@@ -307,8 +309,10 @@ export function LeadsTable({
                       <td className="px-5 py-2 text-slate-600 font-medium">
                         {SOURCE_LABELS[lead.source] ?? lead.source}
                       </td>
-                      <td className="px-5 py-2 text-slate-600 font-medium">
-                        {INTEREST_LABELS[lead.interest] ?? lead.interest}
+                      <td className="px-5 py-2">
+                        <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium", leadInterestPillClass(lead.interest))}>
+                          {INTEREST_LABELS[lead.interest] ?? lead.interest}
+                        </span>
                       </td>
                       <td className="px-5 py-2 text-slate-600">
                         {formatAEDRange(lead.budget_min, lead.budget_max) ?? "—"}

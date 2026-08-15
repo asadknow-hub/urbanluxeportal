@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { AlertCircle, MoreHorizontal, Plus, Edit3, Trash2, User as UserIcon } from "lucide-react";
 import { updateLeadStage, createLeadStage, updateLeadStageName, deleteLeadStage } from "@/server/leads";
 import { cn } from "@/lib/utils";
-import { formatLeadInterest, formatLeadTag } from "@/lib/lead-format";
+import { formatLeadInterest, formatLeadTag, leadInterestPillClass } from "@/lib/lead-format";
 import { formatAEDRange } from "@/lib/money";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -57,17 +57,17 @@ export type BoardLead = {
   duplicate?: boolean;
 };
 
-const COLOR_MAP: Record<string, { bg: string; border: string; text: string; dot: string; grad: string }> = {
-  blue: { bg: "bg-blue-50/80", border: "border-blue-200/60", text: "text-blue-700", dot: "bg-blue-500", grad: "from-blue-50/80 to-transparent" },
-  cyan: { bg: "bg-cyan-50/80", border: "border-cyan-200/60", text: "text-cyan-700", dot: "bg-cyan-500", grad: "from-cyan-50/80 to-transparent" },
-  teal: { bg: "bg-teal-50/80", border: "border-teal-200/60", text: "text-teal-700", dot: "bg-teal-500", grad: "from-teal-50/80 to-transparent" },
-  purple: { bg: "bg-purple-50/80", border: "border-purple-200/60", text: "text-purple-700", dot: "bg-purple-500", grad: "from-purple-50/80 to-transparent" },
-  indigo: { bg: "bg-indigo-50/80", border: "border-indigo-200/60", text: "text-indigo-700", dot: "bg-indigo-500", grad: "from-indigo-50/80 to-transparent" },
-  green: { bg: "bg-emerald-50/80", border: "border-emerald-200/60", text: "text-emerald-700", dot: "bg-emerald-500", grad: "from-emerald-50/80 to-transparent" },
-  slate: { bg: "bg-slate-100/80", border: "border-slate-300/60", text: "text-slate-700", dot: "bg-slate-500", grad: "from-slate-100/80 to-transparent" },
-  gray: { bg: "bg-gray-100/80", border: "border-gray-300/60", text: "text-gray-700", dot: "bg-gray-500", grad: "from-gray-100/80 to-transparent" },
-  amber: { bg: "bg-amber-50/80", border: "border-amber-200/60", text: "text-amber-700", dot: "bg-amber-500", grad: "from-amber-50/80 to-transparent" },
-  red: { bg: "bg-red-50/80", border: "border-red-200/60", text: "text-red-700", dot: "bg-red-500", grad: "from-red-50/80 to-transparent" },
+const COLOR_MAP: Record<string, { bg: string; border: string; text: string; dot: string; header: string }> = {
+  blue: { bg: "bg-blue-50/80", border: "border-blue-200/60", text: "text-blue-700", dot: "bg-blue-500", header: "bg-blue-600 text-white" },
+  cyan: { bg: "bg-cyan-50/80", border: "border-cyan-200/60", text: "text-cyan-700", dot: "bg-cyan-500", header: "bg-sky-500 text-white" },
+  teal: { bg: "bg-teal-50/80", border: "border-teal-200/60", text: "text-teal-700", dot: "bg-teal-500", header: "bg-teal-600 text-white" },
+  purple: { bg: "bg-purple-50/80", border: "border-purple-200/60", text: "text-purple-700", dot: "bg-purple-500", header: "bg-violet-600 text-white" },
+  indigo: { bg: "bg-indigo-50/80", border: "border-indigo-200/60", text: "text-indigo-700", dot: "bg-indigo-500", header: "bg-indigo-700 text-white" },
+  green: { bg: "bg-emerald-50/80", border: "border-emerald-200/60", text: "text-emerald-700", dot: "bg-emerald-500", header: "bg-emerald-600 text-white" },
+  slate: { bg: "bg-slate-100/80", border: "border-slate-300/60", text: "text-slate-700", dot: "bg-slate-500", header: "bg-slate-600 text-white" },
+  gray: { bg: "bg-gray-100/80", border: "border-gray-300/60", text: "text-gray-700", dot: "bg-gray-500", header: "bg-zinc-600 text-white" },
+  amber: { bg: "bg-amber-50/80", border: "border-amber-200/60", text: "text-amber-700", dot: "bg-amber-500", header: "bg-amber-500 text-white" },
+  red: { bg: "bg-red-50/80", border: "border-red-200/60", text: "text-red-700", dot: "bg-red-500", header: "bg-red-600 text-white" },
 };
 
 function getColor(color: string) {
@@ -126,11 +126,14 @@ function LeadCard({ lead, stage, isDragging }: { lead: BoardLead; stage: LeadSta
         </div>
       </div>
 
-      {(interestLabel || budget) && (
-        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-          {[interestLabel, budget].filter(Boolean).join(" · ")}
-        </p>
-      )}
+      <div className="mt-1 flex flex-wrap items-center gap-1">
+        {interestLabel && (
+          <span className={cn("rounded-full px-1.5 py-px text-[10px] font-medium", leadInterestPillClass(lead.interest))}>
+            {interestLabel}
+          </span>
+        )}
+        {budget && <span className="text-[11px] text-muted-foreground">{budget}</span>}
+      </div>
       {area && (
         <p className="truncate text-[11px] text-muted-foreground">
           {area}
@@ -258,17 +261,14 @@ function StageColumn({
   return (
     <div className="flex h-full w-[240px] min-w-[240px] flex-col">
       <div
-        className={cn("flex items-center justify-between gap-1 border-t-2 bg-card px-2 py-1.5", color.border)}
+        className={cn("flex items-center justify-between gap-1 px-2 py-1.5", color.header)}
         title={stage.helper_text ?? undefined}
       >
-        <div className="flex min-w-0 items-center gap-1.5">
-          <span className={cn("h-2 w-2 shrink-0 rounded-full", color.dot)} />
-          <h3 className="truncate text-xs font-medium text-foreground">{stage.name}</h3>
-        </div>
+        <h3 className="min-w-0 truncate text-xs font-medium">{stage.name}</h3>
         <div className="flex shrink-0 items-center">
-          <span className="px-1 text-[11px] tabular-nums text-muted-foreground">{leads.length}</span>
+          <span className="px-1 text-[11px] tabular-nums opacity-90">{leads.length}</span>
           <DropdownMenu>
-            <DropdownMenuTrigger render={<button className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted" aria-label={`${stage.name} options`} />}>
+            <DropdownMenuTrigger render={<button className="flex h-6 w-6 items-center justify-center rounded opacity-80 hover:bg-black/15 hover:opacity-100" aria-label={`${stage.name} options`} />}>
               <MoreHorizontal className="h-3.5 w-3.5" />
             </DropdownMenuTrigger>
               <DropdownMenuContent align="end">

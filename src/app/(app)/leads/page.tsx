@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LeadsBoard, type BoardLead, type LeadStage } from "@/components/leads/leads-board";
 import { LeadsTable, type LeadRow } from "@/components/leads/leads-table";
 import { LeadCreateDialog } from "@/components/leads/lead-create-dialog";
+import { LeadsAgentFilter } from "@/components/leads/leads-agent-filter";
 import Link from "next/link";
 import { KanbanSquare, List } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -200,6 +201,9 @@ export default async function LeadsBoardPage({
               List
             </Link>
           </div>
+          {user.role !== "agent" && (
+            <LeadsAgentFilter agents={agents} assigned={params.assigned} />
+          )}
           <LeadCreateDialog agents={agents} />
         </div>
       </div>
