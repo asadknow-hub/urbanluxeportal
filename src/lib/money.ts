@@ -33,6 +33,17 @@ export function formatAEDCompact(
   return formatAED(fils);
 }
 
+export function formatAEDRange(
+  min: number | bigint | null | undefined,
+  max: number | bigint | null | undefined
+): string | null {
+  if (min == null && max == null) return null;
+  const strip = (value: number | bigint) => formatAEDCompact(value).replace(/^AED\s/, "");
+  if (min != null && max != null) return `AED ${strip(min)}–${strip(max)}`;
+  if (min != null) return `From ${formatAEDCompact(min)}`;
+  return `Up to ${formatAEDCompact(max)}`;
+}
+
 export function calculateVAT(
   subtotal: number,
   vatRate: number = 5.0

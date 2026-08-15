@@ -31,7 +31,7 @@ export function MobileNav({ role }: { role: UserRole }) {
             <BrandMark />
           </SheetTitle>
         </SheetHeader>
-        <nav className="flex-1 overflow-y-auto p-3">
+        <nav className="scrollbar-gold flex-1 overflow-y-auto p-3">
           {groups.map((group) => (
             <div key={group} className="mb-5">
               <p className="mb-1.5 px-3 text-[10px] font-medium tracking-[0.16em] text-sidebar-foreground/40">

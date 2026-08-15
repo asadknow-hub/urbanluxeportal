@@ -15,12 +15,13 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { toast } from "sonner";
-import { Phone, Mail, Clock, User as UserIcon, AlertCircle, MoreHorizontal, Plus, Edit3, Trash2, Settings } from "lucide-react";
+import { AlertCircle, MoreHorizontal, Plus, Edit3, Trash2, User as UserIcon } from "lucide-react";
 import { updateLeadStage, createLeadStage, updateLeadStageName, deleteLeadStage } from "@/server/leads";
 import { cn } from "@/lib/utils";
 import { formatLeadInterest, formatLeadTag } from "@/lib/lead-format";
+import { formatAEDRange } from "@/lib/money";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -94,105 +95,74 @@ function isStale(lead: BoardLead, stage: LeadStage): boolean {
 }
 
 function LeadCard({ lead, stage, isDragging }: { lead: BoardLead; stage: LeadStage; isDragging?: boolean }) {
-  const color = getColor(stage.color);
   const stale = isStale(lead, stage);
+  const budget = formatAEDRange(lead.budget_min, lead.budget_max);
+  const area = lead.preferred_areas?.[0];
+  const extraAreas = (lead.preferred_areas?.length ?? 0) - 1;
+  const interestLabel = lead.interest ? formatLeadInterest(lead.interest) : null;
+  const tags = (lead.tags ?? []).filter((tag) => tag.toLowerCase() !== (lead.interest ?? "").toLowerCase()).slice(0, 1);
 
   return (
     <div
       className={cn(
-        "rounded-xl border border-border bg-card p-3 shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:ring-1 hover:ring-border cursor-grab active:cursor-grabbing group",
-        isDragging && "opacity-50 ring-2 ring-primary/40",
-        stale && "ring-1 ring-amber-300 bg-amber-50/20"
+        "cursor-grab rounded-lg border border-border bg-card px-2.5 py-2 active:cursor-grabbing",
+        isDragging && "opacity-50 ring-1 ring-primary/40",
+        stale && "border-amber-300/80"
       )}
     >
-      <div className="flex items-start justify-between gap-3 mb-3">
+      <div className="flex items-start justify-between gap-2">
         <Link
           href={`/leads/${lead.id}`}
-          className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1"
+          className="min-w-0 text-[13px] font-medium leading-tight text-foreground hover:text-primary"
           onClick={(e) => e.stopPropagation()}
         >
-          {lead.name}
+          <span className="line-clamp-1">{lead.name}</span>
         </Link>
-        {stale && (
-          <AlertCircle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-        )}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2 mb-3">
-        {lead.interest && (
-          <span className={cn("rounded-lg px-2 py-1 text-[11px] font-bold uppercase tracking-wider ring-1 ring-inset", color.bg, color.text, color.border)}>
-            {formatLeadInterest(lead.interest)}
-          </span>
-        )}
-        {lead.duplicate && (
-          <span className="rounded-lg px-2 py-1 text-[11px] font-bold uppercase tracking-wider bg-red-50 text-red-700 ring-1 ring-inset ring-red-200">
-            Duplicate
-          </span>
-        )}
-      </div>
-
-      {(lead.budget_min || lead.budget_max) && (
-        <p className="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
-          <span className="text-slate-400 font-normal">Budget:</span>
-          {lead.budget_min ? `${(lead.budget_min / 100).toLocaleString()}k` : "?"}
-          {" – "}
-          {lead.budget_max ? `${(lead.budget_max / 100).toLocaleString()}k` : "?"} AED
-        </p>
-      )}
-
-      {lead.preferred_areas && lead.preferred_areas.length > 0 && (
-        <p className="text-[10px] text-slate-500 mb-2 font-medium tracking-wide line-clamp-1 leading-relaxed">
-          {lead.preferred_areas.slice(0, 2).join(", ")}
-          {lead.preferred_areas.length > 2 && ` +${lead.preferred_areas.length - 2}`}
-        </p>
-      )}
-
-      {lead.tags && lead.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-4">
-          {lead.tags.slice(0, 3).map((tag) => (
-            <span key={tag} className="rounded-full bg-slate-100/80 px-2.5 py-0.5 text-[11px] font-medium text-slate-600 border border-slate-200/60">
-              {formatLeadTag(tag)}
-            </span>
-          ))}
-          {lead.tags.length > 3 && (
-            <span className="rounded-full bg-slate-100/80 px-2.5 py-0.5 text-[11px] font-medium text-slate-500 border border-slate-200/60">
-              +{lead.tags.length - 3}
-            </span>
+        <div className="flex shrink-0 items-center gap-1">
+          {lead.duplicate && (
+            <span className="rounded bg-red-50 px-1 py-px text-[10px] font-medium text-red-700">Dup</span>
           )}
+          {stale && <AlertCircle className="h-3.5 w-3.5 text-amber-500" />}
         </div>
+      </div>
+
+      {(interestLabel || budget) && (
+        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+          {[interestLabel, budget].filter(Boolean).join(" · ")}
+        </p>
+      )}
+      {area && (
+        <p className="truncate text-[11px] text-muted-foreground">
+          {area}
+          {extraAreas > 0 ? ` +${extraAreas}` : ""}
+        </p>
+      )}
+      {tags.length > 0 && (
+        <p className="truncate text-[11px] text-muted-foreground">{formatLeadTag(tags[0])}</p>
       )}
 
-      <div className="mt-auto pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-        <div className="flex items-center gap-1.5 text-slate-500 font-medium">
+      <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+        <span className="flex min-w-0 items-center gap-1 truncate">
           {lead.assigned_to_profile ? (
-             <div className="flex items-center gap-1.5">
-               {lead.assigned_to_profile.avatar_url ? (
-                 <img src={lead.assigned_to_profile.avatar_url} className="w-5 h-5 rounded-full object-cover" alt="" />
-               ) : (
-                 <div className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center">
-                   <UserIcon className="h-3 w-3 text-slate-500" />
-                 </div>
-               )}
-               <span className="truncate max-w-[80px]">{lead.assigned_to_profile.full_name.split(' ')[0]}</span>
-             </div>
+            <>
+              {lead.assigned_to_profile.avatar_url ? (
+                <img src={lead.assigned_to_profile.avatar_url} className="h-4 w-4 rounded-full object-cover" alt="" />
+              ) : (
+                <UserIcon className="h-3 w-3 shrink-0" />
+              )}
+              <span className="truncate">{lead.assigned_to_profile.full_name.split(" ")[0]}</span>
+            </>
           ) : (
-            <span className="text-slate-400 italic">Unassigned</span>
+            <span>Unassigned</span>
           )}
-        </div>
-        
-        <div className="flex flex-col items-end gap-1">
+        </span>
+        <span className="shrink-0 tabular-nums" suppressHydrationWarning>
           {lead.next_follow_up_at ? (
-            <span className="text-primary font-medium bg-primary/10 px-2 py-0.5 rounded-md flex items-center gap-1" suppressHydrationWarning>
-              <Clock className="h-3 w-3" />
-              {new Date(lead.next_follow_up_at).toLocaleDateString("en", { month: "short", day: "numeric" })}
-            </span>
+            new Date(lead.next_follow_up_at).toLocaleDateString("en", { month: "short", day: "numeric" })
           ) : (
-            <span className="flex items-center gap-1 text-slate-400" suppressHydrationWarning>
-              <Clock className="h-3 w-3" />
-              {timeAgo(lead.last_activity_at ?? lead.updated_at)}
-            </span>
+            timeAgo(lead.last_activity_at ?? lead.updated_at)
           )}
-        </div>
+        </span>
       </div>
     </div>
   );
@@ -286,23 +256,21 @@ function StageColumn({
   const isSystemStage = ["won", "lost", "junk"].includes(stage.kind);
 
   return (
-    <div className="flex h-full flex-col min-w-[320px] w-[320px] snap-center">
-      <div className={cn("rounded-t-xl border-t-2 bg-card px-3 py-2", color.border)}>
-        <div className="flex items-center justify-between mb-1.5">
-          <div className="flex items-center gap-3">
-            <div className={cn("h-3 w-3 rounded-full shadow-sm", color.dot)} />
-            <h3 className="text-xs font-semibold tracking-wide text-muted-foreground">{stage.name}</h3>
-          </div>
-          
-          <div className="flex items-center gap-1.5">
-            <span className="rounded-full bg-white px-2.5 py-0.5 text-xs font-bold text-slate-600 border border-slate-200/60 shadow-sm">
-              {leads.length}
-            </span>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger render={<button className="h-6 w-6 rounded-md flex items-center justify-center hover:bg-black/5 text-slate-500 transition-colors" />}>
-                <MoreHorizontal className="h-4 w-4" />
-              </DropdownMenuTrigger>
+    <div className="flex h-full w-[240px] min-w-[240px] flex-col">
+      <div
+        className={cn("flex items-center justify-between gap-1 border-t-2 bg-card px-2 py-1.5", color.border)}
+        title={stage.helper_text ?? undefined}
+      >
+        <div className="flex min-w-0 items-center gap-1.5">
+          <span className={cn("h-2 w-2 shrink-0 rounded-full", color.dot)} />
+          <h3 className="truncate text-xs font-medium text-foreground">{stage.name}</h3>
+        </div>
+        <div className="flex shrink-0 items-center">
+          <span className="px-1 text-[11px] tabular-nums text-muted-foreground">{leads.length}</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger render={<button className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted" aria-label={`${stage.name} options`} />}>
+              <MoreHorizontal className="h-3.5 w-3.5" />
+            </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onSelect={() => { setNewName(stage.name); setRenameOpen(true); }} disabled={isSystemStage}>
                   <Edit3 className="mr-2 h-4 w-4" /> Rename Stage
@@ -312,23 +280,19 @@ function StageColumn({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
         </div>
-        {stage.helper_text && (
-          <p className="text-xs text-slate-500 line-clamp-1 ml-6 font-medium">{stage.helper_text}</p>
-        )}
       </div>
 
       <div
         ref={setNodeRef}
         className={cn(
-          "flex-1 overflow-y-auto rounded-b-xl border border-t-0 border-border bg-muted/30 p-2 space-y-2 min-h-[200px] transition-all",
-          isOver && "bg-muted ring-2 ring-inset ring-primary/30"
+          "scrollbar-gold flex-1 space-y-1.5 overflow-y-auto border border-t-0 border-border bg-muted/25 p-1.5",
+          isOver && "bg-muted ring-1 ring-inset ring-primary/30"
         )}
       >
         {leads.length === 0 && (
-          <div className="flex h-32 items-center justify-center text-sm font-medium text-muted-foreground border-2 border-dashed border-border rounded-xl m-2">
-            Drop leads here
+          <div className="flex h-16 items-center justify-center text-[11px] text-muted-foreground">
+            Drop here
           </div>
         )}
         {leads.map((lead) => (
@@ -490,7 +454,7 @@ export function LeadsBoard({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-4 overflow-x-auto pb-6 h-[calc(100vh-14rem)] px-1 snap-x scroll-smooth">
+        <div className="scrollbar-gold flex h-[calc(100dvh-7.5rem)] gap-2 overflow-x-auto">
           {stages.map((stage) => (
             <StageColumn
               key={stage.id}
@@ -503,16 +467,14 @@ export function LeadsBoard({
             />
           ))}
           
-          {/* Add Board Column Button */}
-          <div className="flex h-full flex-col min-w-[320px] w-[320px] snap-center py-2">
+          <div className="flex h-full w-10 shrink-0 flex-col py-1">
             <button 
+              type="button"
               onClick={() => setAddStageOpen(true)}
-              className="flex-1 rounded-xl border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center text-muted-foreground hover:text-primary transition-all gap-3 m-2 group"
+              className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary"
+              aria-label="Add stage"
             >
-              <div className="h-12 w-12 rounded-full bg-card border border-border flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Plus className="h-5 w-5" />
-              </div>
-              <span className="font-bold">Add New Stage</span>
+              <Plus className="h-4 w-4" />
             </button>
           </div>
         </div>

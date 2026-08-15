@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Search } from "lucide-react";
-import { breadcrumbsFor } from "@/lib/nav";
-import type { SessionUser } from "@/lib/auth";
 import { NotificationBell } from "@/components/shared/notification-bell";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { TopbarSearch } from "@/components/layout/topbar-search";
+import { Suspense } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -18,6 +17,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { breadcrumbsFor } from "@/lib/nav";
+import type { SessionUser } from "@/lib/auth";
 import type { UserRole } from "@/lib/permissions";
 
 export function Topbar({ user }: { user: SessionUser }) {
@@ -39,7 +40,7 @@ export function Topbar({ user }: { user: SessionUser }) {
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-md lg:px-6">
+    <header className="sticky top-0 z-30 flex h-12 items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-md lg:px-5">
       <MobileNav role={user.role as UserRole} />
 
       <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-1.5 text-sm md:flex">
@@ -60,16 +61,9 @@ export function Topbar({ user }: { user: SessionUser }) {
       </nav>
 
       <div className="ml-auto flex items-center gap-2">
-        <div className="relative hidden lg:block">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="search"
-            placeholder="Search…"
-            disabled
-            aria-label="Search (coming soon)"
-            className="h-9 w-56 rounded-lg border border-border bg-card pl-9 pr-3 text-sm text-muted-foreground"
-          />
-        </div>
+        <Suspense fallback={<div className="hidden h-8 w-52 lg:block" />}>
+          <TopbarSearch />
+        </Suspense>
         <NotificationBell />
         <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg p-1 hover:bg-muted focus:outline-none">

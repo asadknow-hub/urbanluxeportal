@@ -1,7 +1,7 @@
 # Leads — overrides
 
-- PageHeader + search + board/list toggle + gold Add Lead
-- Board columns: stage color as a 2px top rule only; cards are warm white
-- List: FilterBar on tokens; bulk bar uses gold/muted, not emerald
-- Detail `/leads/[id]` uses the same header language; do not revive unused drawer
-- Configure inflow lives under System, not CRM
+- One search only: topbar. Do not repeat search on the page or list filters.
+- Breadcrumb already says Leads — page chrome is count + board/list + add.
+- Compact kanban: 240px columns, no stage helper on the card face (tooltip only).
+- Card fields: name, interest · budget, area, agent, next date. No ALL CAPS chips, no duplicate tags, no fake “k” on fils.
+- Scrollbars: thin gold pill (`.scrollbar-gold`), no track.

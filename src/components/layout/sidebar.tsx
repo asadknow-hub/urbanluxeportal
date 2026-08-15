@@ -40,7 +40,7 @@ export function Sidebar({ user }: { user: SessionUser }) {
         collapsed ? "w-[76px]" : "w-64"
       )}
     >
-      <div className="relative flex h-16 items-center border-b border-sidebar-border px-4">
+      <div className="relative flex h-12 items-center border-b border-sidebar-border px-3">
         <BrandMark compact={collapsed} />
         <button
           type="button"
@@ -55,15 +55,15 @@ export function Sidebar({ user }: { user: SessionUser }) {
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-2 py-4">
+      <nav className="scrollbar-gold flex-1 overflow-y-auto px-2 py-3">
         {groups.map((group) => (
-          <div key={group} className="mb-5">
+          <div key={group} className="mb-3">
             {!collapsed && (
-              <p className="mb-1.5 px-3 text-[10px] font-medium tracking-[0.16em] text-sidebar-foreground/40">
+              <p className="mb-1 px-2.5 text-[10px] font-medium tracking-[0.16em] text-sidebar-foreground/40">
                 {group}
               </p>
             )}
-            <div className="space-y-0.5">
+            <div className="space-y-px">
               {items
                 .filter((i) => i.group === group)
                 .map((item) => {
@@ -76,14 +76,14 @@ export function Sidebar({ user }: { user: SessionUser }) {
                       prefetch
                       title={collapsed ? item.label : undefined}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-200",
+                        "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] transition-colors duration-200",
                         active
                           ? "bg-sidebar-primary/15 text-sidebar-primary"
                           : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground",
                         collapsed && "justify-center px-0"
                       )}
                     >
-                      <Icon className="h-[18px] w-[18px] shrink-0" />
+                      <Icon className="h-4 w-4 shrink-0" />
                       {!collapsed && <span>{item.label}</span>}
                     </Link>
                   );

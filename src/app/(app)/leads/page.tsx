@@ -4,10 +4,8 @@ import { LeadsBoard, type BoardLead, type LeadStage } from "@/components/leads/l
 import { LeadsTable, type LeadRow } from "@/components/leads/leads-table";
 import { LeadCreateDialog } from "@/components/leads/lead-create-dialog";
 import Link from "next/link";
-import { Input } from "@/components/ui/input";
-import { KanbanSquare, List, Search } from "lucide-react";
+import { KanbanSquare, List } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PageHeader } from "@/components/primitives/page-header";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -171,52 +169,40 @@ export default async function LeadsBoardPage({
     .map((lead) => lead.id);
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-5">
-      <PageHeader
-        title="Leads"
-        description={`${view === "board" ? `${boardData?.count ?? 0}` : `${listData?.count ?? 0}`} opportunities in the pipeline`}
-        actions={
-          <>
-            <form action="/leads" method="get" className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                name="q"
-                defaultValue={params.q ?? ""}
-                placeholder="Search leads..."
-                className="h-9 w-full pl-9 sm:w-56"
-              />
-              <input type="hidden" name="view" value={view} />
-              {params.status && <input type="hidden" name="status" value={params.status} />}
-              {params.source && <input type="hidden" name="source" value={params.source} />}
-              {params.assigned && <input type="hidden" name="assigned" value={params.assigned} />}
-              {params.stage && <input type="hidden" name="stage" value={params.stage} />}
-            </form>
-            <div className="inline-flex h-9 rounded-lg border border-border bg-card p-0.5">
-              <Link
-                href={buildViewHref("board")}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-md px-3 text-xs font-medium",
-                  view === "board" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <KanbanSquare className="h-3.5 w-3.5" />
-                Board
-              </Link>
-              <Link
-                href={buildViewHref("list")}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-md px-3 text-xs font-medium",
-                  view === "list" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <List className="h-3.5 w-3.5" />
-                List
-              </Link>
-            </div>
-            <LeadCreateDialog agents={agents} />
-          </>
-        }
-      />
+    <div className="flex min-h-0 flex-col gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-muted-foreground">
+          <span className="font-medium text-foreground tabular-nums">
+            {view === "board" ? boardData?.count ?? 0 : listData?.count ?? 0}
+          </span>{" "}
+          in pipeline
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex h-8 rounded-md border border-border bg-card p-0.5">
+            <Link
+              href={buildViewHref("board")}
+              className={cn(
+                "inline-flex items-center gap-1 rounded px-2.5 text-xs font-medium",
+                view === "board" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <KanbanSquare className="h-3.5 w-3.5" />
+              Board
+            </Link>
+            <Link
+              href={buildViewHref("list")}
+              className={cn(
+                "inline-flex items-center gap-1 rounded px-2.5 text-xs font-medium",
+                view === "list" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <List className="h-3.5 w-3.5" />
+              List
+            </Link>
+          </div>
+          <LeadCreateDialog agents={agents} />
+        </div>
+      </div>
 
       {view === "board" ? (
         <LeadsBoard

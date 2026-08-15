@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -14,11 +13,11 @@ import {
 } from "@/components/ui/select";
 import { getStatusColor } from "@/lib/status-colors";
 import { whatsappLink } from "@/lib/phone";
-import { formatAED } from "@/lib/money";
+import { formatAEDRange } from "@/lib/money";
 import { formatDate } from "@/lib/dates";
 import { bulkAssignLeads } from "@/server/leads";
 import { toast } from "sonner";
-import { MessageCircle, Search, Loader2, UserCog } from "lucide-react";
+import { MessageCircle, Loader2, UserCog, Search } from "lucide-react";
 import { FilterBar } from "@/components/primitives/filter-bar";
 
 export type LeadRow = {
@@ -72,7 +71,6 @@ export function LeadsTable({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [searchValue, setSearchValue] = useState(currentFilters.q ?? "");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkAgent, setBulkAgent] = useState("");
   const [pending, startTransition] = useTransition();
@@ -88,11 +86,6 @@ export function LeadsTable({
     }
     params.set("view", "list");
     router.push(`/leads?${params.toString()}`);
-  }
-
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    updateFilter("q", searchValue);
   }
 
   function toggleSelect(id: string) {
@@ -132,16 +125,6 @@ export function LeadsTable({
     <div className="space-y-4">
       {/* Filters */}
       <FilterBar>
-        <form onSubmit={handleSearch} className="relative">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <Input
-            placeholder="Search leads..."
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            className="w-48 pl-10"
-          />
-        </form>
-
         <Select
           value={currentFilters.status ?? "all"}
           onValueChange={(v) => updateFilter("status", v ?? "all")}
@@ -328,9 +311,7 @@ export function LeadsTable({
                         {INTEREST_LABELS[lead.interest] ?? lead.interest}
                       </td>
                       <td className="px-5 py-2 text-slate-600">
-                        {lead.budget_min || lead.budget_max
-                          ? <span className="font-medium text-slate-700">{lead.budget_min ? formatAED(lead.budget_min) : "?"} – {lead.budget_max ? formatAED(lead.budget_max) : "?"}</span>
-                          : "—"}
+                        {formatAEDRange(lead.budget_min, lead.budget_max) ?? "—"}
                       </td>
                       <td className="px-5 py-2">
                         <Link href={`/leads/${lead.id}`}>
