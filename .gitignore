@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local AI skill dumps (install via CLI; do not ship catalogs)
+.cursor/skills/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

@@ -100,15 +100,15 @@ function LeadCard({ lead, stage, isDragging }: { lead: BoardLead; stage: LeadSta
   return (
     <div
       className={cn(
-        "rounded-2xl border border-slate-200/60 bg-white p-3 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md cursor-grab active:cursor-grabbing group",
-        isDragging && "opacity-50 ring-2 ring-emerald-500/50 shadow-xl",
+        "rounded-xl border border-border bg-card p-3 shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:ring-1 hover:ring-border cursor-grab active:cursor-grabbing group",
+        isDragging && "opacity-50 ring-2 ring-primary/40",
         stale && "ring-1 ring-amber-300 bg-amber-50/20"
       )}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <Link
           href={`/leads/${lead.id}`}
-          className="text-sm font-bold text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-1"
+          className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1"
           onClick={(e) => e.stopPropagation()}
         >
           {lead.name}
@@ -182,7 +182,7 @@ function LeadCard({ lead, stage, isDragging }: { lead: BoardLead; stage: LeadSta
         
         <div className="flex flex-col items-end gap-1">
           {lead.next_follow_up_at ? (
-            <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-md flex items-center gap-1" suppressHydrationWarning>
+            <span className="text-primary font-medium bg-primary/10 px-2 py-0.5 rounded-md flex items-center gap-1" suppressHydrationWarning>
               <Clock className="h-3 w-3" />
               {new Date(lead.next_follow_up_at).toLocaleDateString("en", { month: "short", day: "numeric" })}
             </span>
@@ -287,11 +287,11 @@ function StageColumn({
 
   return (
     <div className="flex h-full flex-col min-w-[320px] w-[320px] snap-center">
-      <div className={cn("rounded-t-[1.5rem] border-t-2 px-3 py-2 bg-white", color.border)}>
+      <div className={cn("rounded-t-xl border-t-2 bg-card px-3 py-2", color.border)}>
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-3">
             <div className={cn("h-3 w-3 rounded-full shadow-sm", color.dot)} />
-            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500">{stage.name}</h3>
+            <h3 className="text-xs font-semibold tracking-wide text-muted-foreground">{stage.name}</h3>
           </div>
           
           <div className="flex items-center gap-1.5">
@@ -322,12 +322,12 @@ function StageColumn({
       <div
         ref={setNodeRef}
         className={cn(
-          "flex-1 overflow-y-auto rounded-b-[1.5rem] border border-t-0 border-slate-200/60 bg-slate-50/50 p-2 space-y-2 min-h-[200px] transition-all",
-          isOver && "bg-slate-100/80 ring-2 ring-inset ring-slate-300 shadow-inner"
+          "flex-1 overflow-y-auto rounded-b-xl border border-t-0 border-border bg-muted/30 p-2 space-y-2 min-h-[200px] transition-all",
+          isOver && "bg-muted ring-2 ring-inset ring-primary/30"
         )}
       >
         {leads.length === 0 && (
-          <div className="flex h-32 items-center justify-center text-sm font-medium text-slate-400 border-2 border-dashed border-slate-200 rounded-xl m-2">
+          <div className="flex h-32 items-center justify-center text-sm font-medium text-muted-foreground border-2 border-dashed border-border rounded-xl m-2">
             Drop leads here
           </div>
         )}
@@ -364,7 +364,7 @@ function StageColumn({
             <DialogTitle>Delete Stage</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-muted-foreground">
               Are you sure you want to delete the stage <strong>{stage.name}</strong>? This action cannot be undone.
             </p>
             {leads.length > 0 && (
@@ -507,9 +507,9 @@ export function LeadsBoard({
           <div className="flex h-full flex-col min-w-[320px] w-[320px] snap-center py-2">
             <button 
               onClick={() => setAddStageOpen(true)}
-              className="flex-1 rounded-[1.5rem] border-2 border-dashed border-slate-300 hover:border-emerald-500 hover:bg-emerald-50/50 flex flex-col items-center justify-center text-slate-500 hover:text-emerald-600 transition-all gap-3 m-2 group"
+              className="flex-1 rounded-xl border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center text-muted-foreground hover:text-primary transition-all gap-3 m-2 group"
             >
-              <div className="h-12 w-12 rounded-full bg-white shadow-sm border border-slate-200 flex items-center justify-center group-hover:scale-110 group-hover:border-emerald-200 transition-transform">
+              <div className="h-12 w-12 rounded-full bg-card border border-border flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Plus className="h-5 w-5" />
               </div>
               <span className="font-bold">Add New Stage</span>

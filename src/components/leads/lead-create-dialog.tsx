@@ -134,64 +134,62 @@ export function LeadCreateDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={(props) => (
-          <Button {...props} className="bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/20 border-0 h-11 px-6 rounded-xl font-bold transition-all">
+          <Button {...props}>
             <Plus className="mr-2 h-4 w-4" />
-            Add Lead
+            Add lead
           </Button>
         )}
       />
       <DialogContent 
-        className="sm:max-w-3xl md:max-w-4xl max-h-[90vh] overflow-y-auto p-0 border-0 rounded-[1.5rem] shadow-2xl"
-        closeClassName="text-slate-400 hover:text-white hover:bg-slate-800/50 z-50 right-4 top-4"
+        className="max-h-[90vh] overflow-y-auto p-0 sm:max-w-3xl md:max-w-4xl"
       >
-        <DialogHeader className="p-4 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 rounded-t-[2rem] relative overflow-hidden">
-          <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
-          <DialogTitle className="text-2xl font-extrabold text-white">New Lead</DialogTitle>
-          <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-widest mt-1">Capture prospect details</p>
+        <DialogHeader className="border-b border-border bg-card p-5">
+          <DialogTitle className="text-xl font-semibold">New lead</DialogTitle>
+          <p className="text-sm text-muted-foreground">Capture prospect details</p>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="p-4 space-y-6">
           {/* Required fields row */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="name" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Name <span className="text-emerald-500">*</span></Label>
+              <Label htmlFor="name" className="text-xs font-medium text-muted-foreground">Name <span className="text-primary">*</span></Label>
               <Input
                 id="name"
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
                 required
                 placeholder="Full name"
-                className="h-11 rounded-xl bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500/20"
+                className="h-11"
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="phone" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Phone <span className="text-emerald-500">*</span></Label>
+              <Label htmlFor="phone" className="text-xs font-medium text-muted-foreground">Phone <span className="text-primary">*</span></Label>
               <Input
                 id="phone"
                 value={form.phone}
                 onChange={(e) => set("phone", e.target.value)}
                 required
                 placeholder="+971501234567"
-                className="h-11 rounded-xl bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500/20"
+                className="h-11"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Email</Label>
+              <Label htmlFor="email" className="text-xs font-medium text-muted-foreground">Email</Label>
               <Input
                 id="email"
                 type="email"
                 value={form.email}
                 onChange={(e) => set("email", e.target.value)}
                 placeholder="email@example.com"
-                className="h-11 rounded-xl bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500/20"
+                className="h-11"
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Source <span className="text-emerald-500">*</span></Label>
+              <Label className="text-xs font-medium text-muted-foreground">Source <span className="text-primary">*</span></Label>
               <Select value={form.source} onValueChange={(v) => set("source", v ?? "website")}>
-                <SelectTrigger className="h-11 rounded-xl bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500/20"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {SOURCES.map((s) => (
                     <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
@@ -203,9 +201,9 @@ export function LeadCreateDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Interest <span className="text-emerald-500">*</span></Label>
+              <Label className="text-xs font-medium text-muted-foreground">Interest <span className="text-primary">*</span></Label>
               <Select value={form.interest} onValueChange={(v) => set("interest", v ?? "buy")}>
-                <SelectTrigger className="h-11 rounded-xl bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500/20"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {INTERESTS.map((i) => (
                     <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>
@@ -214,9 +212,9 @@ export function LeadCreateDialog({
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Assign to</Label>
+              <Label className="text-xs font-medium text-muted-foreground">Assign to</Label>
               <Select value={form.assigned_to} onValueChange={(v) => set("assigned_to", v ?? "")}>
-                <SelectTrigger className="h-11 rounded-xl bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500/20"><SelectValue placeholder="Unassigned" /></SelectTrigger>
+                <SelectTrigger className="h-11"><SelectValue placeholder="Unassigned" /></SelectTrigger>
                 <SelectContent>
                   {agents.map((a) => (
                     <SelectItem key={a.id ?? ""} value={a.id ?? ""}>
@@ -229,21 +227,21 @@ export function LeadCreateDialog({
           </div>
 
           {/* Budget + Property details */}
-          <div className="rounded-[1.5rem] bg-slate-50/50 p-5 border border-slate-100">
+          <div className="rounded-xl border border-border bg-muted/40 p-5">
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Property Requirements</p>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="budget_min" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Budget Min (AED)</Label>
-                <Input id="budget_min" type="number" value={form.budget_min} onChange={(e) => set("budget_min", e.target.value)} placeholder="500,000" className="h-11 rounded-xl bg-white border-slate-200 focus-visible:ring-emerald-500/20" />
+                <Label htmlFor="budget_min" className="text-xs font-medium text-muted-foreground">Budget Min (AED)</Label>
+                <Input id="budget_min" type="number" value={form.budget_min} onChange={(e) => set("budget_min", e.target.value)} placeholder="500,000" className="h-11" />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="budget_max" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Budget Max (AED)</Label>
-                <Input id="budget_max" type="number" value={form.budget_max} onChange={(e) => set("budget_max", e.target.value)} placeholder="2,000,000" className="h-11 rounded-xl bg-white border-slate-200 focus-visible:ring-emerald-500/20" />
+                <Label htmlFor="budget_max" className="text-xs font-medium text-muted-foreground">Budget Max (AED)</Label>
+                <Input id="budget_max" type="number" value={form.budget_max} onChange={(e) => set("budget_max", e.target.value)} placeholder="2,000,000" className="h-11" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Bedrooms</Label>
+                <Label className="text-xs font-medium text-muted-foreground">Bedrooms</Label>
                 <Select value={form.bedrooms} onValueChange={(v) => set("bedrooms", v ?? "")}>
-                  <SelectTrigger className="h-11 rounded-xl bg-white border-slate-200 focus-visible:ring-emerald-500/20"><SelectValue placeholder="Any" /></SelectTrigger>
+                  <SelectTrigger className="h-11"><SelectValue placeholder="Any" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="studio">Studio</SelectItem>
                     <SelectItem value="1">1 BR</SelectItem>
@@ -255,9 +253,9 @@ export function LeadCreateDialog({
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Category</Label>
+                <Label className="text-xs font-medium text-muted-foreground">Category</Label>
                 <Select value={form.category} onValueChange={(v) => set("category", v ?? "")}>
-                  <SelectTrigger className="h-11 rounded-xl bg-white border-slate-200 focus-visible:ring-emerald-500/20"><SelectValue placeholder="Any" /></SelectTrigger>
+                  <SelectTrigger className="h-11"><SelectValue placeholder="Any" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="apartment">Apartment</SelectItem>
                     <SelectItem value="villa">Villa</SelectItem>
@@ -272,13 +270,13 @@ export function LeadCreateDialog({
           </div>
 
           {/* Lead details */}
-          <div className="rounded-[1.5rem] bg-slate-50/50 p-5 border border-slate-100">
+          <div className="rounded-xl border border-border bg-muted/40 p-5">
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Lead Details</p>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Financing</Label>
+                <Label className="text-xs font-medium text-muted-foreground">Financing</Label>
                 <Select value={form.financing} onValueChange={(v) => set("financing", v ?? "")}>
-                  <SelectTrigger className="h-11 rounded-xl bg-white border-slate-200 focus-visible:ring-emerald-500/20"><SelectValue placeholder="Unknown" /></SelectTrigger>
+                  <SelectTrigger className="h-11"><SelectValue placeholder="Unknown" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="cash">Cash</SelectItem>
                     <SelectItem value="mortgage">Mortgage</SelectItem>
@@ -287,9 +285,9 @@ export function LeadCreateDialog({
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Timeframe</Label>
+                <Label className="text-xs font-medium text-muted-foreground">Timeframe</Label>
                 <Select value={form.timeframe} onValueChange={(v) => set("timeframe", v ?? "")}>
-                  <SelectTrigger className="h-11 rounded-xl bg-white border-slate-200 focus-visible:ring-emerald-500/20"><SelectValue placeholder="Unknown" /></SelectTrigger>
+                  <SelectTrigger className="h-11"><SelectValue placeholder="Unknown" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="immediate">Immediate</SelectItem>
                     <SelectItem value="1_month">1 Month</SelectItem>
@@ -300,9 +298,9 @@ export function LeadCreateDialog({
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Purpose</Label>
+                <Label className="text-xs font-medium text-muted-foreground">Purpose</Label>
                 <Select value={form.purpose} onValueChange={(v) => set("purpose", v ?? "")}>
-                  <SelectTrigger className="h-11 rounded-xl bg-white border-slate-200 focus-visible:ring-emerald-500/20"><SelectValue placeholder="Unknown" /></SelectTrigger>
+                  <SelectTrigger className="h-11"><SelectValue placeholder="Unknown" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="end_use">End Use</SelectItem>
                     <SelectItem value="investment">Investment</SelectItem>
@@ -311,9 +309,9 @@ export function LeadCreateDialog({
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Language</Label>
+                <Label className="text-xs font-medium text-muted-foreground">Language</Label>
                 <Select value={form.language} onValueChange={(v) => set("language", v ?? "en")}>
-                  <SelectTrigger className="h-11 rounded-xl bg-white border-slate-200 focus-visible:ring-emerald-500/20"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="en">English</SelectItem>
                     <SelectItem value="ar">Arabic</SelectItem>
@@ -328,7 +326,7 @@ export function LeadCreateDialog({
           </div>
 
           {/* Areas */}
-          <div className="rounded-[1.5rem] bg-slate-50/50 p-5 border border-slate-100">
+          <div className="rounded-xl border border-border bg-muted/40 p-5">
             <PreferredAreasPicker
               value={form.preferred_areas}
               onChange={(next) => setForm((prev) => ({ ...prev, preferred_areas: next }))}
@@ -337,22 +335,22 @@ export function LeadCreateDialog({
 
           {/* Notes */}
           <div className="space-y-1.5">
-            <Label htmlFor="notes" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Notes</Label>
+            <Label htmlFor="notes" className="text-xs font-medium text-muted-foreground">Notes</Label>
             <Textarea
               id="notes"
               value={form.notes}
               onChange={(e) => set("notes", e.target.value)}
               placeholder="Any additional notes..."
               rows={3}
-              className="text-sm rounded-xl bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500/20"
+              className="text-sm"
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-            <Button type="button" variant="outline" className="rounded-full px-6 h-11" onClick={() => setOpen(false)}>
+          <div className="flex justify-end gap-3 border-t border-border pt-4">
+            <Button type="button" variant="outline" className="h-11 px-6" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" className="rounded-full px-5 h-11 bg-emerald-500 hover:bg-emerald-600 font-bold shadow-sm" disabled={pending || !form.name || !form.phone}>
+            <Button type="submit" className="h-11 px-5" disabled={pending || !form.name || !form.phone}>
               {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Lead
             </Button>

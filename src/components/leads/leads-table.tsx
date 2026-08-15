@@ -19,6 +19,7 @@ import { formatDate } from "@/lib/dates";
 import { bulkAssignLeads } from "@/server/leads";
 import { toast } from "sonner";
 import { MessageCircle, Search, Loader2, UserCog } from "lucide-react";
+import { FilterBar } from "@/components/primitives/filter-bar";
 
 export type LeadRow = {
   id: string;
@@ -130,14 +131,14 @@ export function LeadsTable({
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3 bg-white p-3 rounded-[1.5rem] shadow-sm border border-slate-200/60">
+      <FilterBar>
         <form onSubmit={handleSearch} className="relative">
           <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
             placeholder="Search leads..."
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
-            className="w-48 pl-10 bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500 rounded-lg transition-all"
+            className="w-48 pl-10"
           />
         </form>
 
@@ -145,7 +146,7 @@ export function LeadsTable({
           value={currentFilters.status ?? "all"}
           onValueChange={(v) => updateFilter("status", v ?? "all")}
         >
-          <SelectTrigger className="w-32 bg-slate-50/50 border-slate-200 focus:ring-emerald-500 rounded-lg">
+          <SelectTrigger className="w-32">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent className="rounded-lg">
@@ -163,7 +164,7 @@ export function LeadsTable({
             value={currentFilters.stage ?? "all"}
             onValueChange={(v) => updateFilter("stage", v ?? "all")}
           >
-            <SelectTrigger className="w-36 bg-slate-50/50 border-slate-200 focus:ring-emerald-500 rounded-lg">
+            <SelectTrigger className="w-36">
               <SelectValue placeholder="Stage" />
             </SelectTrigger>
             <SelectContent className="rounded-lg">
@@ -181,7 +182,7 @@ export function LeadsTable({
           value={currentFilters.source ?? "all"}
           onValueChange={(v) => updateFilter("source", v ?? "all")}
         >
-          <SelectTrigger className="w-32 bg-slate-50/50 border-slate-200 focus:ring-emerald-500 rounded-lg">
+          <SelectTrigger className="w-32">
             <SelectValue placeholder="Source" />
           </SelectTrigger>
           <SelectContent className="rounded-lg">
@@ -199,7 +200,7 @@ export function LeadsTable({
             value={currentFilters.assigned ?? "all"}
             onValueChange={(v) => updateFilter("assigned", v ?? "all")}
           >
-            <SelectTrigger className="w-36 bg-slate-50/50 border-slate-200 focus:ring-emerald-500 rounded-lg">
+            <SelectTrigger className="w-36">
               <SelectValue placeholder="Assigned" />
             </SelectTrigger>
             <SelectContent className="rounded-lg">
@@ -213,16 +214,16 @@ export function LeadsTable({
             </SelectContent>
           </Select>
         )}
-      </div>
+      </FilterBar>
 
       {/* Bulk assign bar */}
       {canBulkAssign && selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 rounded-[1.5rem] bg-emerald-50 border border-emerald-200 p-3 px-5 shadow-sm animate-in fade-in slide-in-from-top-3 duration-300">
-          <span className="text-sm font-bold text-emerald-800 bg-emerald-100/50 px-3 py-1 rounded-lg">
+        <div className="flex items-center gap-3 rounded-xl border border-primary/25 bg-primary/10 p-3 px-5">
+          <span className="rounded-lg bg-card px-3 py-1 text-sm font-medium text-foreground">
             {selectedIds.size} selected
           </span>
           <Select value={bulkAgent} onValueChange={(v) => setBulkAgent(v ?? "")}>
-            <SelectTrigger className="w-48 bg-white border-emerald-200 focus:ring-emerald-500 rounded-lg">
+            <SelectTrigger className="w-48">
               <SelectValue placeholder="Assign to agent..." />
             </SelectTrigger>
             <SelectContent className="rounded-lg">
@@ -232,29 +233,29 @@ export function LeadsTable({
               ))}
             </SelectContent>
           </Select>
-          <Button size="sm" onClick={handleBulkAssign} disabled={pending || !bulkAgent} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg h-9 px-4">
+          <Button size="sm" onClick={handleBulkAssign} disabled={pending || !bulkAgent} className="h-9 px-4">
             {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserCog className="mr-2 h-4 w-4" />}
             Assign Selected
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())} className="text-emerald-700 hover:text-emerald-800 hover:bg-emerald-100 rounded-lg h-9">
+          <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())} className="h-9">
             Clear
           </Button>
         </div>
       )}
 
       {/* Table */}
-      <div className="overflow-hidden rounded-[1.5rem] bg-white shadow-sm border border-slate-200/60">
+      <div className="overflow-hidden rounded-xl bg-card ring-1 ring-border">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200/80 bg-slate-50/50 text-left text-xs font-bold uppercase tracking-widest text-slate-500">
+              <tr className="border-b border-border bg-muted/40 text-left text-xs font-medium tracking-wide text-muted-foreground">
                 {canBulkAssign && (
                   <th className="px-5 py-2.5 w-12">
                     <input
                       type="checkbox"
                       checked={selectedIds.size === leads.length && leads.length > 0}
                       onChange={toggleSelectAll}
-                      className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 transition-colors cursor-pointer"
+                      className="h-4 w-4 rounded border-border text-primary"
                     />
                   </th>
                 )}
@@ -288,7 +289,7 @@ export function LeadsTable({
                   return (
                     <tr
                       key={lead.id}
-                      className={`hover:bg-slate-50/80 transition-colors group ${isSelected ? "bg-emerald-50/50" : ""}`}
+                      className={`hover:bg-muted/50 transition-colors group ${isSelected ? "bg-primary/5" : ""}`}
                     >
                       {canBulkAssign && (
                         <td className="px-5 py-2">
@@ -296,12 +297,12 @@ export function LeadsTable({
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => toggleSelect(lead.id)}
-                            className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                            className="h-4 w-4 rounded border-border text-primary"
                           />
                         </td>
                       )}
                       <td className="px-5 py-2 font-semibold text-slate-900">
-                        <Link href={`/leads/${lead.id}`} className="hover:text-emerald-600 group-hover:underline decoration-emerald-500/30 underline-offset-4">
+                        <Link href={`/leads/${lead.id}`} className="hover:text-primary group-hover:underline underline-offset-4">
                           {lead.name}
                         </Link>
                       </td>
@@ -311,7 +312,7 @@ export function LeadsTable({
                             href={waLink ?? "#"}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-emerald-600 hover:text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md font-medium"
+                            className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1 font-medium text-foreground hover:bg-muted/80"
                           >
                             <MessageCircle className="h-3.5 w-3.5" />
                             {lead.phone}
@@ -340,7 +341,7 @@ export function LeadsTable({
                       </td>
                       <td className="px-5 py-2">
                         {lead.score !== null ? (
-                          <span className={`inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-bold ${lead.score >= 70 ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200" : lead.score >= 40 ? "bg-amber-100 text-amber-700 ring-1 ring-amber-200" : "bg-slate-100 text-slate-600 ring-1 ring-slate-200"}`}>
+                          <span className={`inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-medium ${lead.score >= 70 ? "bg-primary/15 text-primary" : lead.score >= 40 ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
                             {lead.score}
                           </span>
                         ) : (

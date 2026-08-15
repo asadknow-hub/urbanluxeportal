@@ -93,10 +93,10 @@ export function NotificationBell() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="relative flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors focus:outline-none">
-        <Bell className="h-[22px] w-[22px]" strokeWidth={1.5} />
+      <DropdownMenuTrigger className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors focus:outline-none">
+        <Bell className="h-4 w-4" strokeWidth={1.5} />
         {unreadCount > 0 && (
-          <span className="absolute right-1.5 top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
+          <span className="absolute right-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-medium text-white">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -122,7 +122,7 @@ export function NotificationBell() {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         {notifications.length === 0 ? (
-          <div className="px-4 py-8 text-center text-sm text-slate-400">
+          <div className="px-4 py-8 text-center text-sm text-muted-foreground">
             No notifications yet.
           </div>
         ) : (
@@ -134,14 +134,14 @@ export function NotificationBell() {
             >
               <div className="flex w-full items-start gap-2">
                 {!n.read_at && (
-                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm ${n.read_at ? "text-slate-500" : "font-medium text-slate-900"}`}>
+                  <p className={`text-sm ${n.read_at ? "text-muted-foreground" : "font-medium text-foreground"}`}>
                     {n.title}
                   </p>
-                  <p className="text-xs text-slate-400 line-clamp-2">{n.body}</p>
-                  <p className="mt-0.5 text-[10px] text-slate-300">{timeAgo(n.created_at)}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{n.body}</p>
+                  <p className="mt-0.5 text-[10px] text-muted-foreground/70">{timeAgo(n.created_at)}</p>
                 </div>
               </div>
             </DropdownMenuItem>

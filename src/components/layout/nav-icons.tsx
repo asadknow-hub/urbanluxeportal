@@ -1,0 +1,43 @@
+"use client";
+
+import {
+  LayoutDashboard,
+  Users,
+  Contact,
+  KanbanSquare,
+  Building2,
+  FileText,
+  ReceiptText,
+  CreditCard,
+  FolderOpen,
+  CheckCircle2,
+  BarChart3,
+  Settings,
+  UserCog,
+  CalendarClock,
+  Megaphone,
+  Settings2,
+  Wallet,
+  UsersRound,
+} from "lucide-react";
+
+export const NAV_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  LayoutDashboard,
+  Users,
+  Contact,
+  KanbanSquare,
+  Building2,
+  FileText,
+  ReceiptText,
+  CreditCard,
+  FolderOpen,
+  CheckCircle2,
+  BarChart3,
+  Settings,
+  UserCog,
+  CalendarClock,
+  Megaphone,
+  Settings2,
+  Wallet,
+  UsersRound,
+};

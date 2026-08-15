@@ -1,0 +1,14 @@
+---
+description: Use UI UX Pro Max skill for all interface design and frontend UI work
+globs: **/*.{tsx,jsx,css}
+alwaysApply: false
+---
+
+# UI UX Pro Max
+
+Before designing, building, reviewing, or fixing UI (pages, components, layout, typography, color, charts, a11y):
+
+1. Read `.cursor/skills/ui-ux-pro-max/SKILL.md` and follow its workflow.
+2. Stack for this app is **Next.js + shadcn/ui + Tailwind**. Use `--stack nextjs` and `--stack shadcn` searches, not generic HTML unless asked.
+3. On Windows run `python` (not `python3`) for skill scripts.
+4. Do not invent a new visual system that fights existing Urban Luxe branding already in the app; extend what is there unless Asad asks for a redesign.

@@ -1,0 +1,24 @@
+---
+description: UrbanLuxe Portal stack, repo, and change workflow (GitHub, main, Supabase, Vercel)
+alwaysApply: true
+---
+
+# UrbanLuxe Portal — stack and workflow
+
+This is **UrbanLuxe Portal**, a CRM/ERP for Dubai real estate. Owner: Asad (software engineer). Work in code directly; iterate by implementing, debugging, and shipping.
+
+## Source of truth
+
+- **GitHub repo:** https://github.com/asadknow-hub/urbanluxeportal.git
+- **Default branch:** `main` — all work happens on `main` unless Asad explicitly asks for a different branch
+- **Backend / DB / Auth / Storage:** Supabase (Postgres, Auth, Storage). Schema and changes live in `supabase/migrations/`. Prefer `supabase db push` / new numbered migrations over ad-hoc dashboard-only schema.
+- **Hosting:** Vercel. Production is deployed from GitHub (`main`). Cron: `/api/cron/daily` in `vercel.json`.
+- **App:** Next.js App Router (TypeScript). Read `node_modules/next/dist/docs/` before using Next APIs. UI: Tailwind + shadcn/ui.
+
+## How to change things
+
+- Prefer changes that stay compatible with **Supabase + Vercel**: env vars in `.env.local` locally and Vercel project settings in production. Never commit `.env*` or secrets.
+- Database/API changes: migrations + typed clients in `src/lib/supabase/` and `src/types/database.ts`.
+- Do not assume a separate custom backend. Server logic is Next.js route handlers / server actions talking to Supabase.
+- After UI/UX work, follow `.cursor/skills/ui-ux-pro-max/SKILL.md` (stack: Next.js + shadcn/ui).
+- Do not push, force-push, or open PRs unless Asad asks. Do not commit unless asked.

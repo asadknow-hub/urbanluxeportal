@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { KanbanSquare, List, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/primitives/page-header";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -170,62 +171,52 @@ export default async function LeadsBoardPage({
     .map((lead) => lead.id);
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto">
-      {/* Minimalist White Header */}
-      <div className="flex flex-col gap-4 rounded-[1.5rem] border border-slate-200/60 bg-white p-5 shadow-sm xl:flex-row xl:items-center xl:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-            <KanbanSquare className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-slate-900 leading-none mb-1">Lead Pipeline</h1>
-            <p className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">
-              {view === "board" ? `${boardData?.count ?? 0} total leads` : `${listData?.count ?? 0} total leads`} · Manage opportunities
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3 xl:justify-end">
-          <form action="/leads" method="get" className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            <Input
-              name="q"
-              defaultValue={params.q ?? ""}
-              placeholder="Search leads..."
-              className="w-full sm:w-56 pl-9 h-9 bg-slate-50 border-slate-200 text-sm text-slate-900 focus-visible:ring-emerald-500 rounded-lg"
-            />
-            <input type="hidden" name="view" value={view} />
-            {params.status && <input type="hidden" name="status" value={params.status} />}
-            {params.source && <input type="hidden" name="source" value={params.source} />}
-            {params.assigned && <input type="hidden" name="assigned" value={params.assigned} />}
-            {params.stage && <input type="hidden" name="stage" value={params.stage} />}
-          </form>
-
-          <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1 shadow-inner h-9">
-            <Link
-              href={buildViewHref("board")}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-md px-3 text-xs font-bold transition-all duration-200",
-                view === "board" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
-              )}
-            >
-              <KanbanSquare className="h-3.5 w-3.5" />
-              Board
-            </Link>
-            <Link
-              href={buildViewHref("list")}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-md px-3 text-xs font-bold transition-all duration-200",
-                view === "list" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
-              )}
-            >
-              <List className="h-3.5 w-3.5" />
-              List
-            </Link>
-          </div>
-          <LeadCreateDialog agents={agents} />
-        </div>
-      </div>
+    <div className="mx-auto max-w-[1600px] space-y-5">
+      <PageHeader
+        title="Leads"
+        description={`${view === "board" ? `${boardData?.count ?? 0}` : `${listData?.count ?? 0}`} opportunities in the pipeline`}
+        actions={
+          <>
+            <form action="/leads" method="get" className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                name="q"
+                defaultValue={params.q ?? ""}
+                placeholder="Search leads..."
+                className="h-9 w-full pl-9 sm:w-56"
+              />
+              <input type="hidden" name="view" value={view} />
+              {params.status && <input type="hidden" name="status" value={params.status} />}
+              {params.source && <input type="hidden" name="source" value={params.source} />}
+              {params.assigned && <input type="hidden" name="assigned" value={params.assigned} />}
+              {params.stage && <input type="hidden" name="stage" value={params.stage} />}
+            </form>
+            <div className="inline-flex h-9 rounded-lg border border-border bg-card p-0.5">
+              <Link
+                href={buildViewHref("board")}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-md px-3 text-xs font-medium",
+                  view === "board" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <KanbanSquare className="h-3.5 w-3.5" />
+                Board
+              </Link>
+              <Link
+                href={buildViewHref("list")}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-md px-3 text-xs font-medium",
+                  view === "list" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <List className="h-3.5 w-3.5" />
+                List
+              </Link>
+            </div>
+            <LeadCreateDialog agents={agents} />
+          </>
+        }
+      />
 
       {view === "board" ? (
         <LeadsBoard

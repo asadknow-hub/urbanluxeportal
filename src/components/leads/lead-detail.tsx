@@ -630,11 +630,11 @@ export function LeadDetail({
 
   return (
     <div className="space-y-4">
-      {/* 1. Minimalist White Header */}
-      <div className="flex flex-col gap-4 rounded-[1.5rem] border border-slate-200/60 bg-white p-5 shadow-sm xl:flex-row xl:items-center xl:justify-between">
+      {/* 1. Header */}
+      <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 xl:flex-row xl:items-center xl:justify-between">
         
         <div className="flex items-center gap-4">
-          <Avatar className="h-16 w-16 bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xl">
+          <Avatar className="flex h-16 w-16 items-center justify-center bg-secondary text-xl font-semibold text-secondary-foreground">
             <AvatarFallback className="bg-transparent">{initials}</AvatarFallback>
             <AvatarImage src={optimisticLead.assigned_to_profile?.avatar_url ?? undefined} />
           </Avatar>
@@ -650,15 +650,15 @@ export function LeadDetail({
                 </span>
               )}
             </div>
-            <h1 className="text-xl font-bold text-slate-900 leading-none mb-2">{optimisticLead.name}</h1>
-            <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-              <span>Source: <span className="text-slate-700">{formatLabel(optimisticLead.source)}</span></span>
-              <span className="text-slate-300">•</span>
-              <span><span className="text-slate-700">{formatLeadInterest(optimisticLead.interest)}</span></span>
+            <h1 className="mb-2 text-xl font-semibold leading-none text-foreground">{optimisticLead.name}</h1>
+            <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <span>Source: <span className="text-foreground">{formatLabel(optimisticLead.source)}</span></span>
+              <span className="text-border">•</span>
+              <span><span className="text-foreground">{formatLeadInterest(optimisticLead.interest)}</span></span>
               {optimisticLead.score !== null && (
                 <>
-                  <span className="text-slate-300">•</span>
-                  <span>Score: <span className={optimisticLead.score >= 70 ? "text-emerald-600" : optimisticLead.score >= 40 ? "text-amber-600" : "text-blue-600"}>{optimisticLead.score} ({optimisticLead.score >= 70 ? "Hot" : optimisticLead.score >= 40 ? "Warm" : "Cold"})</span></span>
+                  <span className="text-border">•</span>
+                  <span>Score: <span className={optimisticLead.score >= 70 ? "text-primary" : optimisticLead.score >= 40 ? "text-amber-600" : "text-muted-foreground"}>{optimisticLead.score} ({optimisticLead.score >= 70 ? "Hot" : optimisticLead.score >= 40 ? "Warm" : "Cold"})</span></span>
                 </>
               )}
             </div>
@@ -695,7 +695,7 @@ export function LeadDetail({
             )}
             
             <Dialog>
-              <DialogTrigger render={<Button className="h-9 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4" />}>
+              <DialogTrigger render={<Button className="h-9 px-4" />}>
                 <ArrowLeft className="mr-2 h-3.5 w-3.5 rotate-90" /> Upload Document
               </DialogTrigger>
               <DialogContent>
@@ -823,7 +823,7 @@ export function LeadDetail({
                 return isEditing ? (
                   <div
                     key={field.key}
-                    className={`rounded-2xl border border-emerald-200 bg-emerald-50/40 p-3 shadow-[0_10px_24px_rgba(15,23,42,0.05)] ${field.span}`}
+                    className={`rounded-xl border border-primary/20 bg-primary/5 p-3 ${field.span}`}
                   >
                     {renderInlineEditor()}
                   </div>
@@ -832,13 +832,13 @@ export function LeadDetail({
                     key={field.key}
                     type="button"
                     onClick={() => startInlineEdit(editState as InlineEditState)}
-                    className={`group flex w-full items-center justify-between gap-3 rounded-xl border border-transparent bg-transparent px-3 py-2.5 text-left transition-colors hover:border-slate-200 hover:bg-slate-50/80 focus:outline-none focus:ring-2 focus:ring-emerald-200 ${field.span}`}
+                    className={`group flex w-full items-center justify-between gap-3 rounded-xl border border-transparent bg-transparent px-3 py-2.5 text-left transition-colors hover:border-border hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-ring ${field.span}`}
                   >
                     <div className="min-w-0 flex-1">
                       <span className="block text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400">{field.label}</span>
                       <span className="mt-0.5 block truncate text-[12px] font-medium text-slate-700 group-hover:text-slate-900">{valueText}</span>
                     </div>
-                    <PenLine className="h-3.5 w-3.5 shrink-0 text-slate-300 transition-colors group-hover:text-emerald-500" aria-hidden="true" />
+                    <PenLine className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40 transition-colors group-hover:text-primary" aria-hidden="true" />
                   </button>
                 );
               })}
@@ -919,7 +919,7 @@ export function LeadDetail({
             </div>
             
             <div className="flex items-center gap-3 mb-6">
-              <Avatar className="h-10 w-10 bg-emerald-100 text-emerald-800 text-xs font-bold">
+              <Avatar className="h-10 w-10 bg-secondary text-xs font-medium text-secondary-foreground">
                  <AvatarFallback>{optimisticLead.assigned_to_profile?.full_name.substring(0,2).toUpperCase() || "??"}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
@@ -949,13 +949,13 @@ export function LeadDetail({
                   />
                   <CalendarClock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                 </div>
-                <Button size="sm" className="h-10 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-700" onClick={handleScheduleFollowUp} disabled={!followUpDate || pending}>
+                <Button size="sm" className="h-10 px-4" onClick={handleScheduleFollowUp} disabled={!followUpDate || pending}>
                   Set
                 </Button>
               </div>
             </div>
 
-            <Button className="w-full h-11 rounded-lg bg-emerald-600 hover:bg-emerald-700 font-bold text-sm shadow-sm" onClick={() => setConverting(true)}>
+            <Button className="h-11 w-full text-sm" onClick={() => setConverting(true)}>
               <UserPlus className="mr-2 h-4 w-4" /> Convert to Deal
             </Button>
           </div>
@@ -974,7 +974,7 @@ export function LeadDetail({
              </div>
              <p className="text-xs text-slate-500 mb-4">Score based on engagement and budget</p>
              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-               <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(100, Math.max(0, optimisticLead.score ?? 0))}%` }}></div>
+               <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, Math.max(0, optimisticLead.score ?? 0))}%` }}></div>
              </div>
           </div>
 
@@ -989,7 +989,7 @@ export function LeadDetail({
              </div>
              
              <Dialog>
-               <DialogTrigger render={<button className="w-full h-12 flex items-center justify-center gap-2 rounded-lg border border-dashed border-emerald-300 bg-emerald-50/50 text-emerald-600 text-sm font-medium hover:bg-emerald-50 transition-colors" />}>
+               <DialogTrigger render={<button className="flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-primary/5 text-sm font-medium text-primary hover:bg-primary/10" />}>
                  <ArrowLeft className="h-3.5 w-3.5 rotate-90" /> Attach Document
                </DialogTrigger>
                <DialogContent>
@@ -1005,7 +1005,7 @@ export function LeadDetail({
                   {documents.map(d => (
                     <div key={d.id} className="flex items-center justify-between text-sm p-2 rounded-lg bg-slate-50">
                       <span className="truncate">{d.file_name}</span>
-                      <a href={d.file_url} target="_blank" className="text-emerald-600"><ExternalLink className="h-3.5 w-3.5" /></a>
+                      <a href={d.file_url} target="_blank" className="text-primary"><ExternalLink className="h-3.5 w-3.5" /></a>
                     </div>
                   ))}
                 </div>
