@@ -1,18 +1,4 @@
-// ─── Leads Inflow Client Component ─────────────────────────────
-//
-// This component manages three tabs:
-//   1. Sources — CRUD for lead_sources (where leads come from)
-//   2. Field Configuration — CRUD for custom_field_defs (what fields leads have)
-//   3. Field Mapping — configure how raw incoming data maps to lead fields
-//
-// ARCHITECTURE NOTES:
-//   - Custom fields are stored in leads.custom JSONB, keyed by field def key
-//   - Deleting a field definition is SOFT (is_active = false)
-//     Data in leads.custom[key] is PRESERVED, not deleted
-//   - Re-activating a field with the same key makes old data visible again
-//   - Field keys are immutable after creation (prevents data orphaning)
-//   - Field mapping on lead_sources translates raw incoming field names
-//     to lead field keys (e.g., "full_name" -> "name")
+// Sources and field mapping for lead capture. Lead table fields live on the Fields hub tab.
 
 "use client";
 
@@ -28,7 +14,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -41,10 +26,6 @@ import {
   updateLeadSource,
   toggleLeadSource,
   deleteLeadSource,
-  createCustomFieldDef,
-  updateCustomFieldDef,
-  deleteCustomFieldDef,
-  reactivateCustomFieldDef,
   updateLeadSourceMapping,
 } from "@/server/leads";
 import { toast } from "sonner";
@@ -64,9 +45,7 @@ import {
   Trash2,
   Power,
   Pencil,
-  Settings2,
   ArrowRight,
-  RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -85,26 +64,6 @@ type LeadSource = {
   created_at: string;
   updated_at: string;
 };
-
-type FieldDef = {
-  id: string;
-  entity: string;
-  key: string;
-  label: string;
-  type: string;
-  options: Array<{ value: string; label: string }> | null;
-  required: boolean;
-  show_on_card: boolean;
-  show_in_list: boolean;
-  group_name: string | null;
-  sort: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-};
-
-// ─── Constants ─────────────────────────────────────────────────
 
 const KIND_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   web_form: Globe,
@@ -151,20 +110,6 @@ const KIND_COLORS: Record<string, string> = {
   other: "bg-gray-50 text-gray-600 border-gray-200",
 };
 
-const FIELD_TYPES: Record<string, string> = {
-  text: "Text",
-  textarea: "Text Area",
-  number: "Number",
-  money: "Money (AED)",
-  select: "Select (dropdown)",
-  multiselect: "Multi-Select",
-  date: "Date",
-  checkbox: "Checkbox",
-  phone: "Phone",
-  url: "URL",
-};
-
-// Standard lead fields that can be mapped to (not custom fields)
 const STANDARD_LEAD_FIELDS = [
   { key: "name", label: "Name" },
   { key: "phone", label: "Phone" },
@@ -184,22 +129,16 @@ const STANDARD_LEAD_FIELDS = [
   { key: "tags", label: "Tags" },
 ];
 
-export type LeadInflowTab = "sources" | "fields" | "mapping";
-
-// ─── Main Component ────────────────────────────────────────────
+export type LeadInflowTab = "sources" | "mapping";
 
 export function LeadsInflowClient({
   sources,
-  fieldDefs,
   statsMap,
   initialTab = "sources",
-  hideTabs = false,
 }: {
   sources: LeadSource[];
-  fieldDefs: FieldDef[];
   statsMap: Record<string, number>;
   initialTab?: LeadInflowTab;
-  hideTabs?: boolean;
 }) {
   const [tab, setTab] = useState<LeadInflowTab>(initialTab);
 
@@ -209,23 +148,17 @@ export function LeadsInflowClient({
 
   return (
     <div className="space-y-4">
-      {!hideTabs && (
-        <div className="flex gap-1 border-b border-slate-200">
-          <TabButton active={tab === "sources"} onClick={() => setTab("sources")}>
-            Sources
-          </TabButton>
-          <TabButton active={tab === "fields"} onClick={() => setTab("fields")}>
-            Field Configuration
-          </TabButton>
-          <TabButton active={tab === "mapping"} onClick={() => setTab("mapping")}>
-            Field Mapping
-          </TabButton>
-        </div>
-      )}
+      <div className="flex gap-1 border-b border-slate-200">
+        <TabButton active={tab === "sources"} onClick={() => setTab("sources")}>
+          Sources
+        </TabButton>
+        <TabButton active={tab === "mapping"} onClick={() => setTab("mapping")}>
+          Field Mapping
+        </TabButton>
+      </div>
 
       {tab === "sources" && <SourcesTab sources={sources} statsMap={statsMap} />}
-      {tab === "fields" && <FieldsTab fieldDefs={fieldDefs} />}
-      {tab === "mapping" && <MappingTab sources={sources} fieldDefs={fieldDefs} />}
+      {tab === "mapping" && <MappingTab sources={sources} />}
     </div>
   );
 }
@@ -433,323 +366,6 @@ function SourcesTab({ sources, statsMap }: { sources: LeadSource[]; statsMap: Re
   );
 }
 
-// ─── Fields Tab ────────────────────────────────────────────────
-//
-// This tab manages custom field definitions.
-// Fields are stored in custom_field_defs (metadata) and leads.custom (data).
-// Deleting = soft delete (is_active = false). Data is PRESERVED.
-
-function FieldsTab({ fieldDefs }: { fieldDefs: FieldDef[] }) {
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [editId, setEditId] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
-  const [form, setForm] = useState({
-    key: "",
-    label: "",
-    type: "text",
-    group_name: "",
-    required: false,
-    show_on_card: false,
-    show_in_list: false,
-    optionsText: "",
-  });
-
-  function set<K extends keyof typeof form>(key: K, value: string | boolean) {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  }
-
-  function resetForm() {
-    setForm({ key: "", label: "", type: "text", group_name: "", required: false, show_on_card: false, show_in_list: false, optionsText: "" });
-    setEditId(null);
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    startTransition(async () => {
-      let options: Array<{ value: string; label: string }> | null = null;
-      if (form.type === "select" || form.type === "multiselect") {
-        if (form.optionsText.trim()) {
-          const lines = form.optionsText.trim().split("\n").map((l) => l.trim()).filter(Boolean);
-          if (lines.length === 0) {
-            toast.error("Please add at least one option");
-            return;
-          }
-          options = lines.map((line) => {
-            const colonIdx = line.indexOf(":");
-            if (colonIdx > 0) {
-              const value = line.slice(0, colonIdx).trim();
-              const label = line.slice(colonIdx + 1).trim();
-              return { value, label: label || value };
-            }
-            const value = line.toLowerCase().replace(/\s+/g, "_");
-            return { value, label: line };
-          });
-        }
-      }
-
-      if (editId) {
-        const result = await updateCustomFieldDef(editId, {
-          label: form.label,
-          type: form.type as any,
-          options,
-          required: form.required,
-          show_on_card: form.show_on_card,
-          show_in_list: form.show_in_list,
-          group_name: form.group_name || null,
-        });
-        if (result.ok) {
-          toast.success("Field updated");
-          setOpen(false);
-          resetForm();
-          router.refresh();
-        } else {
-          toast.error(result.error ?? "Failed");
-        }
-      } else {
-        const result = await createCustomFieldDef({
-          key: form.key,
-          label: form.label,
-          type: form.type as any,
-          options,
-          required: form.required,
-          show_on_card: form.show_on_card,
-          show_in_list: form.show_in_list,
-          group_name: form.group_name || null,
-        } as any);
-        if (result.ok) {
-          toast.success("Field created");
-          setOpen(false);
-          resetForm();
-          router.refresh();
-        } else {
-          toast.error(result.error ?? "Failed");
-        }
-      }
-    });
-  }
-
-  function handleEdit(def: FieldDef) {
-    setEditId(def.id);
-    setForm({
-      key: def.key,
-      label: def.label,
-      type: def.type,
-      group_name: def.group_name ?? "",
-      required: def.required,
-      show_on_card: def.show_on_card,
-      show_in_list: def.show_in_list,
-      optionsText: def.options ? def.options.map((o) => o.value === o.label ? o.label : `${o.value}:${o.label}`).join("\n") : "",
-    });
-    setOpen(true);
-  }
-
-  function handleDelete(def: FieldDef) {
-    if (!confirm(`Deactivate field "${def.label}"?\n\nData in existing leads will be PRESERVED but hidden.\nYou can re-activate later to see the data again.`)) return;
-    startTransition(async () => {
-      const result = await deleteCustomFieldDef(def.id);
-      if (result.ok) {
-        toast.success("Field deactivated (data preserved)");
-        router.refresh();
-      } else {
-        toast.error(result.error ?? "Failed");
-      }
-    });
-  }
-
-  function handleReactivate(def: FieldDef) {
-    startTransition(async () => {
-      const result = await reactivateCustomFieldDef(def.id);
-      if (result.ok) {
-        toast.success("Field re-activated");
-        router.refresh();
-      } else {
-        toast.error(result.error ?? "Failed");
-      }
-    });
-  }
-
-  const activeFields = fieldDefs.filter((f) => f.is_active);
-  const inactiveFields = fieldDefs.filter((f) => !f.is_active);
-
-  return (
-    <div className="space-y-4">
-      <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 text-xs text-blue-700">
-        <p className="font-semibold mb-1">What are custom fields?</p>
-        <p>Custom fields are extra fields you can add to every lead beyond the standard ones (name, phone, email, budget, etc.).
-        They appear on the lead detail page and can be edited just like standard fields.</p>
-        <p className="mt-1">For example: Visa Status, Referred By, Pre-Approval Amount, Nationality, etc.</p>
-        <p className="mt-1 text-blue-500">Deleting a field <strong>preserves existing data</strong> — it only hides the field. Re-activating makes data visible again.</p>
-      </div>
-
-      <div className="flex justify-end">
-        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
-          <DialogTrigger
-            render={(props) => (
-              <Button {...props} className="bg-emerald-500 hover:bg-emerald-600">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Field
-              </Button>
-            )}
-          />
-          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editId ? "Edit Field" : "Add Custom Field"}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="key">Key (snake_case) *</Label>
-                <Input
-                  id="key"
-                  value={form.key}
-                  onChange={(e) => set("key", e.target.value)}
-                  required={!editId}
-                  disabled={!!editId}
-                  placeholder="e.g. visa_status"
-                  className={editId ? "bg-slate-50 text-slate-400" : ""}
-                />
-                {editId && <p className="text-xs text-slate-400">Key cannot be changed after creation (prevents data orphaning)</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="label">Label *</Label>
-                <Input id="label" value={form.label} onChange={(e) => set("label", e.target.value)} required placeholder="e.g. Visa Status" />
-              </div>
-              <div className="space-y-2">
-                <Label>Field Type</Label>
-                <Select value={form.type} onValueChange={(v) => set("type", v ?? "text")}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(FIELD_TYPES).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>{label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {(form.type === "select" || form.type === "multiselect") && (
-                <div className="space-y-2">
-                  <Label htmlFor="optionsText">Options (one per line)</Label>
-                  <Textarea
-                    id="optionsText"
-                    value={form.optionsText}
-                    onChange={(e) => set("optionsText", e.target.value)}
-                    placeholder={`Cash\nMortgage\nPre-approved\nNot sure`}
-                    rows={4}
-                  />
-                  <p className="text-xs text-slate-400">Each line becomes a dropdown option. Use <code>value:Label</code> format for custom values (e.g. <code>cash:Cash Buyer</code>)</p>
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="group_name">Group Name (optional)</Label>
-                <Input id="group_name" value={form.group_name} onChange={(e) => set("group_name", e.target.value)} placeholder="e.g. Background" />
-              </div>
-              <div className="flex flex-wrap gap-4">
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={form.required} onChange={(e) => set("required", e.target.checked)} />
-                  Required
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={form.show_on_card} onChange={(e) => set("show_on_card", e.target.checked)} />
-                  Show on board card
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={form.show_in_list} onChange={(e) => set("show_in_list", e.target.checked)} />
-                  Show in list view
-                </label>
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => { setOpen(false); resetForm(); }}>Cancel</Button>
-                <Button type="submit" disabled={pending || (!editId && !form.key) || !form.label}>
-                  {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {editId ? "Update" : "Create"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {activeFields.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-slate-700">Active Fields ({activeFields.length})</h3>
-          <div className="space-y-2">
-            {activeFields.map((def) => (
-              <div
-                key={def.id}
-                onClick={() => handleEdit(def)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    handleEdit(def);
-                  }
-                }}
-                className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-white p-3 text-left transition-colors hover:border-emerald-300 hover:bg-emerald-50/40"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium text-slate-900">{def.label}</span>
-                    <span className="text-xs text-slate-400 font-mono">{def.key} · {FIELD_TYPES[def.type] ?? def.type}</span>
-                  </div>
-                  {def.group_name && <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-500">{def.group_name}</span>}
-                  {def.required && <span className="rounded bg-red-50 px-1.5 py-0.5 text-xs text-red-500">required</span>}
-                  {def.show_on_card && <span className="rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-500">on card</span>}
-                </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 text-xs text-red-500 hover:text-red-600"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleDelete(def);
-                  }}
-                  disabled={pending}
-                >
-                  <Trash2 className="mr-1 h-3 w-3" />Deactivate
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {inactiveFields.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-slate-400">Inactive Fields ({inactiveFields.length})</h3>
-          <p className="text-xs text-slate-400">Data in leads.custom is preserved. Re-activate to make it visible again.</p>
-          <div className="space-y-2">
-            {inactiveFields.map((def) => (
-              <div key={def.id} className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-3 opacity-70">
-                <div className="flex items-center gap-3">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium text-slate-600">{def.label}</span>
-                    <span className="text-xs text-slate-400 font-mono">{def.key} · {FIELD_TYPES[def.type] ?? def.type}</span>
-                  </div>
-                  {def.deleted_at && <span className="text-xs text-slate-400">Deactivated {new Date(def.deleted_at).toLocaleDateString()}</span>}
-                </div>
-                <Button size="sm" variant="ghost" className="h-7 text-xs text-emerald-600 hover:text-emerald-700" onClick={() => handleReactivate(def)} disabled={pending}>
-                  <RotateCcw className="mr-1 h-3 w-3" />Re-activate
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {fieldDefs.length === 0 && (
-        <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50">
-          <div className="text-center">
-            <Settings2 className="mx-auto h-8 w-8 text-slate-300" />
-            <p className="text-sm text-slate-400 mt-2">No custom fields defined yet</p>
-            <p className="text-xs text-slate-300 mt-1">Add fields like visa status, referred by, or pre-approval amount</p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Mapping Tab ───────────────────────────────────────────────
 //
 // This tab lets admins configure how raw incoming data from each source
@@ -761,19 +377,13 @@ function FieldsTab({ fieldDefs }: { fieldDefs: FieldDef[] }) {
 // If field_mapping is empty {}, the system assumes raw field names
 // already match lead field keys (identity mapping).
 
-function MappingTab({ sources, fieldDefs }: { sources: LeadSource[]; fieldDefs: FieldDef[] }) {
+function MappingTab({ sources }: { sources: LeadSource[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [selectedSourceId, setSelectedSourceId] = useState<string | null>(sources[0]?.id ?? null);
   const [mappings, setMappings] = useState<Record<string, string>>({});
 
-  const selectedSource = sources.find((s) => s.id === selectedSourceId);
-  const activeFieldDefs = fieldDefs.filter((f) => f.is_active);
-
-  const allTargetFields = [
-    ...STANDARD_LEAD_FIELDS,
-    ...activeFieldDefs.map((f) => ({ key: `custom.${f.key}`, label: `${f.label} (custom)` })),
-  ];
+  const allTargetFields = STANDARD_LEAD_FIELDS;
 
   // Load mapping when source changes
   function loadMapping(sourceId: string) {
@@ -862,7 +472,6 @@ function MappingTab({ sources, fieldDefs }: { sources: LeadSource[]; fieldDefs: 
       <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-700">
         <strong>Field Mapping</strong> defines how raw incoming data from a source translates to your lead fields.
         For example, a web form might send <code>full_name</code> which maps to <code>name</code>.
-        For custom fields, use the <code>custom.</code> prefix (e.g., <code>custom.visa_status</code>).
         If no mapping is set, the system assumes field names already match.
       </div>
 

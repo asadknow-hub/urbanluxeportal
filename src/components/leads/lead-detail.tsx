@@ -125,21 +125,6 @@ type LeadActivity = {
 
 type Agent = { id: string; full_name: string; role: string };
 
-type FieldDef = {
-  id: string;
-  entity: string;
-  key: string;
-  label: string;
-  type: string;
-  options: Array<{ value: string; label: string }> | null;
-  required: boolean;
-  show_on_card: boolean;
-  show_in_list: boolean;
-  group_name: string | null;
-  sort: number;
-  is_active: boolean;
-};
-
 type InlineEditState =
   | {
       key: string;
@@ -209,7 +194,7 @@ export function LeadDetail({
   activities,
   agents,
   stages,
-  fieldDefs,
+  areas,
   customer,
   deal,
   documents,
@@ -222,7 +207,7 @@ export function LeadDetail({
   activities: LeadActivity[];
   agents: Agent[];
   stages: { id: string; name: string; color: string; kind: string; sort: number; helper_text: string | null }[];
-  fieldDefs: FieldDef[];
+  areas: string[];
   customer: { id: string; name: string; phone: string | null; email: string | null } | null;
   deal: { id: string; title: string; stage: string; value: number; deal_type: string } | null;
   documents: { id: string; file_name: string; file_url: string; file_type: string; created_at: string }[];
@@ -373,6 +358,7 @@ export function LeadDetail({
 
         {inlineEdit.kind === "areas" ? (
           <PreferredAreasPicker
+            areas={areas}
             value={inlineEdit.value}
             onChange={(value) => setInlineEditValue(value)}
             label={inlineEdit.label}

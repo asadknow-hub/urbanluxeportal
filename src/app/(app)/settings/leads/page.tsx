@@ -5,6 +5,9 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LeadsInflowClient, type LeadInflowTab } from "@/components/leads/leads-inflow-client";
 import { LeadTableFieldsColumn } from "@/components/leads/lead-table-fields";
+import { LeadAreasManager } from "@/components/leads/lead-areas-manager";
+import { fetchLeadTableColumns } from "@/server/lead-areas";
+import { mapLeadTableColumns } from "@/lib/lead-table-fields";
 import { ArrowRight, CalendarClock, CheckCircle2, Layers3, Settings2, Route, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -56,21 +59,21 @@ export default async function LeadsSettingsPage({
   const supabase = await createSupabaseServerClient();
   const params = await searchParams;
   const tab: HubTab = isHubTab(params.tab) ? params.tab : "fields";
-  const inflowTab: LeadInflowTab = tab === "fields" || tab === "mapping" ? tab : "sources";
+  const inflowTab: LeadInflowTab = tab === "mapping" ? "mapping" : "sources";
 
-  const [sourcesResult, fieldDefsResult, stagesResult, routingResult, docsResult, reasonsResult, sourceStatsResult, leadStatsResult] = await Promise.all([
+  const [sourcesResult, stagesResult, routingResult, docsResult, reasonsResult, sourceStatsResult, leadStatsResult, areasResult, leadColumns] = await Promise.all([
     supabase.from("lead_sources").select("*").order("created_at", { ascending: false }),
-    supabase.from("custom_field_defs").select("*").eq("entity", "lead").order("is_active", { ascending: false }).order("sort", { ascending: true }),
     supabase.from("lead_stages").select("*").eq("is_active", true).order("sort", { ascending: true }),
     supabase.from("routing_rules").select("*").eq("is_active", true).order("sort", { ascending: true }),
     supabase.from("lead_doc_requirements").select("*").eq("is_active", true).order("sort", { ascending: true }),
     supabase.from("lost_reasons").select("kind, label, sort").eq("is_active", true).order("sort", { ascending: true }),
     supabase.from("leads").select("source_id").not("source_id", "is", null),
     supabase.from("leads").select("stage_id").not("stage_id", "is", null),
+    supabase.from("lead_areas").select("id, name").order("name"),
+    fetchLeadTableColumns(),
   ]);
 
   if (sourcesResult.error) console.error("[settings/leads] sources query error:", sourcesResult.error.message);
-  if (fieldDefsResult.error) console.error("[settings/leads] field defs query error:", fieldDefsResult.error.message);
   if (stagesResult.error) console.error("[settings/leads] stages query error:", stagesResult.error.message);
   if (routingResult.error) console.error("[settings/leads] routing query error:", routingResult.error.message);
   if (docsResult.error) console.error("[settings/leads] docs query error:", docsResult.error.message);
@@ -79,7 +82,7 @@ export default async function LeadsSettingsPage({
   if (leadStatsResult.error) console.error("[settings/leads] lead stats query error:", leadStatsResult.error.message);
 
   const sources = sourcesResult.data ?? [];
-  const fieldDefs = fieldDefsResult.data ?? [];
+  const fieldCount = leadColumns.length;
   const stages = stagesResult.data ?? [];
   const routingRules = routingResult.data ?? [];
   const docReqs = docsResult.data ?? [];
@@ -95,8 +98,8 @@ export default async function LeadsSettingsPage({
     if (row.stage_id) stageCountMap[row.stage_id] = (stageCountMap[row.stage_id] ?? 0) + 1;
   });
 
-  const activeFields = fieldDefs.filter((field: { is_active: boolean }) => field.is_active).length;
-  const inactiveFields = fieldDefs.length - activeFields;
+  const activeFields = fieldCount;
+  const areaCount = areasResult.data?.length ?? 0;
 
   return (
     <div className="space-y-5 max-w-[1600px] mx-auto">
@@ -183,7 +186,7 @@ export default async function LeadsSettingsPage({
                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Fields</h3>
                </div>
                <div className="text-2xl font-bold text-slate-900">{activeFields}</div>
-               <p className="mt-2 text-xs font-medium text-slate-400">{inactiveFields} inactive in `leads.custom`</p>
+               <p className="mt-2 text-xs font-medium text-slate-400">{areaCount} preferred areas configured</p>
             </div>
           </div>
 
@@ -251,22 +254,8 @@ export default async function LeadsSettingsPage({
 
       {tab === "fields" && (
         <div className="grid gap-4 xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
-          <LeadTableFieldsColumn />
-          <div className="rounded-xl border border-slate-200/60 bg-white p-4 shadow-sm">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
-                <Route className="h-4 w-4" />
-              </div>
-              <h2 className="text-base font-bold text-slate-900">Custom fields</h2>
-            </div>
-            <LeadsInflowClient
-              sources={sources}
-              fieldDefs={fieldDefs}
-              statsMap={sourceCountMap}
-              initialTab="fields"
-              hideTabs
-            />
-          </div>
+          <LeadTableFieldsColumn fields={mapLeadTableColumns(leadColumns)} />
+          <LeadAreasManager areas={areasResult.data ?? []} />
         </div>
       )}
 
@@ -281,7 +270,6 @@ export default async function LeadsSettingsPage({
           <div>
             <LeadsInflowClient
               sources={sources}
-              fieldDefs={fieldDefs}
               statsMap={sourceCountMap}
               initialTab={inflowTab}
             />

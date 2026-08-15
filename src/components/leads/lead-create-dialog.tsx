@@ -46,8 +46,10 @@ const INTERESTS = [
 
 export function LeadCreateDialog({
   agents,
+  areas,
 }: {
   agents: { id: string; full_name: string; role: string }[];
+  areas: string[];
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -328,6 +330,7 @@ export function LeadCreateDialog({
           {/* Areas */}
           <div className="rounded-xl border border-border bg-muted/40 p-5">
             <PreferredAreasPicker
+              areas={areas}
               value={form.preferred_areas}
               onChange={(next) => setForm((prev) => ({ ...prev, preferred_areas: next }))}
             />

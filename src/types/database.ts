@@ -406,38 +406,18 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["campaigns"]["Insert"]>;
       };
-      custom_field_defs: {
+      lead_areas: {
         Row: {
           id: string;
-          entity: string;
-          key: string;
-          label: string;
-          type: string;
-          options: unknown | null;
-          required: boolean;
-          show_on_card: boolean;
-          show_in_list: boolean;
-          group_name: string | null;
-          sort: number;
-          is_active: boolean;
+          name: string;
+          name_norm: string;
           created_at: string;
-          updated_at: string;
-          deleted_at: string | null;
         };
         Insert: {
-          entity?: string;
-          key: string;
-          label: string;
-          type: string;
-          options?: unknown | null;
-          required?: boolean;
-          show_on_card?: boolean;
-          show_in_list?: boolean;
-          group_name?: string | null;
-          sort?: number;
-          is_active?: boolean;
+          id?: string;
+          name: string;
         };
-        Update: Partial<Database["public"]["Tables"]["custom_field_defs"]["Insert"]>;
+        Update: Partial<Database["public"]["Tables"]["lead_areas"]["Insert"]>;
       };
       lead_sources: {
         Row: {
@@ -1112,6 +1092,15 @@ export interface Database {
       next_doc_number: {
         Args: { prefix: string };
         Returns: string;
+      };
+      lead_table_columns: {
+        Args: Record<string, never>;
+        Returns: {
+          column_name: string;
+          data_type: string;
+          udt_name: string;
+          ordinal_position: number;
+        }[];
       };
     };
     Enums: {

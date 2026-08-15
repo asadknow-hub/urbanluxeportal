@@ -71,35 +71,28 @@ export default async function LeadDetailPage({
     { data: activities },
     { data: agents },
     { data: documents },
-    { data: fieldDefs },
+    { data: areaRows },
     { data: lostReasons },
     customerResult,
     dealResult,
   ] = await Promise.all([
-    // Stages for the stage dropdown + workflow bar
     supabase
       .from("lead_stages")
       .select("*")
       .eq("is_active", true)
       .order("sort"),
-
-    // Activities with author profile (fixes agent names showing as UUIDs)
     supabase
       .from("lead_activities")
       .select(`*, author:profiles!lead_activities_created_by_fkey(id, full_name)`)
       .eq("lead_id", id)
       .order("occurred_at", { ascending: false })
       .limit(50),
-
-    // Agents for assignment dropdown
     supabase
       .from("profiles")
       .select("id, full_name, role")
       .in("role", ["admin", "manager", "agent"])
       .eq("is_active", true)
       .order("full_name"),
-
-    // Documents
     supabase
       .from("documents")
       .select("*")
@@ -107,28 +100,15 @@ export default async function LeadDetailPage({
       .eq("entity_id", id)
       .is("deleted_at", null)
       .order("created_at", { ascending: false }),
-
-    // Custom field definitions (active, for lead entity)
-    supabase
-      .from("custom_field_defs")
-      .select("*")
-      .eq("entity", "lead")
-      .eq("is_active", true)
-      .order("sort"),
-
-    // Lost / junk reasons for stage change dialogs
+    supabase.from("lead_areas").select("name").order("name"),
     supabase
       .from("lost_reasons")
       .select("kind, label")
       .eq("is_active", true)
       .order("sort"),
-
-    // Linked customer (only if converted)
     lead.converted_customer_id
       ? supabase.from("customers").select("id, name, phone, email").eq("id", lead.converted_customer_id).single()
       : Promise.resolve({ data: null, error: null }),
-
-    // Linked deal (only if converted)
     lead.converted_deal_id
       ? supabase.from("deals").select("id, title, stage, value, deal_type").eq("id", lead.converted_deal_id).single()
       : Promise.resolve({ data: null, error: null }),
@@ -148,7 +128,7 @@ export default async function LeadDetailPage({
       activities={activities ?? []}
       agents={agents ?? []}
       stages={stages ?? []}
-      fieldDefs={fieldDefs ?? []}
+      areas={(areaRows ?? []).map((row) => row.name)}
       customer={customer}
       deal={deal}
       documents={documents ?? []}
