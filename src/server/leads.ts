@@ -1209,7 +1209,8 @@ export async function createLeadStage(
 
 export async function updateLeadStageName(
   id: string,
-  name: string
+  name: string,
+  color?: string
 ): Promise<ActionResult> {
   try {
     const user = await getCurrentUser();
@@ -1220,20 +1221,25 @@ export async function updateLeadStageName(
 
     const supabase = createSupabaseServiceClient();
     
-    // Check if it's a system stage (kind won/lost/junk)
     const { data: stage } = await supabase.from("lead_stages").select("kind").eq("id", id).single();
-    if (stage && ["won", "lost", "junk"].includes(stage.kind)) {
-       return { ok: false, error: "Cannot rename system stages" };
+    const isSystem = !!stage && ["won", "lost", "junk"].includes(stage.kind);
+
+    const patch: { name?: string; color?: string } = {};
+    if (!isSystem && name.trim()) patch.name = name.trim();
+    if (color) patch.color = color;
+    if (Object.keys(patch).length === 0) {
+      return { ok: false, error: isSystem ? "System stages can only change color" : "Nothing to update" };
     }
 
     const { error } = await supabase
       .from("lead_stages")
-      .update({ name })
+      .update(patch)
       .eq("id", id);
 
     if (error) return { ok: false, error: error.message };
 
     revalidatePath("/leads");
+    revalidatePath("/settings/leads");
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };

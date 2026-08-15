@@ -193,11 +193,13 @@ export function LeadsInflowClient({
   fieldDefs,
   statsMap,
   initialTab = "sources",
+  hideTabs = false,
 }: {
   sources: LeadSource[];
   fieldDefs: FieldDef[];
   statsMap: Record<string, number>;
   initialTab?: LeadInflowTab;
+  hideTabs?: boolean;
 }) {
   const [tab, setTab] = useState<LeadInflowTab>(initialTab);
 
@@ -207,18 +209,19 @@ export function LeadsInflowClient({
 
   return (
     <div className="space-y-4">
-      {/* Tab bar */}
-      <div className="flex gap-1 border-b border-slate-200">
-        <TabButton active={tab === "sources"} onClick={() => setTab("sources")}>
-          Sources
-        </TabButton>
-        <TabButton active={tab === "fields"} onClick={() => setTab("fields")}>
-          Field Configuration
-        </TabButton>
-        <TabButton active={tab === "mapping"} onClick={() => setTab("mapping")}>
-          Field Mapping
-        </TabButton>
-      </div>
+      {!hideTabs && (
+        <div className="flex gap-1 border-b border-slate-200">
+          <TabButton active={tab === "sources"} onClick={() => setTab("sources")}>
+            Sources
+          </TabButton>
+          <TabButton active={tab === "fields"} onClick={() => setTab("fields")}>
+            Field Configuration
+          </TabButton>
+          <TabButton active={tab === "mapping"} onClick={() => setTab("mapping")}>
+            Field Mapping
+          </TabButton>
+        </div>
+      )}
 
       {tab === "sources" && <SourcesTab sources={sources} statsMap={statsMap} />}
       {tab === "fields" && <FieldsTab fieldDefs={fieldDefs} />}

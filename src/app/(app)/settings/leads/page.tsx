@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LeadsInflowClient, type LeadInflowTab } from "@/components/leads/leads-inflow-client";
+import { LeadTableFieldsColumn } from "@/components/leads/lead-table-fields";
 import { ArrowRight, CalendarClock, CheckCircle2, Layers3, Settings2, Route, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -54,7 +55,7 @@ export default async function LeadsSettingsPage({
 
   const supabase = await createSupabaseServerClient();
   const params = await searchParams;
-  const tab: HubTab = isHubTab(params.tab) ? params.tab : "overview";
+  const tab: HubTab = isHubTab(params.tab) ? params.tab : "fields";
   const inflowTab: LeadInflowTab = tab === "fields" || tab === "mapping" ? tab : "sources";
 
   const [sourcesResult, fieldDefsResult, stagesResult, routingResult, docsResult, reasonsResult, sourceStatsResult, leadStatsResult] = await Promise.all([
@@ -107,11 +108,11 @@ export default async function LeadsSettingsPage({
           </div>
           <div>
             <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
-              <Link href="/settings" className="hover:text-slate-600 transition-colors">Settings</Link>
+              <span>CRM</span>
               <span>/</span>
-              <span className="text-slate-900">Leads</span>
+              <span className="text-slate-900">Lead Settings</span>
             </div>
-            <h1 className="text-lg font-bold text-slate-900 leading-none mb-1">Lead Settings Hub</h1>
+            <h1 className="text-lg font-bold text-slate-900 leading-none mb-1">Lead Settings</h1>
             <p className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">
               Control center for the lead lifecycle
             </p>
@@ -248,7 +249,28 @@ export default async function LeadsSettingsPage({
         </div>
       )}
 
-      {(tab === "sources" || tab === "fields" || tab === "mapping") && (
+      {tab === "fields" && (
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
+          <LeadTableFieldsColumn />
+          <div className="rounded-xl border border-slate-200/60 bg-white p-4 shadow-sm">
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                <Route className="h-4 w-4" />
+              </div>
+              <h2 className="text-base font-bold text-slate-900">Custom fields</h2>
+            </div>
+            <LeadsInflowClient
+              sources={sources}
+              fieldDefs={fieldDefs}
+              statsMap={sourceCountMap}
+              initialTab="fields"
+              hideTabs
+            />
+          </div>
+        </div>
+      )}
+
+      {(tab === "sources" || tab === "mapping") && (
         <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200/60 flex flex-col">
           <div className="flex items-center gap-3 mb-4">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">

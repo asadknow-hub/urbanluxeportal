@@ -37,7 +37,7 @@ export function Sidebar({ user }: { user: SessionUser }) {
     <aside
       className={cn(
         "sticky top-0 z-40 hidden h-screen shrink-0 flex-col bg-sidebar text-sidebar-foreground lg:flex",
-        collapsed ? "w-[76px]" : "w-64"
+        collapsed ? "w-[72px]" : "w-56"
       )}
     >
       <div className="relative flex h-12 items-center border-b border-sidebar-border px-3">

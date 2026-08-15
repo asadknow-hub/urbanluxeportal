@@ -213,9 +213,11 @@ function DraggableLeadCard({ lead, stage }: { lead: BoardLead; stage: LeadStage 
 function StageColumn({
   stage,
   leads,
+  roundedStart,
 }: {
   stage: LeadStage;
   leads: BoardLead[];
+  roundedStart?: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
   const color = getColor(stage.color);
@@ -223,23 +225,32 @@ function StageColumn({
   const [renameOpen, setRenameOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [newName, setNewName] = useState(stage.name);
+  const [editColor, setEditColor] = useState(stage.color);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
+  const openEdit = () => {
+    setNewName(stage.name);
+    setEditColor(stage.color);
+    window.setTimeout(() => setRenameOpen(true), 0);
+  };
+
   const handleRename = async () => {
-    if (!newName.trim() || newName === stage.name) {
+    const nameUnchanged = newName.trim() === stage.name;
+    const colorUnchanged = editColor === stage.color;
+    if (nameUnchanged && colorUnchanged) {
       setRenameOpen(false);
       return;
     }
     setIsSubmitting(true);
-    const res = await updateLeadStageName(stage.id, newName);
+    const res = await updateLeadStageName(stage.id, newName, editColor);
     setIsSubmitting(false);
     if (res.ok) {
-      toast.success("Stage renamed successfully");
+      toast.success("Stage updated");
       setRenameOpen(false);
       router.refresh();
     } else {
-      toast.error(res.error || "Failed to rename stage");
+      toast.error(res.error || "Failed to update stage");
     }
   };
 
@@ -259,7 +270,7 @@ function StageColumn({
   const isSystemStage = ["won", "lost", "junk"].includes(stage.kind);
 
   return (
-    <div className="flex h-full w-[240px] min-w-[240px] flex-col">
+    <div className={cn("flex h-full w-[240px] min-w-[240px] flex-col overflow-hidden", roundedStart && "rounded-l-lg")}>
       <div
         className={cn("flex items-center justify-between gap-1 px-2 py-1.5", color.header)}
         title={stage.helper_text ?? undefined}
@@ -268,14 +279,14 @@ function StageColumn({
         <div className="flex shrink-0 items-center">
           <span className="px-1 text-[11px] tabular-nums opacity-90">{leads.length}</span>
           <DropdownMenu>
-            <DropdownMenuTrigger render={<button className="flex h-6 w-6 items-center justify-center rounded opacity-80 hover:bg-black/15 hover:opacity-100" aria-label={`${stage.name} options`} />}>
+            <DropdownMenuTrigger render={<button type="button" className="flex h-6 w-6 items-center justify-center rounded opacity-80 hover:bg-black/15 hover:opacity-100" aria-label={`${stage.name} options`} />}>
               <MoreHorizontal className="h-3.5 w-3.5" />
             </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={() => { setNewName(stage.name); setRenameOpen(true); }} disabled={isSystemStage}>
-                  <Edit3 className="mr-2 h-4 w-4" /> Rename Stage
+                <DropdownMenuItem onClick={openEdit}>
+                  <Edit3 className="mr-2 h-4 w-4" /> Edit Stage
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setDeleteOpen(true)} className="text-red-600" disabled={isSystemStage || leads.length > 0}>
+                <DropdownMenuItem onClick={() => setDeleteOpen(true)} className="text-red-600" disabled={isSystemStage || leads.length > 0}>
                   <Trash2 className="mr-2 h-4 w-4" /> Delete Stage
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -304,17 +315,44 @@ function StageColumn({
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rename Stage</DialogTitle>
+            <DialogTitle>Edit Stage</DialogTitle>
           </DialogHeader>
-          <div className="py-4 space-y-4">
+          <div className="space-y-5 py-4">
             <div className="space-y-2">
               <Label>Stage Name</Label>
-              <Input value={newName} onChange={(e) => setNewName(e.target.value)} autoFocus placeholder="e.g. Follow Up" />
+              <Input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                autoFocus
+                placeholder="e.g. Follow Up"
+                disabled={isSystemStage}
+              />
+              {isSystemStage && (
+                <p className="text-xs text-muted-foreground">System stages keep their name. You can still change the color.</p>
+              )}
+            </div>
+            <div className="space-y-3">
+              <Label>Stage Color</Label>
+              <div className="flex flex-wrap gap-2">
+                {Object.keys(COLOR_MAP).map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setEditColor(key)}
+                    className={cn(
+                      "h-8 w-8 rounded-full border-2 transition-transform hover:scale-110",
+                      COLOR_MAP[key].header,
+                      editColor === key ? "border-foreground ring-2 ring-foreground ring-offset-2" : "border-transparent"
+                    )}
+                    aria-label={key}
+                  />
+                ))}
+              </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRenameOpen(false)}>Cancel</Button>
-            <Button onClick={handleRename} disabled={!newName.trim() || isSubmitting}>
+            <Button onClick={handleRename} disabled={(!newName.trim() && !isSystemStage) || isSubmitting}>
               {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
@@ -455,10 +493,11 @@ export function LeadsBoard({
         onDragEnd={handleDragEnd}
       >
         <div className="scrollbar-gold flex h-[calc(100dvh-7.5rem)] gap-2 overflow-x-auto">
-          {stages.map((stage) => (
+          {stages.map((stage, index) => (
             <StageColumn
               key={stage.id}
               stage={stage}
+              roundedStart={index === 0}
               leads={(leadsByStage[stage.id] ?? []).map((lead) => ({
                 ...lead,
                 tags: lead.tags ?? [],
@@ -513,7 +552,7 @@ export function LeadsBoard({
                     onClick={() => setNewStageColor(color)}
                     className={cn(
                       "h-8 w-8 rounded-full border-2 transition-transform hover:scale-110",
-                      COLOR_MAP[color].bg,
+                      COLOR_MAP[color].header,
                       newStageColor === color ? "border-slate-900 ring-2 ring-slate-900 ring-offset-2" : "border-transparent"
                     )}
                   />

@@ -21,6 +21,7 @@ export const NAV_GROUPS = [
 
 export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard", roles: ["admin", "manager", "agent", "accountant"], group: "Workspace" },
+  { label: "Lead Settings", href: "/settings/leads", icon: "Settings2", roles: ["admin", "manager"], group: "CRM" },
   { label: "Leads", href: "/leads", icon: "Users", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
   { label: "Follow-ups", href: "/leads/followups", icon: "CalendarClock", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
   { label: "Deals", href: "/deals", icon: "KanbanSquare", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
@@ -36,7 +37,6 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Documents", href: "/documents", icon: "FolderOpen", roles: ["admin", "manager", "agent", "accountant"], group: "Governance" },
   { label: "Approvals", href: "/approvals", icon: "CheckCircle2", roles: ["admin", "manager", "agent"], group: "Governance" },
   { label: "Reports", href: "/reports", icon: "BarChart3", roles: ["admin", "manager", "agent", "accountant"], group: "Governance" },
-  { label: "Lead inflow", href: "/settings/leads", icon: "Settings2", roles: ["admin", "manager"], group: "System" },
   { label: "Settings", href: "/settings", icon: "Settings", roles: ["admin"], group: "System" },
 ];
 
