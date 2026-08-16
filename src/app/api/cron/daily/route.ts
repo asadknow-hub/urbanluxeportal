@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
-import { notifyByRole } from "@/lib/notify";
+import { notify, notifyByRole } from "@/lib/notify";
 import { formatAED } from "@/lib/money";
 import { formatDate } from "@/lib/dates";
 
@@ -97,10 +97,59 @@ export async function GET(request: NextRequest) {
 
   await Promise.allSettled(tasks);
 
+  // 5. Stage SLA: leads sitting in a stage past stale_after_days
+  const { data: openLeads } = await supabase
+    .from("leads")
+    .select("id, name, assigned_to, stage_entered_at, stage:lead_stages(name, kind, stale_after_days)")
+    .is("deleted_at", null);
+
+  const staleLeads = (openLeads ?? []).filter((lead) => {
+    const stage = Array.isArray(lead.stage) ? lead.stage[0] : lead.stage;
+    if (!stage || stage.kind === "won" || stage.kind === "lost" || stage.kind === "junk") return false;
+    if (!stage.stale_after_days || !lead.stage_entered_at) return false;
+    const elapsedMs = now.getTime() - new Date(lead.stage_entered_at).getTime();
+    return elapsedMs > stage.stale_after_days * 24 * 60 * 60 * 1000;
+  });
+
+  if (staleLeads.length > 0) {
+    const byAssignee = new Map<string, typeof staleLeads>();
+    for (const lead of staleLeads) {
+      if (!lead.assigned_to) continue;
+      const list = byAssignee.get(lead.assigned_to) ?? [];
+      list.push(lead);
+      byAssignee.set(lead.assigned_to, list);
+    }
+    await Promise.all(
+      [...byAssignee.entries()].map(([userId, list]) =>
+        notify({
+          userIds: [userId],
+          kind: "lead_stale",
+          title: `${list.length} lead${list.length === 1 ? "" : "s"} past stage SLA`,
+          body: list
+            .slice(0, 5)
+            .map((lead) => {
+              const stage = Array.isArray(lead.stage) ? lead.stage[0] : lead.stage;
+              return `${lead.name} in ${stage?.name ?? "stage"}`;
+            })
+            .join(", "),
+          entityType: "lead",
+          entityId: list[0]?.id,
+        })
+      )
+    );
+    await notifyByRole(["admin", "manager"], {
+      kind: "lead_stale",
+      title: `${staleLeads.length} leads past stage SLA`,
+      body: "Leads have sat in a stage longer than the SLA. Open Leads to work them.",
+      entityType: "lead",
+    });
+  }
+
   return NextResponse.json({
     ok: true,
     overdueInvoices: overdueInvoices?.length ?? 0,
     dueCheques: dueCheques?.length ?? 0,
     expiringDocs: expiringDocs?.length ?? 0,
+    staleLeads: staleLeads.length,
   });
 }

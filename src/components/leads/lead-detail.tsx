@@ -34,6 +34,7 @@ import {
 import { telLink, whatsappLink } from "@/lib/phone";
 import { formatAED, formatAEDRange } from "@/lib/money";
 import { daysSince, formatDate, formatDateTime, isOverdue, timeAgo } from "@/lib/dates";
+import { stageSlaClock } from "@/lib/lead-sla";
 import { formatLeadInterest } from "@/lib/lead-format";
 import { getSignedUrl } from "@/server/documents";
 import {
@@ -82,6 +83,7 @@ type Lead = {
   created_at: string;
   updated_at: string;
   last_activity_at: string | null;
+  stage_entered_at: string | null;
   stage_id: string | null;
   nationality: string | null;
   financing: string | null;
@@ -254,12 +256,14 @@ function QuietSaveInput({
   type = "text",
   disabled,
   placeholder,
+  className,
   onSave,
 }: {
   value: string;
   type?: string;
   disabled?: boolean;
   placeholder?: string;
+  className?: string;
   onSave: (next: string) => void;
 }) {
   return (
@@ -269,7 +273,7 @@ function QuietSaveInput({
       defaultValue={value}
       disabled={disabled}
       placeholder={placeholder}
-      className="h-7 w-full rounded-md bg-transparent px-1 text-[0.86rem] text-foreground outline-none placeholder:text-[#B9B6AB] hover:bg-muted/70 focus:bg-muted/80 disabled:cursor-default"
+      className={`h-7 w-full rounded-md bg-transparent px-1 text-[0.86rem] text-foreground outline-none placeholder:text-[#B9B6AB] hover:bg-muted/70 focus:bg-muted/80 disabled:cursor-default ${className ?? ""}`}
       onBlur={(e) => {
         if (e.target.value.trim() === value.trim()) return;
         onSave(e.target.value);
@@ -416,7 +420,6 @@ export function LeadDetail({
   const [activityFilter, setActivityFilter] = useState("all");
   const [showAllActivity, setShowAllActivity] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
-  const [showNote, setShowNote] = useState(false);
 
   const currentStage = stages.find((s) => s.id === optimisticLead.stage_id) ?? null;
   const pipelineStages = stages.filter((s) => s.kind !== "lost" && s.kind !== "junk");
@@ -433,11 +436,10 @@ export function LeadDetail({
   const lastTouch = optimisticActivities[0]?.occurred_at ?? optimisticLead.last_activity_at ?? optimisticLead.updated_at;
   const currentIdx = pipelineStages.findIndex((s) => s.id === optimisticLead.stage_id);
   const fillPct = pipelineStages.length <= 1 || currentIdx < 0 ? 0 : (currentIdx / (pipelineStages.length - 1)) * 100;
-  const daysInStage = (() => {
-    const change = optimisticActivities.find((a) => a.type === "stage_change" || a.type === "status_change");
-    return daysSince(change?.occurred_at ?? optimisticLead.created_at);
-  })();
-  const sla = currentStage?.stale_after_days ?? null;
+  const slaClock = stageSlaClock(
+    optimisticLead.stage_entered_at ?? optimisticLead.created_at,
+    currentStage?.kind === "open" ? currentStage.stale_after_days : null
+  );
 
   const visibleActivities = useMemo(() => {
     const filtered =
@@ -487,13 +489,13 @@ export function LeadDetail({
       setSelectedReason("");
       return;
     }
-    setOptimisticLead((prev) => ({ ...prev, stage_id: stageId }));
+    setOptimisticLead((prev) => ({ ...prev, stage_id: stageId, stage_entered_at: new Date().toISOString() }));
     startTransition(async () => {
       const result = await updateLeadStage(optimisticLead.id, stageId);
       if (result.ok) {
         router.refresh();
       } else {
-        setOptimisticLead((prev) => ({ ...prev, stage_id: lead.stage_id }));
+        setOptimisticLead((prev) => ({ ...prev, stage_id: lead.stage_id, stage_entered_at: lead.stage_entered_at }));
         toast.error(result.error ?? "Failed to change stage");
       }
     });
@@ -501,7 +503,7 @@ export function LeadDetail({
 
   function handleReasonConfirm() {
     if (!reasonDialog || !selectedReason) return;
-    setOptimisticLead((prev) => ({ ...prev, stage_id: reasonDialog.stageId, status: "unqualified" }));
+    setOptimisticLead((prev) => ({ ...prev, stage_id: reasonDialog.stageId, status: "unqualified", stage_entered_at: new Date().toISOString() }));
     setReasonDialog(null);
     startTransition(async () => {
       const extra: { lost_reason?: string; junk_reason?: string } = {};
@@ -511,7 +513,7 @@ export function LeadDetail({
       if (result.ok) {
         router.refresh();
       } else {
-        setOptimisticLead((prev) => ({ ...prev, stage_id: lead.stage_id }));
+        setOptimisticLead((prev) => ({ ...prev, stage_id: lead.stage_id, stage_entered_at: lead.stage_entered_at }));
         toast.error(result.error ?? "Failed");
       }
       setSelectedReason("");
@@ -566,6 +568,35 @@ export function LeadDetail({
       await addLeadActivity(optimisticLead.id, type, summary);
       router.refresh();
     });
+  }
+
+  function saveNote() {
+    const text = noteDraft.trim();
+    if (!text) return;
+    const row: LeadActivity = {
+      id: `opt_${Date.now()}`,
+      type: "note",
+      summary: text,
+      occurred_at: new Date().toISOString(),
+      created_by: userId,
+      author: { id: userId, full_name: "You" },
+    };
+    setOptimisticActivities((prev) => [row, ...prev]);
+    setNoteDraft("");
+    startTransition(async () => {
+      const result = await addLeadActivity(optimisticLead.id, "note", text);
+      if (result.ok) router.refresh();
+      else {
+        setOptimisticActivities(activities);
+        toast.error(result.error ?? "Failed");
+      }
+    });
+  }
+
+  function focusNote() {
+    const el = document.getElementById("lead-note");
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    el?.focus();
   }
 
   async function openDocument(path: string) {
@@ -650,31 +681,26 @@ export function LeadDetail({
                   />
                 )}
               </FloatPicker>
-              {editing === "phone" ? (
-                <BlurSaveInput
+              <span className="flex min-w-[10rem] items-center gap-1.5">
+                <Phone className="h-[15px] w-[15px] shrink-0" />
+                <QuietSaveInput
                   value={optimisticLead.phone ?? ""}
-                  onCancel={() => setEditing(null)}
+                  disabled={!canEdit}
+                  placeholder="Add phone"
+                  className="font-mono text-[0.82rem]"
                   onSave={(next) => saveField({ phone: next.trim() || null }, { phone: next.trim() || null })}
                 />
-              ) : (
-                <button type="button" disabled={!canEdit} onClick={() => setEditing("phone")} className="flex items-center gap-1.5 rounded-md px-1 font-mono text-[0.82rem] hover:bg-muted/70 disabled:cursor-default">
-                  <Phone className="h-[15px] w-[15px]" />
-                  {optimisticLead.phone || "Add phone"}
-                </button>
-              )}
-              {editing === "email" ? (
-                <BlurSaveInput
+              </span>
+              <span className="flex min-w-[14rem] flex-1 items-center gap-1.5">
+                <Mail className="h-[15px] w-[15px] shrink-0" />
+                <QuietSaveInput
                   type="email"
                   value={optimisticLead.email ?? ""}
-                  onCancel={() => setEditing(null)}
+                  disabled={!canEdit}
+                  placeholder="Add email"
                   onSave={(next) => saveField({ email: next.trim() || null }, { email: next.trim() || null })}
                 />
-              ) : (
-                <button type="button" disabled={!canEdit} onClick={() => setEditing("email")} className="flex items-center gap-1.5 rounded-md px-1 hover:bg-muted/70 disabled:cursor-default">
-                  <Mail className="h-[15px] w-[15px]" />
-                  {optimisticLead.email || "Add email"}
-                </button>
-              )}
+              </span>
             </div>
           </div>
 
@@ -751,9 +777,15 @@ export function LeadDetail({
                       style={{ left: `${left}%` }}
                     >
                       {isDone && <Check className="absolute -top-5 h-[13px] w-[13px] text-primary" />}
-                      {isCurrent && sla != null && (
-                        <span className="absolute -top-6 whitespace-nowrap font-mono text-[0.7rem] text-[#8A6D2C]">
-                          day {Math.max(1, daysInStage || 1)} of {sla}
+                      {isCurrent && slaClock && (
+                        <span
+                          title="Days in this stage versus the SLA in Lead Settings"
+                          className={`absolute -top-6 whitespace-nowrap font-mono text-[0.7rem] ${
+                            slaClock.overdue ? "font-semibold text-red-700" : "text-[#8A6D2C]"
+                          }`}
+                        >
+                          day {slaClock.dayNum} of {slaClock.sla}
+                          {slaClock.overdue ? " · overdue" : ""}
                         </span>
                       )}
                       {isCurrent ? (
@@ -796,23 +828,6 @@ export function LeadDetail({
                       if (!next.trim()) return;
                       saveField({ name: next.trim() }, { name: next.trim() });
                     }}
-                  />
-                </LedgerRow>
-                <LedgerRow label="Phone" overlay>
-                  <QuietSaveInput
-                    value={optimisticLead.phone ?? ""}
-                    disabled={!canEdit}
-                    placeholder="Not captured"
-                    onSave={(next) => saveField({ phone: next.trim() || null }, { phone: next.trim() || null })}
-                  />
-                </LedgerRow>
-                <LedgerRow label="Email" overlay>
-                  <QuietSaveInput
-                    type="email"
-                    value={optimisticLead.email ?? ""}
-                    disabled={!canEdit}
-                    placeholder="Not captured"
-                    onSave={(next) => saveField({ email: next.trim() || null }, { email: next.trim() || null })}
                   />
                 </LedgerRow>
                 <LedgerRow label="Nationality" overlay>
@@ -1003,7 +1018,35 @@ export function LeadDetail({
                 <option value="follow_up">Follow-ups</option>
               </select>
             </div>
-            <div className="relative mt-[18px] pl-[26px] before:absolute before:top-2 before:bottom-2 before:left-[7px] before:w-[1.5px] before:bg-border">
+            {canEdit && (
+              <div className="mt-3 mb-1 rounded-xl border border-border bg-muted/40 p-2.5">
+                <Textarea
+                  id="lead-note"
+                  rows={2}
+                  value={noteDraft}
+                  onChange={(e) => setNoteDraft(e.target.value)}
+                  placeholder="Write a note…"
+                  className="resize-none border-0 bg-transparent p-1 text-sm shadow-none focus-visible:ring-0"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                      e.preventDefault();
+                      saveNote();
+                    }
+                  }}
+                />
+                <div className="mt-2 flex justify-end">
+                  <button
+                    type="button"
+                    disabled={!noteDraft.trim() || pending}
+                    className="h-8 rounded-lg bg-primary px-3 text-[0.78rem] font-semibold text-white disabled:opacity-40"
+                    onClick={saveNote}
+                  >
+                    Add note
+                  </button>
+                </div>
+              </div>
+            )}
+            <div className="relative mt-[14px] pl-[26px] before:absolute before:top-2 before:bottom-2 before:left-[7px] before:w-[1.5px] before:bg-border">
               {visibleActivities.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No activity yet.</p>
               ) : (
@@ -1032,31 +1075,6 @@ export function LeadDetail({
                 {showAllActivity ? "Show less" : "View all activity"}
               </button>
             )}
-            {showNote ? (
-              <div className="mt-3 space-y-2">
-                <Textarea rows={2} value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} placeholder="Log a note" className="text-sm" />
-                <div className="flex gap-2">
-                  <Button size="sm" className="h-8" disabled={!noteDraft.trim() || pending} onClick={() => {
-                    const text = noteDraft.trim();
-                    const row: LeadActivity = { id: `opt_${Date.now()}`, type: "note", summary: text, occurred_at: new Date().toISOString(), created_by: userId, author: { id: userId, full_name: "You" } };
-                    setOptimisticActivities((prev) => [row, ...prev]);
-                    setNoteDraft("");
-                    setShowNote(false);
-                    startTransition(async () => {
-                      const result = await addLeadActivity(optimisticLead.id, "note", text);
-                      if (result.ok) router.refresh();
-                      else {
-                        setOptimisticActivities(activities);
-                        toast.error(result.error ?? "Failed");
-                      }
-                    });
-                  }}>Save note</Button>
-                  <Button size="sm" variant="ghost" className="h-8" onClick={() => setShowNote(false)}>Cancel</Button>
-                </div>
-              </div>
-            ) : (
-              <button type="button" className="mt-3 text-[0.8rem] font-semibold text-[#8A6D2C]" onClick={() => setShowNote(true)}>Log a note</button>
-            )}
           </section>
         </div>
 
@@ -1070,6 +1088,8 @@ export function LeadDetail({
                   <span className="font-mono text-[0.86rem] text-primary">{formatDateTime(optimisticLead.next_follow_up_at)}</span>
                   {isOverdue(optimisticLead.next_follow_up_at) ? ". This follow-up is overdue." : ". Confirm or reschedule before it slips."}
                 </>
+              ) : slaClock?.overdue ? (
+                <>This lead is past the {currentStage?.name} SLA ({slaClock.dayNum} of {slaClock.sla} days). Set a follow-up now.</>
               ) : (
                 <>No follow-up is set — <b className="text-white">set one now</b>.</>
               )}
@@ -1126,7 +1146,7 @@ export function LeadDetail({
                     Mark done
                   </button>
                 ) : (
-                  <button type="button" className="inline-flex h-[42px] flex-1 items-center justify-center rounded-[10px] border border-white/25 text-[0.88rem] font-semibold text-[#EDEBE0] hover:border-white" onClick={() => setShowNote(true)}>
+                  <button type="button" className="inline-flex h-[42px] flex-1 items-center justify-center rounded-[10px] border border-white/25 text-[0.88rem] font-semibold text-[#EDEBE0] hover:border-white" onClick={focusNote}>
                     Add note
                   </button>
                 )}
@@ -1159,6 +1179,7 @@ export function LeadDetail({
               <span>0</span><span>Cold · Warm · Hot</span><span>100</span>
             </div>
             <div className="mt-4 border-t border-border/70">
+              <div className="flex justify-between border-b border-border/70 py-2.5 text-[0.84rem]"><span className="text-muted-foreground">Stage clock</span><b className={slaClock?.overdue ? "text-red-700" : undefined}>{slaClock ? `Day ${slaClock.dayNum} of ${slaClock.sla}` : "No SLA"}</b></div>
               <div className="flex justify-between border-b border-border/70 py-2.5 text-[0.84rem]"><span className="text-muted-foreground">Engagement</span><b>{engagement}</b></div>
               <div className="flex justify-between border-b border-border/70 py-2.5 text-[0.84rem]"><span className="text-muted-foreground">Last activity</span><b className="font-mono text-[0.8rem]">{timeAgo(lastTouch)}</b></div>
               <div className="flex justify-between border-b border-border/70 py-2.5 text-[0.84rem]"><span className="text-muted-foreground">First contact</span><b className="font-mono text-[0.8rem]">{formatDate(optimisticLead.created_at)}</b></div>

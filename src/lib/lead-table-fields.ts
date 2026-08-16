@@ -60,6 +60,7 @@ const LEAD_ROW_UDT = {
   first_responded_at: "timestamptz",
   last_activity_at: "timestamptz",
   last_inquiry_at: "timestamptz",
+  stage_entered_at: "timestamptz",
 } as const satisfies Record<keyof LeadRow, string>;
 
 export function fallbackLeadTableColumns(): LeadTableColumn[] {

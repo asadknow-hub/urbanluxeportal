@@ -46,7 +46,7 @@ export default async function LeadsBoardPage({
       .from("leads")
       .select(
         `id, name, phone, email, interest, budget_min, budget_max, preferred_areas,
-         stage_id, assigned_to, next_follow_up_at, created_at, updated_at, last_activity_at, tags,
+         stage_id, assigned_to, next_follow_up_at, created_at, updated_at, last_activity_at, stage_entered_at, tags,
          assigned_to_profile:profiles!leads_assigned_to_fkey(id, full_name, avatar_url)`,
         { count: "exact" }
       )

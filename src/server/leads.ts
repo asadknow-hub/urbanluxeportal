@@ -120,6 +120,7 @@ export async function createLead(
         tags: parsed.data.tags ?? [],
         custom: parsed.data.custom ?? {},
         last_activity_at: new Date().toISOString(),
+        stage_entered_at: new Date().toISOString(),
       })
       .select("id")
       .single();
@@ -197,12 +198,15 @@ export async function updateLeadStage(
       }
     }
 
-    // Update lead stage
+    const now = new Date().toISOString();
     const updateData: Record<string, unknown> = {
       stage_id: stageId,
-      updated_at: new Date().toISOString(),
-      last_activity_at: new Date().toISOString(),
+      updated_at: now,
+      last_activity_at: now,
     };
+    if (lead.stage_id !== stageId) {
+      updateData.stage_entered_at = now;
+    }
 
     // Map stage kind to legacy status for backward compat
     // Only use stage.kind (dynamic, DB-driven) — never match on stage names
@@ -1112,6 +1116,7 @@ export async function createLeadStage(
       sort: newSort,
       is_active: true,
       required_fields: [],
+      stale_after_days: 3,
     });
 
     if (error) return { ok: false, error: error.message };
@@ -1150,6 +1155,33 @@ export async function updateLeadStageName(
     const { error } = await supabase
       .from("lead_stages")
       .update(patch)
+      .eq("id", id);
+
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath("/leads");
+    revalidatePath("/settings/leads");
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function updateLeadStageSla(
+  id: string,
+  staleAfterDays: number | null
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    if (!["admin", "manager"].includes(user.role)) {
+      return { ok: false, error: "Not authorized" };
+    }
+
+    const supabase = createSupabaseServiceClient();
+    const { error } = await supabase
+      .from("lead_stages")
+      .update({ stale_after_days: staleAfterDays, updated_at: new Date().toISOString() })
       .eq("id", id);
 
     if (error) return { ok: false, error: error.message };

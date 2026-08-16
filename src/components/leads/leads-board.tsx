@@ -52,6 +52,7 @@ export type BoardLead = {
   created_at: string;
   updated_at: string;
   last_activity_at: string | null;
+  stage_entered_at: string | null;
   tags: string[];
   assigned_to_profile: { id: string; full_name: string; avatar_url: string | null } | null;
   duplicate?: boolean;
@@ -89,9 +90,9 @@ function timeAgo(dateStr: string | null): string {
 
 function isStale(lead: BoardLead, stage: LeadStage): boolean {
   if (!stage.stale_after_days) return false;
-  const ref = lead.last_activity_at ?? lead.updated_at;
+  const ref = lead.stage_entered_at ?? lead.created_at;
   const diff = (Date.now() - new Date(ref).getTime()) / (1000 * 60 * 60 * 24);
-  return diff > stage.stale_after_days;
+  return diff >= stage.stale_after_days;
 }
 
 function LeadCard({ lead, stage, isDragging }: { lead: BoardLead; stage: LeadStage; isDragging?: boolean }) {

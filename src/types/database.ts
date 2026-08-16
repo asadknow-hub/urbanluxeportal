@@ -214,6 +214,7 @@ export interface Database {
           first_responded_at: string | null;
           last_activity_at: string | null;
           last_inquiry_at: string | null;
+          stage_entered_at: string;
           import_batch_id: string | null;
           merged_into_id: string | null;
           tags: string[];
@@ -257,6 +258,7 @@ export interface Database {
           first_responded_at?: string | null;
           last_activity_at?: string | null;
           last_inquiry_at?: string | null;
+          stage_entered_at?: string;
           import_batch_id?: string | null;
           merged_into_id?: string | null;
           tags?: string[];

@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LeadsInflowClient, type LeadInflowTab } from "@/components/leads/leads-inflow-client";
 import { LeadFieldsWorkspace } from "@/components/leads/lead-fields-workspace";
+import { StageSlaEditor } from "@/components/leads/stage-sla-editor";
 import { fetchLeadTableColumns } from "@/server/lead-areas";
 import { ArrowRight, CalendarClock, CheckCircle2, Layers3, Settings2, Route, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -269,7 +270,7 @@ export default async function LeadsSettingsPage({
               <h2 className="text-base font-bold text-slate-900">Activation Stages</h2>
             </div>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {stages.map((stage: { id: string; name: string; color: string; kind: string; sort: number; helper_text: string | null; required_fields: unknown }) => (
+              {stages.map((stage: { id: string; name: string; color: string; kind: string; sort: number; helper_text: string | null; required_fields: unknown; stale_after_days: number | null }) => (
                 <div key={stage.id} className="rounded-xl border border-slate-100 bg-slate-50 p-4 hover:border-slate-200 hover:shadow-sm transition-all flex flex-col">
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -291,6 +292,7 @@ export default async function LeadsSettingsPage({
                         )) : <span className="text-xs text-slate-400 font-medium">None</span>}
                       </div>
                     </div>
+                    <StageSlaEditor stageId={stage.id} value={stage.stale_after_days} />
                     <div className="mt-3 flex items-center gap-2">
                       <span className="flex h-5 items-center justify-center rounded bg-emerald-100 px-2 text-[10px] font-bold text-emerald-700">{stageCountMap[stage.id] ?? 0}</span>
                       <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Leads in stage</span>
