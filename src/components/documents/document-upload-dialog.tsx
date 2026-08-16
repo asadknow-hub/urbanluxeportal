@@ -39,10 +39,12 @@ export function DocumentUploadDialog({
   triggerLabel = "Upload Document",
   entityType,
   entityId,
+  quiet = false,
 }: {
   triggerLabel?: string;
   entityType?: string;
   entityId?: string;
+  quiet?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -128,7 +130,12 @@ export function DocumentUploadDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={(props) => (
-          <Button {...props} className="bg-emerald-500 hover:bg-emerald-600 shadow-sm rounded-full px-6 font-medium">
+          <Button
+            {...props}
+            variant={quiet ? "outline" : "default"}
+            size={quiet ? "sm" : "default"}
+            className={quiet ? "h-8" : "bg-emerald-500 hover:bg-emerald-600 shadow-sm rounded-full px-6 font-medium"}
+          >
             <Plus className="mr-2 h-4 w-4" />
             {triggerLabel}
           </Button>

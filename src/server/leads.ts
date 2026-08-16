@@ -35,6 +35,7 @@ const leadSchema = z.object({
   next_follow_up_at: z.string().optional().nullable(),
   stage_id: z.string().min(1).optional().nullable(),
   language: z.string().optional().nullable(),
+  nationality: z.string().optional().nullable(),
   financing: z.string().optional().nullable(),
   timeframe: z.string().optional().nullable(),
   purpose: z.string().optional().nullable(),
@@ -110,6 +111,7 @@ export async function createLead(
         created_by: user.id,
         stage_id: stageId,
         language: parsed.data.language || null,
+        nationality: parsed.data.nationality || null,
         financing: parsed.data.financing || null,
         timeframe: parsed.data.timeframe || null,
         purpose: parsed.data.purpose || null,
@@ -327,6 +329,7 @@ export async function updateLead(
     });
 
     revalidatePath("/leads");
+    revalidatePath(`/leads/${id}`);
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
@@ -360,6 +363,7 @@ export async function convertLead(
         name: lead.name,
         phone: lead.phone,
         email: lead.email,
+        nationality: lead.nationality,
         notes: lead.notes,
         assigned_to: lead.assigned_to,
         created_by: user.id,
@@ -587,12 +591,28 @@ export async function scheduleFollowUp(
     if (!user) return { ok: false, error: "Unauthorized" };
 
     const supabase = createSupabaseServiceClient();
+    const now = new Date().toISOString();
+
+    await supabase
+      .from("lead_follow_ups")
+      .update({ status: "snoozed", updated_at: now })
+      .eq("lead_id", leadId)
+      .eq("status", "scheduled");
+
+    const { error: historyError } = await supabase.from("lead_follow_ups").insert({
+      lead_id: leadId,
+      scheduled_at: followUpAt,
+      status: "scheduled",
+      notes: notes || null,
+      created_by: user.id,
+    });
+    if (historyError) return { ok: false, error: historyError.message };
 
     const { error: leadError } = await supabase
       .from("leads")
       .update({
         next_follow_up_at: followUpAt,
-        updated_at: new Date().toISOString(),
+        updated_at: now,
       })
       .eq("id", leadId);
 
@@ -607,6 +627,7 @@ export async function scheduleFollowUp(
 
     revalidatePath("/leads");
     revalidatePath(`/leads/${leadId}`);
+    revalidatePath("/leads/followups");
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
@@ -622,13 +643,27 @@ export async function completeFollowUp(
     if (!user) return { ok: false, error: "Unauthorized" };
 
     const supabase = createSupabaseServiceClient();
+    const now = new Date().toISOString();
+
+    const doneUpdate: Record<string, unknown> = {
+      status: "done",
+      completed_at: now,
+      updated_at: now,
+    };
+    if (note?.trim()) doneUpdate.notes = note.trim();
+
+    await supabase
+      .from("lead_follow_ups")
+      .update(doneUpdate)
+      .eq("lead_id", leadId)
+      .eq("status", "scheduled");
 
     const { error: leadError } = await supabase
       .from("leads")
       .update({
         next_follow_up_at: null,
-        updated_at: new Date().toISOString(),
-        last_activity_at: new Date().toISOString(),
+        updated_at: now,
+        last_activity_at: now,
       })
       .eq("id", leadId);
 
@@ -669,12 +704,28 @@ export async function snoozeFollowUp(
     if (!user) return { ok: false, error: "Unauthorized" };
 
     const supabase = createSupabaseServiceClient();
+    const now = new Date().toISOString();
+
+    await supabase
+      .from("lead_follow_ups")
+      .update({ status: "snoozed", notes: note?.trim() || undefined, updated_at: now })
+      .eq("lead_id", leadId)
+      .eq("status", "scheduled");
+
+    const { error: historyError } = await supabase.from("lead_follow_ups").insert({
+      lead_id: leadId,
+      scheduled_at: followUpAt,
+      status: "scheduled",
+      notes: note?.trim() || "Snoozed",
+      created_by: user.id,
+    });
+    if (historyError) return { ok: false, error: historyError.message };
 
     const { error: leadError } = await supabase
       .from("leads")
       .update({
         next_follow_up_at: followUpAt,
-        updated_at: new Date().toISOString(),
+        updated_at: now,
       })
       .eq("id", leadId);
 

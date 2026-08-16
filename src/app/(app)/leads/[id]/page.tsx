@@ -72,6 +72,8 @@ export default async function LeadDetailPage({
     { data: agents },
     { data: documents },
     { data: areaRows },
+    { data: nationalityRows },
+    { data: followUpRows },
     { data: lostReasons },
     customerResult,
     dealResult,
@@ -101,6 +103,12 @@ export default async function LeadDetailPage({
       .is("deleted_at", null)
       .order("created_at", { ascending: false }),
     supabase.from("lead_areas").select("name").order("name"),
+    supabase.from("lead_nationalities").select("name").order("name"),
+    supabase
+      .from("lead_follow_ups")
+      .select("id, scheduled_at, completed_at, status, notes, created_at")
+      .eq("lead_id", id)
+      .order("scheduled_at", { ascending: false }),
     supabase
       .from("lost_reasons")
       .select("kind, label")
@@ -129,6 +137,8 @@ export default async function LeadDetailPage({
       agents={agents ?? []}
       stages={stages ?? []}
       areas={(areaRows ?? []).map((row) => row.name)}
+      nationalities={(nationalityRows ?? []).map((row) => row.name)}
+      followUps={followUpRows ?? []}
       customer={customer}
       deal={deal}
       documents={documents ?? []}

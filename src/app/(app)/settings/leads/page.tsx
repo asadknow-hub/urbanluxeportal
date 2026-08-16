@@ -59,7 +59,7 @@ export default async function LeadsSettingsPage({
   const tab: HubTab = isHubTab(params.tab) ? params.tab : "fields";
   const inflowTab: LeadInflowTab = tab === "mapping" ? "mapping" : "sources";
 
-  const [sourcesResult, stagesResult, routingResult, docsResult, reasonsResult, sourceStatsResult, leadStatsResult, areasResult, leadColumns] = await Promise.all([
+  const [sourcesResult, stagesResult, routingResult, docsResult, reasonsResult, sourceStatsResult, leadStatsResult, areasResult, nationalitiesResult, leadColumns] = await Promise.all([
     supabase.from("lead_sources").select("*").order("created_at", { ascending: false }),
     supabase.from("lead_stages").select("*").eq("is_active", true).order("sort", { ascending: true }),
     supabase.from("routing_rules").select("*").eq("is_active", true).order("sort", { ascending: true }),
@@ -68,6 +68,7 @@ export default async function LeadsSettingsPage({
     supabase.from("leads").select("source_id").not("source_id", "is", null),
     supabase.from("leads").select("stage_id").not("stage_id", "is", null),
     supabase.from("lead_areas").select("id, name").order("name"),
+    supabase.from("lead_nationalities").select("id, name").order("name"),
     fetchLeadTableColumns(),
   ]);
 
@@ -233,7 +234,11 @@ export default async function LeadsSettingsPage({
       )}
 
       {tab === "fields" && (
-        <LeadFieldsWorkspace areas={areasResult.data ?? []} initialField={params.field} />
+        <LeadFieldsWorkspace
+          areas={areasResult.data ?? []}
+          nationalities={nationalitiesResult.data ?? []}
+          initialField={params.field}
+        />
       )}
 
       {(tab === "sources" || tab === "mapping") && (

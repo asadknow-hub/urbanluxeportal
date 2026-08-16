@@ -10,21 +10,21 @@ export type LeadSnapshotField = {
 
 /** Fields shown on the lead detail snapshot — also the Fields tab in Lead Settings. */
 export const LEAD_SNAPSHOT_FIELDS: LeadSnapshotField[] = [
-  { key: "name", label: "Name", kind: "text", group: "Identity" },
-  { key: "phone", label: "Phone", kind: "text", group: "Identity" },
-  { key: "email", label: "Email", kind: "text", group: "Identity" },
-  { key: "language", label: "Language", kind: "text", group: "Identity" },
-  { key: "interest", label: "Interest", kind: "text", group: "Preference" },
-  { key: "budget_min", label: "Budget Min (AED)", kind: "money", group: "Preference" },
-  { key: "budget_max", label: "Budget Max (AED)", kind: "money", group: "Preference" },
-  { key: "preferred_areas", label: "Preferred Areas", kind: "areas", group: "Preference" },
-  { key: "financing", label: "Financing", kind: "text", group: "Preference" },
-  { key: "timeframe", label: "Timeframe", kind: "text", group: "Preference" },
-  { key: "purpose", label: "Purpose", kind: "text", group: "Preference" },
-  { key: "bedrooms", label: "Bedrooms", kind: "text", group: "Preference" },
-  { key: "category", label: "Category", kind: "text", group: "Preference" },
-  { key: "tags", label: "Tags", kind: "tags", group: "Preference" },
-  { key: "notes", label: "Notes", kind: "textarea", group: "Preference", span: "sm:col-span-2 xl:col-span-3" },
+  { key: "name", label: "Name", kind: "text", group: "Customer" },
+  { key: "phone", label: "WhatsApp", kind: "text", group: "Customer" },
+  { key: "email", label: "Email", kind: "text", group: "Customer" },
+  { key: "nationality", label: "Nationality", kind: "text", group: "Customer" },
+  { key: "preferred_areas", label: "Preferred Areas", kind: "areas", group: "Preferences" },
+  { key: "budget_min", label: "Budget Min (AED)", kind: "money", group: "Preferences" },
+  { key: "budget_max", label: "Budget Max (AED)", kind: "money", group: "Preferences" },
+  { key: "interest", label: "Interest", kind: "text", group: "Requirements" },
+  { key: "financing", label: "Financing", kind: "text", group: "Requirements" },
+  { key: "timeframe", label: "Timeframe", kind: "text", group: "Requirements" },
+  { key: "purpose", label: "Purpose", kind: "text", group: "Requirements" },
+  { key: "bedrooms", label: "Bedrooms", kind: "text", group: "Requirements" },
+  { key: "category", label: "Category", kind: "text", group: "Requirements" },
+  { key: "tags", label: "Tags", kind: "tags", group: "Requirements" },
+  { key: "notes", label: "Notes", kind: "textarea", group: "Requirements", span: "sm:col-span-2 xl:col-span-3" },
 ];
 
 export function snapshotFieldGroups() {

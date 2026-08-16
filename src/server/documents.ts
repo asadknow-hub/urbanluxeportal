@@ -63,6 +63,9 @@ export async function createDocument(
     });
 
     revalidatePath("/documents");
+    if (parsed.data.entity_type === "lead" && parsed.data.entity_id) {
+      revalidatePath(`/leads/${parsed.data.entity_id}`);
+    }
     return { ok: true, data: { id: data.id } };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };

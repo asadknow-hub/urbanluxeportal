@@ -203,6 +203,7 @@ export interface Database {
           phone_norm: string | null;
           email_norm: string | null;
           language: string | null;
+          nationality: string | null;
           financing: string | null;
           timeframe: string | null;
           purpose: string | null;
@@ -245,6 +246,7 @@ export interface Database {
           source_id?: string | null;
           external_ref?: string | null;
           language?: string | null;
+          nationality?: string | null;
           financing?: string | null;
           timeframe?: string | null;
           purpose?: string | null;
@@ -418,6 +420,42 @@ export interface Database {
           name: string;
         };
         Update: Partial<Database["public"]["Tables"]["lead_areas"]["Insert"]>;
+      };
+      lead_nationalities: {
+        Row: {
+          id: string;
+          name: string;
+          name_norm: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["lead_nationalities"]["Insert"]>;
+      };
+      lead_follow_ups: {
+        Row: {
+          id: string;
+          lead_id: string;
+          scheduled_at: string;
+          completed_at: string | null;
+          status: "scheduled" | "done" | "snoozed" | "skipped";
+          notes: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          lead_id: string;
+          scheduled_at: string;
+          completed_at?: string | null;
+          status?: "scheduled" | "done" | "snoozed" | "skipped";
+          notes?: string | null;
+          created_by?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["lead_follow_ups"]["Insert"]>;
       };
       lead_sources: {
         Row: {

@@ -47,9 +47,11 @@ const INTERESTS = [
 export function LeadCreateDialog({
   agents,
   areas,
+  nationalities,
 }: {
   agents: { id: string; full_name: string; role: string }[];
   areas: string[];
+  nationalities: string[];
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -65,7 +67,7 @@ export function LeadCreateDialog({
     notes: "",
     assigned_to: "",
     preferred_areas: [] as string[],
-    language: "en",
+    nationality: "",
     financing: "",
     timeframe: "",
     purpose: "",
@@ -91,7 +93,7 @@ export function LeadCreateDialog({
         preferred_areas: form.preferred_areas,
         notes: form.notes || null,
         assigned_to: form.assigned_to || null,
-        language: form.language || null,
+        nationality: form.nationality || null,
         financing: form.financing || null,
         timeframe: form.timeframe || null,
         purpose: form.purpose || null,
@@ -119,7 +121,7 @@ export function LeadCreateDialog({
           notes: "",
           assigned_to: "",
           preferred_areas: [],
-          language: "en",
+          nationality: "",
           financing: "",
           timeframe: "",
           purpose: "",
@@ -311,16 +313,13 @@ export function LeadCreateDialog({
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">Language</Label>
-                <Select value={form.language} onValueChange={(v) => set("language", v ?? "en")}>
-                  <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                <Label className="text-xs font-medium text-muted-foreground">Nationality</Label>
+                <Select value={form.nationality || undefined} onValueChange={(v) => set("nationality", v ?? "")}>
+                  <SelectTrigger className="h-11"><SelectValue placeholder="Select" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="ar">Arabic</SelectItem>
-                    <SelectItem value="ru">Russian</SelectItem>
-                    <SelectItem value="zh">Chinese</SelectItem>
-                    <SelectItem value="fr">French</SelectItem>
-                    <SelectItem value="hi">Hindi</SelectItem>
+                    {nationalities.map((item) => (
+                      <SelectItem key={item} value={item}>{item}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

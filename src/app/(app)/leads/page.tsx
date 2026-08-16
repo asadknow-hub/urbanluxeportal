@@ -139,7 +139,7 @@ export default async function LeadsBoardPage({
     };
   };
 
-  const [boardData, listData, agentsResult, areasResult] = await Promise.all([
+  const [boardData, listData, agentsResult, areasResult, nationalitiesResult] = await Promise.all([
     view === "board" ? fetchBoardData() : Promise.resolve(null),
     view === "list" ? fetchListData() : Promise.resolve(null),
     supabase
@@ -149,10 +149,12 @@ export default async function LeadsBoardPage({
       .eq("is_active", true)
       .order("full_name"),
     supabase.from("lead_areas").select("name").order("name"),
+    supabase.from("lead_nationalities").select("name").order("name"),
   ]);
 
   const agents = agentsResult.data ?? [];
   const areaNames = (areasResult.data ?? []).map((row) => row.name);
+  const nationalityNames = (nationalitiesResult.data ?? []).map((row) => row.name);
   const visibleLeads = boardData?.leads ?? [];
   const normalize = (value: string | null) => (value ?? "").trim().toLowerCase();
   const phoneCounts = new Map<string, number>();
@@ -206,7 +208,7 @@ export default async function LeadsBoardPage({
           {user.role !== "agent" && (
             <LeadsAgentFilter agents={agents} assigned={params.assigned} />
           )}
-          <LeadCreateDialog agents={agents} areas={areaNames} />
+          <LeadCreateDialog agents={agents} areas={areaNames} nationalities={nationalityNames} />
         </div>
       </div>
 

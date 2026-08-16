@@ -11,7 +11,7 @@ export type LeadTableField = {
   configurable: boolean;
 };
 
-export const CONFIGURABLE_LEAD_FIELDS = new Set(["preferred_areas"]);
+export const CONFIGURABLE_LEAD_FIELDS = new Set(["preferred_areas", "nationality"]);
 
 const LEAD_ROW_UDT = {
   id: "uuid",
@@ -21,6 +21,7 @@ const LEAD_ROW_UDT = {
   email: "text",
   email_norm: "text",
   language: "text",
+  nationality: "text",
   source: "lead_source",
   source_id: "uuid",
   campaign_id: "uuid",
@@ -92,7 +93,7 @@ function prettyType(column: LeadTableColumn) {
 }
 
 function groupFor(key: string) {
-  if (["id", "name", "phone", "phone_norm", "email", "email_norm", "language"].includes(key)) return "Identity";
+  if (["id", "name", "phone", "phone_norm", "email", "email_norm", "language", "nationality"].includes(key)) return "Identity";
   if (["source", "source_id", "campaign_id", "external_ref", "import_batch_id"].includes(key)) return "Origin";
   if (
     [

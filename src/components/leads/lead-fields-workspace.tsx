@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LeadAreasManager } from "@/components/leads/lead-areas-manager";
+import { LeadNationalitiesManager } from "@/components/leads/lead-nationalities-manager";
 import { LeadFieldDetailPlaceholder } from "@/components/leads/lead-field-detail";
 import { CONFIGURABLE_LEAD_FIELDS, type LeadTableField } from "@/lib/lead-table-fields";
 import { snapshotFieldGroups, type LeadSnapshotField } from "@/lib/lead-snapshot-fields";
@@ -20,9 +21,11 @@ function toTableField(field: LeadSnapshotField): LeadTableField {
 
 export function LeadFieldsWorkspace({
   areas,
+  nationalities,
   initialField,
 }: {
   areas: { id: string; name: string }[];
+  nationalities: { id: string; name: string }[];
   initialField?: string;
 }) {
   const router = useRouter();
@@ -81,6 +84,8 @@ export function LeadFieldsWorkspace({
       <div className="scrollbar-gold max-h-[calc(100dvh-7.5rem)] overflow-y-auto xl:sticky xl:top-16">
         {selectedKey === "preferred_areas" ? (
           <LeadAreasManager areas={areas} />
+        ) : selectedKey === "nationality" ? (
+          <LeadNationalitiesManager nationalities={nationalities} />
         ) : selected ? (
           <LeadFieldDetailPlaceholder field={toTableField(selected)} />
         ) : null}
