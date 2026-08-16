@@ -56,10 +56,9 @@ export default async function LeadsSettingsPage({
   const params = await searchParams;
   const tab: HubTab = isHubTab(params.tab) ? params.tab : "fields";
 
-  const [stagesResult, routingResult, reasonsResult, leadStatsResult, areasResult, nationalitiesResult, fieldOptionsResult, leadColumns] = await Promise.all([
+  const [stagesResult, routingResult, leadStatsResult, areasResult, nationalitiesResult, fieldOptionsResult, leadColumns] = await Promise.all([
     supabase.from("lead_stages").select("*").eq("is_active", true).order("sort", { ascending: true }),
     supabase.from("routing_rules").select("*").eq("is_active", true).order("sort", { ascending: true }),
-    supabase.from("lost_reasons").select("kind, label, sort").eq("is_active", true).order("sort", { ascending: true }),
     supabase.from("leads").select("stage_id").not("stage_id", "is", null),
     supabase.from("lead_areas").select("id, name").order("name"),
     supabase.from("lead_nationalities").select("id, name").order("name"),
@@ -69,13 +68,12 @@ export default async function LeadsSettingsPage({
 
   if (stagesResult.error) console.error("[settings/leads] stages query error:", stagesResult.error.message);
   if (routingResult.error) console.error("[settings/leads] routing query error:", routingResult.error.message);
-  if (reasonsResult.error) console.error("[settings/leads] reasons query error:", reasonsResult.error.message);
   if (leadStatsResult.error) console.error("[settings/leads] lead stats query error:", leadStatsResult.error.message);
 
+  const fieldOptions = groupLeadFieldOptions((fieldOptionsResult.data ?? []) as LeadFieldOption[]);
   const fieldCount = leadColumns.length;
   const stages = stagesResult.data ?? [];
   const routingRules = routingResult.data ?? [];
-  const lostReasons = reasonsResult.data ?? [];
 
   const stageCountMap: Record<string, number> = {};
   (leadStatsResult.data ?? []).forEach((row: { stage_id: string | null }) => {
@@ -210,7 +208,7 @@ export default async function LeadsSettingsPage({
         <LeadFieldsWorkspace
           areas={areasResult.data ?? []}
           nationalities={nationalitiesResult.data ?? []}
-          fieldOptions={groupLeadFieldOptions((fieldOptionsResult.data ?? []) as LeadFieldOption[])}
+          fieldOptions={fieldOptions}
           initialField={params.field}
         />
       )}
@@ -265,8 +263,8 @@ export default async function LeadsSettingsPage({
                 <div key={kind} className="rounded-xl border border-slate-100 bg-slate-50 p-4">
                   <p className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">{kind}</p>
                   <div className="flex flex-wrap gap-2">
-                    {lostReasons.filter((reason: { kind: string }) => reason.kind === kind).map((reason: { label: string; kind: string }) => (
-                      <span key={reason.label} className="rounded-full bg-white border border-slate-200/60 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm">
+                    {(kind === "lost" ? fieldOptions.lost_reason : fieldOptions.junk_reason)?.map((reason) => (
+                      <span key={reason.id} className="rounded-full bg-white border border-slate-200/60 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm">
                         {reason.label}
                       </span>
                     ))}

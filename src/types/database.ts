@@ -1,23 +1,6 @@
 export type UserRole = "admin" | "manager" | "agent" | "accountant";
 
-export type LeadSource =
-  | "website"
-  | "bayut"
-  | "property_finder"
-  | "dubizzle"
-  | "referral"
-  | "walk_in"
-  | "social"
-  | "other";
-
-export type LeadInterest = "buy" | "rent" | "sell" | "off_plan" | "commercial";
-
-export type LeadStatus =
-  | "new"
-  | "contacted"
-  | "qualified"
-  | "unqualified"
-  | "converted";
+export type LeadStatus = string;
 
 export type StageKind = "open" | "won" | "lost" | "junk";
 
@@ -1113,8 +1096,6 @@ export interface Database {
     };
     Enums: {
       user_role: UserRole;
-      lead_source: LeadSource;
-      lead_interest: LeadInterest;
       lead_status: LeadStatus;
       customer_type: CustomerType;
       deal_type: DealType;

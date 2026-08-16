@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PreferredAreasPicker } from "@/components/leads/preferred-areas-picker";
+import { OptionMultiPicker } from "@/components/leads/option-multi-picker";
 import { NationalityPicker } from "@/components/leads/nationality-picker";
 import { BlurSaveInput } from "@/components/leads/hover-edit-row";
 import { DocumentUploadDialog } from "@/components/documents/document-upload-dialog";
@@ -39,6 +40,8 @@ import { stageSlaClock } from "@/lib/lead-sla";
 import {
   choiceItems,
   optionLabel,
+  scoreBandForValue,
+  scoreFromBand,
   type LeadFieldOption,
 } from "@/lib/lead-field-options";
 import {
@@ -365,7 +368,6 @@ export function LeadDetail({
   customer,
   deal,
   documents,
-  lostReasons,
   userRole,
   userId,
 }: {
@@ -380,7 +382,6 @@ export function LeadDetail({
   customer: { id: string; name: string; phone: string | null; email: string | null } | null;
   deal: { id: string; title: string; stage: string; value: number; deal_type: string } | null;
   documents: DocumentRow[];
-  lostReasons: Record<string, string[]>;
   duplicateMatches: unknown[];
   userRole: string;
   userId: string;
@@ -422,7 +423,8 @@ export function LeadDetail({
   const canManage = userRole === "admin" || userRole === "manager";
   const canEdit = canManage || userRole === "agent";
   const score = optimisticLead.score ?? 0;
-  const temp = score >= 70 ? "Hot" : score >= 40 ? "Warm" : "Cold";
+  const scoreBand = scoreBandForValue(fieldOptions.score, score);
+  const scoreLegend = (fieldOptions.score ?? []).map((row) => row.label).join(" · ");
   const engagement = optimisticActivities.length >= 15 ? "High" : optimisticActivities.length >= 5 ? "Medium" : "Low";
   const budgetLine = formatAEDRange(optimisticLead.budget_min, optimisticLead.budget_max);
   const lastTouch = optimisticActivities[0]?.occurred_at ?? optimisticLead.last_activity_at ?? optimisticLead.updated_at;
@@ -635,7 +637,7 @@ export function LeadDetail({
                 </span>
               )}
               <span className="h-1 w-1 rounded-full bg-[#C4C1B6]" />
-              <span>{formatLabel(optimisticLead.source)}</span>
+              <span>{optionLabel(fieldOptions.source, optimisticLead.source)}</span>
               <span className="h-1 w-1 rounded-full bg-[#C4C1B6]" />
               <span>{optionLabel(fieldOptions.interest, optimisticLead.interest)}</span>
             </div>
@@ -1037,15 +1039,31 @@ export function LeadDetail({
 
                 <SnapshotBlock title="Notes">
                   <LedgerRow label="Tags" overlay>
-                    <QuietSaveInput
-                      value={(optimisticLead.tags ?? []).join(", ")}
+                    <FloatPicker
                       disabled={!canEdit}
-                      placeholder="Not captured"
-                      onSave={(next) => {
-                        const tags = next.split(",").map((tag) => tag.trim()).filter(Boolean);
-                        saveField({ tags }, { tags });
-                      }}
-                    />
+                      className="w-[20rem] p-3"
+                      trigger={
+                        <span className="block px-1 py-0.5 text-[0.86rem]">
+                          {(optimisticLead.tags ?? []).length ? (
+                            <span className="flex flex-wrap gap-1">
+                              {(optimisticLead.tags ?? []).map((tag) => (
+                                <span key={tag} className="rounded-full border border-border bg-muted px-2 py-0.5 text-[0.75rem] text-muted-foreground">
+                                  {optionLabel(fieldOptions.tags, tag)}
+                                </span>
+                              ))}
+                            </span>
+                          ) : emptyValue()}
+                        </span>
+                      }
+                    >
+                      {() => (
+                        <OptionMultiPicker
+                          value={optimisticLead.tags ?? []}
+                          options={choiceItems(fieldOptions.tags)}
+                          onChange={(tags) => saveField({ tags }, { tags }, false)}
+                        />
+                      )}
+                    </FloatPicker>
                   </LedgerRow>
                   <LedgerRow
                     label="Notes"
@@ -1217,7 +1235,9 @@ export function LeadDetail({
           <section className="rounded-[14px] border border-border bg-card px-[26px] py-6">
             <div className="flex items-baseline justify-between">
               <h2 className="font-heading text-[1.12rem]" style={{ fontFamily: "var(--font-display), serif" }}>Lead score</h2>
-              <span className="rounded-full border border-[#D6E0E9] bg-[#E9EEF3] px-3 py-1 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[#44607A]">{temp}</span>
+              {scoreBand ? (
+                <span className="rounded-full border border-[#D6E0E9] bg-[#E9EEF3] px-3 py-1 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[#44607A]">{scoreBand.label}</span>
+              ) : null}
             </div>
             <div className="mt-3.5 font-heading text-[2.6rem] leading-none" style={{ fontFamily: "var(--font-display), serif" }}>
               {score}<small className="ml-1 font-sans text-base text-muted-foreground">/ 100</small>
@@ -1226,8 +1246,27 @@ export function LeadDetail({
               <i className="block h-full rounded-[3px] bg-linear-to-r from-primary to-[#8A6D2C]" style={{ width: `${Math.min(100, score)}%` }} />
             </div>
             <div className="mt-2 flex justify-between font-mono text-[0.68rem] text-muted-foreground">
-              <span>0</span><span>Cold · Warm · Hot</span><span>100</span>
+              <span>0</span><span>{scoreLegend || "Set bands in Lead Settings"}</span><span>100</span>
             </div>
+            {(fieldOptions.score ?? []).length > 0 && canEdit ? (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {(fieldOptions.score ?? []).map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    className={`rounded-full border px-2.5 py-1 text-[0.72rem] font-medium ${
+                      scoreBand?.id === opt.id ? "border-primary bg-primary/10 text-foreground" : "border-border text-muted-foreground hover:border-foreground"
+                    }`}
+                    onClick={() => {
+                      const next = scoreFromBand(opt);
+                      saveField({ score: next }, { score: next });
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
             <div className="mt-4 border-t border-border/70">
               <div className="border-b border-border/70 py-2.5 text-[0.84rem]">
                 <div className="flex justify-between gap-3">
@@ -1311,8 +1350,8 @@ export function LeadDetail({
           <Select value={selectedReason} onValueChange={(v) => setSelectedReason(v ?? "")}>
             <SelectTrigger className="h-9"><SelectValue placeholder="Select a reason" /></SelectTrigger>
             <SelectContent>
-              {(lostReasons[reasonDialog?.kind ?? ""] ?? []).map((reason) => (
-                <SelectItem key={reason} value={reason}>{reason}</SelectItem>
+              {(reasonDialog?.kind === "junk" ? choiceItems(fieldOptions.junk_reason) : choiceItems(fieldOptions.lost_reason)).map((reason) => (
+                <SelectItem key={reason.value} value={reason.value}>{reason.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>

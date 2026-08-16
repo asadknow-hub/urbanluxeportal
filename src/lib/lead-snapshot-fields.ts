@@ -23,8 +23,11 @@ export const LEAD_SNAPSHOT_FIELDS: LeadSnapshotField[] = [
   { key: "budget", label: "Budget", kind: "options", group: "Financing" },
   { key: "financing", label: "Financing", kind: "options", group: "Financing" },
   { key: "timeframe", label: "Timeframe", kind: "options", group: "Financing" },
-  { key: "tags", label: "Tags", kind: "tags", group: "Notes" },
+  { key: "tags", label: "Tags", kind: "options", group: "Notes" },
   { key: "notes", label: "Notes", kind: "textarea", group: "Notes", span: "sm:col-span-2 xl:col-span-3" },
+  { key: "score", label: "Score bands", kind: "options", group: "Scoring" },
+  { key: "lost_reason", label: "Lost reason", kind: "options", group: "Pipeline" },
+  { key: "junk_reason", label: "Junk reason", kind: "options", group: "Pipeline" },
   { key: "doc_category", label: "Document category", kind: "options", group: "Documents" },
 ];
 

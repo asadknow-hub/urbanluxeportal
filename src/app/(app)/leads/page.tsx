@@ -17,7 +17,6 @@ export default async function LeadsBoardPage({
 }: {
   searchParams: Promise<{
     view?: string;
-    status?: string;
     source?: string;
     assigned?: string;
     q?: string;
@@ -95,9 +94,6 @@ export default async function LeadsBoardPage({
       query = query.or(`assigned_to.eq.${user.id},assigned_to.is.null`);
     }
 
-    if (params.status && params.status !== "all") {
-      query = query.eq("status", params.status);
-    }
     if (params.source && params.source !== "all") {
       query = query.eq("source", params.source);
     }
@@ -154,6 +150,7 @@ export default async function LeadsBoardPage({
     supabase.from("lead_field_options").select("id, field_key, value, label, sort, extra").order("sort").order("label"),
   ]);
 
+  const groupedOptions = groupLeadFieldOptions((fieldOptionsResult.data ?? []) as LeadFieldOption[]);
   const agents = agentsResult.data ?? [];
   const areaNames = (areasResult.data ?? []).map((row) => row.name);
   const nationalityNames = (nationalitiesResult.data ?? []).map((row) => row.name);
@@ -214,7 +211,7 @@ export default async function LeadsBoardPage({
             agents={agents}
             areas={areaNames}
             nationalities={nationalityNames}
-            fieldOptions={groupLeadFieldOptions((fieldOptionsResult.data ?? []) as LeadFieldOption[])}
+            fieldOptions={groupedOptions}
           />
         </div>
       </div>
@@ -225,6 +222,7 @@ export default async function LeadsBoardPage({
           leads={boardData?.leads ?? []}
           duplicateLeadIds={duplicateLeadIds}
           userRole={user.role}
+          fieldOptions={groupedOptions}
         />
       ) : (
         <LeadsTable
@@ -233,6 +231,7 @@ export default async function LeadsBoardPage({
           stages={listData?.stages ?? []}
           currentFilters={params}
           userRole={user.role}
+          fieldOptions={groupedOptions}
         />
       )}
     </div>

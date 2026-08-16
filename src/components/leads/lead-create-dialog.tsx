@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PreferredAreasPicker } from "@/components/leads/preferred-areas-picker";
+import { OptionMultiPicker } from "@/components/leads/option-multi-picker";
+import { choiceItems, type LeadFieldOption } from "@/lib/lead-field-options";
 import {
   Select,
   SelectContent,
@@ -22,7 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createLead } from "@/server/leads";
-import { type LeadFieldOption } from "@/lib/lead-field-options";
 import { toast } from "sonner";
 import { Plus, Loader2 } from "lucide-react";
 
@@ -66,6 +67,7 @@ export function LeadCreateDialog({
     purpose: "",
     bedrooms: "",
     category: "",
+    tags: [] as string[],
   });
 
   function set<K extends keyof typeof form>(key: K, value: string) {
@@ -92,7 +94,7 @@ export function LeadCreateDialog({
         purpose: form.purpose || null,
         bedrooms: form.bedrooms || null,
         category: form.category || null,
-        tags: [],
+        tags: form.tags,
         custom: {},
       });
       if (result.ok) {
@@ -120,6 +122,7 @@ export function LeadCreateDialog({
           purpose: "",
           bedrooms: "",
           category: "",
+          tags: [],
         });
       } else {
         toast.error(result.error ?? "Failed to create lead");
@@ -339,6 +342,19 @@ export function LeadCreateDialog({
               onChange={(next) => setForm((prev) => ({ ...prev, preferred_areas: next }))}
             />
           </div>
+
+          {(fieldOptions.tags ?? []).length > 0 && (
+            <div className="rounded-xl border border-border bg-muted/40 p-5">
+              <Label className="text-xs font-medium text-muted-foreground">Tags</Label>
+              <div className="mt-2">
+                <OptionMultiPicker
+                  value={form.tags}
+                  options={choiceItems(fieldOptions.tags)}
+                  onChange={(next) => setForm((prev) => ({ ...prev, tags: next }))}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Notes */}
           <div className="space-y-1.5">

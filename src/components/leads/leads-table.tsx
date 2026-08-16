@@ -11,13 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getStatusColor } from "@/lib/status-colors";
-import { leadInterestPillClass } from "@/lib/lead-format";
-import { cn } from "@/lib/utils";
 import { whatsappLink } from "@/lib/phone";
 import { formatAEDRange } from "@/lib/money";
 import { formatDate } from "@/lib/dates";
 import { bulkAssignLeads } from "@/server/leads";
+import { optionLabel, scoreBandForValue, type LeadFieldOption } from "@/lib/lead-field-options";
 import { toast } from "sonner";
 import { MessageCircle, Loader2, UserCog, Search } from "lucide-react";
 import { FilterBar } from "@/components/primitives/filter-bar";
@@ -37,25 +35,7 @@ export type LeadRow = {
   assigned_to: string | null;
   assigned_to_profile: { id: string; full_name: string; avatar_url: string | null } | null;
   created_at: string;
-};
-
-const SOURCE_LABELS: Record<string, string> = {
-  website: "Website",
-  bayut: "Bayut",
-  property_finder: "Property Finder",
-  dubizzle: "Dubizzle",
-  referral: "Referral",
-  walk_in: "Walk-in",
-  social: "Social",
-  other: "Other",
-};
-
-const INTEREST_LABELS: Record<string, string> = {
-  buy: "Buy",
-  rent: "Rent",
-  sell: "Sell",
-  off_plan: "Off Plan",
-  commercial: "Commercial",
+  stage_id: string | null;
 };
 
 export function LeadsTable({
@@ -64,12 +44,14 @@ export function LeadsTable({
   stages,
   currentFilters,
   userRole,
+  fieldOptions,
 }: {
   leads: LeadRow[];
   agents: { id: string; full_name: string; role: string }[];
   stages?: { id: string; name: string; color: string }[];
-  currentFilters: { status?: string; source?: string; assigned?: string; q?: string; stage?: string };
+  currentFilters: { source?: string; assigned?: string; q?: string; stage?: string };
   userRole: string;
+  fieldOptions: Record<string, LeadFieldOption[]>;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -127,23 +109,6 @@ export function LeadsTable({
     <div className="space-y-4">
       {/* Filters */}
       <FilterBar>
-        <Select
-          value={currentFilters.status ?? "all"}
-          onValueChange={(v) => updateFilter("status", v ?? "all")}
-        >
-          <SelectTrigger className="w-32">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent className="rounded-lg">
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="new">New</SelectItem>
-            <SelectItem value="contacted">Contacted</SelectItem>
-            <SelectItem value="qualified">Qualified</SelectItem>
-            <SelectItem value="unqualified">Unqualified</SelectItem>
-            <SelectItem value="converted">Converted</SelectItem>
-          </SelectContent>
-        </Select>
-
         {stages && stages.length > 0 && (
           <Select
             value={currentFilters.stage ?? "all"}
@@ -172,9 +137,9 @@ export function LeadsTable({
           </SelectTrigger>
           <SelectContent className="rounded-lg">
             <SelectItem value="all">All Sources</SelectItem>
-            {Object.entries(SOURCE_LABELS).map(([key, label]) => (
-              <SelectItem key={key} value={key}>
-                {label}
+            {(fieldOptions.source ?? []).map((row) => (
+              <SelectItem key={row.value} value={row.value}>
+                {row.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -249,7 +214,7 @@ export function LeadsTable({
                 <th className="px-5 py-2.5">Source</th>
                 <th className="px-5 py-2.5">Interest</th>
                 <th className="px-5 py-2.5">Budget</th>
-                <th className="px-5 py-2.5">Status</th>
+                <th className="px-5 py-2.5">Stage</th>
                 <th className="px-5 py-2.5">Score</th>
                 <th className="px-5 py-2.5">Agent</th>
                 <th className="px-5 py-2.5">Follow-up</th>
@@ -268,9 +233,10 @@ export function LeadsTable({
                 </tr>
               ) : (
                 leads.map((lead) => {
-                  const colors = getStatusColor(lead.status);
                   const waLink = whatsappLink(lead.phone);
                   const isSelected = selectedIds.has(lead.id);
+                  const stage = stages?.find((row) => row.id === lead.stage_id);
+                  const band = scoreBandForValue(fieldOptions.score, lead.score);
                   return (
                     <tr
                       key={lead.id}
@@ -307,11 +273,11 @@ export function LeadsTable({
                         )}
                       </td>
                       <td className="px-5 py-2 text-slate-600 font-medium">
-                        {SOURCE_LABELS[lead.source] ?? lead.source}
+                        {optionLabel(fieldOptions.source, lead.source)}
                       </td>
                       <td className="px-5 py-2">
-                        <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium", leadInterestPillClass(lead.interest))}>
-                          {INTEREST_LABELS[lead.interest] ?? lead.interest}
+                        <span className="inline-flex rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-secondary-foreground">
+                          {optionLabel(fieldOptions.interest, lead.interest)}
                         </span>
                       </td>
                       <td className="px-5 py-2 text-slate-600">
@@ -319,15 +285,16 @@ export function LeadsTable({
                       </td>
                       <td className="px-5 py-2">
                         <Link href={`/leads/${lead.id}`}>
-                          <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${colors.bg} ${colors.text} ring-1 ring-inset ${colors.border}`}>
-                            {lead.status}
+                          <span className="inline-flex rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground">
+                            {stage?.name ?? "—"}
                           </span>
                         </Link>
                       </td>
                       <td className="px-5 py-2">
                         {lead.score !== null ? (
-                          <span className={`inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-medium ${lead.score >= 70 ? "bg-primary/15 text-primary" : lead.score >= 40 ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
                             {lead.score}
+                            {band ? <span className="text-muted-foreground">· {band.label}</span> : null}
                           </span>
                         ) : (
                           <span className="text-slate-300">—</span>

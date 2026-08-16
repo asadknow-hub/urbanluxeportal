@@ -76,7 +76,6 @@ export default async function LeadDetailPage({
     { data: nationalityRows },
     { data: fieldOptionRows },
     { data: followUpRows },
-    { data: lostReasons },
     customerResult,
     dealResult,
   ] = await Promise.all([
@@ -112,11 +111,6 @@ export default async function LeadDetailPage({
       .select("id, scheduled_at, completed_at, status, notes, created_at")
       .eq("lead_id", id)
       .order("scheduled_at", { ascending: false }),
-    supabase
-      .from("lost_reasons")
-      .select("kind, label")
-      .eq("is_active", true)
-      .order("sort"),
     lead.converted_customer_id
       ? supabase.from("customers").select("id, name, phone, email").eq("id", lead.converted_customer_id).single()
       : Promise.resolve({ data: null, error: null }),
@@ -124,11 +118,6 @@ export default async function LeadDetailPage({
       ? supabase.from("deals").select("id, title, stage, value, deal_type").eq("id", lead.converted_deal_id).single()
       : Promise.resolve({ data: null, error: null }),
   ]);
-
-  const lostReasonsByKind = (lostReasons ?? []).reduce<Record<string, string[]>>((acc, r) => {
-    (acc[r.kind] ??= []).push(r.label);
-    return acc;
-  }, {});
 
   const customer = customerResult?.data ?? null;
   const deal = dealResult?.data ?? null;
@@ -146,7 +135,6 @@ export default async function LeadDetailPage({
       customer={customer}
       deal={deal}
       documents={documents ?? []}
-      lostReasons={lostReasonsByKind}
       duplicateMatches={duplicateMatches.data ?? []}
       userRole={user.role}
       userId={user.id}

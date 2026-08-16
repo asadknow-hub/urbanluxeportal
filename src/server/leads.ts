@@ -316,6 +316,7 @@ const leadUpdateSchema = z.object({
   bedrooms: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
   tags: z.array(z.string()).optional(),
+  score: z.number().int().min(0).max(100).nullable().optional(),
   custom: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -813,8 +814,7 @@ export async function updateLeadStatus(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const validStatuses = ["new", "contacted", "qualified", "unqualified", "converted"];
-    if (!validStatuses.includes(status)) {
+    if (!status.trim()) {
       return { ok: false, error: "Invalid status" };
     }
 

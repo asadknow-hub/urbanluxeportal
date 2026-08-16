@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { parseAreaNames } from "@/lib/parse-area-list";
 import {
   isLeadOptionField,
+  isRangeOptionField,
   slugifyOptionValue,
   type LeadOptionFieldKey,
 } from "@/lib/lead-field-options";
@@ -28,7 +29,7 @@ export async function mergeLeadFieldOptions(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
     if (!canManage(user.role)) return { ok: false, error: "Not authorized" };
-    if (!isLeadOptionField(fieldKey) || fieldKey === "budget") {
+    if (!isLeadOptionField(fieldKey) || isRangeOptionField(fieldKey)) {
       return { ok: false, error: "This field cannot be pasted as a name list" };
     }
 
@@ -78,7 +79,7 @@ export async function mergeLeadFieldOptions(
 
 export async function addLeadFieldOption(
   fieldKey: string,
-  input: { label: string; minAed?: string; maxAed?: string }
+  input: { label: string; minAed?: string; maxAed?: string; minScore?: string; maxScore?: string }
 ): Promise<ActionResult> {
   try {
     const user = await getCurrentUser();
@@ -112,6 +113,22 @@ export async function addLeadFieldOption(
         label,
         sort,
         extra: { min_fils, max_fils },
+      });
+      if (error) return { ok: false, error: error.message };
+    } else if (fieldKey === "score") {
+      const min = Number(input.minScore);
+      const max = Number(input.maxScore);
+      if (!Number.isFinite(min) || !Number.isFinite(max) || min < 0 || max > 100 || max < min) {
+        return { ok: false, error: "Enter a valid score range between 0 and 100" };
+      }
+      const value = slugifyOptionValue(input.label) || `${min}_${max}`;
+      const label = input.label.trim() || `${min} – ${max}`;
+      const { error } = await supabase.from("lead_field_options").insert({
+        field_key: fieldKey,
+        value,
+        label,
+        sort,
+        extra: { min_score: min, max_score: max },
       });
       if (error) return { ok: false, error: error.message };
     } else {

@@ -8,6 +8,10 @@ export const LEAD_OPTION_FIELD_KEYS = [
   "financing",
   "budget",
   "doc_category",
+  "tags",
+  "score",
+  "lost_reason",
+  "junk_reason",
 ] as const;
 
 export type LeadOptionFieldKey = (typeof LEAD_OPTION_FIELD_KEYS)[number];
@@ -63,4 +67,30 @@ export function budgetBandForRange(
       return Number(extra.min_fils) === Number(minFils) && Number(extra.max_fils) === Number(maxFils);
     }) ?? null
   );
+}
+
+export function scoreBandForValue(options: LeadFieldOption[] | undefined, score: number | null | undefined) {
+  if (score == null || !options?.length) return null;
+  return (
+    options.find((row) => {
+      const extra = row.extra ?? {};
+      const min = Number(extra.min_score);
+      const max = Number(extra.max_score);
+      return Number.isFinite(min) && Number.isFinite(max) && score >= min && score <= max;
+    }) ?? null
+  );
+}
+
+export function scoreFromBand(option: LeadFieldOption) {
+  const extra = option.extra ?? {};
+  const min = Number(extra.min_score);
+  const max = Number(extra.max_score);
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return 0;
+  return Math.round((min + max) / 2);
+}
+
+export const RANGE_OPTION_KEYS = ["budget", "score"] as const;
+
+export function isRangeOptionField(key: string) {
+  return (RANGE_OPTION_KEYS as readonly string[]).includes(key);
 }

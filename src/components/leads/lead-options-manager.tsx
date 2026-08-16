@@ -28,7 +28,7 @@ export function LeadOptionsManager({
   title: string;
   description: string;
   options: LeadFieldOption[];
-  kind?: "list" | "budget";
+  kind?: "list" | "budget" | "score";
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -36,6 +36,9 @@ export function LeadOptionsManager({
   const [single, setSingle] = useState("");
   const [minAed, setMinAed] = useState("");
   const [maxAed, setMaxAed] = useState("");
+  const [minScore, setMinScore] = useState("");
+  const [maxScore, setMaxScore] = useState("");
+  const [bandLabel, setBandLabel] = useState("");
 
   function run(action: () => Promise<ActionResult>, success: string) {
     startTransition(async () => {
@@ -46,6 +49,9 @@ export function LeadOptionsManager({
         setSingle("");
         setMinAed("");
         setMaxAed("");
+        setMinScore("");
+        setMaxScore("");
+        setBandLabel("");
         router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
@@ -109,6 +115,35 @@ export function LeadOptionsManager({
               </Button>
             </div>
           </>
+        ) : kind === "score" ? (
+          <div className="grid grid-cols-[1fr_1fr_1fr_auto] items-end gap-2">
+            <div className="space-y-2">
+              <Label className="text-xs">Name</Label>
+              <Input value={bandLabel} onChange={(e) => setBandLabel(e.target.value)} className="h-9" placeholder="Hot" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Min score</Label>
+              <Input value={minScore} onChange={(e) => setMinScore(e.target.value)} type="number" className="h-9" placeholder="70" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Max score</Label>
+              <Input value={maxScore} onChange={(e) => setMaxScore(e.target.value)} type="number" className="h-9" placeholder="100" />
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              className="h-9"
+              disabled={pending || !minScore.trim() || !maxScore.trim()}
+              onClick={() =>
+                run(
+                  () => addLeadFieldOption(fieldKey, { label: bandLabel, minScore, maxScore }),
+                  "Score band added"
+                )
+              }
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         ) : (
           <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
             <div className="space-y-2">
@@ -147,7 +182,11 @@ export function LeadOptionsManager({
           <ul className="max-h-[28rem] space-y-1 overflow-y-auto">
             {options.map((row) => (
               <li key={row.id} className="flex items-center justify-between gap-2 rounded-md px-1 py-1.5">
-                <span className="truncate text-sm">{row.label}</span>
+                <span className="truncate text-sm">
+                  {kind === "score"
+                    ? `${row.label} (${Number(row.extra?.min_score)}–${Number(row.extra?.max_score)})`
+                    : row.label}
+                </span>
                 <button
                   type="button"
                   className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"

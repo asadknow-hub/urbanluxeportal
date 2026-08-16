@@ -23,6 +23,10 @@ export const CONFIGURABLE_LEAD_FIELDS = new Set([
   "financing",
   "timeframe",
   "doc_category",
+  "tags",
+  "score",
+  "lost_reason",
+  "junk_reason",
 ]);
 
 const LEAD_ROW_UDT = {
@@ -52,7 +56,7 @@ const LEAD_ROW_UDT = {
   custom: "jsonb",
   stage_id: "uuid",
   pipeline_id: "uuid",
-  status: "lead_status",
+  status: "text",
   assigned_to: "uuid",
   score: "int4",
   score_reason: "text",
@@ -77,11 +81,7 @@ const LEAD_ROW_UDT = {
 export function fallbackLeadTableColumns(): LeadTableColumn[] {
   return Object.entries(LEAD_ROW_UDT).map(([column_name, udt_name], index) => ({
     column_name,
-    data_type: udt_name.startsWith("_")
-      ? "ARRAY"
-      : udt_name === "lead_status"
-        ? "USER-DEFINED"
-        : "text",
+    data_type: udt_name.startsWith("_") ? "ARRAY" : "text",
     udt_name,
     ordinal_position: index + 1,
   }));

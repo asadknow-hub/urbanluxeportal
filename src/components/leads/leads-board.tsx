@@ -18,8 +18,8 @@ import { toast } from "sonner";
 import { AlertCircle, MoreHorizontal, Plus, Edit3, Trash2, User as UserIcon } from "lucide-react";
 import { updateLeadStage, createLeadStage, updateLeadStageName, deleteLeadStage } from "@/server/leads";
 import { cn } from "@/lib/utils";
-import { formatLeadInterest, formatLeadTag, leadInterestPillClass } from "@/lib/lead-format";
 import { formatAEDRange } from "@/lib/money";
+import { optionLabel, type LeadFieldOption } from "@/lib/lead-field-options";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -95,12 +95,22 @@ function isStale(lead: BoardLead, stage: LeadStage): boolean {
   return diff >= stage.stale_after_days;
 }
 
-function LeadCard({ lead, stage, isDragging }: { lead: BoardLead; stage: LeadStage; isDragging?: boolean }) {
+function LeadCard({
+  lead,
+  stage,
+  isDragging,
+  fieldOptions = {},
+}: {
+  lead: BoardLead;
+  stage: LeadStage;
+  isDragging?: boolean;
+  fieldOptions?: Record<string, LeadFieldOption[]>;
+}) {
   const stale = isStale(lead, stage);
   const budget = formatAEDRange(lead.budget_min, lead.budget_max);
   const area = lead.preferred_areas?.[0];
   const extraAreas = (lead.preferred_areas?.length ?? 0) - 1;
-  const interestLabel = lead.interest ? formatLeadInterest(lead.interest) : null;
+  const interestLabel = lead.interest ? optionLabel(fieldOptions.interest, lead.interest) : null;
   const tags = (lead.tags ?? []).filter((tag) => tag.toLowerCase() !== (lead.interest ?? "").toLowerCase()).slice(0, 1);
 
   return (
@@ -129,7 +139,7 @@ function LeadCard({ lead, stage, isDragging }: { lead: BoardLead; stage: LeadSta
 
       <div className="mt-1 flex flex-wrap items-center gap-1">
         {interestLabel && (
-          <span className={cn("rounded-full px-1.5 py-px text-[10px] font-medium", leadInterestPillClass(lead.interest))}>
+          <span className="rounded-full bg-secondary px-1.5 py-px text-[10px] font-medium text-secondary-foreground">
             {interestLabel}
           </span>
         )}
@@ -142,7 +152,7 @@ function LeadCard({ lead, stage, isDragging }: { lead: BoardLead; stage: LeadSta
         </p>
       )}
       {tags.length > 0 && (
-        <p className="truncate text-[11px] text-muted-foreground">{formatLeadTag(tags[0])}</p>
+        <p className="truncate text-[11px] text-muted-foreground">{optionLabel(fieldOptions.tags, tags[0])}</p>
       )}
 
       <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
@@ -172,7 +182,15 @@ function LeadCard({ lead, stage, isDragging }: { lead: BoardLead; stage: LeadSta
   );
 }
 
-function DraggableLeadCard({ lead, stage }: { lead: BoardLead; stage: LeadStage }) {
+function DraggableLeadCard({
+  lead,
+  stage,
+  fieldOptions,
+}: {
+  lead: BoardLead;
+  stage: LeadStage;
+  fieldOptions?: Record<string, LeadFieldOption[]>;
+}) {
   const router = useRouter();
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: lead.id,
@@ -206,7 +224,7 @@ function DraggableLeadCard({ lead, stage }: { lead: BoardLead; stage: LeadStage 
       }}
       onClick={handleClick}
     >
-      <LeadCard lead={lead} stage={stage} isDragging={isDragging} />
+      <LeadCard lead={lead} stage={stage} isDragging={isDragging} fieldOptions={fieldOptions} />
     </div>
   );
 }
@@ -215,10 +233,12 @@ function StageColumn({
   stage,
   leads,
   roundedStart,
+  fieldOptions,
 }: {
   stage: LeadStage;
   leads: BoardLead[];
   roundedStart?: boolean;
+  fieldOptions?: Record<string, LeadFieldOption[]>;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
   const color = getColor(stage.color);
@@ -308,7 +328,7 @@ function StageColumn({
           </div>
         )}
         {leads.map((lead) => (
-          <DraggableLeadCard key={lead.id} lead={lead} stage={stage} />
+          <DraggableLeadCard key={lead.id} lead={lead} stage={stage} fieldOptions={fieldOptions} />
         ))}
       </div>
       
@@ -392,11 +412,13 @@ export function LeadsBoard({
   stages,
   leads,
   duplicateLeadIds = [],
+  fieldOptions = {},
 }: {
   stages: LeadStage[];
   leads: BoardLead[];
   duplicateLeadIds?: string[];
   userRole: string;
+  fieldOptions?: Record<string, LeadFieldOption[]>;
 }) {
   const router = useRouter();
   const [activeLead, setActiveLead] = useState<{ lead: BoardLead; stage: LeadStage } | null>(null);
@@ -504,6 +526,7 @@ export function LeadsBoard({
                 tags: lead.tags ?? [],
                 duplicate: duplicateSet.has(lead.id),
               }))}
+              fieldOptions={fieldOptions}
             />
           ))}
           
@@ -522,7 +545,7 @@ export function LeadsBoard({
         <DragOverlay>
           {activeLead ? (
             <div className="rotate-3 opacity-90">
-              <LeadCard lead={activeLead.lead} stage={activeLead.stage} />
+              <LeadCard lead={activeLead.lead} stage={activeLead.stage} fieldOptions={fieldOptions} />
             </div>
           ) : null}
         </DragOverlay>
