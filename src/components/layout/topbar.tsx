@@ -21,6 +21,10 @@ import { breadcrumbsFor } from "@/lib/nav";
 import type { SessionUser } from "@/lib/auth";
 import type { UserRole } from "@/lib/permissions";
 
+function isRecordId(label: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(label);
+}
+
 export function Topbar({ user }: { user: SessionUser }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -52,7 +56,15 @@ export function Topbar({ user }: { user: SessionUser }) {
                 {crumb.label}
               </Link>
             ) : (
-              <span className={i === crumbs.length - 1 ? "truncate font-medium text-foreground" : "truncate text-muted-foreground"}>
+              <span
+                className={
+                  i === crumbs.length - 1
+                    ? isRecordId(crumb.label)
+                      ? "truncate font-normal text-muted-foreground/55"
+                      : "truncate font-medium text-foreground"
+                    : "truncate text-muted-foreground"
+                }
+              >
                 {crumb.label}
               </span>
             )}
