@@ -25,7 +25,6 @@ const leadSchema = z.object({
   assigned_to: z.string().min(1).optional().nullable(),
   next_follow_up_at: z.string().optional().nullable(),
   stage_id: z.string().min(1).optional().nullable(),
-  language: z.string().optional().nullable(),
   nationality: z.string().optional().nullable(),
   financing: z.string().optional().nullable(),
   timeframe: z.string().optional().nullable(),
@@ -33,7 +32,6 @@ const leadSchema = z.object({
   bedrooms: z.string().optional().nullable(),
   category: z.string().optional().nullable(),
   tags: z.array(z.string()).optional().default([]),
-  custom: z.record(z.string(), z.unknown()).optional().default({}),
 });
 
 export async function createLead(
@@ -101,7 +99,6 @@ export async function createLead(
         next_follow_up_at: parsed.data.next_follow_up_at || null,
         created_by: user.id,
         stage_id: stageId,
-        language: parsed.data.language || null,
         nationality: parsed.data.nationality || null,
         financing: parsed.data.financing || null,
         timeframe: parsed.data.timeframe || null,
@@ -109,7 +106,6 @@ export async function createLead(
         bedrooms: parsed.data.bedrooms || null,
         category: parsed.data.category || null,
         tags: parsed.data.tags ?? [],
-        custom: parsed.data.custom ?? {},
         last_activity_at: new Date().toISOString(),
         stage_entered_at: new Date().toISOString(),
       })
@@ -308,7 +304,6 @@ const leadUpdateSchema = z.object({
   assigned_to: z.string().nullable().optional(),
   next_follow_up_at: z.string().nullable().optional(),
   stage_id: z.string().nullable().optional(),
-  language: z.string().nullable().optional(),
   nationality: z.string().nullable().optional(),
   financing: z.string().nullable().optional(),
   timeframe: z.string().nullable().optional(),
@@ -317,7 +312,6 @@ const leadUpdateSchema = z.object({
   category: z.string().nullable().optional(),
   tags: z.array(z.string()).optional(),
   score: z.number().int().min(0).max(100).nullable().optional(),
-  custom: z.record(z.string(), z.unknown()).optional(),
 });
 
 function fieldLabel(key: string) {

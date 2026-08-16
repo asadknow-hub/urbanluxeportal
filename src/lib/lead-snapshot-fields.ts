@@ -8,12 +8,17 @@ export type LeadSnapshotField = {
   span?: string;
 };
 
-/** Fields shown on the lead detail snapshot — also the Fields tab in Lead Settings. */
+/**
+ * Single CRM catalog for leads.
+ * Lead Settings → Fields lists these.
+ * Lead detail / create read and write these (plus workflow chrome: stage, assignee, follow-up).
+ * Do not add a lead CRM attribute anywhere else without adding it here first.
+ */
 export const LEAD_SNAPSHOT_FIELDS: LeadSnapshotField[] = [
   { key: "name", label: "Name", kind: "text", group: "Contact" },
   { key: "phone", label: "WhatsApp", kind: "text", group: "Contact" },
   { key: "email", label: "Email", kind: "text", group: "Contact" },
-  { key: "nationality", label: "Nationality", kind: "text", group: "Contact" },
+  { key: "nationality", label: "Nationality", kind: "options", group: "Contact" },
   { key: "source", label: "Source", kind: "options", group: "Contact" },
   { key: "interest", label: "Interest", kind: "options", group: "Tastes" },
   { key: "category", label: "Category", kind: "options", group: "Tastes" },
@@ -25,7 +30,7 @@ export const LEAD_SNAPSHOT_FIELDS: LeadSnapshotField[] = [
   { key: "timeframe", label: "Timeframe", kind: "options", group: "Financing" },
   { key: "tags", label: "Tags", kind: "options", group: "Notes" },
   { key: "notes", label: "Notes", kind: "textarea", group: "Notes", span: "sm:col-span-2 xl:col-span-3" },
-  { key: "score", label: "Score bands", kind: "options", group: "Scoring" },
+  { key: "score", label: "Score", kind: "options", group: "Scoring" },
   { key: "lost_reason", label: "Lost reason", kind: "options", group: "Pipeline" },
   { key: "junk_reason", label: "Junk reason", kind: "options", group: "Pipeline" },
   { key: "doc_category", label: "Document category", kind: "options", group: "Documents" },

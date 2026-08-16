@@ -66,7 +66,9 @@ export function LeadFieldsWorkspace({
       <div className="flex max-h-[calc(100dvh-7.5rem)] flex-col overflow-hidden rounded-xl border border-border bg-card">
         <div className="shrink-0 border-b border-border px-4 py-3">
           <h2 className="text-sm font-medium text-foreground">Lead fields</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">Same fields as the lead detail page.</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            One catalog for CRM leads. Options here power lead detail and add lead.
+          </p>
         </div>
         <div className="scrollbar-gold min-h-0 flex-1 overflow-y-auto py-2">
           {groups.map((group) => (

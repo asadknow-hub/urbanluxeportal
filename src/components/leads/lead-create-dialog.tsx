@@ -95,7 +95,6 @@ export function LeadCreateDialog({
         bedrooms: form.bedrooms || null,
         category: form.category || null,
         tags: form.tags,
-        custom: {},
       });
       if (result.ok) {
         toast.success("Lead created");

@@ -172,7 +172,6 @@ export interface Database {
           notes: string | null;
           status: LeadStatus;
           score: number | null;
-          score_reason: string | null;
           assigned_to: string | null;
           next_follow_up_at: string | null;
           converted_customer_id: string | null;
@@ -182,28 +181,17 @@ export interface Database {
           updated_at: string;
           deleted_at: string | null;
           stage_id: string | null;
-          custom: Record<string, unknown>;
-          campaign_id: string | null;
-          external_ref: string | null;
           phone_norm: string | null;
           email_norm: string | null;
-          language: string | null;
           nationality: string | null;
           financing: string | null;
           timeframe: string | null;
           purpose: string | null;
           bedrooms: string | null;
           category: string | null;
-          no_show_count: number;
-          first_response_due_at: string | null;
-          first_responded_at: string | null;
           last_activity_at: string | null;
-          last_inquiry_at: string | null;
           stage_entered_at: string;
-          import_batch_id: string | null;
-          merged_into_id: string | null;
           tags: string[];
-          pipeline_id: string | null;
           lost_reason: string | null;
           junk_reason: string | null;
         };
@@ -220,33 +208,21 @@ export interface Database {
           notes?: string | null;
           status?: LeadStatus;
           score?: number | null;
-          score_reason?: string | null;
           assigned_to?: string | null;
           next_follow_up_at?: string | null;
           converted_customer_id?: string | null;
           converted_deal_id?: string | null;
           created_by?: string | null;
           stage_id?: string | null;
-          custom?: Record<string, unknown>;
-          campaign_id?: string | null;
-          external_ref?: string | null;
-          language?: string | null;
           nationality?: string | null;
           financing?: string | null;
           timeframe?: string | null;
           purpose?: string | null;
           bedrooms?: string | null;
           category?: string | null;
-          no_show_count?: number;
-          first_response_due_at?: string | null;
-          first_responded_at?: string | null;
           last_activity_at?: string | null;
-          last_inquiry_at?: string | null;
           stage_entered_at?: string;
-          import_batch_id?: string | null;
-          merged_into_id?: string | null;
           tags?: string[];
-          pipeline_id?: string | null;
           lost_reason?: string | null;
           junk_reason?: string | null;
         };
@@ -461,22 +437,6 @@ export interface Database {
           created_by?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["lead_follow_ups"]["Insert"]>;
-      };
-      lost_reasons: {
-        Row: {
-          id: string;
-          kind: string;
-          label: string;
-          sort: number;
-          is_active: boolean;
-        };
-        Insert: {
-          kind: string;
-          label: string;
-          sort?: number;
-          is_active?: boolean;
-        };
-        Update: Partial<Database["public"]["Tables"]["lost_reasons"]["Insert"]>;
       };
       saved_filters: {
         Row: {

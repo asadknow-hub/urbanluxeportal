@@ -11,6 +11,7 @@ export type LeadTableField = {
   configurable: boolean;
 };
 
+/** Fields whose option lists are managed in Lead Settings → Fields. */
 export const CONFIGURABLE_LEAD_FIELDS = new Set([
   "preferred_areas",
   "nationality",
@@ -29,6 +30,7 @@ export const CONFIGURABLE_LEAD_FIELDS = new Set([
   "junk_reason",
 ]);
 
+/** Live `leads` columns after dropping silent/unused fields. */
 const LEAD_ROW_UDT = {
   id: "uuid",
   name: "text",
@@ -36,12 +38,8 @@ const LEAD_ROW_UDT = {
   phone_norm: "text",
   email: "text",
   email_norm: "text",
-  language: "text",
   nationality: "text",
   source: "text",
-  campaign_id: "uuid",
-  external_ref: "text",
-  import_batch_id: "uuid",
   interest: "text",
   budget_min: "int8",
   budget_max: "int8",
@@ -53,28 +51,20 @@ const LEAD_ROW_UDT = {
   timeframe: "text",
   tags: "_text",
   notes: "text",
-  custom: "jsonb",
   stage_id: "uuid",
-  pipeline_id: "uuid",
   status: "text",
   assigned_to: "uuid",
   score: "int4",
-  score_reason: "text",
   next_follow_up_at: "timestamptz",
-  no_show_count: "int4",
   lost_reason: "text",
   junk_reason: "text",
-  merged_into_id: "uuid",
   converted_customer_id: "uuid",
   converted_deal_id: "uuid",
   created_by: "uuid",
   created_at: "timestamptz",
   updated_at: "timestamptz",
   deleted_at: "timestamptz",
-  first_response_due_at: "timestamptz",
-  first_responded_at: "timestamptz",
   last_activity_at: "timestamptz",
-  last_inquiry_at: "timestamptz",
   stage_entered_at: "timestamptz",
 } as const satisfies Record<keyof LeadRow, string>;
 
@@ -105,8 +95,8 @@ function prettyType(column: LeadTableColumn) {
 }
 
 function groupFor(key: string) {
-  if (["id", "name", "phone", "phone_norm", "email", "email_norm", "language", "nationality"].includes(key)) return "Identity";
-  if (["source", "source_id", "campaign_id", "external_ref", "import_batch_id"].includes(key)) return "Origin";
+  if (["id", "name", "phone", "phone_norm", "email", "email_norm", "nationality"].includes(key)) return "Identity";
+  if (["source"].includes(key)) return "Origin";
   if (
     [
       "interest",
@@ -120,26 +110,11 @@ function groupFor(key: string) {
       "timeframe",
       "tags",
       "notes",
-      "custom",
     ].includes(key)
   ) {
     return "Preference";
   }
-  if (
-    [
-      "stage_id",
-      "pipeline_id",
-      "status",
-      "assigned_to",
-      "score",
-      "score_reason",
-      "next_follow_up_at",
-      "no_show_count",
-      "lost_reason",
-      "junk_reason",
-      "merged_into_id",
-    ].includes(key)
-  ) {
+  if (["stage_id", "status", "assigned_to", "score", "next_follow_up_at", "lost_reason", "junk_reason"].includes(key)) {
     return "Pipeline";
   }
   if (["converted_customer_id", "converted_deal_id"].includes(key)) return "Conversion";

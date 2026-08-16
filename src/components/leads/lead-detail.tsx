@@ -81,7 +81,6 @@ type Lead = {
   notes: string | null;
   status: string;
   score: number | null;
-  score_reason: string | null;
   assigned_to: string | null;
   next_follow_up_at: string | null;
   converted_customer_id: string | null;

@@ -9,12 +9,11 @@ export function LeadFieldDetailPlaceholder({ field }: { field: LeadTableField })
       </div>
       <div className="space-y-3 px-4 py-5">
         <p className="text-sm text-muted-foreground">
-          This field is stored on every lead as <span className="font-mono text-foreground">{field.type}</span>.
-          A managed options list has not been attached yet.
+          Free-text field on the lead. Agents edit it on the lead detail page. Stored as{" "}
+          <span className="font-mono text-foreground">{field.type}</span>.
         </p>
         <p className="text-sm text-muted-foreground">
-          Click <span className="font-medium text-foreground">Preferred Areas</span> on the left to edit a live list
-          (Excel, paste, or one-by-one). Other fields will get the same treatment when you need them.
+          Picklists (Source, Interest, Tags, and so on) are managed from the matching item in this same Fields list.
         </p>
       </div>
     </div>
