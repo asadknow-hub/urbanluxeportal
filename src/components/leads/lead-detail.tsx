@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PreferredAreasPicker } from "@/components/leads/preferred-areas-picker";
 import { NationalityPicker } from "@/components/leads/nationality-picker";
 import { BlurSaveInput, BudgetRangeEditor } from "@/components/leads/hover-edit-row";
@@ -216,6 +217,28 @@ function IconBtn({
   );
 }
 
+function FloatPicker({
+  trigger,
+  children,
+  className,
+  disabled,
+}: {
+  trigger: React.ReactNode;
+  children: (close: () => void) => React.ReactNode;
+  className?: string;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen} modal={false}>
+      <PopoverTrigger disabled={disabled} className="rounded-md text-left hover:bg-muted/70 disabled:cursor-default">
+        {trigger}
+      </PopoverTrigger>
+      <PopoverContent className={className}>{children(() => setOpen(false))}</PopoverContent>
+    </Popover>
+  );
+}
+
 function LedgerRow({
   label,
   editing,
@@ -223,18 +246,22 @@ function LedgerRow({
   onEdit,
   children,
   display,
+  overlay = false,
 }: {
   label: string;
-  editing: boolean;
-  canEdit: boolean;
-  onEdit: () => void;
-  display: React.ReactNode;
+  editing?: boolean;
+  canEdit?: boolean;
+  onEdit?: () => void;
+  display?: React.ReactNode;
   children?: React.ReactNode;
+  overlay?: boolean;
 }) {
   return (
     <div className="grid grid-cols-1 items-baseline gap-1 border-b border-border/70 py-2.5 last:border-b-0 sm:grid-cols-[170px_1fr] sm:gap-4">
       <span className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{label}</span>
-      {editing ? (
+      {overlay ? (
+        <div className="min-w-0">{children}</div>
+      ) : editing ? (
         <div>{children}</div>
       ) : (
         <button
@@ -513,16 +540,25 @@ export function LeadDetail({
                   <span className="font-mono text-[0.82rem]">{budgetLine ?? "Add budget"}</span>
                 </button>
               )}
-              {editing === "preferred_areas" ? (
-                <div className="min-w-[16rem] flex-1">
-                  <PreferredAreasPicker areas={areas} value={optimisticLead.preferred_areas ?? []} onChange={(value) => saveField({ preferred_areas: value }, { preferred_areas: value }, false)} label="" description="" />
-                </div>
-              ) : (
-                <button type="button" disabled={!canEdit} onClick={() => setEditing("preferred_areas")} className="flex items-center gap-1.5 rounded-md px-1 hover:bg-muted/70 disabled:cursor-default">
-                  <MapPin className="h-[15px] w-[15px]" />
-                  {optimisticLead.preferred_areas?.length ? optimisticLead.preferred_areas.join(" · ") : "Add areas"}
-                </button>
-              )}
+              <FloatPicker
+                disabled={!canEdit}
+                className="w-[20rem] p-3"
+                trigger={
+                  <span className="flex items-center gap-1.5 px-1 hover:bg-muted/70">
+                    <MapPin className="h-[15px] w-[15px]" />
+                    {optimisticLead.preferred_areas?.length ? optimisticLead.preferred_areas.join(" · ") : "Add areas"}
+                  </span>
+                }
+              >
+                {() => (
+                  <PreferredAreasPicker
+                    compact
+                    areas={areas}
+                    value={optimisticLead.preferred_areas ?? []}
+                    onChange={(value) => saveField({ preferred_areas: value }, { preferred_areas: value }, false)}
+                  />
+                )}
+              </FloatPicker>
               {editing === "phone" ? (
                 <BlurSaveInput
                   value={optimisticLead.phone ?? ""}
@@ -728,31 +764,55 @@ export function LeadDetail({
                   </Select>
                 </div>
               </LedgerRow>
-              <LedgerRow
-                label="Preferred areas"
-                editing={editing === "preferred_areas"}
-                canEdit={canEdit}
-                onEdit={() => setEditing("preferred_areas")}
-                display={
-                  optimisticLead.preferred_areas?.length ? (
-                    <span className="flex flex-wrap gap-1.5">
-                      {optimisticLead.preferred_areas.map((area) => (
-                        <span key={area} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[0.8rem] text-muted-foreground">{area}</span>
-                      ))}
+              <LedgerRow label="Preferred areas" overlay>
+                <FloatPicker
+                  disabled={!canEdit}
+                  className="w-[20rem] p-3"
+                  trigger={
+                    <span className="block rounded-md px-1 py-0.5 text-[0.9rem] hover:bg-muted/70">
+                      {optimisticLead.preferred_areas?.length ? (
+                        <span className="flex flex-wrap gap-1.5">
+                          {optimisticLead.preferred_areas.map((area) => (
+                            <span key={area} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[0.8rem] text-muted-foreground">{area}</span>
+                          ))}
+                        </span>
+                      ) : emptyValue()}
                     </span>
-                  ) : emptyValue()
-                }
-              >
-                <PreferredAreasPicker areas={areas} value={optimisticLead.preferred_areas ?? []} onChange={(value) => saveField({ preferred_areas: value }, { preferred_areas: value }, false)} label="" description="" />
+                  }
+                >
+                  {() => (
+                    <PreferredAreasPicker
+                      compact
+                      areas={areas}
+                      value={optimisticLead.preferred_areas ?? []}
+                      onChange={(value) => saveField({ preferred_areas: value }, { preferred_areas: value }, false)}
+                    />
+                  )}
+                </FloatPicker>
               </LedgerRow>
-              <LedgerRow
-                label="Nationality"
-                editing={editing === "nationality"}
-                canEdit={canEdit}
-                onEdit={() => setEditing("nationality")}
-                display={optimisticLead.nationality || emptyValue()}
-              >
-                <NationalityPicker value={optimisticLead.nationality ?? ""} options={nationalities} autoFocus onCancel={() => setEditing(null)} onChange={(next) => saveField({ nationality: next || null }, { nationality: next || null })} />
+              <LedgerRow label="Nationality" overlay>
+                <FloatPicker
+                  disabled={!canEdit}
+                  className="w-[18rem] p-2"
+                  trigger={
+                    <span className="block rounded-md px-1 py-0.5 text-[0.9rem] hover:bg-muted/70">
+                      {optimisticLead.nationality || emptyValue()}
+                    </span>
+                  }
+                >
+                  {(close) => (
+                    <NationalityPicker
+                      value={optimisticLead.nationality ?? ""}
+                      options={nationalities}
+                      autoFocus
+                      onCancel={close}
+                      onChange={(next) => {
+                        saveField({ nationality: next || null }, { nationality: next || null });
+                        close();
+                      }}
+                    />
+                  )}
+                </FloatPicker>
               </LedgerRow>
               {([
                 ["bedrooms", BEDROOM_OPTIONS],

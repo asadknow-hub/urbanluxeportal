@@ -14,6 +14,7 @@ export function PreferredAreasPicker({
   label = "Preferred Areas",
   description = "Search and select one or more Dubai communities.",
   className,
+  compact = false,
 }: {
   value: string[];
   onChange: (next: string[]) => void;
@@ -21,6 +22,7 @@ export function PreferredAreasPicker({
   label?: string;
   description?: string;
   className?: string;
+  compact?: boolean;
 }) {
   const [search, setSearch] = useState("");
   const selected = new Set(value);
@@ -46,12 +48,14 @@ export function PreferredAreasPicker({
 
   return (
     <div className={cn("space-y-2", className)}>
-      <div className="space-y-1">
-        <Label className="text-xs font-medium">{label}</Label>
-        <p className="text-xs text-muted-foreground">{description}</p>
-      </div>
+      {!compact && (label || description) && (
+        <div className="space-y-1">
+          {label ? <Label className="text-xs font-medium">{label}</Label> : null}
+          {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
+        </div>
+      )}
 
-      <div className="rounded-xl border border-border bg-card p-3">
+      <div className={cn(!compact && "rounded-xl border border-border bg-card p-3")}>
         <div className="flex flex-wrap gap-2">
           {value.length > 0 ? (
             value.map((area) => (
@@ -86,7 +90,7 @@ export function PreferredAreasPicker({
           />
         </div>
 
-        <ScrollArea className="mt-3 h-52 rounded-xl border border-border bg-muted/40">
+        <ScrollArea className={cn("mt-3 rounded-xl border border-border bg-muted/40", compact ? "h-44" : "h-52")}>
           <div className="grid gap-1 p-2">
             {areas.length === 0 ? (
               <div className="px-3 py-8 text-center text-sm text-muted-foreground">
