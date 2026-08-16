@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef } from "react";
+import { useState, useTransition, useRef, type ReactNode } from "react";
 import {
   Dialog,
   DialogContent,
@@ -40,11 +40,13 @@ export function DocumentUploadDialog({
   entityType,
   entityId,
   quiet = false,
+  trigger,
 }: {
   triggerLabel?: string;
   entityType?: string;
   entityId?: string;
   quiet?: boolean;
+  trigger?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -129,17 +131,23 @@ export function DocumentUploadDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
-        render={(props) => (
-          <Button
-            {...props}
-            variant={quiet ? "outline" : "default"}
-            size={quiet ? "sm" : "default"}
-            className={quiet ? "h-8" : "bg-emerald-500 hover:bg-emerald-600 shadow-sm rounded-full px-6 font-medium"}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            {triggerLabel}
-          </Button>
-        )}
+        render={(props) =>
+          trigger ? (
+            <button type="button" {...props} className="border-0 bg-transparent p-0 text-left">
+              {trigger}
+            </button>
+          ) : (
+            <Button
+              {...props}
+              variant={quiet ? "outline" : "default"}
+              size={quiet ? "sm" : "default"}
+              className={quiet ? "h-8" : "bg-emerald-500 hover:bg-emerald-600 shadow-sm rounded-full px-6 font-medium"}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {triggerLabel}
+            </Button>
+          )
+        }
       />
       <DialogContent 
         className="max-w-2xl w-[95vw] sm:w-[90vw] md:w-[60vw] max-h-[90vh] overflow-y-auto p-0 border-0 rounded-[1.5rem] shadow-2xl"
