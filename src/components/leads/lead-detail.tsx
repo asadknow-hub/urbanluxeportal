@@ -166,6 +166,7 @@ const INTEREST_OPTIONS = [
   { value: "off_plan", label: "Off-plan" },
   { value: "commercial", label: "Commercial" },
 ];
+const SOURCE_OPTIONS = ["website", "bayut", "property_finder", "dubizzle", "referral", "walk_in", "social", "other"];
 const CATEGORY_OPTIONS = ["apartment", "villa", "townhouse", "penthouse", "plot", "commercial", "off_plan"];
 const FINANCING_OPTIONS = ["cash", "mortgage", "pre_approved", "undecided"];
 const TIMEFRAME_OPTIONS = ["immediate", "1_month", "3_months", "6_months", "12_months"];
@@ -239,6 +240,62 @@ function FloatPicker({
   );
 }
 
+function SnapshotBlock({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="border-t border-border/80 pt-2.5 first:border-t-0 first:pt-0">
+      <p className="mb-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[#8A6D2C]">{title}</p>
+      <div>{children}</div>
+    </div>
+  );
+}
+
+function ChoicePicker({
+  value,
+  options,
+  disabled,
+  placeholder = "Not captured",
+  onChange,
+}: {
+  value?: string | null;
+  options: { value: string; label: string }[] | string[];
+  disabled?: boolean;
+  placeholder?: string;
+  onChange: (value: string) => void;
+}) {
+  const items = options.map((opt) => (typeof opt === "string" ? { value: opt, label: formatLabel(opt) } : opt));
+  return (
+    <FloatPicker
+      disabled={disabled}
+      className="w-52 p-1.5"
+      trigger={
+        <span className="block px-1 py-0.5 text-[0.86rem]">
+          {value ? items.find((opt) => opt.value === value)?.label ?? formatLabel(value) : emptyValue(placeholder)}
+        </span>
+      }
+    >
+      {(close) => (
+        <div className="grid gap-0.5">
+          {items.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              className={`rounded-md px-2.5 py-1.5 text-left text-[0.84rem] hover:bg-muted ${
+                opt.value === value ? "bg-[#F5EEDC] text-[#8A6D2C]" : "text-foreground"
+              }`}
+              onClick={() => {
+                onChange(opt.value);
+                close();
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </FloatPicker>
+  );
+}
+
 function LedgerRow({
   label,
   editing,
@@ -257,8 +314,8 @@ function LedgerRow({
   overlay?: boolean;
 }) {
   return (
-    <div className="grid grid-cols-1 items-baseline gap-1 border-b border-border/70 py-2.5 last:border-b-0 sm:grid-cols-[170px_1fr] sm:gap-4">
-      <span className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{label}</span>
+    <div className="grid grid-cols-1 items-center gap-0.5 border-b border-border/50 py-[7px] last:border-b-0 sm:grid-cols-[132px_1fr] sm:gap-3">
+      <span className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{label}</span>
       {overlay ? (
         <div className="min-w-0">{children}</div>
       ) : editing ? (
@@ -268,7 +325,7 @@ function LedgerRow({
           type="button"
           disabled={!canEdit}
           onClick={onEdit}
-          className="rounded-md px-1 py-0.5 text-left text-[0.9rem] text-foreground hover:bg-muted/70 disabled:cursor-default"
+          className="rounded-md px-1 py-0.5 text-left text-[0.86rem] text-foreground hover:bg-muted/70 disabled:cursor-default"
         >
           {display}
         </button>
@@ -693,167 +750,215 @@ export function LeadDetail({
 
       <div className="grid grid-cols-1 items-start gap-[18px] xl:grid-cols-[1fr_360px]">
         <div className="flex min-w-0 flex-col gap-[18px]">
-          <section className="rounded-[14px] border border-border bg-card px-[26px] py-6">
-            <div className="mb-1 flex items-baseline justify-between">
-              <div>
-                <h2 className="font-heading text-[1.12rem]" style={{ fontFamily: "var(--font-display), serif" }}>Lead snapshot</h2>
-                <p className="mt-0.5 text-[0.8rem] text-muted-foreground">Requirements and preferences on record</p>
-              </div>
-              {canEdit && (
-                <button type="button" className="rounded-md px-2 py-1 text-[0.8rem] font-semibold text-[#8A6D2C] hover:bg-[#F5EEDC]" onClick={() => setEditing("budget")}>
-                  Edit
-                </button>
-              )}
+          <section className="rounded-[14px] border border-border bg-card px-[22px] py-5">
+            <div className="mb-3">
+              <h2 className="font-heading text-[1.12rem]" style={{ fontFamily: "var(--font-display), serif" }}>Lead snapshot</h2>
+              <p className="mt-0.5 text-[0.8rem] text-muted-foreground">Click any value to update</p>
             </div>
-            <div className="mt-3.5">
-              <LedgerRow
-                label="Budget"
-                editing={editing === "budget"}
-                canEdit={canEdit}
-                onEdit={() => setEditing("budget")}
-                display={budgetLine ? <span className="font-mono text-[0.85rem]">{formatAED(optimisticLead.budget_min)} – {optimisticLead.budget_max ? formatAED(optimisticLead.budget_max).replace(/^AED\s/, "") : "—"}</span> : emptyValue()}
-              >
-                <BudgetRangeEditor
-                  minAed={optimisticLead.budget_min ? String(optimisticLead.budget_min / 100) : ""}
-                  maxAed={optimisticLead.budget_max ? String(optimisticLead.budget_max / 100) : ""}
-                  onCancel={() => setEditing(null)}
-                  onSave={(min, max) => saveField({ budget_min: toFils(min), budget_max: toFils(max) }, { budget_min: toFils(min), budget_max: toFils(max) })}
-                />
-              </LedgerRow>
-              <LedgerRow
-                label="Phone"
-                editing={editing === "phone"}
-                canEdit={canEdit}
-                onEdit={() => setEditing("phone")}
-                display={optimisticLead.phone || emptyValue()}
-              >
-                <BlurSaveInput value={optimisticLead.phone ?? ""} onCancel={() => setEditing(null)} onSave={(next) => saveField({ phone: next.trim() || null }, { phone: next.trim() || null })} />
-              </LedgerRow>
-              <LedgerRow
-                label="Email"
-                editing={editing === "email"}
-                canEdit={canEdit}
-                onEdit={() => setEditing("email")}
-                display={optimisticLead.email || emptyValue()}
-              >
-                <BlurSaveInput type="email" value={optimisticLead.email ?? ""} onCancel={() => setEditing(null)} onSave={(next) => saveField({ email: next.trim() || null }, { email: next.trim() || null })} />
-              </LedgerRow>
-              <LedgerRow
-                label="Interest"
-                editing={editing === "interest"}
-                canEdit={canEdit}
-                onEdit={() => setEditing("interest")}
-                display={formatLeadInterest(optimisticLead.interest) + (optimisticLead.category ? ` ${formatLabel(optimisticLead.category)}` : "")}
-              >
-                <div className="flex gap-2">
-                  <Select value={optimisticLead.interest} onValueChange={(v) => { if (v) saveField({ interest: v }, { interest: v }); }}>
-                    <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {INTEREST_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={optimisticLead.category ?? undefined} onValueChange={(v) => saveField({ category: v || null }, { category: v || null })}>
-                    <SelectTrigger className="h-8"><SelectValue placeholder="Category" /></SelectTrigger>
-                    <SelectContent>
-                      {CATEGORY_OPTIONS.map((opt) => (
-                        <SelectItem key={opt} value={opt}>{formatLabel(opt)}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </LedgerRow>
-              <LedgerRow label="Preferred areas" overlay>
-                <FloatPicker
-                  disabled={!canEdit}
-                  className="w-[20rem] p-3"
-                  trigger={
-                    <span className="block rounded-md px-1 py-0.5 text-[0.9rem] hover:bg-muted/70">
-                      {optimisticLead.preferred_areas?.length ? (
-                        <span className="flex flex-wrap gap-1.5">
-                          {optimisticLead.preferred_areas.map((area) => (
-                            <span key={area} className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-[0.8rem] text-muted-foreground">{area}</span>
-                          ))}
-                        </span>
-                      ) : emptyValue()}
-                    </span>
-                  }
-                >
-                  {() => (
-                    <PreferredAreasPicker
-                      compact
-                      areas={areas}
-                      value={optimisticLead.preferred_areas ?? []}
-                      onChange={(value) => saveField({ preferred_areas: value }, { preferred_areas: value }, false)}
-                    />
-                  )}
-                </FloatPicker>
-              </LedgerRow>
-              <LedgerRow label="Nationality" overlay>
-                <FloatPicker
-                  disabled={!canEdit}
-                  className="w-[18rem] p-2"
-                  trigger={
-                    <span className="block rounded-md px-1 py-0.5 text-[0.9rem] hover:bg-muted/70">
-                      {optimisticLead.nationality || emptyValue()}
-                    </span>
-                  }
-                >
-                  {(close) => (
-                    <NationalityPicker
-                      value={optimisticLead.nationality ?? ""}
-                      options={nationalities}
-                      autoFocus
-                      onCancel={close}
-                      onChange={(next) => {
-                        saveField({ nationality: next || null }, { nationality: next || null });
-                        close();
-                      }}
-                    />
-                  )}
-                </FloatPicker>
-              </LedgerRow>
-              {([
-                ["bedrooms", BEDROOM_OPTIONS],
-                ["financing", FINANCING_OPTIONS],
-                ["timeframe", TIMEFRAME_OPTIONS],
-                ["purpose", PURPOSE_OPTIONS],
-              ] as const).map(([key, options]) => (
+            <div className="flex flex-col gap-3">
+              <SnapshotBlock title="Contact">
                 <LedgerRow
-                  key={key}
-                  label={formatLabel(key)}
-                  editing={editing === key}
+                  label="Name"
+                  editing={editing === "name"}
                   canEdit={canEdit}
-                  onEdit={() => setEditing(key)}
-                  display={optimisticLead[key] ? formatLabel(optimisticLead[key] as string) : emptyValue(key === "timeframe" ? "Not captured" : "Not captured — ask at viewing")}
+                  onEdit={() => setEditing("name")}
+                  display={optimisticLead.name}
                 >
-                  <Select
-                    value={optimisticLead[key] ?? undefined}
-                    onValueChange={(v) => saveField({ [key]: v || null }, { [key]: v || null })}
-                  >
-                    <SelectTrigger className="h-8"><SelectValue placeholder="Select" /></SelectTrigger>
-                    <SelectContent>
-                      {options.map((opt) => (
-                        <SelectItem key={opt} value={opt}>{formatLabel(opt)}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <BlurSaveInput
+                    value={optimisticLead.name}
+                    onCancel={() => setEditing(null)}
+                    onSave={(next) => {
+                      if (!next.trim()) return setEditing(null);
+                      saveField({ name: next.trim() }, { name: next.trim() });
+                    }}
+                  />
                 </LedgerRow>
-              ))}
-              <LedgerRow
-                label="Notes"
-                editing={editing === "notes"}
-                canEdit={canEdit}
-                onEdit={() => setEditing("notes")}
-                display={optimisticLead.notes ? <div className="border-l-2 border-primary py-0.5 pl-3.5 text-[0.88rem] leading-relaxed text-muted-foreground">{optimisticLead.notes}</div> : emptyValue()}
-              >
-                <Textarea autoFocus rows={3} defaultValue={optimisticLead.notes ?? ""} className="text-sm" onBlur={(e) => {
-                  const next = e.target.value.trim() || null;
-                  if (next === (optimisticLead.notes || null)) return setEditing(null);
-                  saveField({ notes: next }, { notes: next });
-                }} onKeyDown={(e) => { if (e.key === "Escape") setEditing(null); }} />
-              </LedgerRow>
+                <LedgerRow
+                  label="Phone"
+                  editing={editing === "phone"}
+                  canEdit={canEdit}
+                  onEdit={() => setEditing("phone")}
+                  display={optimisticLead.phone || emptyValue()}
+                >
+                  <BlurSaveInput value={optimisticLead.phone ?? ""} onCancel={() => setEditing(null)} onSave={(next) => saveField({ phone: next.trim() || null }, { phone: next.trim() || null })} />
+                </LedgerRow>
+                <LedgerRow
+                  label="Email"
+                  editing={editing === "email"}
+                  canEdit={canEdit}
+                  onEdit={() => setEditing("email")}
+                  display={optimisticLead.email || emptyValue()}
+                >
+                  <BlurSaveInput type="email" value={optimisticLead.email ?? ""} onCancel={() => setEditing(null)} onSave={(next) => saveField({ email: next.trim() || null }, { email: next.trim() || null })} />
+                </LedgerRow>
+                <LedgerRow label="Nationality" overlay>
+                  <FloatPicker
+                    disabled={!canEdit}
+                    className="w-[18rem] p-2"
+                    trigger={
+                      <span className="block px-1 py-0.5 text-[0.86rem]">
+                        {optimisticLead.nationality || emptyValue()}
+                      </span>
+                    }
+                  >
+                    {(close) => (
+                      <NationalityPicker
+                        value={optimisticLead.nationality ?? ""}
+                        options={nationalities}
+                        autoFocus
+                        onCancel={close}
+                        onChange={(next) => {
+                          saveField({ nationality: next || null }, { nationality: next || null });
+                          close();
+                        }}
+                      />
+                    )}
+                  </FloatPicker>
+                </LedgerRow>
+                <LedgerRow label="Source" overlay>
+                  <ChoicePicker
+                    value={optimisticLead.source}
+                    options={SOURCE_OPTIONS}
+                    disabled={!canEdit}
+                    onChange={(v) => saveField({ source: v }, { source: v })}
+                  />
+                </LedgerRow>
+              </SnapshotBlock>
+
+              <SnapshotBlock title="Tastes">
+                <LedgerRow label="Interest" overlay>
+                  <ChoicePicker
+                    value={optimisticLead.interest}
+                    options={INTEREST_OPTIONS}
+                    disabled={!canEdit}
+                    onChange={(v) => saveField({ interest: v }, { interest: v })}
+                  />
+                </LedgerRow>
+                <LedgerRow label="Category" overlay>
+                  <ChoicePicker
+                    value={optimisticLead.category}
+                    options={CATEGORY_OPTIONS}
+                    disabled={!canEdit}
+                    onChange={(v) => saveField({ category: v || null }, { category: v || null })}
+                  />
+                </LedgerRow>
+                <LedgerRow label="Preferred areas" overlay>
+                  <FloatPicker
+                    disabled={!canEdit}
+                    className="w-[20rem] p-3"
+                    trigger={
+                      <span className="block px-1 py-0.5 text-[0.86rem]">
+                        {optimisticLead.preferred_areas?.length ? (
+                          <span className="flex flex-wrap gap-1">
+                            {optimisticLead.preferred_areas.map((area) => (
+                              <span key={area} className="rounded-full border border-border bg-muted px-2 py-0.5 text-[0.75rem] text-muted-foreground">{area}</span>
+                            ))}
+                          </span>
+                        ) : emptyValue()}
+                      </span>
+                    }
+                  >
+                    {() => (
+                      <PreferredAreasPicker
+                        compact
+                        areas={areas}
+                        value={optimisticLead.preferred_areas ?? []}
+                        onChange={(value) => saveField({ preferred_areas: value }, { preferred_areas: value }, false)}
+                      />
+                    )}
+                  </FloatPicker>
+                </LedgerRow>
+                <LedgerRow label="Bedrooms" overlay>
+                  <ChoicePicker
+                    value={optimisticLead.bedrooms}
+                    options={BEDROOM_OPTIONS}
+                    disabled={!canEdit}
+                    onChange={(v) => saveField({ bedrooms: v || null }, { bedrooms: v || null })}
+                  />
+                </LedgerRow>
+                <LedgerRow label="Purpose" overlay>
+                  <ChoicePicker
+                    value={optimisticLead.purpose}
+                    options={PURPOSE_OPTIONS}
+                    disabled={!canEdit}
+                    onChange={(v) => saveField({ purpose: v || null }, { purpose: v || null })}
+                  />
+                </LedgerRow>
+              </SnapshotBlock>
+
+              <SnapshotBlock title="Financing">
+                <LedgerRow label="Budget" overlay>
+                  <FloatPicker
+                    disabled={!canEdit}
+                    className="w-[18rem] p-3"
+                    trigger={
+                      <span className="block px-1 py-0.5 font-mono text-[0.82rem]">
+                        {budgetLine ?? emptyValue()}
+                      </span>
+                    }
+                  >
+                    {(close) => (
+                      <BudgetRangeEditor
+                        minAed={optimisticLead.budget_min ? String(optimisticLead.budget_min / 100) : ""}
+                        maxAed={optimisticLead.budget_max ? String(optimisticLead.budget_max / 100) : ""}
+                        onCancel={close}
+                        onSave={(min, max) => {
+                          saveField({ budget_min: toFils(min), budget_max: toFils(max) }, { budget_min: toFils(min), budget_max: toFils(max) });
+                          close();
+                        }}
+                      />
+                    )}
+                  </FloatPicker>
+                </LedgerRow>
+                <LedgerRow label="Financing" overlay>
+                  <ChoicePicker
+                    value={optimisticLead.financing}
+                    options={FINANCING_OPTIONS}
+                    disabled={!canEdit}
+                    onChange={(v) => saveField({ financing: v || null }, { financing: v || null })}
+                  />
+                </LedgerRow>
+                <LedgerRow label="Timeframe" overlay>
+                  <ChoicePicker
+                    value={optimisticLead.timeframe}
+                    options={TIMEFRAME_OPTIONS}
+                    disabled={!canEdit}
+                    onChange={(v) => saveField({ timeframe: v || null }, { timeframe: v || null })}
+                  />
+                </LedgerRow>
+              </SnapshotBlock>
+
+              <SnapshotBlock title="Notes">
+                <LedgerRow
+                  label="Tags"
+                  editing={editing === "tags"}
+                  canEdit={canEdit}
+                  onEdit={() => setEditing("tags")}
+                  display={optimisticLead.tags?.length ? optimisticLead.tags.join(", ") : emptyValue()}
+                >
+                  <BlurSaveInput
+                    value={(optimisticLead.tags ?? []).join(", ")}
+                    onCancel={() => setEditing(null)}
+                    onSave={(next) => {
+                      const tags = next.split(",").map((tag) => tag.trim()).filter(Boolean);
+                      saveField({ tags }, { tags });
+                    }}
+                  />
+                </LedgerRow>
+                <LedgerRow
+                  label="Notes"
+                  editing={editing === "notes"}
+                  canEdit={canEdit}
+                  onEdit={() => setEditing("notes")}
+                  display={optimisticLead.notes ? <div className="border-l-2 border-primary py-0.5 pl-3 text-[0.84rem] leading-relaxed text-muted-foreground">{optimisticLead.notes}</div> : emptyValue()}
+                >
+                  <Textarea autoFocus rows={2} defaultValue={optimisticLead.notes ?? ""} className="text-sm" onBlur={(e) => {
+                    const next = e.target.value.trim() || null;
+                    if (next === (optimisticLead.notes || null)) return setEditing(null);
+                    saveField({ notes: next }, { notes: next });
+                  }} onKeyDown={(e) => { if (e.key === "Escape") setEditing(null); }} />
+                </LedgerRow>
+              </SnapshotBlock>
             </div>
           </section>
 
