@@ -181,8 +181,8 @@ export interface Database {
           name: string;
           phone: string | null;
           email: string | null;
-          source: LeadSource;
-          interest: LeadInterest;
+          source: string;
+          interest: string;
           budget_min: number | null;
           budget_max: number | null;
           preferred_areas: string[] | null;
@@ -230,8 +230,8 @@ export interface Database {
           name: string;
           phone?: string | null;
           email?: string | null;
-          source?: LeadSource;
-          interest?: LeadInterest;
+          source?: string;
+          interest?: string;
           budget_min?: number | null;
           budget_max?: number | null;
           preferred_areas?: string[] | null;
@@ -438,6 +438,25 @@ export interface Database {
           name: string;
         };
         Update: Partial<Database["public"]["Tables"]["lead_nationalities"]["Insert"]>;
+      };
+      lead_field_options: {
+        Row: {
+          id: string;
+          field_key: string;
+          value: string;
+          label: string;
+          sort: number;
+          extra: Record<string, unknown>;
+          created_at: string;
+        };
+        Insert: {
+          field_key: string;
+          value: string;
+          label: string;
+          sort?: number;
+          extra?: Record<string, unknown>;
+        };
+        Update: Partial<Database["public"]["Tables"]["lead_field_options"]["Insert"]>;
       };
       lead_follow_ups: {
         Row: {

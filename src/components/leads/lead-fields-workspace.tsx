@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LeadAreasManager } from "@/components/leads/lead-areas-manager";
 import { LeadNationalitiesManager } from "@/components/leads/lead-nationalities-manager";
+import { LeadOptionsManager } from "@/components/leads/lead-options-manager";
 import { LeadFieldDetailPlaceholder } from "@/components/leads/lead-field-detail";
 import { CONFIGURABLE_LEAD_FIELDS, type LeadTableField } from "@/lib/lead-table-fields";
 import { snapshotFieldGroups, type LeadSnapshotField } from "@/lib/lead-snapshot-fields";
+import { isLeadOptionField, type LeadFieldOption } from "@/lib/lead-field-options";
 import { cn } from "@/lib/utils";
 
 function toTableField(field: LeadSnapshotField): LeadTableField {
@@ -19,13 +21,26 @@ function toTableField(field: LeadSnapshotField): LeadTableField {
   };
 }
 
+const OPTION_COPY: Record<string, string> = {
+  source: "This list powers Source on add lead and lead detail. It is separate from the Sources tab (inbound channels).",
+  interest: "This list powers Interest on add lead and lead detail.",
+  category: "This list powers Category on add lead and lead detail.",
+  bedrooms: "This list powers Bedrooms on add lead and lead detail.",
+  purpose: "This list powers Purpose on add lead and lead detail.",
+  timeframe: "This list powers Timeframe on add lead and lead detail.",
+  financing: "This list powers Financing on add lead and lead detail.",
+  budget: "Budget bands set min and max on the lead when an agent picks one.",
+};
+
 export function LeadFieldsWorkspace({
   areas,
   nationalities,
+  fieldOptions,
   initialField,
 }: {
   areas: { id: string; name: string }[];
   nationalities: { id: string; name: string }[];
+  fieldOptions: Record<string, LeadFieldOption[]>;
   initialField?: string;
 }) {
   const router = useRouter();
@@ -86,6 +101,14 @@ export function LeadFieldsWorkspace({
           <LeadAreasManager areas={areas} />
         ) : selectedKey === "nationality" ? (
           <LeadNationalitiesManager nationalities={nationalities} />
+        ) : isLeadOptionField(selectedKey) ? (
+          <LeadOptionsManager
+            fieldKey={selectedKey}
+            title={selected?.label ?? selectedKey}
+            description={OPTION_COPY[selectedKey] ?? "This list powers the matching dropdown on leads."}
+            options={fieldOptions[selectedKey] ?? []}
+            kind={selectedKey === "budget" ? "budget" : "list"}
+          />
         ) : selected ? (
           <LeadFieldDetailPlaceholder field={toTableField(selected)} />
         ) : null}

@@ -22,46 +22,39 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createLead } from "@/server/leads";
+import { type LeadFieldOption } from "@/lib/lead-field-options";
 import { toast } from "sonner";
 import { Plus, Loader2 } from "lucide-react";
-
-const SOURCES = [
-  { value: "website", label: "Website" },
-  { value: "bayut", label: "Bayut" },
-  { value: "property_finder", label: "Property Finder" },
-  { value: "dubizzle", label: "Dubizzle" },
-  { value: "referral", label: "Referral" },
-  { value: "walk_in", label: "Walk-in" },
-  { value: "social", label: "Social" },
-  { value: "other", label: "Other" },
-];
-
-const INTERESTS = [
-  { value: "buy", label: "Buy" },
-  { value: "rent", label: "Rent" },
-  { value: "sell", label: "Sell" },
-  { value: "off_plan", label: "Off Plan" },
-  { value: "commercial", label: "Commercial" },
-];
 
 export function LeadCreateDialog({
   agents,
   areas,
   nationalities,
+  fieldOptions,
 }: {
   agents: { id: string; full_name: string; role: string }[];
   areas: string[];
   nationalities: string[];
+  fieldOptions: Record<string, LeadFieldOption[]>;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
+  const sources = fieldOptions.source ?? [];
+  const interests = fieldOptions.interest ?? [];
+  const categories = fieldOptions.category ?? [];
+  const bedrooms = fieldOptions.bedrooms ?? [];
+  const purposes = fieldOptions.purpose ?? [];
+  const timeframes = fieldOptions.timeframe ?? [];
+  const financings = fieldOptions.financing ?? [];
+  const budgets = fieldOptions.budget ?? [];
+
   const [form, setForm] = useState({
     name: "",
     phone: "",
     email: "",
-    source: "website",
-    interest: "buy",
+    source: sources[0]?.value ?? "",
+    interest: interests[0]?.value ?? "",
     budget_min: "",
     budget_max: "",
     notes: "",
@@ -86,8 +79,8 @@ export function LeadCreateDialog({
         name: form.name,
         phone: form.phone || null,
         email: form.email || undefined,
-        source: form.source as any,
-        interest: form.interest as any,
+        source: form.source,
+        interest: form.interest,
         budget_min: form.budget_min ? Number(form.budget_min) * 100 : null,
         budget_max: form.budget_max ? Number(form.budget_max) * 100 : null,
         preferred_areas: form.preferred_areas,
@@ -114,8 +107,8 @@ export function LeadCreateDialog({
           name: "",
           phone: "",
           email: "",
-          source: "website",
-          interest: "buy",
+          source: sources[0]?.value ?? "",
+          interest: interests[0]?.value ?? "",
           budget_min: "",
           budget_max: "",
           notes: "",
@@ -192,10 +185,10 @@ export function LeadCreateDialog({
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-muted-foreground">Source <span className="text-primary">*</span></Label>
-              <Select value={form.source} onValueChange={(v) => set("source", v ?? "website")}>
-                <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+              <Select value={form.source || undefined} onValueChange={(v) => set("source", v ?? "")}>
+                <SelectTrigger className="h-11"><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
-                  {SOURCES.map((s) => (
+                  {sources.map((s) => (
                     <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                   ))}
                 </SelectContent>
@@ -206,10 +199,10 @@ export function LeadCreateDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-muted-foreground">Interest <span className="text-primary">*</span></Label>
-              <Select value={form.interest} onValueChange={(v) => set("interest", v ?? "buy")}>
-                <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+              <Select value={form.interest || undefined} onValueChange={(v) => set("interest", v ?? "")}>
+                <SelectTrigger className="h-11"><SelectValue placeholder="Select" /></SelectTrigger>
                 <SelectContent>
-                  {INTERESTS.map((i) => (
+                  {interests.map((i) => (
                     <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>
                   ))}
                 </SelectContent>
@@ -234,39 +227,53 @@ export function LeadCreateDialog({
           <div className="rounded-xl border border-border bg-muted/40 p-5">
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Property Requirements</p>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="budget_min" className="text-xs font-medium text-muted-foreground">Budget Min (AED)</Label>
-                <Input id="budget_min" type="number" value={form.budget_min} onChange={(e) => set("budget_min", e.target.value)} placeholder="500,000" className="h-11" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="budget_max" className="text-xs font-medium text-muted-foreground">Budget Max (AED)</Label>
-                <Input id="budget_max" type="number" value={form.budget_max} onChange={(e) => set("budget_max", e.target.value)} placeholder="2,000,000" className="h-11" />
+              <div className="space-y-1.5 col-span-2">
+                <Label className="text-xs font-medium text-muted-foreground">Budget</Label>
+                <Select
+                  value={
+                    budgets.find(
+                      (b) =>
+                        Number(b.extra.min_fils) === Number(form.budget_min) * 100 &&
+                        Number(b.extra.max_fils) === Number(form.budget_max) * 100
+                    )?.value
+                  }
+                  onValueChange={(v) => {
+                    const band = budgets.find((b) => b.value === v);
+                    if (!band) return;
+                    setForm((prev) => ({
+                      ...prev,
+                      budget_min: String(Number(band.extra.min_fils) / 100),
+                      budget_max: String(Number(band.extra.max_fils) / 100),
+                    }));
+                  }}
+                >
+                  <SelectTrigger className="h-11"><SelectValue placeholder="Select a band" /></SelectTrigger>
+                  <SelectContent>
+                    {budgets.map((b) => (
+                      <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-muted-foreground">Bedrooms</Label>
-                <Select value={form.bedrooms} onValueChange={(v) => set("bedrooms", v ?? "")}>
+                <Select value={form.bedrooms || undefined} onValueChange={(v) => set("bedrooms", v ?? "")}>
                   <SelectTrigger className="h-11"><SelectValue placeholder="Any" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="studio">Studio</SelectItem>
-                    <SelectItem value="1">1 BR</SelectItem>
-                    <SelectItem value="2">2 BR</SelectItem>
-                    <SelectItem value="3">3 BR</SelectItem>
-                    <SelectItem value="4">4 BR</SelectItem>
-                    <SelectItem value="5+">5+ BR</SelectItem>
+                    {bedrooms.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-muted-foreground">Category</Label>
-                <Select value={form.category} onValueChange={(v) => set("category", v ?? "")}>
+                <Select value={form.category || undefined} onValueChange={(v) => set("category", v ?? "")}>
                   <SelectTrigger className="h-11"><SelectValue placeholder="Any" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="apartment">Apartment</SelectItem>
-                    <SelectItem value="villa">Villa</SelectItem>
-                    <SelectItem value="townhouse">Townhouse</SelectItem>
-                    <SelectItem value="penthouse">Penthouse</SelectItem>
-                    <SelectItem value="office">Office</SelectItem>
-                    <SelectItem value="retail">Retail</SelectItem>
+                    {categories.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -279,36 +286,34 @@ export function LeadCreateDialog({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-muted-foreground">Financing</Label>
-                <Select value={form.financing} onValueChange={(v) => set("financing", v ?? "")}>
+                <Select value={form.financing || undefined} onValueChange={(v) => set("financing", v ?? "")}>
                   <SelectTrigger className="h-11"><SelectValue placeholder="Unknown" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="mortgage">Mortgage</SelectItem>
-                    <SelectItem value="pre_approved">Pre-approved</SelectItem>
+                    {financings.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-muted-foreground">Timeframe</Label>
-                <Select value={form.timeframe} onValueChange={(v) => set("timeframe", v ?? "")}>
+                <Select value={form.timeframe || undefined} onValueChange={(v) => set("timeframe", v ?? "")}>
                   <SelectTrigger className="h-11"><SelectValue placeholder="Unknown" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="immediate">Immediate</SelectItem>
-                    <SelectItem value="1_month">1 Month</SelectItem>
-                    <SelectItem value="3_months">3 Months</SelectItem>
-                    <SelectItem value="6_months">6 Months</SelectItem>
-                    <SelectItem value="1_year">1 Year+</SelectItem>
+                    {timeframes.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-muted-foreground">Purpose</Label>
-                <Select value={form.purpose} onValueChange={(v) => set("purpose", v ?? "")}>
+                <Select value={form.purpose || undefined} onValueChange={(v) => set("purpose", v ?? "")}>
                   <SelectTrigger className="h-11"><SelectValue placeholder="Unknown" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="end_use">End Use</SelectItem>
-                    <SelectItem value="investment">Investment</SelectItem>
-                    <SelectItem value="rental_yield">Rental Yield</SelectItem>
+                    {purposes.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

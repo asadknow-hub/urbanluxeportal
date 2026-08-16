@@ -11,7 +11,18 @@ export type LeadTableField = {
   configurable: boolean;
 };
 
-export const CONFIGURABLE_LEAD_FIELDS = new Set(["preferred_areas", "nationality"]);
+export const CONFIGURABLE_LEAD_FIELDS = new Set([
+  "preferred_areas",
+  "nationality",
+  "source",
+  "interest",
+  "category",
+  "bedrooms",
+  "purpose",
+  "budget",
+  "financing",
+  "timeframe",
+]);
 
 const LEAD_ROW_UDT = {
   id: "uuid",
@@ -22,12 +33,12 @@ const LEAD_ROW_UDT = {
   email_norm: "text",
   language: "text",
   nationality: "text",
-  source: "lead_source",
+  source: "text",
   source_id: "uuid",
   campaign_id: "uuid",
   external_ref: "text",
   import_batch_id: "uuid",
-  interest: "lead_interest",
+  interest: "text",
   budget_min: "int8",
   budget_max: "int8",
   preferred_areas: "_text",
@@ -68,7 +79,7 @@ export function fallbackLeadTableColumns(): LeadTableColumn[] {
     column_name,
     data_type: udt_name.startsWith("_")
       ? "ARRAY"
-      : udt_name === "lead_source" || udt_name === "lead_interest" || udt_name === "lead_status"
+      : udt_name === "lead_status"
         ? "USER-DEFINED"
         : "text",
     udt_name,

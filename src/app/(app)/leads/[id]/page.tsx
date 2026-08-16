@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LeadDetail } from "@/components/leads/lead-detail";
+import { groupLeadFieldOptions, type LeadFieldOption } from "@/lib/lead-field-options";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -73,6 +74,7 @@ export default async function LeadDetailPage({
     { data: documents },
     { data: areaRows },
     { data: nationalityRows },
+    { data: fieldOptionRows },
     { data: followUpRows },
     { data: lostReasons },
     customerResult,
@@ -104,6 +106,7 @@ export default async function LeadDetailPage({
       .order("created_at", { ascending: false }),
     supabase.from("lead_areas").select("name").order("name"),
     supabase.from("lead_nationalities").select("name").order("name"),
+    supabase.from("lead_field_options").select("id, field_key, value, label, sort, extra").order("sort").order("label"),
     supabase
       .from("lead_follow_ups")
       .select("id, scheduled_at, completed_at, status, notes, created_at")
@@ -138,6 +141,7 @@ export default async function LeadDetailPage({
       stages={stages ?? []}
       areas={(areaRows ?? []).map((row) => row.name)}
       nationalities={(nationalityRows ?? []).map((row) => row.name)}
+      fieldOptions={groupLeadFieldOptions((fieldOptionRows ?? []) as LeadFieldOption[])}
       followUps={followUpRows ?? []}
       customer={customer}
       deal={deal}

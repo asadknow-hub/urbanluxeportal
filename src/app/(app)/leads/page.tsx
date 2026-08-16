@@ -7,6 +7,7 @@ import { LeadsAgentFilter } from "@/components/leads/leads-agent-filter";
 import Link from "next/link";
 import { KanbanSquare, List } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { groupLeadFieldOptions, type LeadFieldOption } from "@/lib/lead-field-options";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -139,7 +140,7 @@ export default async function LeadsBoardPage({
     };
   };
 
-  const [boardData, listData, agentsResult, areasResult, nationalitiesResult] = await Promise.all([
+  const [boardData, listData, agentsResult, areasResult, nationalitiesResult, fieldOptionsResult] = await Promise.all([
     view === "board" ? fetchBoardData() : Promise.resolve(null),
     view === "list" ? fetchListData() : Promise.resolve(null),
     supabase
@@ -150,6 +151,7 @@ export default async function LeadsBoardPage({
       .order("full_name"),
     supabase.from("lead_areas").select("name").order("name"),
     supabase.from("lead_nationalities").select("name").order("name"),
+    supabase.from("lead_field_options").select("id, field_key, value, label, sort, extra").order("sort").order("label"),
   ]);
 
   const agents = agentsResult.data ?? [];
@@ -208,7 +210,12 @@ export default async function LeadsBoardPage({
           {user.role !== "agent" && (
             <LeadsAgentFilter agents={agents} assigned={params.assigned} />
           )}
-          <LeadCreateDialog agents={agents} areas={areaNames} nationalities={nationalityNames} />
+          <LeadCreateDialog
+            agents={agents}
+            areas={areaNames}
+            nationalities={nationalityNames}
+            fieldOptions={groupLeadFieldOptions((fieldOptionsResult.data ?? []) as LeadFieldOption[])}
+          />
         </div>
       </div>
 

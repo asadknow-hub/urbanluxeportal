@@ -7,6 +7,7 @@ import { LeadsInflowClient, type LeadInflowTab } from "@/components/leads/leads-
 import { LeadFieldsWorkspace } from "@/components/leads/lead-fields-workspace";
 import { StageSlaEditor } from "@/components/leads/stage-sla-editor";
 import { fetchLeadTableColumns } from "@/server/lead-areas";
+import { groupLeadFieldOptions, type LeadFieldOption } from "@/lib/lead-field-options";
 import { ArrowRight, CalendarClock, CheckCircle2, Layers3, Settings2, Route, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -60,7 +61,7 @@ export default async function LeadsSettingsPage({
   const tab: HubTab = isHubTab(params.tab) ? params.tab : "fields";
   const inflowTab: LeadInflowTab = tab === "mapping" ? "mapping" : "sources";
 
-  const [sourcesResult, stagesResult, routingResult, docsResult, reasonsResult, sourceStatsResult, leadStatsResult, areasResult, nationalitiesResult, leadColumns] = await Promise.all([
+  const [sourcesResult, stagesResult, routingResult, docsResult, reasonsResult, sourceStatsResult, leadStatsResult, areasResult, nationalitiesResult, fieldOptionsResult, leadColumns] = await Promise.all([
     supabase.from("lead_sources").select("*").order("created_at", { ascending: false }),
     supabase.from("lead_stages").select("*").eq("is_active", true).order("sort", { ascending: true }),
     supabase.from("routing_rules").select("*").eq("is_active", true).order("sort", { ascending: true }),
@@ -70,6 +71,7 @@ export default async function LeadsSettingsPage({
     supabase.from("leads").select("stage_id").not("stage_id", "is", null),
     supabase.from("lead_areas").select("id, name").order("name"),
     supabase.from("lead_nationalities").select("id, name").order("name"),
+    supabase.from("lead_field_options").select("id, field_key, value, label, sort, extra").order("sort").order("label"),
     fetchLeadTableColumns(),
   ]);
 
@@ -238,6 +240,7 @@ export default async function LeadsSettingsPage({
         <LeadFieldsWorkspace
           areas={areasResult.data ?? []}
           nationalities={nationalitiesResult.data ?? []}
+          fieldOptions={groupLeadFieldOptions((fieldOptionsResult.data ?? []) as LeadFieldOption[])}
           initialField={params.field}
         />
       )}

@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PreferredAreasPicker } from "@/components/leads/preferred-areas-picker";
 import { NationalityPicker } from "@/components/leads/nationality-picker";
-import { BlurSaveInput, BudgetRangeEditor } from "@/components/leads/hover-edit-row";
+import { BlurSaveInput } from "@/components/leads/hover-edit-row";
 import { DocumentUploadDialog } from "@/components/documents/document-upload-dialog";
 import { LeadDocumentsList, type LeadDocument } from "@/components/leads/lead-documents";
 import {
@@ -33,10 +33,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { telLink, whatsappLink } from "@/lib/phone";
-import { formatAED, formatAEDRange } from "@/lib/money";
+import { formatAEDRange } from "@/lib/money";
 import { daysUntil, formatDate, formatDateTime, isOverdue, shortTimeAgo, timeAgo } from "@/lib/dates";
 import { stageSlaClock } from "@/lib/lead-sla";
-import { formatLeadInterest } from "@/lib/lead-format";
+import {
+  choiceItems,
+  optionLabel,
+  type LeadFieldOption,
+} from "@/lib/lead-field-options";
 import {
   assignLead,
   scheduleFollowUp,
@@ -152,28 +156,6 @@ function activityKind(type: string) {
   if (type.includes("viewing") || type.includes("calendar")) return "Calendar";
   if (type === "note") return "Note";
   return formatLabel(type);
-}
-
-const INTEREST_OPTIONS = [
-  { value: "buy", label: "Buy" },
-  { value: "rent", label: "Rent" },
-  { value: "sell", label: "Sell" },
-  { value: "off_plan", label: "Off-plan" },
-  { value: "commercial", label: "Commercial" },
-];
-const SOURCE_OPTIONS = ["website", "bayut", "property_finder", "dubizzle", "referral", "walk_in", "social", "other"];
-const CATEGORY_OPTIONS = ["apartment", "villa", "townhouse", "penthouse", "plot", "commercial", "off_plan"];
-const FINANCING_OPTIONS = ["cash", "mortgage", "pre_approved", "undecided"];
-const TIMEFRAME_OPTIONS = ["immediate", "1_month", "3_months", "6_months", "12_months"];
-const PURPOSE_OPTIONS = ["end_user", "investment", "both"];
-const BEDROOM_OPTIONS = ["studio", "1", "2", "3", "4", "5+"];
-
-function toFils(raw: string) {
-  const trimmed = raw.trim();
-  if (!trimmed) return null;
-  const n = Number(trimmed);
-  if (Number.isNaN(n)) return null;
-  return Math.round(n * 100);
 }
 
 function IconBtn({
@@ -378,6 +360,7 @@ export function LeadDetail({
   stages,
   areas,
   nationalities,
+  fieldOptions,
   followUps,
   customer,
   deal,
@@ -392,6 +375,7 @@ export function LeadDetail({
   stages: Stage[];
   areas: string[];
   nationalities: string[];
+  fieldOptions: Record<string, LeadFieldOption[]>;
   followUps: LeadFollowUp[];
   customer: { id: string; name: string; phone: string | null; email: string | null } | null;
   deal: { id: string; title: string; stage: string; value: number; deal_type: string } | null;
@@ -653,7 +637,7 @@ export function LeadDetail({
               <span className="h-1 w-1 rounded-full bg-[#C4C1B6]" />
               <span>{formatLabel(optimisticLead.source)}</span>
               <span className="h-1 w-1 rounded-full bg-[#C4C1B6]" />
-              <span>{formatLeadInterest(optimisticLead.interest)}</span>
+              <span>{optionLabel(fieldOptions.interest, optimisticLead.interest)}</span>
             </div>
             {editing === "name" ? (
               <BlurSaveInput
@@ -676,19 +660,36 @@ export function LeadDetail({
               </button>
             )}
             <div className="flex flex-wrap items-center gap-x-[22px] gap-y-2 text-[0.86rem] text-muted-foreground">
-              {editing === "budget" ? (
-                <BudgetRangeEditor
-                  minAed={optimisticLead.budget_min ? String(optimisticLead.budget_min / 100) : ""}
-                  maxAed={optimisticLead.budget_max ? String(optimisticLead.budget_max / 100) : ""}
-                  onCancel={() => setEditing(null)}
-                  onSave={(min, max) => saveField({ budget_min: toFils(min), budget_max: toFils(max) }, { budget_min: toFils(min), budget_max: toFils(max) })}
-                />
-              ) : (
-                <button type="button" disabled={!canEdit} onClick={() => setEditing("budget")} className="flex items-center gap-1.5 rounded-md px-1 font-semibold text-foreground hover:bg-muted/70 disabled:cursor-default">
-                  <Building2 className="h-[15px] w-[15px]" />
-                  <span className="font-mono text-[0.82rem]">{budgetLine ?? "Add budget"}</span>
-                </button>
-              )}
+              <FloatPicker
+                disabled={!canEdit}
+                className="w-56 p-1.5"
+                trigger={
+                  <span className="flex items-center gap-1.5 rounded-md px-1 font-semibold text-foreground hover:bg-muted/70">
+                    <Building2 className="h-[15px] w-[15px]" />
+                    <span className="font-mono text-[0.82rem]">{budgetLine ?? "Add budget"}</span>
+                  </span>
+                }
+              >
+                {(close) => (
+                  <div className="grid gap-0.5">
+                    {(fieldOptions.budget ?? []).map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        className="rounded-md px-2.5 py-1.5 text-left text-[0.84rem] hover:bg-muted"
+                        onClick={() => {
+                          const min = Number(opt.extra.min_fils);
+                          const max = Number(opt.extra.max_fils);
+                          saveField({ budget_min: min, budget_max: max }, { budget_min: min, budget_max: max }, false);
+                          close();
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </FloatPicker>
               <FloatPicker
                 disabled={!canEdit}
                 className="w-[20rem] p-3"
@@ -913,7 +914,7 @@ export function LeadDetail({
                 <LedgerRow label="Source" overlay>
                   <ChoicePicker
                     value={optimisticLead.source}
-                    options={SOURCE_OPTIONS}
+                    options={choiceItems(fieldOptions.source)}
                     disabled={!canEdit}
                     onChange={(v) => saveField({ source: v }, { source: v })}
                   />
@@ -932,22 +933,30 @@ export function LeadDetail({
                     }
                   >
                     {(close) => (
-                      <BudgetRangeEditor
-                        minAed={optimisticLead.budget_min ? String(optimisticLead.budget_min / 100) : ""}
-                        maxAed={optimisticLead.budget_max ? String(optimisticLead.budget_max / 100) : ""}
-                        onCancel={close}
-                        onSave={(min, max) => {
-                          saveField({ budget_min: toFils(min), budget_max: toFils(max) }, { budget_min: toFils(min), budget_max: toFils(max) });
-                          close();
-                        }}
-                      />
+                      <div className="grid gap-0.5">
+                        {(fieldOptions.budget ?? []).map((opt) => (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            className="rounded-md px-2.5 py-1.5 text-left text-[0.84rem] hover:bg-muted"
+                            onClick={() => {
+                              const min = Number(opt.extra.min_fils);
+                              const max = Number(opt.extra.max_fils);
+                              saveField({ budget_min: min, budget_max: max }, { budget_min: min, budget_max: max }, false);
+                              close();
+                            }}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
                     )}
                   </FloatPicker>
                 </LedgerRow>
                 <LedgerRow label="Financing" overlay>
                   <ChoicePicker
                     value={optimisticLead.financing}
-                    options={FINANCING_OPTIONS}
+                    options={choiceItems(fieldOptions.financing)}
                     disabled={!canEdit}
                     onChange={(v) => saveField({ financing: v || null }, { financing: v || null })}
                   />
@@ -955,7 +964,7 @@ export function LeadDetail({
                 <LedgerRow label="Timeframe" overlay>
                   <ChoicePicker
                     value={optimisticLead.timeframe}
-                    options={TIMEFRAME_OPTIONS}
+                    options={choiceItems(fieldOptions.timeframe)}
                     disabled={!canEdit}
                     onChange={(v) => saveField({ timeframe: v || null }, { timeframe: v || null })}
                   />
@@ -968,7 +977,7 @@ export function LeadDetail({
                   <LedgerRow label="Interest" overlay>
                     <ChoicePicker
                       value={optimisticLead.interest}
-                      options={INTEREST_OPTIONS}
+                      options={choiceItems(fieldOptions.interest)}
                       disabled={!canEdit}
                       onChange={(v) => saveField({ interest: v }, { interest: v })}
                     />
@@ -976,7 +985,7 @@ export function LeadDetail({
                   <LedgerRow label="Category" overlay>
                     <ChoicePicker
                       value={optimisticLead.category}
-                      options={CATEGORY_OPTIONS}
+                      options={choiceItems(fieldOptions.category)}
                       disabled={!canEdit}
                       onChange={(v) => saveField({ category: v || null }, { category: v || null })}
                     />
@@ -1010,7 +1019,7 @@ export function LeadDetail({
                   <LedgerRow label="Bedrooms" overlay>
                     <ChoicePicker
                       value={optimisticLead.bedrooms}
-                      options={BEDROOM_OPTIONS}
+                      options={choiceItems(fieldOptions.bedrooms)}
                       disabled={!canEdit}
                       onChange={(v) => saveField({ bedrooms: v || null }, { bedrooms: v || null })}
                     />
@@ -1018,7 +1027,7 @@ export function LeadDetail({
                   <LedgerRow label="Purpose" overlay>
                     <ChoicePicker
                       value={optimisticLead.purpose}
-                      options={PURPOSE_OPTIONS}
+                      options={choiceItems(fieldOptions.purpose)}
                       disabled={!canEdit}
                       onChange={(v) => saveField({ purpose: v || null }, { purpose: v || null })}
                     />

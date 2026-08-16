@@ -21,13 +21,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
-    // Map source — default to "website" if not recognized
-    const validSources = ["website", "bayut", "property_finder", "dubizzle", "referral", "walk_in", "social", "other"];
-    const source = validSources.includes(body.source) ? body.source : "website";
-
-    // Map interest — default to "buy"
-    const validInterests = ["buy", "rent", "sell", "off_plan", "commercial"];
-    const interest = validInterests.includes(body.interest) ? body.interest : "buy";
+    const source = typeof body.source === "string" && body.source.trim() ? body.source.trim() : "website";
+    const interest = typeof body.interest === "string" && body.interest.trim() ? body.interest.trim() : "buy";
 
     const supabase = createSupabaseServiceClient();
 
