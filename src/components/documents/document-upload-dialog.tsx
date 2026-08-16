@@ -21,7 +21,7 @@ import {
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { createDocument } from "@/server/documents";
 import { toast } from "sonner";
-import { Plus, Loader2, Upload, FileCheck2, X } from "lucide-react";
+import { Loader2, Upload, FileCheck2, X } from "lucide-react";
 
 const CATEGORIES = [
   "emirates_id",
@@ -41,16 +41,19 @@ export function DocumentUploadDialog({
   entityId,
   quiet = false,
   trigger,
+  onSaved,
 }: {
   triggerLabel?: string;
   entityType?: string;
   entityId?: string;
   quiet?: boolean;
   trigger?: ReactNode;
+  onSaved?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<{
     path: string;
     name: string;
@@ -72,6 +75,10 @@ export function DocumentUploadDialog({
 
   async function handleFileUpload(file: File | null) {
     if (!file) return;
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error("File must be under 20MB");
+      return;
+    }
     setUploading(true);
 
     const supabase = createSupabaseBrowserClient();
@@ -93,7 +100,6 @@ export function DocumentUploadDialog({
         size: file.size,
       });
       if (!form.name) set("name", file.name.replace(/\.[^.]+$/, ""));
-      toast.success("File uploaded");
     }
 
     setUploading(false);
@@ -122,6 +128,7 @@ export function DocumentUploadDialog({
         setOpen(false);
         setUploadedFile(null);
         setForm({ name: "", category: "other", entity_type: entityType ?? "", expiry_date: "" });
+        onSaved?.();
       } else {
         toast.error(result.error ?? "Failed to save document");
       }
@@ -137,149 +144,143 @@ export function DocumentUploadDialog({
               {trigger}
             </button>
           ) : (
-            <Button
-              {...props}
-              variant={quiet ? "outline" : "default"}
-              size={quiet ? "sm" : "default"}
-              className={quiet ? "h-8" : "bg-emerald-500 hover:bg-emerald-600 shadow-sm rounded-full px-6 font-medium"}
-            >
-              <Plus className="mr-2 h-4 w-4" />
+            <Button {...props} variant={quiet ? "outline" : "default"} size={quiet ? "sm" : "default"}>
+              <Upload className="mr-2 h-4 w-4" />
               {triggerLabel}
             </Button>
           )
         }
       />
-      <DialogContent 
-        className="max-w-2xl w-[95vw] sm:w-[90vw] md:w-[60vw] max-h-[90vh] overflow-y-auto p-0 border-0 rounded-[1.5rem] shadow-2xl"
-        closeClassName="text-slate-300 hover:text-white hover:bg-slate-800/50"
+      <DialogContent
+        className="w-[95vw] max-w-lg overflow-hidden rounded-[14px] border border-border p-0 shadow-xl sm:max-w-lg"
+        closeClassName="text-white/70 hover:bg-white/10 hover:text-white"
       >
-        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-4 sm:p-5 text-white relative overflow-hidden">
-          <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
-          <DialogHeader className="relative z-10">
-            <DialogTitle className="text-2xl font-bold tracking-tight">Secure Document Upload</DialogTitle>
+        <div className="bg-[#16241F] px-6 py-5 text-center">
+          <DialogHeader>
+            <DialogTitle
+              className="text-center text-[1.15rem] font-normal tracking-[0.12em] text-white uppercase"
+              style={{ fontFamily: "var(--font-display), serif" }}
+            >
+              Secure document upload
+            </DialogTitle>
           </DialogHeader>
         </div>
-        <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-6">
-          {/* Upload area */}
-          <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-5 text-center transition-colors hover:bg-slate-50/80 hover:border-emerald-200">
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/*,.pdf,.docx,.xlsx"
-              onChange={(e) => handleFileUpload(e.target.files?.[0] ?? null)}
-              className="hidden"
-              id="doc-upload-input"
-            />
-            <label
-              htmlFor="doc-upload-input"
-              className="inline-flex cursor-pointer flex-col items-center justify-center gap-3 w-full"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm border border-slate-100">
-                {uploading ? (
-                  <Loader2 className="h-5 w-5 animate-spin text-emerald-500" />
-                ) : (
-                  <Upload className="h-5 w-5 text-slate-400" />
-                )}
-              </div>
-              <span className="text-sm font-semibold text-slate-700">
-                {uploading ? "Uploading securely..." : "Click to select a document"}
-              </span>
-            </label>
-            <p className="mt-2 text-xs font-medium text-slate-400">
-              PDF, JPG, PNG, WebP, DOCX, XLSX · Max 20MB
-            </p>
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-5 bg-card px-6 py-5">
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*,.pdf,.docx,.xlsx"
+            onChange={(e) => handleFileUpload(e.target.files?.[0] ?? null)}
+            className="hidden"
+            id="doc-upload-input"
+          />
+          <label
+            htmlFor="doc-upload-input"
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              handleFileUpload(e.dataTransfer.files?.[0] ?? null);
+            }}
+            className={`block cursor-pointer rounded-[10px] border-[1.5px] border-dashed px-4 py-8 text-center transition-colors ${
+              dragOver ? "border-primary bg-[#F5EEDC]" : "border-border hover:border-primary hover:bg-[#F5EEDC]/60"
+            }`}
+          >
+            <span className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full border border-border bg-card">
+              {uploading ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : <Upload className="h-5 w-5 text-muted-foreground" />}
+            </span>
+            <span className="block text-sm font-semibold text-foreground">
+              {uploading ? "Uploading…" : "Click to select a document"}
+            </span>
+            <span className="mt-1 block text-[0.76rem] text-muted-foreground">PDF, JPG, PNG, WebP, DOCX, XLSX · Max 20MB</span>
+          </label>
 
           {uploadedFile && (
-            <div className="flex items-center gap-4 rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 shadow-sm">
-              <div className="p-2 bg-white rounded-lg shadow-sm border border-emerald-100">
-                <FileCheck2 className="h-6 w-6 text-emerald-500" />
+            <div className="flex items-center gap-3 rounded-[10px] border border-border bg-muted/50 p-3">
+              <FileCheck2 className="h-5 w-5 text-primary" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{uploadedFile.name}</p>
+                <p className="text-xs text-muted-foreground">{(uploadedFile.size / 1024).toFixed(0)} KB</p>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-slate-900 truncate">{uploadedFile.name}</p>
-                <p className="text-xs font-medium text-emerald-600 mt-0.5">
-                  {(uploadedFile.size / 1024).toFixed(0)} KB successfully uploaded
-                </p>
-              </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => setUploadedFile(null)}
-                className="h-8 w-8 rounded-full hover:bg-emerald-100 hover:text-emerald-700"
-              >
+              <button type="button" className="rounded-full p-1 text-muted-foreground hover:text-foreground" onClick={() => setUploadedFile(null)}>
                 <X className="h-4 w-4" />
-              </Button>
+              </button>
             </div>
           )}
 
-          <div className="space-y-2.5">
-            <Label htmlFor="doc_name" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Name *</Label>
+          <div className="space-y-2">
+            <Label htmlFor="doc_name" className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+              Name *
+            </Label>
             <Input
               id="doc_name"
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
               required
               placeholder="Document name"
-              className="h-11 rounded-xl bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500/20"
+              className="h-11 rounded-[10px]"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2.5">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Category</Label>
-                <Select value={form.category} onValueChange={(v) => set("category", v ?? "other")}>
-                  <SelectTrigger className="h-11 rounded-xl bg-slate-50/50 border-slate-200 focus:ring-emerald-500/20">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl shadow-xl">
-                    {CATEGORIES.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase())}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2.5">
-                <Label htmlFor="doc_expiry" className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Expiry Date</Label>
-                <Input
-                  id="doc_expiry"
-                  type="date"
-                  value={form.expiry_date}
-                  onChange={(e) => set("expiry_date", e.target.value)}
-                  className="h-11 rounded-xl bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500/20"
-                />
-              </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Category</Label>
+              <Select value={form.category} onValueChange={(v) => set("category", v ?? "other")}>
+                <SelectTrigger className="h-11 rounded-[10px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase())}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            {!entityType && (
-              <div className="space-y-2.5">
-                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Entity Type</Label>
-                <Select value={form.entity_type || "none"} onValueChange={(v) => set("entity_type", v === "none" ? "" : v ?? "")}>
-                  <SelectTrigger className="h-11 rounded-xl bg-slate-50/50 border-slate-200 focus:ring-emerald-500/20">
-                    <SelectValue placeholder="Optional" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl shadow-xl">
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="lead">Lead</SelectItem>
-                    <SelectItem value="customer">Customer</SelectItem>
-                    <SelectItem value="property">Property</SelectItem>
-                    <SelectItem value="deal">Deal</SelectItem>
-                    <SelectItem value="invoice">Invoice</SelectItem>
-                    <SelectItem value="expense">Expense</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="doc_expiry" className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                Expiry date
+              </Label>
+              <Input
+                id="doc_expiry"
+                type="date"
+                value={form.expiry_date}
+                onChange={(e) => set("expiry_date", e.target.value)}
+                className="h-11 rounded-[10px]"
+              />
+            </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="rounded-full px-6 font-medium shadow-sm">
+          {!entityType && (
+            <div className="space-y-2">
+              <Label className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Linked to</Label>
+              <Select value={form.entity_type || "none"} onValueChange={(v) => set("entity_type", v === "none" ? "" : v ?? "")}>
+                <SelectTrigger className="h-11 rounded-[10px]">
+                  <SelectValue placeholder="Optional" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="lead">Lead</SelectItem>
+                  <SelectItem value="customer">Customer</SelectItem>
+                  <SelectItem value="property">Property</SelectItem>
+                  <SelectItem value="deal">Deal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 border-t border-border pt-4">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="h-[42px] rounded-full px-6">
               Cancel
             </Button>
-            <Button type="submit" disabled={pending || !uploadedFile} className="rounded-full px-5 bg-emerald-500 hover:bg-emerald-600 font-medium shadow-sm">
+            <Button type="submit" disabled={pending || !uploadedFile} className="h-[42px] rounded-full bg-primary px-5 text-white hover:bg-[#8A6D2C]">
               {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Document
+              Save document
             </Button>
           </div>
         </form>

@@ -62,10 +62,17 @@ export async function createDocument(
       action: "created",
     });
 
-    revalidatePath("/documents");
     if (parsed.data.entity_type === "lead" && parsed.data.entity_id) {
+      await supabase.from("lead_activities").insert({
+        lead_id: parsed.data.entity_id,
+        type: "document",
+        summary: `Uploaded document: ${parsed.data.name}`,
+        created_by: user.id,
+      });
       revalidatePath(`/leads/${parsed.data.entity_id}`);
     }
+
+    revalidatePath("/documents");
     return { ok: true, data: { id: data.id } };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };

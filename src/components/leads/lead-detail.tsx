@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { PreferredAreasPicker } from "@/components/leads/preferred-areas-picker";
 import { NationalityPicker } from "@/components/leads/nationality-picker";
-import { BlurSaveInput } from "@/components/leads/hover-edit-row";
+import { BlurSaveInput, BudgetRangeEditor } from "@/components/leads/hover-edit-row";
 import { DocumentUploadDialog } from "@/components/documents/document-upload-dialog";
 import {
   Dialog,
@@ -158,15 +158,38 @@ function activityKind(type: string) {
   return formatLabel(type);
 }
 
+const INTEREST_OPTIONS = [
+  { value: "buy", label: "Buy" },
+  { value: "rent", label: "Rent" },
+  { value: "sell", label: "Sell" },
+  { value: "off_plan", label: "Off-plan" },
+  { value: "commercial", label: "Commercial" },
+];
+const CATEGORY_OPTIONS = ["apartment", "villa", "townhouse", "penthouse", "plot", "commercial", "off_plan"];
+const FINANCING_OPTIONS = ["cash", "mortgage", "pre_approved", "undecided"];
+const TIMEFRAME_OPTIONS = ["immediate", "1_month", "3_months", "6_months", "12_months"];
+const PURPOSE_OPTIONS = ["end_user", "investment", "both"];
+const BEDROOM_OPTIONS = ["studio", "1", "2", "3", "4", "5+"];
+
+function toFils(raw: string) {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const n = Number(trimmed);
+  if (Number.isNaN(n)) return null;
+  return Math.round(n * 100);
+}
+
 function IconBtn({
   href,
   label,
   disabled,
+  onClick,
   children,
 }: {
   href?: string | null;
   label: string;
   disabled?: boolean;
+  onClick?: () => void;
   children: React.ReactNode;
 }) {
   const className =
@@ -186,6 +209,7 @@ function IconBtn({
       aria-label={label}
       title={label}
       className={className}
+      onClick={onClick}
     >
       {children}
     </a>
@@ -281,7 +305,7 @@ export function LeadDetail({
   const mailLink = optimisticLead.email ? `mailto:${optimisticLead.email}` : null;
   const phoneHref = telLink(optimisticLead.phone);
   const canManage = userRole === "admin" || userRole === "manager";
-  const canEdit = canManage || optimisticLead.assigned_to === userId;
+  const canEdit = canManage || userRole === "agent";
   const score = optimisticLead.score ?? 0;
   const temp = score >= 70 ? "Hot" : score >= 40 ? "Warm" : "Cold";
   const engagement = optimisticActivities.length >= 15 ? "High" : optimisticActivities.length >= 5 ? "Medium" : "Low";
@@ -413,23 +437,27 @@ export function LeadDetail({
     return `Follow-up in ${until} days`;
   }
 
+  function logContact(type: "call" | "whatsapp" | "email") {
+    const summary =
+      type === "call"
+        ? `Called ${optimisticLead.phone}`
+        : type === "whatsapp"
+          ? `WhatsApp ${optimisticLead.phone}`
+          : `Emailed ${optimisticLead.email}`;
+    startTransition(async () => {
+      await addLeadActivity(optimisticLead.id, type, summary);
+      router.refresh();
+    });
+  }
+
   async function openDocument(path: string) {
     const result = await getSignedUrl(path);
     if (result.ok && result.data?.url) window.open(result.data.url, "_blank");
     else toast.error(result.error ?? "Could not open file");
   }
 
-  const ref = optimisticLead.id.replace(/-/g, "").slice(0, 8).toUpperCase();
-  const nextOpen = optimisticFollowUps.find((f) => f.status === "scheduled");
-
   return (
     <div className="mx-auto flex w-full max-w-[1460px] flex-col gap-[18px]">
-      <p className="font-mono text-[0.78rem] text-muted-foreground">
-        <Link href="/leads" className="hover:text-foreground">Leads</Link>
-        <span className="mx-2 text-[#C4C1B6]">/</span>
-        <span className="rounded-md border border-border bg-card px-2 py-0.5 tracking-wide">{ref.slice(0, 4)}-{ref.slice(4, 8)}</span>
-      </p>
-
       <section className="overflow-hidden rounded-[14px] border border-border bg-card">
         <div className="flex flex-col gap-6 px-6 py-7 md:flex-row md:items-start md:gap-[26px] md:px-8">
           <div className="relative grid h-[84px] w-[84px] shrink-0 place-items-center rounded-md border-[1.5px] border-primary bg-[#F5EEDC]">
@@ -472,55 +500,85 @@ export function LeadDetail({
               </button>
             )}
             <div className="flex flex-wrap items-center gap-x-[22px] gap-y-2 text-[0.86rem] text-muted-foreground">
-              {budgetLine && (
-                <span className="flex items-center gap-1.5 font-semibold text-foreground">
+              {editing === "budget" ? (
+                <BudgetRangeEditor
+                  minAed={optimisticLead.budget_min ? String(optimisticLead.budget_min / 100) : ""}
+                  maxAed={optimisticLead.budget_max ? String(optimisticLead.budget_max / 100) : ""}
+                  onCancel={() => setEditing(null)}
+                  onSave={(min, max) => saveField({ budget_min: toFils(min), budget_max: toFils(max) }, { budget_min: toFils(min), budget_max: toFils(max) })}
+                />
+              ) : (
+                <button type="button" disabled={!canEdit} onClick={() => setEditing("budget")} className="flex items-center gap-1.5 rounded-md px-1 font-semibold text-foreground hover:bg-muted/70 disabled:cursor-default">
                   <Building2 className="h-[15px] w-[15px]" />
-                  <span className="font-mono text-[0.82rem]">{budgetLine}</span>
-                </span>
+                  <span className="font-mono text-[0.82rem]">{budgetLine ?? "Add budget"}</span>
+                </button>
               )}
-              {optimisticLead.preferred_areas?.length ? (
-                <span className="flex items-center gap-1.5">
+              {editing === "preferred_areas" ? (
+                <div className="min-w-[16rem] flex-1">
+                  <PreferredAreasPicker areas={areas} value={optimisticLead.preferred_areas ?? []} onChange={(value) => saveField({ preferred_areas: value }, { preferred_areas: value }, false)} label="" description="" />
+                </div>
+              ) : (
+                <button type="button" disabled={!canEdit} onClick={() => setEditing("preferred_areas")} className="flex items-center gap-1.5 rounded-md px-1 hover:bg-muted/70 disabled:cursor-default">
                   <MapPin className="h-[15px] w-[15px]" />
-                  {optimisticLead.preferred_areas.join(" · ")}
-                </span>
-              ) : null}
-              {optimisticLead.phone && (
-                <span className="flex items-center gap-1.5">
-                  <Phone className="h-[15px] w-[15px]" />
-                  <span className="font-mono text-[0.82rem]">{optimisticLead.phone}</span>
-                </span>
+                  {optimisticLead.preferred_areas?.length ? optimisticLead.preferred_areas.join(" · ") : "Add areas"}
+                </button>
               )}
-              {optimisticLead.email && (
-                <span className="flex items-center gap-1.5">
+              {editing === "phone" ? (
+                <BlurSaveInput
+                  value={optimisticLead.phone ?? ""}
+                  onCancel={() => setEditing(null)}
+                  onSave={(next) => saveField({ phone: next.trim() || null }, { phone: next.trim() || null })}
+                />
+              ) : (
+                <button type="button" disabled={!canEdit} onClick={() => setEditing("phone")} className="flex items-center gap-1.5 rounded-md px-1 font-mono text-[0.82rem] hover:bg-muted/70 disabled:cursor-default">
+                  <Phone className="h-[15px] w-[15px]" />
+                  {optimisticLead.phone || "Add phone"}
+                </button>
+              )}
+              {editing === "email" ? (
+                <BlurSaveInput
+                  type="email"
+                  value={optimisticLead.email ?? ""}
+                  onCancel={() => setEditing(null)}
+                  onSave={(next) => saveField({ email: next.trim() || null }, { email: next.trim() || null })}
+                />
+              ) : (
+                <button type="button" disabled={!canEdit} onClick={() => setEditing("email")} className="flex items-center gap-1.5 rounded-md px-1 hover:bg-muted/70 disabled:cursor-default">
                   <Mail className="h-[15px] w-[15px]" />
-                  {optimisticLead.email}
-                </span>
+                  {optimisticLead.email || "Add email"}
+                </button>
               )}
             </div>
           </div>
 
           <div className="flex shrink-0 flex-col items-stretch gap-3 md:items-end">
             <div className="flex gap-2">
-              <IconBtn href={phoneHref} label="Call"><Phone className="h-[18px] w-[18px]" /></IconBtn>
-              <IconBtn href={waLink} label="WhatsApp"><MessageCircle className="h-[18px] w-[18px]" /></IconBtn>
-              <IconBtn href={mailLink} label="Email"><Mail className="h-[18px] w-[18px]" /></IconBtn>
-              {canManage && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="grid h-10 w-10 place-items-center rounded-[10px] border border-border bg-card text-muted-foreground hover:border-foreground hover:text-foreground">
-                    <MoreHorizontal className="h-[18px] w-[18px]" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+              <IconBtn href={phoneHref} label="Call" onClick={() => logContact("call")}><Phone className="h-[18px] w-[18px]" /></IconBtn>
+              <IconBtn href={waLink} label="WhatsApp" onClick={() => logContact("whatsapp")}><MessageCircle className="h-[18px] w-[18px]" /></IconBtn>
+              <IconBtn href={mailLink} label="Email" onClick={() => logContact("email")}><Mail className="h-[18px] w-[18px]" /></IconBtn>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="grid h-10 w-10 place-items-center rounded-[10px] border border-border bg-card text-muted-foreground hover:border-foreground hover:text-foreground">
+                  <MoreHorizontal className="h-[18px] w-[18px]" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {lostStage && (
+                    <DropdownMenuItem onClick={() => handleStageChange(lostStage.id)}>
+                      Mark as lost
+                    </DropdownMenuItem>
+                  )}
+                  {canManage && (
                     <DropdownMenuItem variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
                       Delete lead
                     </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             <div className="flex flex-wrap gap-2.5">
               <DocumentUploadDialog
                 entityType="lead"
                 entityId={optimisticLead.id}
+                onSaved={() => router.refresh()}
                 trigger={
                   <span className="inline-flex h-[42px] items-center gap-2 rounded-[10px] border border-border bg-card px-5 text-[0.88rem] font-semibold text-muted-foreground hover:border-foreground hover:text-foreground">
                     <Upload className="h-4 w-4" /> Upload document
@@ -592,27 +650,7 @@ export function LeadDetail({
                 })}
               </div>
             </div>
-            <div className="mt-11 flex items-center justify-between gap-3">
-              <span className="text-[0.78rem] text-muted-foreground">
-                {optimisticLead.next_follow_up_at ? (
-                  <>
-                    Next: <b className="font-semibold text-foreground">{formatDateTime(optimisticLead.next_follow_up_at)}</b>
-                    {nextOpen?.notes ? ` — ${nextOpen.notes}` : null}
-                  </>
-                ) : (
-                  <>Next milestone: <b className="font-semibold text-foreground">set a follow-up</b></>
-                )}
-              </span>
-              {lostStage && (
-                <button
-                  type="button"
-                  className="rounded-lg px-2.5 py-1.5 text-[0.8rem] font-semibold text-[#9C4130] hover:bg-[#F7ECE9]"
-                  onClick={() => handleStageChange(lostStage.id)}
-                >
-                  Mark as lost
-                </button>
-              )}
-            </div>
+            <div className="h-12" />
           </div>
         )}
       </section>
@@ -639,29 +677,56 @@ export function LeadDetail({
                 onEdit={() => setEditing("budget")}
                 display={budgetLine ? <span className="font-mono text-[0.85rem]">{formatAED(optimisticLead.budget_min)} – {optimisticLead.budget_max ? formatAED(optimisticLead.budget_max).replace(/^AED\s/, "") : "—"}</span> : emptyValue()}
               >
-                <div className="flex gap-2">
-                  <BlurSaveInput
-                    type="number"
-                    value={optimisticLead.budget_min ? String(optimisticLead.budget_min / 100) : ""}
-                    onCancel={() => setEditing(null)}
-                    onSave={(next) => saveField({ budget_min: next.trim() ? Math.round(Number(next) * 100) : null }, { budget_min: next.trim() ? Math.round(Number(next) * 100) : null })}
-                  />
-                  <BlurSaveInput
-                    type="number"
-                    value={optimisticLead.budget_max ? String(optimisticLead.budget_max / 100) : ""}
-                    onCancel={() => setEditing(null)}
-                    onSave={(next) => saveField({ budget_max: next.trim() ? Math.round(Number(next) * 100) : null }, { budget_max: next.trim() ? Math.round(Number(next) * 100) : null })}
-                  />
-                </div>
+                <BudgetRangeEditor
+                  minAed={optimisticLead.budget_min ? String(optimisticLead.budget_min / 100) : ""}
+                  maxAed={optimisticLead.budget_max ? String(optimisticLead.budget_max / 100) : ""}
+                  onCancel={() => setEditing(null)}
+                  onSave={(min, max) => saveField({ budget_min: toFils(min), budget_max: toFils(max) }, { budget_min: toFils(min), budget_max: toFils(max) })}
+                />
+              </LedgerRow>
+              <LedgerRow
+                label="Phone"
+                editing={editing === "phone"}
+                canEdit={canEdit}
+                onEdit={() => setEditing("phone")}
+                display={optimisticLead.phone || emptyValue()}
+              >
+                <BlurSaveInput value={optimisticLead.phone ?? ""} onCancel={() => setEditing(null)} onSave={(next) => saveField({ phone: next.trim() || null }, { phone: next.trim() || null })} />
+              </LedgerRow>
+              <LedgerRow
+                label="Email"
+                editing={editing === "email"}
+                canEdit={canEdit}
+                onEdit={() => setEditing("email")}
+                display={optimisticLead.email || emptyValue()}
+              >
+                <BlurSaveInput type="email" value={optimisticLead.email ?? ""} onCancel={() => setEditing(null)} onSave={(next) => saveField({ email: next.trim() || null }, { email: next.trim() || null })} />
               </LedgerRow>
               <LedgerRow
                 label="Interest"
                 editing={editing === "interest"}
                 canEdit={canEdit}
                 onEdit={() => setEditing("interest")}
-                display={formatLeadInterest(optimisticLead.interest) + (optimisticLead.category ? ` ${optimisticLead.category}` : "")}
+                display={formatLeadInterest(optimisticLead.interest) + (optimisticLead.category ? ` ${formatLabel(optimisticLead.category)}` : "")}
               >
-                <BlurSaveInput value={optimisticLead.interest} onCancel={() => setEditing(null)} onSave={(next) => saveField({ interest: next.trim() }, { interest: next.trim() })} />
+                <div className="flex gap-2">
+                  <Select value={optimisticLead.interest} onValueChange={(v) => { if (v) saveField({ interest: v }, { interest: v }); }}>
+                    <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {INTEREST_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={optimisticLead.category ?? undefined} onValueChange={(v) => saveField({ category: v || null }, { category: v || null })}>
+                    <SelectTrigger className="h-8"><SelectValue placeholder="Category" /></SelectTrigger>
+                    <SelectContent>
+                      {CATEGORY_OPTIONS.map((opt) => (
+                        <SelectItem key={opt} value={opt}>{formatLabel(opt)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </LedgerRow>
               <LedgerRow
                 label="Preferred areas"
@@ -689,7 +754,12 @@ export function LeadDetail({
               >
                 <NationalityPicker value={optimisticLead.nationality ?? ""} options={nationalities} autoFocus onCancel={() => setEditing(null)} onChange={(next) => saveField({ nationality: next || null }, { nationality: next || null })} />
               </LedgerRow>
-              {(["bedrooms", "financing", "timeframe", "purpose"] as const).map((key) => (
+              {([
+                ["bedrooms", BEDROOM_OPTIONS],
+                ["financing", FINANCING_OPTIONS],
+                ["timeframe", TIMEFRAME_OPTIONS],
+                ["purpose", PURPOSE_OPTIONS],
+              ] as const).map(([key, options]) => (
                 <LedgerRow
                   key={key}
                   label={formatLabel(key)}
@@ -698,7 +768,17 @@ export function LeadDetail({
                   onEdit={() => setEditing(key)}
                   display={optimisticLead[key] ? formatLabel(optimisticLead[key] as string) : emptyValue(key === "timeframe" ? "Not captured" : "Not captured — ask at viewing")}
                 >
-                  <BlurSaveInput value={optimisticLead[key] ?? ""} onCancel={() => setEditing(null)} onSave={(next) => saveField({ [key]: next.trim() || null }, { [key]: next.trim() || null })} />
+                  <Select
+                    value={optimisticLead[key] ?? undefined}
+                    onValueChange={(v) => saveField({ [key]: v || null }, { [key]: v || null })}
+                  >
+                    <SelectTrigger className="h-8"><SelectValue placeholder="Select" /></SelectTrigger>
+                    <SelectContent>
+                      {options.map((opt) => (
+                        <SelectItem key={opt} value={opt}>{formatLabel(opt)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </LedgerRow>
               ))}
               <LedgerRow
@@ -906,6 +986,7 @@ export function LeadDetail({
             <DocumentUploadDialog
               entityType="lead"
               entityId={optimisticLead.id}
+              onSaved={() => router.refresh()}
               trigger={
                 <span className="mt-3.5 block cursor-pointer rounded-[10px] border-[1.5px] border-dashed border-border px-4 py-[26px] text-center hover:border-primary hover:bg-[#F5EEDC]">
                   <b className="text-[0.86rem] font-semibold text-[#8A6D2C]">Attach a document</b>

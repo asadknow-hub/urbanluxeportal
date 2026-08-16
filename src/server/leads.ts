@@ -15,7 +15,7 @@ export type ActionResult<T = unknown> = {
 const leadSchema = z.object({
   name: z.string().min(1, "Name is required"),
   phone: z.string().optional().nullable(),
-  email: z.string().email().optional().or(z.literal("")),
+  email: z.union([z.string().email(), z.literal(""), z.null()]).optional(),
   source: z.enum([
     "website",
     "bayut",
@@ -300,32 +300,95 @@ export async function claimLead(
   }
 }
 
+const leadUpdateSchema = z.object({
+  name: z.string().min(1).optional(),
+  phone: z.string().nullable().optional(),
+  email: z.union([z.string().email(), z.literal(""), z.null()]).optional(),
+  source: z.enum([
+    "website",
+    "bayut",
+    "property_finder",
+    "dubizzle",
+    "referral",
+    "walk_in",
+    "social",
+    "other",
+  ]).optional(),
+  interest: z.enum(["buy", "rent", "sell", "off_plan", "commercial"]).optional(),
+  budget_min: z.number().nullable().optional(),
+  budget_max: z.number().nullable().optional(),
+  preferred_areas: z.array(z.string()).optional(),
+  notes: z.string().nullable().optional(),
+  assigned_to: z.string().nullable().optional(),
+  next_follow_up_at: z.string().nullable().optional(),
+  stage_id: z.string().nullable().optional(),
+  language: z.string().nullable().optional(),
+  nationality: z.string().nullable().optional(),
+  financing: z.string().nullable().optional(),
+  timeframe: z.string().nullable().optional(),
+  purpose: z.string().nullable().optional(),
+  bedrooms: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  tags: z.array(z.string()).optional(),
+  custom: z.record(z.string(), z.unknown()).optional(),
+});
+
+function fieldLabel(key: string) {
+  return key.replace(/_/g, " ");
+}
+
 export async function updateLead(
   id: string,
-  input: Partial<z.infer<typeof leadSchema>>
+  input: z.infer<typeof leadUpdateSchema>
 ): Promise<ActionResult> {
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
+    const parsed = leadUpdateSchema.safeParse(input);
+    if (!parsed.success) {
+      return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    }
+
+    const patch: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(parsed.data)) {
+      if (value === undefined) continue;
+      if (key === "email" && value === "") {
+        patch.email = null;
+        continue;
+      }
+      patch[key] = value;
+    }
+    if (Object.keys(patch).length === 0) return { ok: true };
+
+    const now = new Date().toISOString();
     const supabase = createSupabaseServiceClient();
 
     const { error } = await supabase
       .from("leads")
       .update({
-        ...input,
-        updated_at: new Date().toISOString(),
+        ...patch,
+        updated_at: now,
+        last_activity_at: now,
       })
       .eq("id", id);
 
     if (error) return { ok: false, error: error.message };
+
+    const changed = Object.keys(patch).join(", ");
+    await supabase.from("lead_activities").insert({
+      lead_id: id,
+      type: "field_update",
+      summary: `Updated ${fieldLabel(changed)}`,
+      created_by: user.id,
+    });
 
     await logActivity({
       actorId: user.id,
       entityType: "lead",
       entityId: id,
       action: "updated",
-      diff: input as Record<string, unknown>,
+      diff: patch,
     });
 
     revalidatePath("/leads");

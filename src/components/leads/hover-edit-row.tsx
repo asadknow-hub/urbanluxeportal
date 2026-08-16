@@ -91,3 +91,72 @@ export function BlurSaveInput({
     />
   );
 }
+
+export function BudgetRangeEditor({
+  minAed,
+  maxAed,
+  onSave,
+  onCancel,
+}: {
+  minAed: string;
+  maxAed: string;
+  onSave: (min: string, max: string) => void;
+  onCancel: () => void;
+}) {
+  const minRef = useRef<HTMLInputElement>(null);
+  const maxRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    minRef.current?.focus();
+    minRef.current?.select();
+  }, []);
+
+  function commit() {
+    const min = minRef.current?.value ?? "";
+    const max = maxRef.current?.value ?? "";
+    if (min.trim() === minAed.trim() && max.trim() === maxAed.trim()) {
+      onCancel();
+      return;
+    }
+    onSave(min, max);
+  }
+
+  return (
+    <div
+      className="flex items-center gap-2"
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) commit();
+      }}
+    >
+      <input
+        ref={minRef}
+        type="number"
+        defaultValue={minAed}
+        placeholder="Min AED"
+        className="h-8 w-full rounded-md border border-border bg-background px-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commit();
+          }
+          if (e.key === "Escape") onCancel();
+        }}
+      />
+      <span className="text-xs text-muted-foreground">–</span>
+      <input
+        ref={maxRef}
+        type="number"
+        defaultValue={maxAed}
+        placeholder="Max AED"
+        className="h-8 w-full rounded-md border border-border bg-background px-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            commit();
+          }
+          if (e.key === "Escape") onCancel();
+        }}
+      />
+    </div>
+  );
+}
