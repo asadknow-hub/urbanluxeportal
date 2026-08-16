@@ -351,8 +351,8 @@ function LedgerRow({
   overlay?: boolean;
 }) {
   return (
-    <div className="grid grid-cols-1 items-center gap-0 border-b border-border/40 py-[6px] last:border-b-0 sm:grid-cols-[108px_1fr]">
-      <span className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground sm:border-r sm:border-border/40 sm:pr-3">{label}</span>
+    <div className="grid grid-cols-1 items-center gap-0 border-b border-border py-[6px] last:border-b-0 sm:grid-cols-[108px_1fr]">
+      <span className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground sm:border-r sm:border-border sm:pr-3">{label}</span>
       {overlay ? (
         <div className="min-w-0 sm:pl-3">{children}</div>
       ) : editing ? (
@@ -693,9 +693,25 @@ export function LeadDetail({
                 disabled={!canEdit}
                 className="w-[20rem] p-3"
                 trigger={
-                  <span className="flex items-center gap-1.5 px-1 hover:bg-muted/70">
-                    <MapPin className="h-[15px] w-[15px]" />
-                    {optimisticLead.preferred_areas?.length ? optimisticLead.preferred_areas.join(" · ") : "Add areas"}
+                  <span
+                    className="flex min-w-0 max-w-full items-center gap-1.5 px-1 hover:bg-muted/70"
+                    title={optimisticLead.preferred_areas?.join(" · ")}
+                  >
+                    <MapPin className="h-[15px] w-[15px] shrink-0" />
+                    {optimisticLead.preferred_areas?.length ? (
+                      <>
+                        <span className="min-w-0 truncate font-semibold text-foreground">
+                          {optimisticLead.preferred_areas[0]}
+                        </span>
+                        {optimisticLead.preferred_areas.length > 1 ? (
+                          <span className="shrink-0 rounded-full border border-border bg-muted px-1.5 py-px text-[0.68rem] font-bold tabular-nums text-muted-foreground">
+                            +{optimisticLead.preferred_areas.length - 1}
+                          </span>
+                        ) : null}
+                      </>
+                    ) : (
+                      "Add areas"
+                    )}
                   </span>
                 }
               >
