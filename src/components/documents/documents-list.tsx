@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { formatDate, isExpiringSoon, isOverdue } from "@/lib/dates";
 import { deleteDocument, getSignedUrl } from "@/server/documents";
+import { DOC_CATEGORIES } from "@/lib/document-storage";
 import { toast } from "sonner";
 import { Search, Trash2, FileText, Image as ImageIcon, ExternalLink, AlertTriangle, Loader2 } from "lucide-react";
 
@@ -29,17 +30,7 @@ export type DocumentRow = {
   created_at: string;
 };
 
-const CATEGORIES = [
-  "emirates_id",
-  "passport",
-  "title_deed",
-  "noc",
-  "contract",
-  "permit",
-  "invoice",
-  "receipt",
-  "other",
-];
+const CATEGORIES = DOC_CATEGORIES;
 
 const ENTITY_TYPES = ["customer", "property", "deal", "invoice", "expense"];
 

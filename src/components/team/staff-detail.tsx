@@ -17,6 +17,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { updateStaffProfile, sendPasswordResetLink, setStaffPassword } from "@/server/team";
 import { createDocument as createDoc, deleteDocument as deleteDoc, getSignedUrl } from "@/server/documents";
 import { formatDate } from "@/lib/dates";
+import { canonicalDocumentPath, normalizeDocCategory } from "@/lib/document-storage";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -517,9 +518,12 @@ function DocumentsTab({ staff, documents }: { staff: Staff; documents: Doc[] }) 
     setUploading(true);
 
     const supabase = createSupabaseBrowserClient();
-    const ext = file.name.includes(".") ? file.name.split(".").pop() : "";
-    const fileName = `${crypto.randomUUID()}${ext ? "." + ext : ""}`;
-    const path = `staff/${staff.id}/${fileName}`;
+    const path = canonicalDocumentPath({
+      entityType: "staff",
+      entityId: staff.id,
+      category: docCategory,
+      originalName: file.name,
+    });
 
     const { error } = await supabase.storage
       .from("documents")
@@ -549,7 +553,7 @@ function DocumentsTab({ staff, documents }: { staff: Staff; documents: Doc[] }) 
         storage_path: uploadedFile.path,
         mime_type: uploadedFile.mime,
         size_bytes: uploadedFile.size,
-        category: docCategory,
+        category: normalizeDocCategory(docCategory),
         entity_type: "staff",
         entity_id: staff.id,
         expiry_date: docExpiry || null,

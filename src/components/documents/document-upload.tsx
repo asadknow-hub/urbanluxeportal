@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Upload, FileText, X, Loader2, FileCheck2 } from "lucide-react";
+import { canonicalDocumentPath } from "@/lib/document-storage";
 
 export type UploadedFile = {
   storage_path: string;
@@ -56,9 +57,12 @@ export function DocumentUpload({
 
     for (const file of Array.from(files)) {
       // Canonical path: {entity_type}/{entity_id}/{uuid}-{filename}
-      const ext = file.name.includes(".") ? file.name.split(".").pop() : "";
-      const fileName = `${crypto.randomUUID()}${ext ? "." + ext : ""}`;
-      const path = `${entityType}/${entityId}/${fileName}`;
+      const path = canonicalDocumentPath({
+        entityType,
+        entityId,
+        category: "other",
+        originalName: file.name,
+      });
 
       const { error: uploadError } = await supabase.storage
         .from(bucket)

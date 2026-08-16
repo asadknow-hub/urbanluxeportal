@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { telLink, whatsappLink } from "@/lib/phone";
 import { formatAED, formatAEDRange } from "@/lib/money";
-import { daysSince, formatDate, formatDateTime, isOverdue, timeAgo } from "@/lib/dates";
+import { daysUntil, formatDate, formatDateTime, isOverdue, shortTimeAgo, timeAgo } from "@/lib/dates";
 import { stageSlaClock } from "@/lib/lead-sla";
 import { formatLeadInterest } from "@/lib/lead-format";
 import { getSignedUrl } from "@/server/documents";
@@ -245,7 +245,11 @@ function FloatPicker({
 function SnapshotBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="min-w-0">
-      <p className="mb-1 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[#8A6D2C]">{title}</p>
+      <p className="mb-2 flex justify-center">
+        <span className="rounded-full bg-[#F5EEDC] px-3 py-0.5 text-center text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[#8A6D2C]">
+          {title}
+        </span>
+      </p>
       <div>{children}</div>
     </div>
   );
@@ -440,6 +444,7 @@ export function LeadDetail({
     optimisticLead.stage_entered_at ?? optimisticLead.created_at,
     currentStage?.kind === "open" ? currentStage.stale_after_days : null
   );
+  const scheduledFollowUp = optimisticFollowUps.find((row) => row.status === "scheduled") ?? null;
 
   const visibleActivities = useMemo(() => {
     const filtered =
@@ -549,12 +554,13 @@ export function LeadDetail({
   }
 
   function followUpTitle() {
-    if (!optimisticLead.next_follow_up_at) return "Set the next step";
-    if (isOverdue(optimisticLead.next_follow_up_at)) return "Follow-up overdue";
-    const until = -daysSince(optimisticLead.next_follow_up_at);
-    if (until <= 0) return "Follow-up today";
-    if (until === 1) return "Follow-up in 1 day";
-    return `Follow-up in ${until} days`;
+    const when = optimisticLead.next_follow_up_at;
+    if (!when) return "Set the next step";
+    if (isOverdue(when)) return "Follow-up overdue";
+    const days = daysUntil(when);
+    if (days <= 0) return "Follow-up today";
+    if (days === 1) return "Follow-up in 1 day";
+    return `Follow-up in ${days} days`;
   }
 
   function logContact(type: "call" | "whatsapp" | "email") {
@@ -591,12 +597,6 @@ export function LeadDetail({
         toast.error(result.error ?? "Failed");
       }
     });
-  }
-
-  function focusNote() {
-    const el = document.getElementById("lead-note");
-    el?.scrollIntoView({ behavior: "smooth", block: "center" });
-    el?.focus();
   }
 
   async function openDocument(path: string) {
@@ -1022,11 +1022,11 @@ export function LeadDetail({
               <div className="mt-3 mb-1 rounded-xl border border-border bg-muted/40 p-2.5">
                 <Textarea
                   id="lead-note"
-                  rows={2}
+                  rows={1}
                   value={noteDraft}
                   onChange={(e) => setNoteDraft(e.target.value)}
                   placeholder="Write a note…"
-                  className="resize-none border-0 bg-transparent p-1 text-sm shadow-none focus-visible:ring-0"
+                  className="min-h-9 h-9 resize-none border-0 bg-transparent p-1 text-sm shadow-none focus-visible:ring-0"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
                       e.preventDefault();
@@ -1062,7 +1062,9 @@ export function LeadDetail({
                           <span className="text-[0.9rem] font-semibold">{a.summary?.slice(0, 48) || formatLabel(a.type)}</span>
                           <span className="ml-2 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{activityKind(a.type)}</span>
                         </span>
-                        <span className="shrink-0 font-mono text-[0.74rem] text-muted-foreground">{formatDate(a.occurred_at, "dd MMM")} · {formatDate(a.occurred_at, "HH:mm")}</span>
+                        <span className="shrink-0 text-[0.74rem] text-muted-foreground" title={formatDateTime(a.occurred_at)}>
+                          {shortTimeAgo(a.occurred_at)}
+                        </span>
                       </div>
                       {a.summary && <p className="mt-1 max-w-[60ch] text-[0.85rem] leading-relaxed text-muted-foreground">{a.summary}</p>}
                     </div>
@@ -1086,7 +1088,10 @@ export function LeadDetail({
               {optimisticLead.next_follow_up_at ? (
                 <>
                   <span className="font-mono text-[0.86rem] text-primary">{formatDateTime(optimisticLead.next_follow_up_at)}</span>
-                  {isOverdue(optimisticLead.next_follow_up_at) ? ". This follow-up is overdue." : ". Confirm or reschedule before it slips."}
+                  {isOverdue(optimisticLead.next_follow_up_at) ? ". This follow-up is overdue." : "."}
+                  {scheduledFollowUp?.notes ? (
+                    <span className="mt-2 block text-[0.88rem] text-[#EDEBE0]">{scheduledFollowUp.notes}</span>
+                  ) : null}
                 </>
               ) : slaClock?.overdue ? (
                 <>This lead is past the {currentStage?.name} SLA ({slaClock.dayNum} of {slaClock.sla} days). Set a follow-up now.</>
@@ -1119,7 +1124,7 @@ export function LeadDetail({
             {showFollowUpForm ? (
               <div className="mt-3 space-y-2">
                 <Input type="datetime-local" value={followUpDate} onChange={(e) => setFollowUpDate(e.target.value)} className="h-9 border-white/20 bg-white/5 text-xs text-white" />
-                <Input value={followUpNotes} onChange={(e) => setFollowUpNotes(e.target.value)} placeholder="Note (optional)" className="h-9 border-white/20 bg-white/5 text-xs text-white" />
+                <Input value={followUpNotes} onChange={(e) => setFollowUpNotes(e.target.value)} placeholder="What this is for — call, WhatsApp, viewing…" className="h-9 border-white/20 bg-white/5 text-xs text-white" />
                 <div className="flex gap-2">
                   <button type="button" className="h-[42px] flex-1 rounded-[10px] bg-primary text-[0.88rem] font-semibold text-white" onClick={handleScheduleFollowUp} disabled={!followUpDate || pending}>Save</button>
                   <button type="button" className="h-[42px] flex-1 rounded-[10px] border border-white/25 text-[0.88rem] font-semibold" onClick={() => setShowFollowUpForm(false)}>Cancel</button>
@@ -1145,22 +1150,8 @@ export function LeadDetail({
                   >
                     Mark done
                   </button>
-                ) : (
-                  <button type="button" className="inline-flex h-[42px] flex-1 items-center justify-center rounded-[10px] border border-white/25 text-[0.88rem] font-semibold text-[#EDEBE0] hover:border-white" onClick={focusNote}>
-                    Add note
-                  </button>
-                )}
+                ) : null}
               </div>
-            )}
-            {optimisticFollowUps.length > 0 && (
-              <ul className="mt-4 space-y-1.5 border-t border-white/12 pt-3 text-[0.75rem] text-[#D8D5C8]">
-                {optimisticFollowUps.slice(0, 4).map((row) => (
-                  <li key={row.id} className="flex justify-between gap-2">
-                    <span className="capitalize">{row.status}</span>
-                    <span className="font-mono text-primary/90">{formatDate(row.scheduled_at, "dd MMM, HH:mm")}</span>
-                  </li>
-                ))}
-              </ul>
             )}
           </section>
 

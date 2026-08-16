@@ -20,20 +20,11 @@ import {
 } from "@/components/ui/select";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { createDocument } from "@/server/documents";
+import { canonicalDocumentPath, DOC_CATEGORIES, formatDocCategory, normalizeDocCategory } from "@/lib/document-storage";
 import { toast } from "sonner";
 import { Loader2, Upload, FileCheck2, X } from "lucide-react";
 
-const CATEGORIES = [
-  "emirates_id",
-  "passport",
-  "title_deed",
-  "noc",
-  "contract",
-  "permit",
-  "invoice",
-  "receipt",
-  "other",
-];
+const CATEGORIES = DOC_CATEGORIES;
 
 export function DocumentUploadDialog({
   triggerLabel = "Upload Document",
@@ -55,7 +46,7 @@ export function DocumentUploadDialog({
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<{
-    path: string;
+    file: File;
     name: string;
     mime: string;
     size: number;
@@ -79,30 +70,13 @@ export function DocumentUploadDialog({
       toast.error("File must be under 20MB");
       return;
     }
-    setUploading(true);
-
-    const supabase = createSupabaseBrowserClient();
-    const ext = file.name.includes(".") ? file.name.split(".").pop() : "";
-    const fileName = `${crypto.randomUUID()}${ext ? "." + ext : ""}`;
-    const path = `general/${fileName}`;
-
-    const { error } = await supabase.storage
-      .from("documents")
-      .upload(path, file, { cacheControl: "3600", upsert: false });
-
-    if (error) {
-      toast.error(`Upload failed: ${error.message}`);
-    } else {
-      setUploadedFile({
-        path,
-        name: file.name,
-        mime: file.type || "application/octet-stream",
-        size: file.size,
-      });
-      if (!form.name) set("name", file.name.replace(/\.[^.]+$/, ""));
-    }
-
-    setUploading(false);
+    setUploadedFile({
+      file,
+      name: file.name,
+      mime: file.type || "application/octet-stream",
+      size: file.size,
+    });
+    if (!form.name) set("name", file.name.replace(/\.[^.]+$/, ""));
     if (inputRef.current) inputRef.current.value = "";
   }
 
@@ -113,13 +87,31 @@ export function DocumentUploadDialog({
       return;
     }
     startTransition(async () => {
+      const supabase = createSupabaseBrowserClient();
+      const category = normalizeDocCategory(form.category);
+      const linkedType = (entityType ?? form.entity_type) || null;
+      const path = canonicalDocumentPath({
+        entityType: linkedType,
+        entityId,
+        category,
+        originalName: uploadedFile.name,
+      });
+      setUploading(true);
+      const { error: uploadError } = await supabase.storage
+        .from("documents")
+        .upload(path, uploadedFile.file, { cacheControl: "3600", upsert: false, contentType: uploadedFile.mime });
+      setUploading(false);
+      if (uploadError) {
+        toast.error(`Upload failed: ${uploadError.message}`);
+        return;
+      }
       const result = await createDocument({
         name: form.name || uploadedFile.name,
-        storage_path: uploadedFile.path,
+        storage_path: path,
         mime_type: uploadedFile.mime,
         size_bytes: uploadedFile.size,
-        category: form.category,
-        entity_type: (entityType ?? form.entity_type) || null,
+        category,
+        entity_type: linkedType,
         entity_id: entityId ?? null,
         expiry_date: form.expiry_date || null,
       });
@@ -130,6 +122,7 @@ export function DocumentUploadDialog({
         setForm({ name: "", category: "other", entity_type: entityType ?? "", expiry_date: "" });
         onSaved?.();
       } else {
+        await supabase.storage.from("documents").remove([path]);
         toast.error(result.error ?? "Failed to save document");
       }
     });
@@ -194,7 +187,7 @@ export function DocumentUploadDialog({
               {uploading ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : <Upload className="h-5 w-5 text-muted-foreground" />}
             </span>
             <span className="block text-sm font-semibold text-foreground">
-              {uploading ? "Uploading…" : "Click to select a document"}
+              {uploading ? "Uploading…" : uploadedFile ? "File ready — click save to store it" : "Click to select a document"}
             </span>
             <span className="mt-1 block text-[0.76rem] text-muted-foreground">PDF, JPG, PNG, WebP, DOCX, XLSX · Max 20MB</span>
           </label>
@@ -236,7 +229,7 @@ export function DocumentUploadDialog({
                 <SelectContent>
                   {CATEGORIES.map((c) => (
                     <SelectItem key={c} value={c}>
-                      {c.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase())}
+                      {formatDocCategory(c)}
                     </SelectItem>
                   ))}
                 </SelectContent>
