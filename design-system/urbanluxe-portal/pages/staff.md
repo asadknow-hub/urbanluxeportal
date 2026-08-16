@@ -1,8 +1,7 @@
 # Staff — overrides
 
-- Title is **Staff** (nav label). No emerald hero banner; use `PageHeader` + compact `StatCard` strip.
-- Density: roster as a single divided list (not large profile cards with colored covers).
-- Role chips: quiet capitalize labels (admin / manager / agent / accountant). No ALL CAPS status.
-- Primary CTA: gold Invite in `FilterBar`. Open action uses secondary (ink), not emerald.
-- Invite dialog: ink header + gold accent icon; form on card surface.
-- Metrics on each row: leads · deals · won only — no duplicate contact blocks.
+- Match `preview.html` layout: Cinzel display title, icon+sparkline stat tiles, bordered toolbar, inset staff tiles.
+- Whole staff row is a link to `/team/[id]` (clickable tile). Action menu uses stopPropagation.
+- Gold **Invite staff** + outline **RBAC** (permission matrix dialog; Manage users for admins).
+- Columns: Staff member · Role & status · Performance (leads/deals/won + win ring) · Actions.
+- Role chips: soft tinted pills (admin purple, agent blue, accountant amber). No emerald brand.

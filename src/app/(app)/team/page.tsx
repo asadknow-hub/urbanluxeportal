@@ -1,8 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { TeamList } from "@/components/team/team-list";
-import { PageHeader } from "@/components/primitives/page-header";
-import { StatCard } from "@/components/primitives/stat-card";
+import { StaffStats } from "@/components/team/staff-stats";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -68,21 +67,23 @@ export default async function TeamPage({
   });
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-5">
-      <PageHeader
-        title="Staff"
-        description="Accounts, roles, and CRM load for your workspace."
-      />
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <StatCard label="Roster" value={String(total)} hint={`${active} active`} />
-        <StatCard label="Active agents" value={String(agents)} />
-        <StatCard
-          label="Showing"
-          value={String(staff?.length ?? 0)}
-          hint={params.role || params.q ? "Filtered" : "All roles"}
-        />
+    <div className="mx-auto max-w-[1600px] space-y-7">
+      <div>
+        <h1 className="font-[family-name:var(--font-display)] text-[clamp(1.75rem,4vw,2.375rem)] font-semibold leading-tight tracking-[-0.05em] text-foreground">
+          Staff
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Manage your team, roles, and CRM access in one place.
+        </p>
       </div>
+
+      <StaffStats
+        total={total}
+        active={active}
+        agents={agents}
+        showing={staff?.length ?? 0}
+        showingHint={params.role || params.q ? "Filtered view" : "All roles"}
+      />
 
       <TeamList
         staff={staff ?? []}

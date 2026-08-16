@@ -8,7 +8,18 @@ export type Capability =
   | "settings"
   | "delete_any";
 
-const PERMISSION_MATRIX: Record<UserRole, Record<Capability, boolean>> = {
+export const USER_ROLES: UserRole[] = ["admin", "manager", "agent", "accountant"];
+
+export const CAPABILITY_META: { key: Capability; label: string; description: string }[] = [
+  { key: "dashboard_full", label: "Full dashboard", description: "See agency-wide KPIs" },
+  { key: "leads_all", label: "All leads", description: "View and edit every lead" },
+  { key: "pipeline_all", label: "All deals", description: "View and edit every deal" },
+  { key: "user_management", label: "User management", description: "Invite, roles, activate staff" },
+  { key: "settings", label: "System settings", description: "Company profile and templates" },
+  { key: "delete_any", label: "Hard delete", description: "Permanently remove records" },
+];
+
+export const PERMISSION_MATRIX: Record<UserRole, Record<Capability, boolean>> = {
   admin: {
     dashboard_full: true,
     leads_all: true,

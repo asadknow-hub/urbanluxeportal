@@ -21,9 +21,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
-import { FilterBar } from "@/components/primitives/filter-bar";
 import { EmptyState } from "@/components/primitives/empty-state";
+import { RbacDialog } from "@/components/team/rbac-dialog";
 import { inviteStaff, toggleStaffActive } from "@/server/team";
 import { toast } from "sonner";
 import {
@@ -35,7 +41,9 @@ import {
   UserCog,
   Phone,
   ChevronRight,
+  MoreHorizontal,
   Power,
+  ExternalLink,
 } from "lucide-react";
 
 export type StaffRow = {
@@ -58,17 +66,30 @@ const ROLE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
   accountant: UserCog,
 };
 
+const AVATAR_TONES = [
+  "bg-[#f4ecdc] text-[#8a6d2c]",
+  "bg-[#e2efee] text-[#2a6f6a]",
+  "bg-[#eae5f7] text-[#4f3d8a]",
+  "bg-[#f7e4d9] text-[#9a5a3a]",
+  "bg-[#f5e9c9] text-[#8a7020]",
+];
+
 function roleChipClass(role: string) {
   switch (role) {
     case "admin":
-      return "bg-secondary/10 text-secondary ring-secondary/20";
+      return "bg-[#eeeafa] text-[#5943a4]";
     case "manager":
-      return "bg-primary/10 text-foreground ring-primary/25";
+      return "bg-[#f5eddd] text-[#8a6d2c]";
     case "accountant":
-      return "bg-muted text-muted-foreground ring-border";
+      return "bg-[#fff0dc] text-[#b26a15]";
     default:
-      return "bg-card text-foreground ring-border";
+      return "bg-[#eaf2f9] text-[#21649a]";
   }
+}
+
+function conversionPct(won: number, total: number) {
+  if (total <= 0) return 0;
+  return Math.round((won / total) * 1000) / 10;
 }
 
 export function TeamList({
@@ -93,6 +114,7 @@ export function TeamList({
   const [inviteRole, setInviteRole] = useState("agent");
   const [invitePhone, setInvitePhone] = useState("");
   const [pending, startTransition] = useTransition();
+  const canManageUsers = currentUserRole === "admin";
 
   function updateFilter(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -139,15 +161,15 @@ export function TeamList({
 
   return (
     <div className="space-y-4">
-      <FilterBar className="justify-between gap-3">
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-          <form onSubmit={handleSearch} className="relative w-full sm:w-56">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+      <div className="flex flex-col gap-3 rounded-[17px] border border-[#e9e5dc] bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+          <form onSubmit={handleSearch} className="relative w-full sm:max-w-[330px]">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search name or email"
+              placeholder="Search by name or email..."
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              className="h-8 pl-8 text-sm"
+              className="h-[42px] rounded-[11px] border-[#e9e5dc] pl-10 text-[13px]"
             />
           </form>
 
@@ -155,7 +177,7 @@ export function TeamList({
             value={currentFilters.role ?? "all"}
             onValueChange={(v) => updateFilter("role", v ?? "all")}
           >
-            <SelectTrigger className="h-8 w-[140px] text-sm">
+            <SelectTrigger className="h-[42px] w-full rounded-[11px] border-[#e9e5dc] text-[13px] sm:w-[185px]">
               <SelectValue placeholder="Role" />
             </SelectTrigger>
             <SelectContent>
@@ -168,100 +190,107 @@ export function TeamList({
           </Select>
         </div>
 
-        <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-          <DialogTrigger
-            render={(props) => (
-              <Button {...props} size="sm" className="h-8 gap-1.5">
-                <UserPlus className="h-3.5 w-3.5" />
-                Invite
-              </Button>
-            )}
-          />
-          <DialogContent className="max-w-md gap-0 overflow-hidden p-0 sm:max-w-lg">
-            <div className="border-b border-border bg-secondary px-5 py-4 text-secondary-foreground">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2.5 text-lg font-semibold tracking-tight">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
-                    <UserPlus className="h-4 w-4" />
-                  </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <RbacDialog canManageUsers={canManageUsers} />
+
+          <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+            <DialogTrigger
+              render={(props) => (
+                <Button
+                  {...props}
+                  className="h-[42px] gap-2 rounded-[11px] bg-[#b78a2c] px-[18px] text-[13px] font-semibold text-white hover:bg-[#a77b22]"
+                >
+                  <UserPlus className="h-4 w-4" />
                   Invite staff
-                </DialogTitle>
-              </DialogHeader>
-              <p className="mt-2 text-sm text-secondary-foreground/70">
-                Send an invite so they can set a password and join the workspace.
-              </p>
-            </div>
-
-            <form onSubmit={handleInvite} className="space-y-4 bg-card p-5">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="inv_name" className="text-xs text-muted-foreground">
-                    Full name
-                  </Label>
-                  <Input
-                    id="inv_name"
-                    value={inviteName}
-                    onChange={(e) => setInviteName(e.target.value)}
-                    required
-                    placeholder="Ahmed Al Mansoori"
-                    className="h-9"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="inv_email" className="text-xs text-muted-foreground">
-                    Email
-                  </Label>
-                  <Input
-                    id="inv_email"
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    required
-                    placeholder="ahmed@urbanluxe.ae"
-                    className="h-9"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="inv_phone" className="text-xs text-muted-foreground">
-                    Phone
-                  </Label>
-                  <Input
-                    id="inv_phone"
-                    value={invitePhone}
-                    onChange={(e) => setInvitePhone(e.target.value)}
-                    placeholder="+971 50 123 4567"
-                    className="h-9"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Role</Label>
-                  <Select value={inviteRole} onValueChange={(v) => setInviteRole(v ?? "agent")}>
-                    <SelectTrigger className="h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="manager">Manager</SelectItem>
-                      <SelectItem value="agent">Agent</SelectItem>
-                      <SelectItem value="accountant">Accountant</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                </Button>
+              )}
+            />
+            <DialogContent className="max-w-md gap-0 overflow-hidden p-0 sm:max-w-lg">
+              <div className="border-b border-border bg-secondary px-5 py-4 text-secondary-foreground">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2.5 text-lg font-semibold tracking-tight">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                      <UserPlus className="h-4 w-4" />
+                    </span>
+                    Invite staff
+                  </DialogTitle>
+                </DialogHeader>
+                <p className="mt-2 text-sm text-secondary-foreground/70">
+                  Send an invite so they can set a password and join the workspace.
+                </p>
               </div>
 
-              <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
-                <Button type="button" variant="ghost" size="sm" onClick={() => setInviteOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" size="sm" disabled={pending || !inviteEmail || !inviteName}>
-                  {pending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
-                  Send invitation
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </FilterBar>
+              <form onSubmit={handleInvite} className="space-y-4 bg-card p-5">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="inv_name" className="text-xs text-muted-foreground">
+                      Full name
+                    </Label>
+                    <Input
+                      id="inv_name"
+                      value={inviteName}
+                      onChange={(e) => setInviteName(e.target.value)}
+                      required
+                      placeholder="Ahmed Al Mansoori"
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="inv_email" className="text-xs text-muted-foreground">
+                      Email
+                    </Label>
+                    <Input
+                      id="inv_email"
+                      type="email"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      required
+                      placeholder="ahmed@urbanluxe.ae"
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="inv_phone" className="text-xs text-muted-foreground">
+                      Phone
+                    </Label>
+                    <Input
+                      id="inv_phone"
+                      value={invitePhone}
+                      onChange={(e) => setInvitePhone(e.target.value)}
+                      placeholder="+971 50 123 4567"
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Role</Label>
+                    <Select value={inviteRole} onValueChange={(v) => setInviteRole(v ?? "agent")}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="manager">Manager</SelectItem>
+                        <SelectItem value="agent">Agent</SelectItem>
+                        <SelectItem value="accountant">Accountant</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setInviteOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" size="sm" disabled={pending || !inviteEmail || !inviteName}>
+                    {pending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+                    Send invitation
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
 
       {staff.length === 0 ? (
         <EmptyState
@@ -269,108 +298,174 @@ export function TeamList({
           description="Try another role filter, clear search, or invite someone to the workspace."
         />
       ) : (
-        <div className="overflow-hidden rounded-xl bg-card ring-1 ring-border">
-          <ul className="divide-y divide-border">
-            {staff.map((s) => {
+        <div className="rounded-[18px] border border-[#e9e5dc] bg-card p-2.5">
+          <div className="mb-1 hidden h-10 grid-cols-[3.1fr_2.3fr_2fr_1.2fr] items-center px-[22px] text-[11px] font-semibold uppercase tracking-wide text-[#8d8982] lg:grid">
+            <div>Staff member</div>
+            <div>Role & status</div>
+            <div>Performance</div>
+            <div className="text-right">Actions</div>
+          </div>
+
+          <ul className="space-y-1.5">
+            {staff.map((s, index) => {
               const RoleIcon = ROLE_ICONS[s.role] ?? User;
               const leads = leadMap[s.id] ?? 0;
               const deals = dealMap[s.id] ?? { total: 0, won: 0 };
+              const conv = conversionPct(deals.won, deals.total);
               const initials = s.full_name
                 .split(" ")
                 .map((n) => n[0])
                 .join("")
                 .toUpperCase()
                 .slice(0, 2);
+              const avatarTone = AVATAR_TONES[index % AVATAR_TONES.length];
+              const canToggle = !(currentUserRole === "manager" && s.role === "admin");
+              const href = `/team/${s.id}`;
 
               return (
-                <li
-                  key={s.id}
-                  className="group flex flex-col gap-3 px-4 py-3 transition-colors duration-200 hover:bg-muted/40 sm:flex-row sm:items-center sm:gap-4"
-                >
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <Avatar className="h-10 w-10 shrink-0 ring-1 ring-border">
-                      <AvatarImage src={s.avatar_url ?? undefined} className="object-cover" />
-                      <AvatarFallback className="bg-muted text-xs font-semibold text-foreground">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate text-sm font-medium text-foreground">{s.full_name}</p>
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium capitalize ring-1",
-                            roleChipClass(s.role)
-                          )}
-                        >
-                          <RoleIcon className="h-3 w-3" />
-                          {s.role}
-                        </span>
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1 text-[11px] font-medium",
-                            s.is_active ? "text-foreground/70" : "text-destructive"
-                          )}
-                        >
-                          <span
-                            className={cn(
-                              "h-1.5 w-1.5 rounded-full",
-                              s.is_active ? "bg-primary" : "bg-destructive"
-                            )}
-                          />
-                          {s.is_active ? "Active" : "Inactive"}
-                        </span>
-                      </div>
-                      <p className="mt-0.5 truncate text-xs text-muted-foreground">{s.email}</p>
-                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
-                        {s.phone ? (
-                          <span className="inline-flex items-center gap-1">
-                            <Phone className="h-3 w-3" />
-                            {s.phone}
-                          </span>
-                        ) : null}
-                        {s.brn ? <span>BRN {s.brn}</span> : null}
-                        {s.commission_rate != null ? <span>Comm {s.commission_rate}%</span> : null}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex shrink-0 items-center gap-4 sm:gap-6">
-                    <div className="flex gap-4 text-center">
-                      <div>
-                        <p className="text-sm font-semibold tabular-nums text-foreground">{leads}</p>
-                        <p className="text-[10px] text-muted-foreground">Leads</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold tabular-nums text-foreground">{deals.total}</p>
-                        <p className="text-[10px] text-muted-foreground">Deals</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold tabular-nums text-foreground">{deals.won}</p>
-                        <p className="text-[10px] text-muted-foreground">Won</p>
+                <li key={s.id}>
+                  <div
+                    role="link"
+                    tabIndex={0}
+                    onClick={() => router.push(href)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        router.push(href);
+                      }
+                    }}
+                    className={cn(
+                      "group grid min-h-[84px] cursor-pointer grid-cols-1 items-center gap-4 rounded-[13px] border border-[#eeeae3] px-4 py-4 transition-all duration-200",
+                      "hover:-translate-y-px hover:border-[#ded8ca] hover:shadow-[0_5px_20px_rgba(25,25,25,0.04)]",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                      "lg:grid-cols-[3.1fr_2.3fr_2fr_1.2fr] lg:gap-0 lg:px-3 lg:py-0 lg:pl-4"
+                    )}
+                  >
+                    <div className="flex min-w-0 items-center gap-3.5">
+                      <Avatar className="h-12 w-12 shrink-0">
+                        <AvatarImage src={s.avatar_url ?? undefined} className="object-cover" />
+                        <AvatarFallback className={cn("text-sm font-medium", avatarTone)}>
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="truncate text-[15px] font-semibold tracking-tight text-foreground">
+                          {s.full_name}
+                        </p>
+                        <p className="mt-1 truncate text-xs text-[#88857f]">{s.email}</p>
+                        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-[#99958e]">
+                          {s.phone ? (
+                            <span className="inline-flex items-center gap-1">
+                              <Phone className="h-3 w-3" />
+                              {s.phone}
+                            </span>
+                          ) : null}
+                          {s.phone && s.brn ? <span aria-hidden>•</span> : null}
+                          {s.brn ? <span>BRN {s.brn}</span> : null}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handleToggleActive(s)}
-                        disabled={pending || (currentUserRole === "manager" && s.role === "admin")}
-                        className="h-8 w-8 text-muted-foreground"
-                        title={s.is_active ? "Deactivate" : "Activate"}
-                      >
-                        <Power className="h-3.5 w-3.5" />
-                      </Button>
-                      <Link
-                        href={`/team/${s.id}`}
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span
                         className={cn(
-                          "inline-flex h-8 items-center gap-1 rounded-md bg-secondary px-3 text-xs font-medium text-secondary-foreground transition-colors duration-200 hover:bg-secondary/90"
+                          "inline-flex items-center gap-1.5 rounded-[7px] px-2.5 py-1.5 text-xs font-semibold capitalize",
+                          roleChipClass(s.role)
                         )}
                       >
+                        <RoleIcon className="h-3.5 w-3.5" />
+                        {s.role}
+                      </span>
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1.5 text-xs",
+                          s.is_active ? "text-[#77746e]" : "text-destructive"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "h-1.5 w-1.5 rounded-full",
+                            s.is_active ? "bg-[#36a25b]" : "bg-destructive"
+                          )}
+                        />
+                        {s.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-5 sm:gap-7">
+                      <div className="min-w-9">
+                        <p className="font-[family-name:var(--font-display)] text-[17px] leading-none text-foreground">
+                          {leads}
+                        </p>
+                        <p className="mt-1 text-[10px] text-[#96928b]">Leads</p>
+                      </div>
+                      <div className="min-w-9">
+                        <p className="font-[family-name:var(--font-display)] text-[17px] leading-none text-foreground">
+                          {deals.total}
+                        </p>
+                        <p className="mt-1 text-[10px] text-[#96928b]">Deals</p>
+                      </div>
+                      <div className="min-w-9">
+                        <p className="font-[family-name:var(--font-display)] text-[17px] leading-none text-foreground">
+                          {deals.won}
+                        </p>
+                        <p className="mt-1 text-[10px] text-[#96928b]">Won</p>
+                      </div>
+                      <div
+                        className="relative flex h-11 w-11 items-center justify-center rounded-full border-[3px] border-[#eeeae3] text-[11px] font-semibold text-foreground"
+                        title="Win rate"
+                      >
+                        <span
+                          className="pointer-events-none absolute inset-[-3px] rounded-full border-[3px] border-transparent border-t-[#429a8f]"
+                          style={{ transform: `rotate(${Math.min(conv, 100) * 3.6}deg)` }}
+                          aria-hidden
+                        />
+                        {`${conv}%`}
+                      </div>
+                    </div>
+
+                    <div
+                      className="flex items-center justify-start gap-3 lg:justify-end"
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          render={(props) => (
+                            <Button
+                              {...props}
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className="h-[42px] w-11 rounded-[11px] border-[#e9e5dc]"
+                              aria-label="More actions"
+                            >
+                              <MoreHorizontal className="h-4 w-4 text-[#666]" />
+                            </Button>
+                          )}
+                        />
+                        <DropdownMenuContent align="end" className="min-w-44">
+                          <DropdownMenuItem onClick={() => router.push(href)}>
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            Open profile
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={pending || !canToggle}
+                            onClick={() => handleToggleActive(s)}
+                          >
+                            <Power className="h-3.5 w-3.5" />
+                            {s.is_active ? "Deactivate" : "Activate"}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      <Link
+                        href={href}
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex h-[42px] items-center gap-2 rounded-[11px] bg-[#17202d] px-[17px] text-xs font-semibold text-white transition-colors hover:bg-[#253142]"
+                      >
                         Open
-                        <ChevronRight className="h-3.5 w-3.5 opacity-70" />
+                        <ChevronRight className="h-3.5 w-3.5 opacity-80" />
                       </Link>
                     </div>
                   </div>
