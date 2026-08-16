@@ -4,11 +4,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LeadsInflowClient, type LeadInflowTab } from "@/components/leads/leads-inflow-client";
-import { LeadTableFieldsColumn } from "@/components/leads/lead-table-fields";
-import { LeadAreasManager } from "@/components/leads/lead-areas-manager";
-import { LeadFieldDetailPlaceholder } from "@/components/leads/lead-field-detail";
+import { LeadFieldsWorkspace } from "@/components/leads/lead-fields-workspace";
 import { fetchLeadTableColumns } from "@/server/lead-areas";
-import { mapLeadTableColumns } from "@/lib/lead-table-fields";
 import { ArrowRight, CalendarClock, CheckCircle2, Layers3, Settings2, Route, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -103,44 +100,26 @@ export default async function LeadsSettingsPage({
   const areaCount = areasResult.data?.length ?? 0;
 
   return (
-    <div className="space-y-5 max-w-[1600px] mx-auto">
-      {/* Minimalist White Header */}
-      <div className="flex flex-col gap-4 rounded-xl border border-slate-200/60 bg-white p-4 shadow-sm xl:flex-row xl:items-center xl:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-            <Settings2 className="h-4 w-4" />
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
-              <span>CRM</span>
-              <span>/</span>
-              <span className="text-slate-900">Lead Settings</span>
-            </div>
-            <h1 className="text-lg font-bold text-slate-900 leading-none mb-1">Lead Settings</h1>
-            <p className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">
-              Control center for the lead lifecycle
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Segmented Control Tabs */}
-      <div className="inline-flex flex-wrap items-center rounded-lg border border-slate-200 bg-slate-50 p-1 shadow-inner h-9 max-w-fit">
+    <div className="mx-auto max-w-[1600px] space-y-4">
+      <nav
+        aria-label="Lead settings sections"
+        className="flex flex-wrap gap-1 rounded-xl border border-border bg-card p-1"
+      >
         {HUB_TABS.map((item) => (
           <Link
             key={item.key}
-            href={`/settings/leads?tab=${item.key}`}
+            href={item.key === "fields" ? "/settings/leads?tab=fields" : `/settings/leads?tab=${item.key}`}
             className={cn(
-              "inline-flex items-center justify-center rounded-md px-3 h-7 text-xs font-bold transition-all duration-200",
-              tab === item.key 
-                ? "bg-white text-slate-900 shadow-sm" 
-                : "text-slate-500 hover:text-slate-700"
+              "inline-flex h-8 items-center rounded-lg px-3 text-xs font-medium transition-colors",
+              tab === item.key
+                ? "bg-secondary text-secondary-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >
             {item.label}
           </Link>
         ))}
-      </div>
+      </nav>
 
       {tab === "overview" && (
         <div className="space-y-6">
@@ -253,22 +232,9 @@ export default async function LeadsSettingsPage({
         </div>
       )}
 
-      {tab === "fields" && (() => {
-        const fields = mapLeadTableColumns(leadColumns);
-        const selectedKey =
-          fields.some((field) => field.key === params.field) ? params.field! : "preferred_areas";
-        const selectedField = fields.find((field) => field.key === selectedKey) ?? fields[0];
-        return (
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
-            <LeadTableFieldsColumn fields={fields} selectedKey={selectedKey} />
-            {selectedKey === "preferred_areas" ? (
-              <LeadAreasManager areas={areasResult.data ?? []} />
-            ) : selectedField ? (
-              <LeadFieldDetailPlaceholder field={selectedField} />
-            ) : null}
-          </div>
-        );
-      })()}
+      {tab === "fields" && (
+        <LeadFieldsWorkspace areas={areasResult.data ?? []} initialField={params.field} />
+      )}
 
       {(tab === "sources" || tab === "mapping") && (
         <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200/60 flex flex-col">

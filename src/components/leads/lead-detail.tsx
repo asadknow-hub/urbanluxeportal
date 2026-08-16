@@ -29,6 +29,7 @@ import {
 import { whatsappLink } from "@/lib/phone";
 import { formatAED } from "@/lib/money";
 import { formatDate, timeAgo } from "@/lib/dates";
+import { LEAD_SNAPSHOT_FIELDS, type LeadSnapshotField } from "@/lib/lead-snapshot-fields";
 import { formatLeadInterest, formatLeadTag } from "@/lib/lead-format";
 import {
   assignLead,
@@ -146,6 +147,35 @@ type InlineEditState =
 // No hardcoded labels — everything is derived dynamically from the data.
 function formatLabel(s: string): string {
   return s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function snapshotEditValue(lead: Lead, field: LeadSnapshotField): string | string[] {
+  if (field.kind === "areas") return lead.preferred_areas ?? [];
+  if (field.kind === "tags") return lead.tags ?? [];
+  if (field.kind === "money") {
+    const raw = field.key === "budget_min" ? lead.budget_min : lead.budget_max;
+    return raw ? String(raw / 100) : "";
+  }
+  const raw = lead[field.key as keyof Lead];
+  if (typeof raw === "string") return raw;
+  if (raw == null) return "";
+  return String(raw);
+}
+
+function snapshotDisplayText(lead: Lead, field: LeadSnapshotField): string {
+  if (field.kind === "areas") {
+    return lead.preferred_areas?.length ? lead.preferred_areas.join(", ") : "—";
+  }
+  if (field.kind === "tags") {
+    return lead.tags?.length ? lead.tags.map((tag) => formatLeadTag(tag)).join(", ") : "—";
+  }
+  if (field.kind === "money") {
+    const raw = field.key === "budget_min" ? lead.budget_min : lead.budget_max;
+    return raw ? String(raw / 100) : "—";
+  }
+  if (field.key === "interest") return formatLeadInterest(lead.interest) || "—";
+  const raw = snapshotEditValue(lead, field);
+  return typeof raw === "string" && raw ? raw : "—";
 }
 
 function mixHexWithWhite(hex: string, colorWeight: number): string {
@@ -772,44 +802,25 @@ export function LeadDetail({
             </div>
             
             {/* Inline-editable field grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 p-4">
-              {[
-                { label: "Name", kind: "text" as const, value: optimisticLead.name, key: "name", span: "" },
-                { label: "Phone", kind: "text" as const, value: optimisticLead.phone ?? "", key: "phone", span: "" },
-                { label: "Email", kind: "text" as const, value: optimisticLead.email ?? "", key: "email", span: "" },
-                { label: "Interest", kind: "text" as const, value: optimisticLead.interest, key: "interest", span: "" },
-                { label: "Budget Min (AED)", kind: "money" as const, value: optimisticLead.budget_min ? String(optimisticLead.budget_min / 100) : "", key: "budget_min", span: "" },
-                { label: "Budget Max (AED)", kind: "money" as const, value: optimisticLead.budget_max ? String(optimisticLead.budget_max / 100) : "", key: "budget_max", span: "" },
-                { label: "Preferred Areas", kind: "areas" as const, value: optimisticLead.preferred_areas?.length ? optimisticLead.preferred_areas.join(", ") : "", key: "preferred_areas", span: "" },
-                { label: "Language", kind: "text" as const, value: optimisticLead.language ?? "", key: "language", span: "" },
-                { label: "Financing", kind: "text" as const, value: optimisticLead.financing ?? "", key: "financing", span: "" },
-                { label: "Timeframe", kind: "text" as const, value: optimisticLead.timeframe ?? "", key: "timeframe", span: "" },
-                { label: "Purpose", kind: "text" as const, value: optimisticLead.purpose ?? "", key: "purpose", span: "" },
-                { label: "Bedrooms", kind: "text" as const, value: optimisticLead.bedrooms ?? "", key: "bedrooms", span: "" },
-                { label: "Category", kind: "text" as const, value: optimisticLead.category ?? "", key: "category", span: "" },
-                { label: "Tags", kind: "tags" as const, value: optimisticLead.tags ?? [], key: "tags", span: "" },
-                { label: "Notes", kind: "textarea" as const, value: optimisticLead.notes ?? "", key: "notes", span: "sm:col-span-2 xl:col-span-3" },
-              ].map((field) => {
+            <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
+              {LEAD_SNAPSHOT_FIELDS.map((field) => {
                 const isEditing = inlineEdit?.key === field.key;
-                const valueText =
-                  field.kind === "areas"
-                    ? field.value || "—"
-                    : field.kind === "tags"
-                    ? field.value.length > 0
-                      ? field.value.map((tag) => formatLeadTag(tag)).join(", ")
-                      : "—"
-                    : field.value || "—";
-                const editState =
-                  field.kind === "areas"
-                    ? { key: field.key, label: field.label, kind: field.kind, value: optimisticLead.preferred_areas ?? [] }
-                    : field.kind === "tags"
-                    ? { key: field.key, label: field.label, kind: field.kind, value: optimisticLead.tags ?? [] }
-                    : { key: field.key, label: field.label, kind: field.kind, value: field.value };
+                const valueText = snapshotDisplayText(optimisticLead, field);
+                const editValue = snapshotEditValue(optimisticLead, field);
+                const editState: InlineEditState =
+                  field.kind === "areas" || field.kind === "tags"
+                    ? { key: field.key, label: field.label, kind: field.kind, value: editValue as string[] }
+                    : {
+                        key: field.key,
+                        label: field.label,
+                        kind: field.kind === "money" ? "money" : field.kind === "textarea" ? "textarea" : "text",
+                        value: editValue as string,
+                      };
 
                 return isEditing ? (
                   <div
                     key={field.key}
-                    className={`rounded-xl border border-primary/20 bg-primary/5 p-3 ${field.span}`}
+                    className={`rounded-xl border border-primary/20 bg-primary/5 p-3 ${field.span ?? ""}`}
                   >
                     {renderInlineEditor()}
                   </div>
@@ -817,8 +828,8 @@ export function LeadDetail({
                   <button
                     key={field.key}
                     type="button"
-                    onClick={() => startInlineEdit(editState as InlineEditState)}
-                    className={`group flex w-full items-center justify-between gap-3 rounded-xl border border-transparent bg-transparent px-3 py-2.5 text-left transition-colors hover:border-border hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-ring ${field.span}`}
+                    onClick={() => startInlineEdit(editState)}
+                    className={`group flex w-full items-center justify-between gap-3 rounded-xl border border-transparent bg-transparent px-3 py-2.5 text-left transition-colors hover:border-border hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-ring ${field.span ?? ""}`}
                   >
                     <div className="min-w-0 flex-1">
                       <span className="block text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400">{field.label}</span>
