@@ -25,6 +25,7 @@ export const LEAD_SNAPSHOT_FIELDS: LeadSnapshotField[] = [
   { key: "timeframe", label: "Timeframe", kind: "options", group: "Financing" },
   { key: "tags", label: "Tags", kind: "tags", group: "Notes" },
   { key: "notes", label: "Notes", kind: "textarea", group: "Notes", span: "sm:col-span-2 xl:col-span-3" },
+  { key: "doc_category", label: "Document category", kind: "options", group: "Documents" },
 ];
 
 export function snapshotFieldGroups() {

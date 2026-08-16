@@ -22,6 +22,7 @@ export const CONFIGURABLE_LEAD_FIELDS = new Set([
   "budget",
   "financing",
   "timeframe",
+  "doc_category",
 ]);
 
 const LEAD_ROW_UDT = {
@@ -34,7 +35,6 @@ const LEAD_ROW_UDT = {
   language: "text",
   nationality: "text",
   source: "text",
-  source_id: "uuid",
   campaign_id: "uuid",
   external_ref: "text",
   import_batch_id: "uuid",

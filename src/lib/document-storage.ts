@@ -1,3 +1,5 @@
+import { slugifyOptionValue } from "@/lib/lead-field-options";
+
 export const DOC_CATEGORIES = [
   "emirates_id",
   "passport",
@@ -16,17 +18,10 @@ export const DOC_CATEGORIES = [
   "other",
 ] as const;
 
-export type DocCategoryValue = (typeof DOC_CATEGORIES)[number];
+export type DocCategoryValue = string;
 
-const CATEGORY_SET = new Set<string>(DOC_CATEGORIES);
-
-export function isDocCategory(value: string): value is DocCategoryValue {
-  return CATEGORY_SET.has(value);
-}
-
-export function normalizeDocCategory(value: string | null | undefined): DocCategoryValue {
-  if (value && isDocCategory(value)) return value;
-  return "other";
+export function normalizeDocCategory(value: string | null | undefined): string {
+  return slugifyOptionValue(value ?? "") || "other";
 }
 
 export function formatDocCategory(value: string) {

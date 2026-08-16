@@ -20,11 +20,9 @@ import {
 } from "@/components/ui/select";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { createDocument } from "@/server/documents";
-import { canonicalDocumentPath, DOC_CATEGORIES, formatDocCategory, normalizeDocCategory } from "@/lib/document-storage";
+import { canonicalDocumentPath, formatDocCategory, normalizeDocCategory, DOC_CATEGORIES } from "@/lib/document-storage";
 import { toast } from "sonner";
 import { Loader2, Upload, FileCheck2, X } from "lucide-react";
-
-const CATEGORIES = DOC_CATEGORIES;
 
 export function DocumentUploadDialog({
   triggerLabel = "Upload Document",
@@ -33,6 +31,7 @@ export function DocumentUploadDialog({
   quiet = false,
   trigger,
   onSaved,
+  categories = [],
 }: {
   triggerLabel?: string;
   entityType?: string;
@@ -40,6 +39,7 @@ export function DocumentUploadDialog({
   quiet?: boolean;
   trigger?: ReactNode;
   onSaved?: (doc?: { id: string; name: string; storage_path: string; mime_type: string; category: string; created_at: string }) => void;
+  categories?: { value: string; label: string }[];
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -59,6 +59,11 @@ export function DocumentUploadDialog({
     entity_type: entityType ?? "",
     expiry_date: "",
   });
+
+  const categoryItems =
+    categories.length > 0
+      ? categories
+      : DOC_CATEGORIES.map((value) => ({ value, label: formatDocCategory(value) }));
 
   function set<K extends keyof typeof form>(key: K, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -231,9 +236,9 @@ export function DocumentUploadDialog({
                   <SelectValue placeholder="Choose category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {formatDocCategory(c)}
+                  {categoryItems.map((c) => (
+                    <SelectItem key={c.value} value={c.value}>
+                      {c.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

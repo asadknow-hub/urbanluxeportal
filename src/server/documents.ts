@@ -5,7 +5,7 @@ import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { revalidatePath } from "next/cache";
-import { normalizeDocCategory, DOC_CATEGORIES } from "@/lib/document-storage";
+import { normalizeDocCategory } from "@/lib/document-storage";
 
 export type ActionResult<T = unknown> = {
   ok: boolean;
@@ -18,7 +18,7 @@ const documentSchema = z.object({
   storage_path: z.string().min(1, "Storage path required"),
   mime_type: z.string().default("application/octet-stream"),
   size_bytes: z.number().default(0),
-  category: z.enum(DOC_CATEGORIES),
+  category: z.string().min(1, "Category required"),
   entity_type: z.string().optional().nullable(),
   entity_id: z.string().min(1).optional().nullable(),
   expiry_date: z.string().optional().nullable(),

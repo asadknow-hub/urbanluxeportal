@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { DocumentsList } from "@/components/documents/documents-list";
 import { DocumentUploadDialog } from "@/components/documents/document-upload-dialog";
+import { choiceItems, groupLeadFieldOptions, type LeadFieldOption } from "@/lib/lead-field-options";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,15 @@ export default async function DocumentsPage({
   }
 
   const { data: documents, error, count } = await query.limit(50);
+  const { data: optionRows } = await supabase
+    .from("lead_field_options")
+    .select("id, field_key, value, label, sort, extra")
+    .eq("field_key", "doc_category")
+    .order("sort")
+    .order("label");
+  const docCategories = choiceItems(
+    groupLeadFieldOptions((optionRows ?? []) as LeadFieldOption[]).doc_category
+  );
 
   if (error) console.error("[documents] query error:", error.message);
 
@@ -61,12 +71,12 @@ export default async function DocumentsPage({
               <span className="text-2xl font-black text-white">{count ?? 0}</span>
               <span className="text-xs text-slate-400 font-medium">documents</span>
             </div>
-            <DocumentUploadDialog />
+            <DocumentUploadDialog categories={docCategories} />
           </div>
         </div>
       </div>
 
-      <DocumentsList documents={documents ?? []} currentFilters={params} />
+      <DocumentsList documents={documents ?? []} currentFilters={params} categories={docCategories} />
     </div>
   );
 }

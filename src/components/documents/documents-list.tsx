@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/select";
 import { formatDate, isExpiringSoon, isOverdue } from "@/lib/dates";
 import { deleteDocument, getSignedUrl } from "@/server/documents";
-import { DOC_CATEGORIES } from "@/lib/document-storage";
 import { toast } from "sonner";
 import { Search, Trash2, FileText, Image as ImageIcon, ExternalLink, AlertTriangle, Loader2 } from "lucide-react";
 
@@ -30,8 +29,6 @@ export type DocumentRow = {
   created_at: string;
 };
 
-const CATEGORIES = DOC_CATEGORIES;
-
 const ENTITY_TYPES = ["customer", "property", "deal", "invoice", "expense"];
 
 function formatBytes(bytes: number): string {
@@ -43,9 +40,11 @@ function formatBytes(bytes: number): string {
 export function DocumentsList({
   documents,
   currentFilters,
+  categories = [],
 }: {
   documents: DocumentRow[];
   currentFilters: { q?: string; category?: string; entity_type?: string };
+  categories?: { value: string; label: string }[];
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -88,9 +87,9 @@ export function DocumentsList({
           </SelectTrigger>
           <SelectContent className="rounded-xl shadow-xl">
             <SelectItem value="all">All Categories</SelectItem>
-            {CATEGORIES.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase())}
+            {categories.map((c) => (
+              <SelectItem key={c.value} value={c.value}>
+                {c.label}
               </SelectItem>
             ))}
           </SelectContent>

@@ -7,6 +7,7 @@ export const LEAD_OPTION_FIELD_KEYS = [
   "timeframe",
   "financing",
   "budget",
+  "doc_category",
 ] as const;
 
 export type LeadOptionFieldKey = (typeof LEAD_OPTION_FIELD_KEYS)[number];

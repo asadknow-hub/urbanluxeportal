@@ -775,6 +775,7 @@ export function LeadDetail({
               <DocumentUploadDialog
                 entityType="lead"
                 entityId={optimisticLead.id}
+                categories={choiceItems(fieldOptions.doc_category)}
                 onSaved={(doc) => {
                   if (doc) setOptimisticDocs((prev) => [{ ...doc, category: doc.category || "other" }, ...prev]);
                   router.refresh();
@@ -1258,6 +1259,7 @@ export function LeadDetail({
             <DocumentUploadDialog
               entityType="lead"
               entityId={optimisticLead.id}
+              categories={choiceItems(fieldOptions.doc_category)}
               onSaved={(doc) => {
                 if (doc) setOptimisticDocs((prev) => [{ ...doc, category: doc.category || "other" }, ...prev]);
                 router.refresh();
@@ -1269,7 +1271,11 @@ export function LeadDetail({
                 </span>
               }
             />
-            <LeadDocumentsList documents={optimisticDocs} onChange={setOptimisticDocs} />
+            <LeadDocumentsList
+              documents={optimisticDocs}
+              onChange={setOptimisticDocs}
+              categories={choiceItems(fieldOptions.doc_category)}
+            />
           </section>
 
           {customer && (

@@ -201,7 +201,6 @@ export interface Database {
           stage_id: string | null;
           custom: Record<string, unknown>;
           campaign_id: string | null;
-          source_id: string | null;
           external_ref: string | null;
           phone_norm: string | null;
           email_norm: string | null;
@@ -247,7 +246,6 @@ export interface Database {
           stage_id?: string | null;
           custom?: Record<string, unknown>;
           campaign_id?: string | null;
-          source_id?: string | null;
           external_ref?: string | null;
           language?: string | null;
           nationality?: string | null;
@@ -481,33 +479,6 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["lead_follow_ups"]["Insert"]>;
       };
-      lead_sources: {
-        Row: {
-          id: string;
-          kind: string;
-          name: string;
-          token: string | null;
-          secret: string | null;
-          config: Record<string, unknown>;
-          field_mapping: Record<string, unknown>;
-          is_active: boolean;
-          stats: Record<string, unknown>;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          kind: string;
-          name: string;
-          token?: string | null;
-          secret?: string | null;
-          config?: Record<string, unknown>;
-          field_mapping?: Record<string, unknown>;
-          is_active?: boolean;
-          stats?: Record<string, unknown>;
-        };
-        Update: Partial<Database["public"]["Tables"]["lead_sources"]["Insert"]>;
-      };
-      // ─── END lead_sources ───
       lost_reasons: {
         Row: {
           id: string;
@@ -565,31 +536,6 @@ export interface Database {
           is_active?: boolean;
         };
         Update: Partial<Database["public"]["Tables"]["routing_rules"]["Insert"]>;
-      };
-      lead_doc_requirements: {
-        Row: {
-          id: string;
-          name: string;
-          slots: unknown;
-          applies_when: Record<string, unknown>;
-          required: boolean;
-          allowed_types: string[];
-          max_mb: number;
-          sort: number;
-          is_active: boolean;
-          created_at: string;
-        };
-        Insert: {
-          name: string;
-          slots?: unknown;
-          applies_when?: Record<string, unknown>;
-          required?: boolean;
-          allowed_types?: string[];
-          max_mb?: number;
-          sort?: number;
-          is_active?: boolean;
-        };
-        Update: Partial<Database["public"]["Tables"]["lead_doc_requirements"]["Insert"]>;
       };
       lead_activities: {
         Row: {
@@ -1019,7 +965,7 @@ export interface Database {
           storage_path: string;
           mime_type: string;
           size_bytes: number;
-          category: DocCategory;
+          category: string;
           entity_type: string | null;
           entity_id: string | null;
           expiry_date: string | null;
@@ -1034,7 +980,7 @@ export interface Database {
           storage_path: string;
           mime_type?: string;
           size_bytes?: number;
-          category?: DocCategory;
+          category?: string;
           entity_type?: string | null;
           entity_id?: string | null;
           expiry_date?: string | null;
@@ -1181,7 +1127,6 @@ export interface Database {
       payment_method: PaymentMethod;
       cheque_direction: ChequeDirection;
       cheque_status: ChequeStatus;
-      doc_category: DocCategory;
       approval_kind: ApprovalKind;
       approval_status: ApprovalStatus;
       stage_kind: StageKind;

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { deleteDocument, getSignedUrl, updateDocument } from "@/server/documents";
-import { DOC_CATEGORIES, formatDocCategory } from "@/lib/document-storage";
+import { formatDocCategory } from "@/lib/document-storage";
 import { toast } from "sonner";
 import { ExternalLink, Pencil, Trash2, Loader2 } from "lucide-react";
 import {
@@ -34,9 +34,11 @@ export type LeadDocument = {
 export function LeadDocumentsList({
   documents,
   onChange,
+  categories = [],
 }: {
   documents: LeadDocument[];
   onChange: (next: LeadDocument[]) => void;
+  categories?: { value: string; label: string }[];
 }) {
   const [pending, startTransition] = useTransition();
   const [editing, setEditing] = useState<LeadDocument | null>(null);
@@ -87,7 +89,9 @@ export function LeadDocumentsList({
         {documents.map((doc) => (
           <li key={doc.id} className="group flex items-center gap-2 py-2 text-sm">
             <div className="min-w-0 flex-1">
-              <p className="truncate font-semibold text-foreground">{formatDocCategory(doc.category)}</p>
+              <p className="truncate font-semibold text-foreground">
+                {categories.find((c) => c.value === doc.category)?.label ?? formatDocCategory(doc.category)}
+              </p>
               <p className="truncate text-[0.78rem] text-muted-foreground">{doc.name}</p>
             </div>
             <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
@@ -117,9 +121,9 @@ export function LeadDocumentsList({
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                {DOC_CATEGORIES.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {formatDocCategory(category)}
+                {(categories.length ? categories : [{ value: editCategory, label: formatDocCategory(editCategory) }]).map((category) => (
+                  <SelectItem key={category.value} value={category.value}>
+                    {category.label}
                   </SelectItem>
                 ))}
               </SelectContent>

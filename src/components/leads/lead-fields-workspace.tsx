@@ -22,7 +22,7 @@ function toTableField(field: LeadSnapshotField): LeadTableField {
 }
 
 const OPTION_COPY: Record<string, string> = {
-  source: "This list powers Source on add lead and lead detail. It is separate from the Sources tab (inbound channels).",
+  source: "This list powers Source on add lead and lead detail.",
   interest: "This list powers Interest on add lead and lead detail.",
   category: "This list powers Category on add lead and lead detail.",
   bedrooms: "This list powers Bedrooms on add lead and lead detail.",
@@ -30,6 +30,7 @@ const OPTION_COPY: Record<string, string> = {
   timeframe: "This list powers Timeframe on add lead and lead detail.",
   financing: "This list powers Financing on add lead and lead detail.",
   budget: "Budget bands set min and max on the lead when an agent picks one.",
+  doc_category: "This list powers the category dropdown when uploading or editing a document.",
 };
 
 export function LeadFieldsWorkspace({
