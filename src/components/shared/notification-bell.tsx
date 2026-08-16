@@ -73,14 +73,10 @@ export function NotificationBell() {
   function handleClick(n: Notification) {
     if (n.entity_type && n.entity_id) {
       const routeMap: Record<string, string> = {
-        invoice: "/invoices",
-        quotation: "/quotations",
-        cheque: "/payments?tab=cheques",
-        document: "/documents",
         lead: "/leads",
-        deal: "/pipeline",
-        property: "/properties",
+        deal: "/deals",
         customer: "/customers",
+        profile: "/team",
       };
       const base = routeMap[n.entity_type] ?? "/dashboard";
       if (base.includes("?")) {

@@ -140,7 +140,7 @@ export function TeamList({
           <form onSubmit={handleSearch} className="relative flex-1 sm:flex-none">
             <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
-              placeholder="Search team..."
+              placeholder="Search staff..."
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               className="w-full sm:w-64 pl-10 bg-slate-50 border-slate-200/60 focus-visible:ring-emerald-500/20 rounded-2xl"
@@ -185,7 +185,7 @@ export function TeamList({
                 </DialogTitle>
               </DialogHeader>
               <p className="text-emerald-100/80 text-sm mt-3 relative z-10 max-w-sm">
-                Send an invitation email to a new team member to set up their account and join your workspace.
+                Send an invitation email so a new staff member can set up their account and join the workspace.
               </p>
             </div>
             

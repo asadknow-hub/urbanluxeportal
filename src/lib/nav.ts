@@ -8,35 +8,25 @@ export type NavItem = {
   group: string;
 };
 
+/** Section headlines always render; only Workspace, CRM, and System have links while CRM is finalized. */
 export const NAV_GROUPS = [
   "Workspace",
   "CRM",
   "Marketing",
   "Inventory",
   "Finance",
-  "People",
   "Governance",
   "System",
 ] as const;
 
 export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard", roles: ["admin", "manager", "agent", "accountant"], group: "Workspace" },
+  { label: "Staff", href: "/team", icon: "UsersRound", roles: ["admin", "manager"], group: "Workspace" },
   { label: "Lead Settings", href: "/settings/leads", icon: "Settings2", roles: ["admin", "manager"], group: "CRM" },
   { label: "Leads", href: "/leads", icon: "Users", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
   { label: "Follow-ups", href: "/leads/followups", icon: "CalendarClock", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
   { label: "Deals", href: "/deals", icon: "KanbanSquare", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
   { label: "Customers", href: "/customers", icon: "Contact", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
-  { label: "Campaigns", href: "/leads/campaigns", icon: "Megaphone", roles: ["admin", "manager", "accountant"], group: "Marketing" },
-  { label: "Properties", href: "/properties", icon: "Building2", roles: ["admin", "manager", "agent", "accountant"], group: "Inventory" },
-  { label: "Owners", href: "/properties/owners", icon: "UserCog", roles: ["admin", "manager", "agent", "accountant"], group: "Inventory" },
-  { label: "Quotations", href: "/quotations", icon: "FileText", roles: ["admin", "manager", "agent", "accountant"], group: "Finance" },
-  { label: "Invoices", href: "/invoices", icon: "ReceiptText", roles: ["admin", "manager", "accountant"], group: "Finance" },
-  { label: "Payments", href: "/payments", icon: "CreditCard", roles: ["admin", "manager", "accountant"], group: "Finance" },
-  { label: "Expenses", href: "/expenses", icon: "Wallet", roles: ["admin", "manager", "accountant"], group: "Finance" },
-  { label: "Team", href: "/team", icon: "UsersRound", roles: ["admin", "manager"], group: "People" },
-  { label: "Documents", href: "/documents", icon: "FolderOpen", roles: ["admin", "manager", "agent", "accountant"], group: "Governance" },
-  { label: "Approvals", href: "/approvals", icon: "CheckCircle2", roles: ["admin", "manager", "agent"], group: "Governance" },
-  { label: "Reports", href: "/reports", icon: "BarChart3", roles: ["admin", "manager", "agent", "accountant"], group: "Governance" },
   { label: "Settings", href: "/settings", icon: "Settings", roles: ["admin"], group: "System" },
 ];
 
@@ -54,9 +44,6 @@ export function isNavActive(pathname: string, href: string): boolean {
   }
   if (href === "/deals" || href === "/pipeline") {
     return pathname === "/deals" || pathname === "/pipeline" || pathname.startsWith("/pipeline/");
-  }
-  if (href === "/properties") {
-    return pathname === "/properties" || (pathname.startsWith("/properties/") && !pathname.startsWith("/properties/owners"));
   }
   if (href === "/settings") {
     return pathname === "/settings" || (pathname.startsWith("/settings/") && !pathname.startsWith("/settings/leads"));

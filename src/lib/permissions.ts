@@ -106,31 +106,37 @@ export function can(
   return PERMISSION_MATRIX[role]?.[capability] ?? false;
 }
 
+/** Parked while CRM + org structure are finalized (code remains, nav + access blocked). */
+const PARKED_ROUTE_PREFIXES = [
+  "/leads/campaigns",
+  "/properties",
+  "/quotations",
+  "/invoices",
+  "/payments",
+  "/expenses",
+  "/documents",
+  "/approvals",
+  "/reports",
+] as const;
+
+function isParkedRoute(path: string): boolean {
+  return PARKED_ROUTE_PREFIXES.some(
+    (prefix) => path === prefix || path.startsWith(`${prefix}/`)
+  );
+}
+
 export function canAccessRoute(role: UserRole | null | undefined, path: string): boolean {
   if (!role) return false;
+  if (isParkedRoute(path)) return false;
+
   if (path.startsWith("/settings/leads")) {
     return role === "admin" || role === "manager";
   }
   if (path.startsWith("/settings")) {
     return can(role, "settings") || can(role, "user_management");
   }
-  if (path.startsWith("/payments")) {
-    return can(role, "payments_view") || can(role, "payments_manage");
-  }
-  if (path.startsWith("/invoices")) {
-    return can(role, "invoices_create") || can(role, "invoices_void") || role === "manager" || role === "admin";
-  }
-  if (path.startsWith("/reports")) {
-    return can(role, "reports_all") || can(role, "reports_own") || can(role, "reports_financial");
-  }
-  if (path.startsWith("/approvals")) {
-    return can(role, "approvals_approve") || can(role, "approvals_request");
-  }
   if (path.startsWith("/team")) {
     return role === "admin" || role === "manager";
-  }
-  if (path.startsWith("/leads/campaigns")) {
-    return role === "admin" || role === "manager" || role === "accountant";
   }
   if (path.startsWith("/leads/inflow")) {
     return role === "admin" || role === "manager";

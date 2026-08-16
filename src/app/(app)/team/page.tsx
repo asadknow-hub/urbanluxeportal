@@ -68,9 +68,9 @@ export default async function TeamPage({
         
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2">Team Directory</h1>
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2">Staff Directory</h1>
             <p className="text-emerald-100/80 text-sm sm:text-base max-w-xl font-medium leading-relaxed">
-              Manage your agency's staff accounts, oversee performance metrics, and assign roles effortlessly.
+              Manage staff accounts, oversee performance metrics, and assign roles.
             </p>
           </div>
           <div className="hidden lg:flex items-center gap-4 rounded-2xl bg-white/10 p-5 backdrop-blur-md border border-white/20 shadow-inner">

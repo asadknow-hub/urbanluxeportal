@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ChevronLeft, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NAV_ITEMS, isNavActive } from "@/lib/nav";
+import { NAV_GROUPS, NAV_ITEMS, isNavActive } from "@/lib/nav";
 import type { UserRole } from "@/lib/permissions";
 import type { SessionUser } from "@/lib/auth";
 import { BrandMark } from "@/components/layout/brand-mark";
@@ -31,7 +31,7 @@ export function Sidebar({ user }: { user: SessionUser }) {
   }
 
   const items = NAV_ITEMS.filter((item) => item.roles.includes(user.role as UserRole));
-  const groups = [...new Set(items.map((i) => i.group))];
+  const groups = [...NAV_GROUPS];
 
   return (
     <aside

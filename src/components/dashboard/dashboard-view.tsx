@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { AlertCircle, ChevronRight } from "lucide-react";
-import { formatAED, formatAEDCompact } from "@/lib/money";
+import { ChevronRight } from "lucide-react";
+import { formatAED } from "@/lib/money";
 import { formatDate, timeAgo } from "@/lib/dates";
 import { PageHeader } from "@/components/primitives/page-header";
 import { StatCard } from "@/components/primitives/stat-card";
@@ -27,34 +27,20 @@ export function DashboardView({
   fullName,
   pipelineValue,
   activeDealCount,
-  revenueThisMonth,
-  expensesThisMonth,
-  overdueCount,
-  overdueAmount,
   newLeadsCount,
-  activeCampaignsCount,
-  totalProperties,
-  chequesDue30Count,
-  chequesOverdueCount,
-  chequesDue30Amount,
-  chequesOverdueAmount,
+  openLeadsCount,
+  customersCount,
+  overdueFollowUpsCount,
   activities,
   followUps,
 }: {
   fullName: string;
   pipelineValue: number;
   activeDealCount: number;
-  revenueThisMonth: number;
-  expensesThisMonth: number;
-  overdueCount: number;
-  overdueAmount: number;
   newLeadsCount: number;
-  activeCampaignsCount: number;
-  totalProperties: number;
-  chequesDue30Count: number;
-  chequesOverdueCount: number;
-  chequesDue30Amount: number;
-  chequesOverdueAmount: number;
+  openLeadsCount: number;
+  customersCount: number;
+  overdueFollowUpsCount: number;
   activities: Activity[];
   followUps: FollowUp[];
 }) {
@@ -62,41 +48,21 @@ export function DashboardView({
     <div className="space-y-6">
       <PageHeader
         title="Dashboard"
-        description={`Welcome back, ${fullName}. Pipeline, cash, and follow-ups for today.`}
+        description={`Welcome back, ${fullName}. CRM pipeline and follow-ups for today.`}
         actions={
           <>
             <Link href="/leads" className={cn(buttonVariants({ size: "sm" }))}>
               Add lead
             </Link>
-            <Link href="/properties" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
-              Add property
+            <Link href="/leads/followups" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
+              Follow-ups
             </Link>
-            <Link href="/quotations" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
-              New quotation
+            <Link href="/deals" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
+              Deals
             </Link>
           </>
         }
       />
-
-      {(chequesDue30Count > 0 || chequesOverdueCount > 0) && (
-        <Link
-          href="/payments?tab=cheques"
-          className="flex items-center justify-between gap-4 rounded-xl border border-destructive/25 bg-card p-4 transition-colors hover:bg-muted/40"
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
-              <AlertCircle className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-foreground">Cheques need attention</p>
-              <p className="text-xs text-muted-foreground">
-                {chequesDue30Count} due in 30 days · {chequesOverdueCount} overdue ({formatAEDCompact(chequesDue30Amount)} due · {formatAEDCompact(chequesOverdueAmount)} overdue)
-              </p>
-            </div>
-          </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-        </Link>
-      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <div className="sm:col-span-2">
@@ -105,21 +71,18 @@ export function DashboardView({
             label="Pipeline value"
             value={formatAED(pipelineValue)}
             hint={`${activeDealCount} active deals`}
-            href="/pipeline"
+            href="/deals"
           />
         </div>
-        <StatCard label="Revenue this month" value={formatAED(revenueThisMonth)} href="/invoices" />
+        <StatCard label="Open leads" value={String(openLeadsCount)} href="/leads" />
         <StatCard
-          label="Overdue invoices"
-          value={String(overdueCount)}
-          hint={formatAED(overdueAmount)}
-          tone="danger"
-          href="/invoices"
+          label="Overdue follow-ups"
+          value={String(overdueFollowUpsCount)}
+          tone={overdueFollowUpsCount > 0 ? "danger" : undefined}
+          href="/leads/followups"
         />
         <StatCard label="New leads (MTD)" value={String(newLeadsCount)} href="/leads" />
-        <StatCard label="Active campaigns" value={String(activeCampaignsCount)} href="/leads/campaigns" />
-        <StatCard label="Properties" value={String(totalProperties)} href="/properties" />
-        <StatCard label="Expenses this month" value={formatAED(expensesThisMonth)} href="/expenses" />
+        <StatCard label="Customers" value={String(customersCount)} href="/customers" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">

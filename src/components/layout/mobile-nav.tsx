@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { LayoutDashboard, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NAV_ITEMS, isNavActive } from "@/lib/nav";
+import { NAV_GROUPS, NAV_ITEMS, isNavActive } from "@/lib/nav";
 import type { UserRole } from "@/lib/permissions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { BrandMark } from "@/components/layout/brand-mark";
@@ -15,7 +15,7 @@ export function MobileNav({ role }: { role: UserRole }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const items = NAV_ITEMS.filter((item) => item.roles.includes(role));
-  const groups = [...new Set(items.map((i) => i.group))];
+  const groups = [...NAV_GROUPS];
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
