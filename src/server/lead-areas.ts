@@ -45,6 +45,38 @@ export async function addLeadArea(name: string): Promise<ActionResult> {
   return mergeLeadAreas([name]);
 }
 
+export async function replaceLeadAreas(rawNames: string[]): Promise<ActionResult<{ added: number }>> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    if (!canManage(user.role)) return { ok: false, error: "Not authorized" };
+
+    const names = parseAreaNames(rawNames.join("\n"));
+    if (names.length === 0) return { ok: false, error: "No area names found" };
+
+    const supabase = createSupabaseServiceClient();
+    const { data: existing, error: existingError } = await supabase.from("lead_areas").select("id");
+    if (existingError) return { ok: false, error: existingError.message };
+
+    const ids = (existing ?? []).map((row: { id: string }) => row.id);
+    for (let i = 0; i < ids.length; i += 200) {
+      const { error } = await supabase.from("lead_areas").delete().in("id", ids.slice(i, i + 200));
+      if (error) return { ok: false, error: error.message };
+    }
+
+    for (let i = 0; i < names.length; i += 200) {
+      const { error } = await supabase.from("lead_areas").insert(names.slice(i, i + 200).map((name) => ({ name })));
+      if (error) return { ok: false, error: error.message };
+    }
+
+    revalidatePath("/settings/leads");
+    revalidatePath("/leads");
+    return { ok: true, data: { added: names.length } };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
 export async function deleteLeadArea(id: string): Promise<ActionResult> {
   try {
     const user = await getCurrentUser();

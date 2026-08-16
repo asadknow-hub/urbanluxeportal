@@ -1,8 +1,8 @@
 export function parseAreaNames(raw: string): string[] {
   const seen = new Set<string>();
   const names: string[] = [];
-  for (const part of raw.split(/[\n\r,;|\t]+/)) {
-    const name = part.replace(/^["']+|["']+$/g, "").trim();
+  for (const line of raw.split(/\r?\n/)) {
+    const name = line.replace(/^["']+|["']+$/g, "").trim();
     if (!name) continue;
     if (/^(area|areas|name|community|communities)$/i.test(name)) continue;
     const key = name.toLowerCase();
@@ -26,8 +26,15 @@ export async function parseAreaFile(file: File): Promise<string[]> {
       raw: false,
       defval: "",
     });
-    const cells = rows.flatMap((row) => (Array.isArray(row) ? row.map((cell) => String(cell ?? "")) : []));
-    return parseAreaNames(cells.join("\n"));
+    const lines = rows.map((row) => {
+      const cells = (Array.isArray(row) ? row : [])
+        .map((cell) => String(cell ?? "").trim())
+        .filter(Boolean);
+      if (cells.length === 0) return "";
+      if (cells.length === 1) return cells[0];
+      return cells.join(", ");
+    });
+    return parseAreaNames(lines.join("\n"));
   }
   return parseAreaNames(await file.text());
 }

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { addLeadArea, deleteLeadArea, mergeLeadAreas } from "@/server/lead-areas";
+import { addLeadArea, deleteLeadArea, mergeLeadAreas, replaceLeadAreas } from "@/server/lead-areas";
 import type { ActionResult } from "@/server/leads";
 import { parseAreaFile, parseAreaNames } from "@/lib/parse-area-list";
 import { toast } from "sonner";
@@ -42,7 +42,7 @@ export function LeadAreasManager({
       <div className="border-b border-border px-4 py-3">
         <h2 className="text-sm font-medium text-foreground">Preferred areas</h2>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          This list powers the Preferred Areas dropdown on lead create and lead detail. Upload Excel, paste names, or add and remove one by one.
+          This list powers the Preferred Areas dropdown on lead create and lead detail. One name per line — commas stay in the name (for example Wadi Al Safa 6, Wadi Al Safa).
         </p>
       </div>
 
@@ -53,18 +53,33 @@ export function LeadAreasManager({
             value={paste}
             onChange={(e) => setPaste(e.target.value)}
             rows={6}
-            placeholder={"Downtown Dubai\nDubai Marina\nPalm Jumeirah"}
+            placeholder={"Wadi Al Safa 6, Wadi Al Safa\nWarsan 2, Warsan\nPalm Jumeirah"}
             className="text-sm"
           />
-          <Button
-            type="button"
-            size="sm"
-            disabled={pending || parseAreaNames(paste).length === 0}
-            onClick={() => run(() => mergeLeadAreas(parseAreaNames(paste)), "Areas added")}
-          >
-            {pending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
-            Merge pasted areas
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              disabled={pending || parseAreaNames(paste).length === 0}
+              onClick={() => run(() => mergeLeadAreas(parseAreaNames(paste)), "Areas added")}
+            >
+              {pending && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
+              Merge pasted areas
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={pending || parseAreaNames(paste).length === 0}
+              onClick={() => {
+                const count = parseAreaNames(paste).length;
+                if (!window.confirm(`Replace the whole list with these ${count} names? The current ${areas.length} areas will be removed.`)) return;
+                run(() => replaceLeadAreas(parseAreaNames(paste)), "Area list replaced");
+              }}
+            >
+              Replace list
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-2">
