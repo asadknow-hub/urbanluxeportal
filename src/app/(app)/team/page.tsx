@@ -1,6 +1,8 @@
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { TeamList } from "@/components/team/team-list";
+import { PageHeader } from "@/components/primitives/page-header";
+import { StatCard } from "@/components/primitives/stat-card";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -30,11 +32,18 @@ export default async function TeamPage({
     query = query.or(`full_name.ilike.%${params.q}%,email.ilike.%${params.q}%`);
   }
 
-  const { data: staff, error } = await query;
+  const [{ data: staff, error }, { data: allStaff }] = await Promise.all([
+    query,
+    supabase.from("profiles").select("id, role, is_active"),
+  ]);
 
   if (error) console.error("[team] query error:", error.message);
 
-  // Get lead counts per agent
+  const roster = allStaff ?? [];
+  const total = roster.length;
+  const active = roster.filter((s) => s.is_active).length;
+  const agents = roster.filter((s) => s.role === "agent" && s.is_active).length;
+
   const { data: leadCounts } = await supabase
     .from("leads")
     .select("assigned_to")
@@ -45,7 +54,6 @@ export default async function TeamPage({
     if (l.assigned_to) leadMap[l.assigned_to] = (leadMap[l.assigned_to] ?? 0) + 1;
   });
 
-  // Get deal counts per agent
   const { data: dealCounts } = await supabase
     .from("deals")
     .select("assigned_to, stage")
@@ -60,31 +68,20 @@ export default async function TeamPage({
   });
 
   return (
-    <div className="space-y-5 max-w-[1600px] mx-auto">
-      {/* Premium Header Banner */}
-      <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-emerald-900 via-emerald-800 to-emerald-950 p-5 sm:p-10 text-white shadow-xl shadow-emerald-900/10">
-        <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-emerald-500/20 blur-3xl mix-blend-overlay pointer-events-none"></div>
-        <div className="absolute -bottom-32 -left-10 h-80 w-80 rounded-full bg-emerald-400/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
-        
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2">Staff Directory</h1>
-            <p className="text-emerald-100/80 text-sm sm:text-base max-w-xl font-medium leading-relaxed">
-              Manage staff accounts, oversee performance metrics, and assign roles.
-            </p>
-          </div>
-          <div className="hidden lg:flex items-center gap-4 rounded-2xl bg-white/10 p-5 backdrop-blur-md border border-white/20 shadow-inner">
-             <div className="text-center">
-               <p className="text-xl font-bold">{staff?.length ?? 0}</p>
-               <p className="text-[10px] uppercase tracking-wider text-emerald-200 font-bold mt-1">Total Members</p>
-             </div>
-             <div className="w-[1px] h-10 bg-white/20"></div>
-             <div className="text-center">
-               <p className="text-xl font-bold">{staff?.filter(s => s.role === 'agent').length ?? 0}</p>
-               <p className="text-[10px] uppercase tracking-wider text-emerald-200 font-bold mt-1">Active Agents</p>
-             </div>
-          </div>
-        </div>
+    <div className="mx-auto max-w-[1600px] space-y-5">
+      <PageHeader
+        title="Staff"
+        description="Accounts, roles, and CRM load for your workspace."
+      />
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <StatCard label="Roster" value={String(total)} hint={`${active} active`} />
+        <StatCard label="Active agents" value={String(agents)} />
+        <StatCard
+          label="Showing"
+          value={String(staff?.length ?? 0)}
+          hint={params.role || params.q ? "Filtered" : "All roles"}
+        />
       </div>
 
       <TeamList
