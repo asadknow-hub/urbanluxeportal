@@ -33,11 +33,7 @@ export const NAV_ITEMS: NavItem[] = [
 export function isNavActive(pathname: string, href: string): boolean {
   if (href === "/leads") {
     if (pathname === "/leads") return true;
-    if (
-      pathname.startsWith("/leads/followups") ||
-      pathname.startsWith("/leads/campaigns") ||
-      pathname.startsWith("/leads/inflow")
-    ) {
+    if (pathname.startsWith("/leads/followups") || pathname.startsWith("/leads/inflow")) {
       return false;
     }
     return pathname.startsWith("/leads/");

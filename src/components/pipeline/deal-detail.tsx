@@ -69,7 +69,6 @@ type Deal = {
   id: string;
   title: string;
   customer_id: string;
-  property_id: string | null;
   deal_type: string;
   stage: string;
   value: number;
@@ -125,7 +124,6 @@ export function DealDetail({
   activities,
   agents,
   documents,
-  invoices,
   userRole,
   userId,
 }: {
@@ -133,7 +131,6 @@ export function DealDetail({
   activities: DealActivity[];
   agents: { id: string; full_name: string; role: string }[];
   documents: { id: string; file_name: string; file_url: string; file_type: string; created_at: string }[];
-  invoices: { id: string; invoice_number: string | null; status: string; total: number; issue_date: string }[];
   userRole: string;
   userId: string;
 }) {
@@ -494,35 +491,6 @@ export function DealDetail({
                     </p>
                   </div>
                 )}
-              </div>
-            </div>
-          )}
-
-          {/* Invoices (if won) */}
-          {deal.stage === "won" && invoices.length > 0 && (
-            <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-              <h2 className="mb-4 text-sm font-semibold text-slate-700">Invoices ({invoices.length})</h2>
-              <div className="space-y-2">
-                {invoices.map((inv) => {
-                  const invColors = getStatusColor(inv.status);
-                  return (
-                    <div key={inv.id} className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-4 w-4 text-slate-400" />
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">{inv.invoice_number ?? inv.id.slice(0, 8)}</p>
-                          <p className="text-xs text-slate-400">{formatDate(inv.issue_date)}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-slate-700">{formatAED(inv.total)}</span>
-                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${invColors.bg} ${invColors.text}`}>
-                          {inv.status}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
               </div>
             </div>
           )}

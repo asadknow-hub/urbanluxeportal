@@ -49,7 +49,6 @@ export type DealCard = {
   assigned_to: string | null;
   assigned_to_profile: { id: string; full_name: string; avatar_url: string | null } | null;
   stage_changed_at: string | null;
-  property_id: string | null;
   lead_id: string | null;
 };
 

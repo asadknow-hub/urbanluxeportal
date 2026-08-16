@@ -68,21 +68,12 @@ export default async function DealDetailPage({
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
-  // Fetch invoices for this customer
-  const { data: invoices } = await supabase
-    .from("invoices")
-    .select("id, invoice_number, status, total, issue_date")
-    .eq("customer_id", deal.customer?.id ?? "")
-    .order("created_at", { ascending: false })
-    .limit(5);
-
   return (
     <DealDetail
       deal={deal}
       activities={activities ?? []}
       agents={agents ?? []}
       documents={documents ?? []}
-      invoices={invoices ?? []}
       userRole={user.role}
       userId={user.id}
     />

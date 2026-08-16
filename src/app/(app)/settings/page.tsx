@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { redirect } from "next/navigation";
 import { can } from "@/lib/permissions";
 import Link from "next/link";
-import { Users, Zap, Mail, ChevronRight, Route } from "lucide-react";
+import { Users, Mail, ChevronRight, Route } from "lucide-react";
 
 export default async function SettingsPage() {
   const user = await getCurrentUser();
@@ -67,19 +67,6 @@ export default async function SettingsPage() {
           <div className="mt-auto">
             <p className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors">Users & Roles</p>
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">Manage team access</p>
-          </div>
-        </Link>
-
-        <Link href="/settings/automations" className="group rounded-[1.5rem] bg-white p-4 shadow-sm border border-slate-200/60 hover:shadow-xl hover:-translate-y-1 hover:border-amber-200 transition-all duration-300 flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <div className="rounded-[1.5rem] bg-amber-50/50 border border-amber-100 p-3 transition-transform group-hover:scale-110">
-              <Zap className="h-6 w-6 text-amber-600" />
-            </div>
-            <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-amber-500 group-hover:translate-x-1 transition-all" />
-          </div>
-          <div className="mt-auto">
-            <p className="text-lg font-bold text-slate-900 group-hover:text-amber-600 transition-colors">Automations</p>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-1">Workflow rules</p>
           </div>
         </Link>
 

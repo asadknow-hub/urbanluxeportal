@@ -382,7 +382,7 @@ export async function updateLead(
 
 export async function convertLead(
   leadId: string,
-  options: { dealTitle?: string; dealValue?: number; propertyId?: string }
+  options: { dealTitle?: string; dealValue?: number }
 ): Promise<ActionResult<{ customerId: string; dealId: string }>> {
   try {
     const user = await getCurrentUser();
@@ -425,7 +425,6 @@ export async function convertLead(
       .insert({
         title,
         customer_id: customer.id,
-        property_id: options.propertyId || null,
         deal_type: lead.interest === "rent" ? "rental" : lead.interest === "off_plan" ? "off_plan" : "sale",
         stage: "inquiry",
         value: options.dealValue ? Math.round(options.dealValue * 100) : 0,

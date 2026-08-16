@@ -36,16 +36,6 @@ export async function GET() {
         profileData: profile ? { id: profile.id, role: profile.role, is_active: profile.is_active } : null,
       };
 
-      const { data: props, error: propsError, count } = await supabase
-        .from("properties")
-        .select("id", { count: "exact", head: true })
-        .is("deleted_at", null);
-
-      results.properties = {
-        count: count ?? 0,
-        error: propsError?.message ?? null,
-      };
-
       const { data: deals, error: dealsError } = await supabase
         .from("deals")
         .select("value")
@@ -57,15 +47,14 @@ export async function GET() {
         error: dealsError?.message ?? null,
       };
 
-      const { data: invoices, error: invoicesError } = await supabase
-        .from("invoices")
-        .select("total")
-        .is("deleted_at", null)
-        .eq("status", "paid");
+      const { count: leadsCount, error: leadsError } = await supabase
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .is("deleted_at", null);
 
-      results.invoices = {
-        count: invoices?.length ?? 0,
-        error: invoicesError?.message ?? null,
+      results.leads = {
+        count: leadsCount ?? 0,
+        error: leadsError?.message ?? null,
       };
     }
 

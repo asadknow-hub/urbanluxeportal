@@ -29,7 +29,7 @@ export type DocumentRow = {
   created_at: string;
 };
 
-const ENTITY_TYPES = ["customer", "property", "deal", "invoice", "expense"];
+const ENTITY_TYPES = ["lead", "customer", "deal", "profile"];
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;

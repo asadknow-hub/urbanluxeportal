@@ -16,7 +16,6 @@ const HUB_TABS = [
   { key: "overview", label: "Overview" },
   { key: "fields", label: "Fields" },
   { key: "stages", label: "Stages" },
-  { key: "routing", label: "Routing" },
 ] as const;
 
 type HubTab = (typeof HUB_TABS)[number]["key"];
@@ -27,20 +26,6 @@ function isHubTab(value: string | undefined): value is HubTab {
 
 function formatStageKind(kind: string) {
   return kind.replace(/_/g, " ");
-}
-
-function describeTarget(action: Record<string, unknown>) {
-  const type = String(action.type ?? "");
-  if (type === "round_robin") {
-    return "Round robin assignment";
-  }
-  if (type === "assign") {
-    return `Assign to ${String(action.user_id ?? action.team_id ?? "configured user")}`;
-  }
-  if (type === "pool") {
-    return "Leave in pool";
-  }
-  return type || "Configured action";
 }
 
 export default async function LeadsSettingsPage({
@@ -56,9 +41,8 @@ export default async function LeadsSettingsPage({
   const params = await searchParams;
   const tab: HubTab = isHubTab(params.tab) ? params.tab : "fields";
 
-  const [stagesResult, routingResult, leadStatsResult, areasResult, nationalitiesResult, fieldOptionsResult, leadColumns] = await Promise.all([
+  const [stagesResult, leadStatsResult, areasResult, nationalitiesResult, fieldOptionsResult, leadColumns] = await Promise.all([
     supabase.from("lead_stages").select("*").eq("is_active", true).order("sort", { ascending: true }),
-    supabase.from("routing_rules").select("*").eq("is_active", true).order("sort", { ascending: true }),
     supabase.from("leads").select("stage_id").not("stage_id", "is", null),
     supabase.from("lead_areas").select("id, name").order("name"),
     supabase.from("lead_nationalities").select("id, name").order("name"),
@@ -67,13 +51,11 @@ export default async function LeadsSettingsPage({
   ]);
 
   if (stagesResult.error) console.error("[settings/leads] stages query error:", stagesResult.error.message);
-  if (routingResult.error) console.error("[settings/leads] routing query error:", routingResult.error.message);
   if (leadStatsResult.error) console.error("[settings/leads] lead stats query error:", leadStatsResult.error.message);
 
   const fieldOptions = groupLeadFieldOptions((fieldOptionsResult.data ?? []) as LeadFieldOption[]);
   const fieldCount = leadColumns.length;
   const stages = stagesResult.data ?? [];
-  const routingRules = routingResult.data ?? [];
 
   const stageCountMap: Record<string, number> = {};
   (leadStatsResult.data ?? []).forEach((row: { stage_id: string | null }) => {
@@ -123,12 +105,12 @@ export default async function LeadsSettingsPage({
             <div className="group rounded-xl bg-white p-3 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
                <div className="flex items-center gap-3 mb-4">
                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
-                   <Settings2 className="h-4 w-4" />
+                   <CalendarClock className="h-4 w-4" />
                  </div>
-                 <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Rules</h3>
+                 <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">SLA</h3>
                </div>
-               <div className="text-2xl font-bold text-slate-900">{routingRules.length}</div>
-               <p className="mt-2 text-xs font-medium text-slate-400">Routing & SLAs</p>
+               <div className="text-2xl font-bold text-slate-900">{stages.filter((s: { stale_after_days: number | null }) => s.stale_after_days != null).length}</div>
+               <p className="mt-2 text-xs font-medium text-slate-400">Stages with stale timers</p>
             </div>
             
             <div className="group rounded-xl bg-white p-3 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
@@ -153,7 +135,7 @@ export default async function LeadsSettingsPage({
               </div>
               <p className="text-sm text-slate-500 font-medium leading-relaxed mb-5">
                 1. Create or capture a lead with the Fields picklists.<br/>
-                2. Enter the stage flow and apply routing / SLA rules.<br/>
+                2. Move through stages and honor SLA timers.<br/>
                 3. Follow up, qualify, and convert into a customer and deal.
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -272,59 +254,6 @@ export default async function LeadsSettingsPage({
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      )}
-
-      {tab === "routing" && (
-        <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200/60">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
-              <Route className="h-4 w-4" />
-            </div>
-            <h2 className="text-base font-bold text-slate-900">Routing and SLA Rules</h2>
-          </div>
-          <div className="space-y-4">
-            {routingRules.length === 0 ? (
-              <p className="text-sm font-medium text-slate-500">No routing rules found.</p>
-            ) : (
-              <div className="grid gap-4">
-                {routingRules.map((rule: { id: string; sort: number; conditions: Record<string, unknown>; action: Record<string, unknown>; is_active: boolean }) => (
-                  <div key={rule.id} className="rounded-xl border border-slate-100 bg-slate-50 p-4 hover:border-slate-200 transition-colors">
-                    <div className="flex items-center justify-between gap-3 mb-4">
-                      <div className="flex items-center gap-4">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm border border-slate-200/60 text-sm font-bold text-slate-700">
-                          {rule.sort}
-                        </span>
-                        <div>
-                          <p className="text-base font-bold text-slate-900">{describeTarget(rule.action)}</p>
-                        </div>
-                      </div>
-                      <span className={cn(
-                        "rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider shadow-sm",
-                        rule.is_active ? "bg-emerald-100 text-emerald-700 border border-emerald-200/50" : "bg-white text-slate-500 border border-slate-200"
-                      )}>
-                        {rule.is_active ? "Active" : "Inactive"}
-                      </span>
-                    </div>
-                    <div className="grid gap-4 md:grid-cols-2 mt-6 border-t border-slate-200/60 pt-6">
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Conditions</p>
-                        <pre className="overflow-x-auto rounded-xl bg-white border border-slate-200/60 p-4 text-[11px] font-medium text-slate-600 shadow-inner max-h-40 overflow-y-auto custom-scrollbar">
-                          {JSON.stringify(rule.conditions, null, 2)}
-                        </pre>
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Action Config</p>
-                        <pre className="overflow-x-auto rounded-xl bg-white border border-slate-200/60 p-4 text-[11px] font-medium text-slate-600 shadow-inner max-h-40 overflow-y-auto custom-scrollbar">
-                          {JSON.stringify(rule.action, null, 2)}
-                        </pre>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       )}

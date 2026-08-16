@@ -13,9 +13,6 @@ import {
   MapPin,
   User,
   Building2,
-  FileText,
-  CreditCard,
-  Calendar,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -61,30 +58,6 @@ export default async function CustomerDetailPage({
       .single();
     originatingLead = ld;
   }
-
-  // Fetch invoices
-  const { data: invoices } = await supabase
-    .from("invoices")
-    .select("*")
-    .eq("customer_id", id)
-    .order("created_at", { ascending: false });
-
-  // Fetch payments
-  const { data: payments } = await supabase
-    .from("payments")
-    .select("*")
-    .eq("customer_id", id)
-    .order("payment_date", { ascending: false });
-
-  // Calculate balance
-  const invoiceTotal = (invoices ?? [])
-    .filter((inv) => inv.status !== "void")
-    .reduce((sum, inv) => sum + (inv.total ?? 0), 0);
-  const paymentTotal = (payments ?? []).reduce(
-    (sum, p) => sum + (p.amount ?? 0),
-    0
-  );
-  const balance = invoiceTotal - paymentTotal;
 
   // Fetch activity log
   const { data: activities } = await supabase
@@ -206,29 +179,9 @@ export default async function CustomerDetailPage({
             </dl>
           </div>
 
-          {/* Balance card */}
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-            <h2 className="mb-4 text-sm font-semibold text-slate-700">Balance</h2>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-slate-500">Total Invoiced</span>
-                <span className="font-medium text-slate-700">{formatAED(invoiceTotal)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500">Total Paid</span>
-                <span className="font-medium text-emerald-600">{formatAED(paymentTotal)}</span>
-              </div>
-              <div className="flex justify-between border-t border-slate-100 pt-2">
-                <span className="font-medium text-slate-700">Outstanding</span>
-                <span className={`font-bold ${balance > 0 ? "text-red-600" : "text-emerald-600"}`}>
-                  {formatAED(balance)}
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Right: Deals, Invoices, Activity */}
+        {/* Right: Deals + Activity */}
         <div className="space-y-6 lg:col-span-2">
           {/* Deals */}
           <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
@@ -293,42 +246,6 @@ export default async function CustomerDetailPage({
               </Link>
             </div>
           )}
-
-          {/* Invoices */}
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-            <h2 className="mb-4 text-sm font-semibold text-slate-700">
-              Invoices ({invoices?.length ?? 0})
-            </h2>
-            <div className="space-y-2">
-              {(invoices ?? []).length === 0 ? (
-                <p className="text-sm text-slate-400">No invoices yet.</p>
-              ) : (
-                (invoices ?? []).map((inv) => {
-                  const colors = getStatusColor(inv.status);
-                  return (
-                    <div
-                      key={inv.id}
-                      className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2"
-                    >
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-4 w-4 text-slate-400" />
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">{inv.invoice_number ?? inv.id.slice(0, 8)}</p>
-                          <p className="text-xs text-slate-400">{formatDate(inv.issue_date)}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-slate-700">{formatAED(inv.total)}</span>
-                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${colors.bg} ${colors.text}`}>
-                          {inv.status}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
 
           {/* Activity */}
           <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">

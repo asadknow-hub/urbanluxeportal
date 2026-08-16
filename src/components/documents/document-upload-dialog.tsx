@@ -269,8 +269,8 @@ export function DocumentUploadDialog({
                   <SelectItem value="none">None</SelectItem>
                   <SelectItem value="lead">Lead</SelectItem>
                   <SelectItem value="customer">Customer</SelectItem>
-                  <SelectItem value="property">Property</SelectItem>
                   <SelectItem value="deal">Deal</SelectItem>
+                  <SelectItem value="profile">Staff</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -258,7 +258,6 @@ export async function updateDeal(
     title?: string;
     value?: number;
     expected_close_date?: string | null;
-    property_id?: string | null;
     commission_rate?: number | null;
   }
 ): Promise<ActionResult> {
@@ -274,7 +273,6 @@ export async function updateDeal(
     if (input.title !== undefined) updateData.title = input.title;
     if (input.value !== undefined) updateData.value = Math.round(input.value * 100);
     if (input.expected_close_date !== undefined) updateData.expected_close_date = input.expected_close_date;
-    if (input.property_id !== undefined) updateData.property_id = input.property_id;
     if (input.commission_rate !== undefined) updateData.commission_rate = input.commission_rate;
 
     const { error } = await supabase
