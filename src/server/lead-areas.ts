@@ -3,6 +3,7 @@
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { fallbackLeadTableColumns } from "@/lib/lead-table-fields";
 import { parseAreaNames } from "@/lib/parse-area-list";
 import type { ActionResult } from "@/server/leads";
 
@@ -23,7 +24,7 @@ export async function mergeLeadAreas(rawNames: string[]): Promise<ActionResult<{
     const { data: existing, error: existingError } = await supabase.from("lead_areas").select("name_norm");
     if (existingError) return { ok: false, error: existingError.message };
 
-    const have = new Set((existing ?? []).map((row) => row.name_norm));
+    const have = new Set((existing ?? []).map((row: { name_norm: string }) => row.name_norm));
     const fresh = names.filter((name) => !have.has(name.trim().toLowerCase()));
     if (fresh.length === 0) {
       return { ok: true, data: { added: 0 } };
@@ -72,9 +73,11 @@ export type LeadTableColumn = {
 export async function fetchLeadTableColumns(): Promise<LeadTableColumn[]> {
   const supabase = createSupabaseServiceClient();
   const { data, error } = await supabase.rpc("lead_table_columns");
+  if (!error && data && data.length > 0) {
+    return data as LeadTableColumn[];
+  }
   if (error) {
     console.error("[lead_table_columns]", error.message);
-    return [];
   }
-  return (data ?? []) as LeadTableColumn[];
+  return fallbackLeadTableColumns();
 }

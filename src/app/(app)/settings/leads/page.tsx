@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LeadsInflowClient, type LeadInflowTab } from "@/components/leads/leads-inflow-client";
 import { LeadTableFieldsColumn } from "@/components/leads/lead-table-fields";
 import { LeadAreasManager } from "@/components/leads/lead-areas-manager";
+import { LeadFieldDetailPlaceholder } from "@/components/leads/lead-field-detail";
 import { fetchLeadTableColumns } from "@/server/lead-areas";
 import { mapLeadTableColumns } from "@/lib/lead-table-fields";
 import { ArrowRight, CalendarClock, CheckCircle2, Layers3, Settings2, Route, FileText } from "lucide-react";
@@ -50,7 +51,7 @@ function describeTarget(action: Record<string, unknown>) {
 export default async function LeadsSettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; field?: string }>;
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
@@ -252,12 +253,22 @@ export default async function LeadsSettingsPage({
         </div>
       )}
 
-      {tab === "fields" && (
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
-          <LeadTableFieldsColumn fields={mapLeadTableColumns(leadColumns)} />
-          <LeadAreasManager areas={areasResult.data ?? []} />
-        </div>
-      )}
+      {tab === "fields" && (() => {
+        const fields = mapLeadTableColumns(leadColumns);
+        const selectedKey =
+          fields.some((field) => field.key === params.field) ? params.field! : "preferred_areas";
+        const selectedField = fields.find((field) => field.key === selectedKey) ?? fields[0];
+        return (
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
+            <LeadTableFieldsColumn fields={fields} selectedKey={selectedKey} />
+            {selectedKey === "preferred_areas" ? (
+              <LeadAreasManager areas={areasResult.data ?? []} />
+            ) : selectedField ? (
+              <LeadFieldDetailPlaceholder field={selectedField} />
+            ) : null}
+          </div>
+        );
+      })()}
 
       {(tab === "sources" || tab === "mapping") && (
         <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200/60 flex flex-col">
