@@ -634,7 +634,7 @@ export function LeadDetail({
 
   return (
     <div className="mx-auto flex w-full max-w-[1460px] flex-col gap-[18px]">
-      <section className="overflow-hidden rounded-[14px] border border-border bg-card">
+      <section className="overflow-visible rounded-[14px] border border-border bg-card">
         <div className="flex flex-col gap-6 px-6 py-7 md:flex-row md:items-start md:gap-[26px] md:px-8">
           <div className="relative grid h-[84px] w-[84px] shrink-0 place-items-center rounded-md border-[1.5px] border-primary bg-[#F5EEDC]">
             <span className="absolute inset-[5px] rounded-[3px] border border-primary/35" />
@@ -805,22 +805,31 @@ export function LeadDetail({
         </div>
 
         {pipelineStages.length > 0 && (
-          <div className="relative border-t border-border/80 px-6 pb-2 pt-5 md:px-8">
+          <div className="relative border-t border-border/80 px-6 pb-2 pt-8 md:px-8">
             <div className="relative h-[5px] rounded-full bg-border">
               <div className="absolute inset-y-0 left-0 rounded-full bg-primary" style={{ width: `${fillPct}%` }} />
               <div className="absolute inset-0">
                 {pipelineStages.map((stage, idx) => {
-                  const left = pipelineStages.length === 1 ? 0 : (idx / (pipelineStages.length - 1)) * 100;
+                  const lastIdx = pipelineStages.length - 1;
+                  const left = lastIdx <= 0 ? 0 : (idx / lastIdx) * 100;
                   const isCurrent = idx === currentIdx;
                   const isDone = currentIdx >= 0 && idx < currentIdx;
+                  const isFirst = idx === 0;
+                  const isLast = idx === lastIdx;
                   return (
                     <button
                       key={stage.id}
                       type="button"
                       disabled={!canEdit || pending}
                       onClick={() => handleStageChange(stage.id)}
-                      className="absolute top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
-                      style={{ left: `${left}%` }}
+                      className={`absolute top-1/2 flex -translate-y-1/2 flex-col ${
+                        isFirst
+                          ? "left-0 items-start"
+                          : isLast
+                            ? "right-0 items-end"
+                            : "items-center -translate-x-1/2"
+                      }`}
+                      style={isFirst || isLast ? undefined : { left: `${left}%` }}
                     >
                       {isDone && <Check className="absolute -top-5 h-[13px] w-[13px] text-primary" />}
                       {isCurrent && slaClock && (
@@ -830,8 +839,8 @@ export function LeadDetail({
                             slaClock.overdue ? "font-semibold text-red-700" : "text-[#8A6D2C]"
                           }`}
                         >
-                          {slaClock.dayNum}/{slaClock.sla} days here
-                          {slaClock.overdue ? " · overdue" : ""}
+                          {slaClock.dayNum}/{slaClock.sla}d
+                          {slaClock.overdue ? " overdue" : ""}
                         </span>
                       )}
                       {isCurrent ? (
@@ -864,7 +873,8 @@ export function LeadDetail({
         <div className="flex min-w-0 flex-col gap-[18px]">
           <section className="rounded-[14px] border border-border bg-card px-[22px] py-4">
             <h2 className="mb-3 text-center font-heading text-[1.12rem]" style={{ fontFamily: "var(--font-display), serif" }}>Lead snapshot</h2>
-            <div className="grid grid-cols-1 gap-x-0 gap-y-4 md:grid-cols-2 md:gap-x-8">
+            <div className="grid grid-cols-1 items-start gap-x-0 gap-y-5 md:grid-cols-2 md:gap-x-8">
+              <div className="flex min-w-0 flex-col gap-5">
               <SnapshotBlock title="Contact">
                 <LedgerRow label="Name" overlay>
                   <QuietSaveInput
@@ -910,7 +920,50 @@ export function LeadDetail({
                 </LedgerRow>
               </SnapshotBlock>
 
-              <div className="md:border-l md:border-border/70 md:pl-8">
+              <SnapshotBlock title="Financing">
+                <LedgerRow label="Budget" overlay>
+                  <FloatPicker
+                    disabled={!canEdit}
+                    className="w-[18rem] p-3"
+                    trigger={
+                      <span className="block px-1 py-0.5 font-mono text-[0.82rem]">
+                        {budgetLine ?? emptyValue()}
+                      </span>
+                    }
+                  >
+                    {(close) => (
+                      <BudgetRangeEditor
+                        minAed={optimisticLead.budget_min ? String(optimisticLead.budget_min / 100) : ""}
+                        maxAed={optimisticLead.budget_max ? String(optimisticLead.budget_max / 100) : ""}
+                        onCancel={close}
+                        onSave={(min, max) => {
+                          saveField({ budget_min: toFils(min), budget_max: toFils(max) }, { budget_min: toFils(min), budget_max: toFils(max) });
+                          close();
+                        }}
+                      />
+                    )}
+                  </FloatPicker>
+                </LedgerRow>
+                <LedgerRow label="Financing" overlay>
+                  <ChoicePicker
+                    value={optimisticLead.financing}
+                    options={FINANCING_OPTIONS}
+                    disabled={!canEdit}
+                    onChange={(v) => saveField({ financing: v || null }, { financing: v || null })}
+                  />
+                </LedgerRow>
+                <LedgerRow label="Timeframe" overlay>
+                  <ChoicePicker
+                    value={optimisticLead.timeframe}
+                    options={TIMEFRAME_OPTIONS}
+                    disabled={!canEdit}
+                    onChange={(v) => saveField({ timeframe: v || null }, { timeframe: v || null })}
+                  />
+                </LedgerRow>
+              </SnapshotBlock>
+              </div>
+
+              <div className="flex min-w-0 flex-col gap-5 md:border-l md:border-border/70 md:pl-8">
                 <SnapshotBlock title="Tastes">
                   <LedgerRow label="Interest" overlay>
                     <ChoicePicker
@@ -971,51 +1024,7 @@ export function LeadDetail({
                     />
                   </LedgerRow>
                 </SnapshotBlock>
-              </div>
 
-              <SnapshotBlock title="Financing">
-                <LedgerRow label="Budget" overlay>
-                  <FloatPicker
-                    disabled={!canEdit}
-                    className="w-[18rem] p-3"
-                    trigger={
-                      <span className="block px-1 py-0.5 font-mono text-[0.82rem]">
-                        {budgetLine ?? emptyValue()}
-                      </span>
-                    }
-                  >
-                    {(close) => (
-                      <BudgetRangeEditor
-                        minAed={optimisticLead.budget_min ? String(optimisticLead.budget_min / 100) : ""}
-                        maxAed={optimisticLead.budget_max ? String(optimisticLead.budget_max / 100) : ""}
-                        onCancel={close}
-                        onSave={(min, max) => {
-                          saveField({ budget_min: toFils(min), budget_max: toFils(max) }, { budget_min: toFils(min), budget_max: toFils(max) });
-                          close();
-                        }}
-                      />
-                    )}
-                  </FloatPicker>
-                </LedgerRow>
-                <LedgerRow label="Financing" overlay>
-                  <ChoicePicker
-                    value={optimisticLead.financing}
-                    options={FINANCING_OPTIONS}
-                    disabled={!canEdit}
-                    onChange={(v) => saveField({ financing: v || null }, { financing: v || null })}
-                  />
-                </LedgerRow>
-                <LedgerRow label="Timeframe" overlay>
-                  <ChoicePicker
-                    value={optimisticLead.timeframe}
-                    options={TIMEFRAME_OPTIONS}
-                    disabled={!canEdit}
-                    onChange={(v) => saveField({ timeframe: v || null }, { timeframe: v || null })}
-                  />
-                </LedgerRow>
-              </SnapshotBlock>
-
-              <div className="md:border-l md:border-border/70 md:pl-8">
                 <SnapshotBlock title="Notes">
                   <LedgerRow label="Tags" overlay>
                     <QuietSaveInput
