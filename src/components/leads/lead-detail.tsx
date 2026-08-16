@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { PreferredAreasPicker } from "@/components/leads/preferred-areas-picker"
 import { NationalityPicker } from "@/components/leads/nationality-picker";
 import { BlurSaveInput, BudgetRangeEditor } from "@/components/leads/hover-edit-row";
 import { DocumentUploadDialog } from "@/components/documents/document-upload-dialog";
+import { LeadDocumentsList, type LeadDocument } from "@/components/leads/lead-documents";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +37,6 @@ import { formatAED, formatAEDRange } from "@/lib/money";
 import { daysUntil, formatDate, formatDateTime, isOverdue, shortTimeAgo, timeAgo } from "@/lib/dates";
 import { stageSlaClock } from "@/lib/lead-sla";
 import { formatLeadInterest } from "@/lib/lead-format";
-import { getSignedUrl } from "@/server/documents";
 import {
   assignLead,
   scheduleFollowUp,
@@ -59,7 +59,6 @@ import {
   MapPin,
   Building2,
   Check,
-  ExternalLink,
 } from "lucide-react";
 
 type Lead = {
@@ -120,13 +119,7 @@ type LeadActivity = {
   author: { id: string; full_name: string } | null;
 };
 
-type DocumentRow = {
-  id: string;
-  name: string;
-  storage_path: string;
-  mime_type: string;
-  created_at: string;
-};
+type DocumentRow = LeadDocument;
 
 type Agent = { id: string; full_name: string; role: string };
 type Stage = { id: string; name: string; color: string; kind: string; sort: number; helper_text: string | null; stale_after_days?: number | null };
@@ -358,18 +351,18 @@ function LedgerRow({
   overlay?: boolean;
 }) {
   return (
-    <div className="grid grid-cols-1 items-center gap-0.5 py-[5px] sm:grid-cols-[108px_1fr] sm:gap-2">
-      <span className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{label}</span>
+    <div className="grid grid-cols-1 items-center gap-0 border-b border-border/40 py-[6px] last:border-b-0 sm:grid-cols-[108px_1fr]">
+      <span className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground sm:border-r sm:border-border/40 sm:pr-3">{label}</span>
       {overlay ? (
-        <div className="min-w-0">{children}</div>
+        <div className="min-w-0 sm:pl-3">{children}</div>
       ) : editing ? (
-        <div>{children}</div>
+        <div className="sm:pl-3">{children}</div>
       ) : (
         <button
           type="button"
           disabled={!canEdit}
           onClick={onEdit}
-          className="rounded-md px-1 py-0.5 text-left text-[0.86rem] text-foreground hover:bg-muted/70 disabled:cursor-default"
+          className="rounded-md px-1 py-0.5 text-left text-[0.86rem] text-foreground hover:bg-muted/70 disabled:cursor-default sm:pl-3"
         >
           {display}
         </button>
@@ -413,6 +406,17 @@ export function LeadDetail({
   const [optimisticLead, setOptimisticLead] = useState(lead);
   const [optimisticFollowUps, setOptimisticFollowUps] = useState(followUps);
   const [optimisticActivities, setOptimisticActivities] = useState(activities);
+  const [optimisticDocs, setOptimisticDocs] = useState<LeadDocument[]>(
+    documents.map((doc) => ({ ...doc, category: doc.category || "other" }))
+  );
+
+  useEffect(() => {
+    setOptimisticLead(lead);
+    setOptimisticFollowUps(followUps);
+    setOptimisticActivities(activities);
+    setOptimisticDocs(documents.map((doc) => ({ ...doc, category: doc.category || "other" })));
+  }, [lead, followUps, activities, documents]);
+
   const [editing, setEditing] = useState<string | null>(null);
   const [followUpDate, setFollowUpDate] = useState(toDatetimeLocal(lead.next_follow_up_at));
   const [followUpNotes, setFollowUpNotes] = useState("");
@@ -553,6 +557,35 @@ export function LeadDetail({
     });
   }
 
+  function handleMarkDone() {
+    const now = new Date().toISOString();
+    setOptimisticLead((prev) => ({ ...prev, next_follow_up_at: null, last_activity_at: now }));
+    setOptimisticFollowUps((prev) =>
+      prev.map((row) => (row.status === "scheduled" ? { ...row, status: "done", completed_at: now } : row))
+    );
+    setOptimisticActivities((prev) => [
+      {
+        id: `opt_fu_${Date.now()}`,
+        type: "follow_up_done",
+        summary: "Follow-up completed",
+        occurred_at: now,
+        created_by: userId,
+        author: { id: userId, full_name: "You" },
+      },
+      ...prev,
+    ]);
+    startTransition(async () => {
+      const result = await completeFollowUp(optimisticLead.id);
+      if (result.ok) router.refresh();
+      else {
+        setOptimisticLead(lead);
+        setOptimisticFollowUps(followUps);
+        setOptimisticActivities(activities);
+        toast.error(result.error ?? "Failed");
+      }
+    });
+  }
+
   function followUpTitle() {
     const when = optimisticLead.next_follow_up_at;
     if (!when) return "Set the next step";
@@ -597,12 +630,6 @@ export function LeadDetail({
         toast.error(result.error ?? "Failed");
       }
     });
-  }
-
-  async function openDocument(path: string) {
-    const result = await getSignedUrl(path);
-    if (result.ok && result.data?.url) window.open(result.data.url, "_blank");
-    else toast.error(result.error ?? "Could not open file");
   }
 
   return (
@@ -731,7 +758,10 @@ export function LeadDetail({
               <DocumentUploadDialog
                 entityType="lead"
                 entityId={optimisticLead.id}
-                onSaved={() => router.refresh()}
+                onSaved={(doc) => {
+                  if (doc) setOptimisticDocs((prev) => [{ ...doc, category: doc.category || "other" }, ...prev]);
+                  router.refresh();
+                }}
                 trigger={
                   <span className="inline-flex h-[42px] items-center gap-2 rounded-[10px] border border-border bg-card px-5 text-[0.88rem] font-semibold text-muted-foreground hover:border-foreground hover:text-foreground">
                     <Upload className="h-4 w-4" /> Upload document
@@ -784,7 +814,7 @@ export function LeadDetail({
                             slaClock.overdue ? "font-semibold text-red-700" : "text-[#8A6D2C]"
                           }`}
                         >
-                          day {slaClock.dayNum} of {slaClock.sla}
+                          {slaClock.dayNum}/{slaClock.sla} days here
                           {slaClock.overdue ? " · overdue" : ""}
                         </span>
                       )}
@@ -817,7 +847,7 @@ export function LeadDetail({
       <div className="grid grid-cols-1 items-start gap-[18px] xl:grid-cols-[1fr_360px]">
         <div className="flex min-w-0 flex-col gap-[18px]">
           <section className="rounded-[14px] border border-border bg-card px-[22px] py-4">
-            <h2 className="mb-3 font-heading text-[1.12rem]" style={{ fontFamily: "var(--font-display), serif" }}>Lead snapshot</h2>
+            <h2 className="mb-3 text-center font-heading text-[1.12rem]" style={{ fontFamily: "var(--font-display), serif" }}>Lead snapshot</h2>
             <div className="grid grid-cols-1 gap-x-0 gap-y-4 md:grid-cols-2 md:gap-x-8">
               <SnapshotBlock title="Contact">
                 <LedgerRow label="Name" overlay>
@@ -1140,13 +1170,7 @@ export function LeadDetail({
                     type="button"
                     className="inline-flex h-[42px] flex-1 items-center justify-center rounded-[10px] border border-white/25 text-[0.88rem] font-semibold text-[#EDEBE0] hover:border-white"
                     disabled={pending}
-                    onClick={() => {
-                      startTransition(async () => {
-                        const result = await completeFollowUp(optimisticLead.id);
-                        if (result.ok) router.refresh();
-                        else toast.error(result.error ?? "Failed");
-                      });
-                    }}
+                    onClick={handleMarkDone}
                   >
                     Mark done
                   </button>
@@ -1170,7 +1194,21 @@ export function LeadDetail({
               <span>0</span><span>Cold · Warm · Hot</span><span>100</span>
             </div>
             <div className="mt-4 border-t border-border/70">
-              <div className="flex justify-between border-b border-border/70 py-2.5 text-[0.84rem]"><span className="text-muted-foreground">Stage clock</span><b className={slaClock?.overdue ? "text-red-700" : undefined}>{slaClock ? `Day ${slaClock.dayNum} of ${slaClock.sla}` : "No SLA"}</b></div>
+              <div className="border-b border-border/70 py-2.5 text-[0.84rem]">
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Time in this stage</span>
+                  <b className={slaClock?.overdue ? "text-red-700" : undefined}>
+                    {slaClock
+                      ? `${slaClock.dayNum} of ${slaClock.sla} days${slaClock.overdue ? " · overdue" : ""}`
+                      : "No limit set"}
+                  </b>
+                </div>
+                <p className="mt-1 text-[0.72rem] leading-snug text-muted-foreground">
+                  {slaClock
+                    ? `How long this lead has sat in ${currentStage?.name ?? "this stage"}. Move them within ${slaClock.sla} days.`
+                    : "Set a stage SLA in Lead Settings to track how long a lead sits here."}
+                </p>
+              </div>
               <div className="flex justify-between border-b border-border/70 py-2.5 text-[0.84rem]"><span className="text-muted-foreground">Engagement</span><b>{engagement}</b></div>
               <div className="flex justify-between border-b border-border/70 py-2.5 text-[0.84rem]"><span className="text-muted-foreground">Last activity</span><b className="font-mono text-[0.8rem]">{timeAgo(lastTouch)}</b></div>
               <div className="flex justify-between border-b border-border/70 py-2.5 text-[0.84rem]"><span className="text-muted-foreground">First contact</span><b className="font-mono text-[0.8rem]">{formatDate(optimisticLead.created_at)}</b></div>
@@ -1181,31 +1219,23 @@ export function LeadDetail({
           <section className="rounded-[14px] border border-border bg-card px-[26px] py-6">
             <div className="mb-1 flex items-baseline justify-between">
               <h2 className="font-heading text-[1.12rem]" style={{ fontFamily: "var(--font-display), serif" }}>Documents</h2>
-              <span className="font-mono text-[0.8rem] text-muted-foreground">{documents.length}</span>
+              <span className="font-mono text-[0.8rem] text-muted-foreground">{optimisticDocs.length}</span>
             </div>
             <DocumentUploadDialog
               entityType="lead"
               entityId={optimisticLead.id}
-              onSaved={() => router.refresh()}
+              onSaved={(doc) => {
+                if (doc) setOptimisticDocs((prev) => [{ ...doc, category: doc.category || "other" }, ...prev]);
+                router.refresh();
+              }}
               trigger={
                 <span className="mt-3.5 block cursor-pointer rounded-[10px] border-[1.5px] border-dashed border-border px-4 py-[26px] text-center hover:border-primary hover:bg-[#F5EEDC]">
                   <b className="text-[0.86rem] font-semibold text-[#8A6D2C]">Attach a document</b>
-                  <p className="mt-1 text-[0.76rem] text-muted-foreground">Passport copy, EOI form, booking receipt — click to upload</p>
+                  <p className="mt-1 text-[0.76rem] text-muted-foreground">Choose a category first — passport, N.O.C., permit, and so on</p>
                 </span>
               }
             />
-            {documents.length > 0 && (
-              <ul className="mt-3 space-y-1">
-                {documents.map((doc) => (
-                  <li key={doc.id} className="flex items-center justify-between gap-2 py-1 text-sm">
-                    <span className="truncate">{doc.name}</span>
-                    <button type="button" aria-label={`Open ${doc.name}`} onClick={() => openDocument(doc.storage_path)}>
-                      <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <LeadDocumentsList documents={optimisticDocs} onChange={setOptimisticDocs} />
           </section>
 
           {customer && (

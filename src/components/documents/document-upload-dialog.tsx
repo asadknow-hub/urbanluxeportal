@@ -39,7 +39,7 @@ export function DocumentUploadDialog({
   entityId?: string;
   quiet?: boolean;
   trigger?: ReactNode;
-  onSaved?: () => void;
+  onSaved?: (doc?: { id: string; name: string; storage_path: string; mime_type: string; category: string; created_at: string }) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -55,7 +55,7 @@ export function DocumentUploadDialog({
 
   const [form, setForm] = useState({
     name: "",
-    category: "other",
+    category: "",
     entity_type: entityType ?? "",
     expiry_date: "",
   });
@@ -84,6 +84,10 @@ export function DocumentUploadDialog({
     e.preventDefault();
     if (!uploadedFile) {
       toast.error("Please upload a file first");
+      return;
+    }
+    if (!form.category) {
+      toast.error("Choose a document category");
       return;
     }
     startTransition(async () => {
@@ -119,8 +123,8 @@ export function DocumentUploadDialog({
         toast.success("Document saved");
         setOpen(false);
         setUploadedFile(null);
-        setForm({ name: "", category: "other", entity_type: entityType ?? "", expiry_date: "" });
-        onSaved?.();
+        setForm({ name: "", category: "", entity_type: entityType ?? "", expiry_date: "" });
+        onSaved?.(result.data);
       } else {
         await supabase.storage.from("documents").remove([path]);
         toast.error(result.error ?? "Failed to save document");
@@ -221,10 +225,10 @@ export function DocumentUploadDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Category</Label>
-              <Select value={form.category} onValueChange={(v) => set("category", v ?? "other")}>
+              <Label className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Category *</Label>
+              <Select value={form.category || undefined} onValueChange={(v) => set("category", v ?? "")}>
                 <SelectTrigger className="h-11 rounded-[10px]">
-                  <SelectValue />
+                  <SelectValue placeholder="Choose category" />
                 </SelectTrigger>
                 <SelectContent>
                   {CATEGORIES.map((c) => (
@@ -271,7 +275,7 @@ export function DocumentUploadDialog({
             <Button type="button" variant="outline" onClick={() => setOpen(false)} className="h-[42px] rounded-full px-6">
               Cancel
             </Button>
-            <Button type="submit" disabled={pending || !uploadedFile} className="h-[42px] rounded-full bg-primary px-5 text-white hover:bg-[#8A6D2C]">
+            <Button type="submit" disabled={pending || uploading || !uploadedFile || !form.category} className="h-[42px] rounded-full bg-primary px-5 text-white hover:bg-[#8A6D2C]">
               {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save document
             </Button>

@@ -30,6 +30,16 @@ export function normalizeDocCategory(value: string | null | undefined): DocCateg
 }
 
 export function formatDocCategory(value: string) {
+  const special: Record<string, string> = {
+    noc: "N.O.C.",
+    emirates_id: "Emirates ID",
+    title_deed: "Title deed",
+    tenancy_contract: "Tenancy contract",
+    cheque_copy: "Cheque copy",
+    mou: "MOU",
+    brn: "BRN",
+  };
+  if (special[value]) return special[value];
   return value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 }
 

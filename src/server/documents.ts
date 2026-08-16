@@ -18,7 +18,7 @@ const documentSchema = z.object({
   storage_path: z.string().min(1, "Storage path required"),
   mime_type: z.string().default("application/octet-stream"),
   size_bytes: z.number().default(0),
-  category: z.enum(DOC_CATEGORIES).default("other"),
+  category: z.enum(DOC_CATEGORIES),
   entity_type: z.string().optional().nullable(),
   entity_id: z.string().min(1).optional().nullable(),
   expiry_date: z.string().optional().nullable(),
@@ -26,7 +26,7 @@ const documentSchema = z.object({
 
 export async function createDocument(
   input: z.infer<typeof documentSchema>
-): Promise<ActionResult<{ id: string }>> {
+): Promise<ActionResult<{ id: string; name: string; storage_path: string; mime_type: string; category: string; created_at: string }>> {
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
@@ -51,7 +51,7 @@ export async function createDocument(
         expiry_date: parsed.data.expiry_date || null,
         uploaded_by: user.id,
       })
-      .select("id")
+      .select("id, name, storage_path, mime_type, category, created_at")
       .single();
 
     if (error) return { ok: false, error: error.message };
@@ -74,7 +74,7 @@ export async function createDocument(
     }
 
     revalidatePath("/documents");
-    return { ok: true, data: { id: data.id } };
+    return { ok: true, data: data };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
   }
@@ -87,10 +87,12 @@ export async function deleteDocument(id: string): Promise<ActionResult> {
 
     const supabase = createSupabaseServiceClient();
 
-    const { error } = await supabase
+    const { data: row, error } = await supabase
       .from("documents")
       .update({ deleted_at: new Date().toISOString() })
-      .eq("id", id);
+      .eq("id", id)
+      .select("entity_type, entity_id")
+      .single();
 
     if (error) return { ok: false, error: error.message };
 
@@ -101,6 +103,45 @@ export async function deleteDocument(id: string): Promise<ActionResult> {
       action: "deleted",
     });
 
+    if (row?.entity_type === "lead" && row.entity_id) {
+      revalidatePath(`/leads/${row.entity_id}`);
+    }
+    revalidatePath("/documents");
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function updateDocument(
+  id: string,
+  input: { name?: string; category?: string }
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+
+    const name = input.name?.trim();
+    const category = input.category ? normalizeDocCategory(input.category) : undefined;
+    if (!name && !category) return { ok: false, error: "Nothing to update" };
+
+    const supabase = createSupabaseServiceClient();
+    const patch: Record<string, unknown> = {};
+    if (name) patch.name = name;
+    if (category) patch.category = category;
+
+    const { data, error } = await supabase
+      .from("documents")
+      .update(patch)
+      .eq("id", id)
+      .select("entity_type, entity_id")
+      .single();
+
+    if (error) return { ok: false, error: error.message };
+
+    if (data?.entity_type === "lead" && data.entity_id) {
+      revalidatePath(`/leads/${data.entity_id}`);
+    }
     revalidatePath("/documents");
     return { ok: true };
   } catch (err) {
