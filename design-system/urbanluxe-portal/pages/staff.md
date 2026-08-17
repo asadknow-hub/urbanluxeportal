@@ -10,10 +10,10 @@
 
 ## Detail (`/team/[id]`)
 
-Match the Gemini staff-profile HTML mock (not the old horizontal-tab screenshot):
+Keep the HTML mock **structure** (header card, vertical sections, Quick Metrics). Restyle with Master tokens — not the mock’s teal `#1d353a`, iOS green, or white-on-gold.
 
-- Do **not** rebuild the app topbar (breadcrumb / search / user already exist).
-- Full-width header card: 80px avatar `#1d353a` / `#e0f2fe` initials, 22px name, email + phone, role pill (`admin` = `#ffe5e5`/`#d93838`), Active `#e6f4ea`/`#1e8e3e`.
-- Below: ~2fr + 1fr. Left = 220px vertical nav (`#1d353a` white when active, hover `#eae9e1`) + form card. Right = stacked Quick Metrics (36px `#f2f2f7` icon, value, label).
-- Nav items: Profile, Documents, Password & Login, Portal Activity, Work Activity. Lucide icons, `cursor-pointer`.
-- Profile form: title “Profile Details”, 2-col grid, inputs `#fafafa` / `#e5e5ea` / 10px radius. Account Active toggle `#34c759`. Save: gold `#b58d3d`, white text, RefreshCw icon.
+- Do **not** rebuild the app topbar.
+- Surfaces: `bg-card` + `border-border`. Avatar: ink (`bg-foreground`) + paper initials. Name: Cinzel. Role chips match the list page. Active = gold dot, not mint pill.
+- **Bridged tabs:** no gap between the active vertical tab and the panel. Active tab uses the card fill, flush right (`-mr-px`, no right border). First tab shares the panel’s top-left radius and a gold hairline across the join (the redline L). Inner-corner scoops (`box-shadow` in `--card`) on the tab’s trailing edge. Inactive tabs inset (`lg:mr-3`).
+- Panel header (“Profile Details”, etc.) sits in that gold-topped bar. Form lives inside the panel — no second floating card.
+- Inputs: `bg-muted/40` + `border-border`. Account toggle: gold when on. Save: primary gold with ink text (`Button` default). Lucide, `cursor-pointer`.
