@@ -213,7 +213,7 @@ export function LeadCreateDialog({
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-muted-foreground">Assign to</Label>
               <Select value={form.assigned_to} onValueChange={(v) => set("assigned_to", v ?? "")}>
-                <SelectTrigger className="h-11"><SelectValue placeholder="Unassigned" /></SelectTrigger>
+                <SelectTrigger className="h-11"><SelectValue placeholder="Round-robin" /></SelectTrigger>
                 <SelectContent>
                   {agents.map((a) => (
                     <SelectItem key={a.id ?? ""} value={a.id ?? ""}>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { applyLeadRouting } from "@/server/routing";
 
 // POST /api/leads/webhook
 // Accepts lead data from external sources (website forms, portals, etc.)
@@ -68,11 +69,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Log activity
+    const assignedTo = await applyLeadRouting(
+      supabase,
+      data.id,
+      body.assigned_to || null,
+      "webhook"
+    );
+
     await supabase.from("lead_activities").insert({
       lead_id: data.id,
       type: "note",
-      summary: `Lead captured from ${source}`,
+      summary: `Lead captured from ${source}${assignedTo ? " and routed to an agent" : ""}`,
     });
 
     return NextResponse.json({ ok: true, id: data.id }, { status: 201 });

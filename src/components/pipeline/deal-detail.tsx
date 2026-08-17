@@ -6,6 +6,13 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -18,6 +25,7 @@ import { getStatusColor } from "@/lib/status-colors";
 import { whatsappLink } from "@/lib/phone";
 import { formatAED } from "@/lib/money";
 import { formatDate, timeAgo } from "@/lib/dates";
+import { ConversionPath } from "@/components/crm/conversion-path";
 import { updateDealStage, addDealActivity, assignDeal, updateDeal } from "@/server/deals";
 import { toast } from "sonner";
 import {
@@ -139,6 +147,8 @@ export function DealDetail({
   const [activityText, setActivityText] = useState("");
   const [activityType, setActivityType] = useState("note");
   const [editMode, setEditMode] = useState(false);
+  const [lostOpen, setLostOpen] = useState(false);
+  const [lostReason, setLostReason] = useState("");
   const [editForm, setEditForm] = useState({
     title: deal.title,
     value: deal.value ? String(deal.value / 100) : "",
@@ -154,10 +164,32 @@ export function DealDetail({
 
   function handleStageChange(newStage: string) {
     if (newStage === deal.stage) return;
+    if (newStage === "lost") {
+      setLostOpen(true);
+      return;
+    }
     startTransition(async () => {
-      const result = await updateDealStage({ id: deal.id, stage: newStage as any });
+      const result = await updateDealStage({ id: deal.id, stage: newStage as "inquiry" | "viewing" | "negotiation" | "offer" | "contract" | "won" | "lost" });
       if (result.ok) {
         toast.success(`Deal moved to ${STAGES.find((s) => s.key === newStage)?.label}`);
+        router.refresh();
+      } else {
+        toast.error(result.error ?? "Failed");
+      }
+    });
+  }
+
+  function confirmLost() {
+    if (!lostReason.trim()) {
+      toast.error("Lost reason is required");
+      return;
+    }
+    startTransition(async () => {
+      const result = await updateDealStage({ id: deal.id, stage: "lost", lost_reason: lostReason.trim() });
+      if (result.ok) {
+        toast.success("Deal marked as lost");
+        setLostOpen(false);
+        setLostReason("");
         router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
@@ -212,10 +244,17 @@ export function DealDetail({
   return (
     <div className="space-y-6">
       {/* Back link */}
-      <Link href="/pipeline" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700">
+      <Link href="/pipeline" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" />
         Back to Pipeline
       </Link>
+
+      <ConversionPath
+        current="deal"
+        lead={deal.lead ? { id: deal.lead.id, name: deal.lead.name } : deal.lead_id ? { id: deal.lead_id, name: "Originating lead" } : null}
+        customer={deal.customer ? { id: deal.customer.id, name: deal.customer.name, status: deal.customer.status } : null}
+        deal={{ id: deal.id, title: deal.title, stage: deal.stage }}
+      />
 
       {/* Header */}
       <div className="flex items-start justify-between">
@@ -552,6 +591,25 @@ export function DealDetail({
           </div>
         </div>
       </div>
+
+      <Dialog open={lostOpen} onOpenChange={setLostOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Mark deal lost</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label htmlFor="lost-reason">Reason</Label>
+            <Textarea id="lost-reason" value={lostReason} onChange={(e) => setLostReason(e.target.value)} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setLostOpen(false)}>Cancel</Button>
+            <Button size="sm" disabled={pending || !lostReason.trim()} onClick={confirmLost}>
+              {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirm lost
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

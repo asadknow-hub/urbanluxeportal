@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import Link from "next/link";
 import { CustomersTable } from "@/components/customers/customers-table";
 import { CustomerCreateDialog } from "@/components/customers/customer-create-dialog";
 
@@ -8,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function CustomersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; type?: string }>;
+  searchParams: Promise<{ q?: string; type?: string; status?: string }>;
 }) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Unauthorized");
@@ -32,6 +33,10 @@ export default async function CustomersPage({
 
   if (params.type && params.type !== "all") {
     query = query.eq("type", params.type);
+  }
+
+  if (params.status && params.status !== "all") {
+    query = query.eq("status", params.status);
   }
 
   if (params.q) {
@@ -83,13 +88,17 @@ export default async function CustomersPage({
           { key: "prospect", label: "Prospect", color: "text-amber-700", border: "border-amber-200/60", bg: "bg-white", badge: "bg-amber-500", grad: "from-amber-50 to-transparent" },
           { key: "inactive", label: "Inactive", color: "text-slate-500", border: "border-slate-200/60", bg: "bg-white", badge: "bg-slate-300", grad: "from-slate-50 to-transparent" },
         ].map((s) => (
-          <div key={s.key} className={`relative overflow-hidden rounded-[1.5rem] border p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-gradient-to-br ${s.border} ${s.bg} ${s.grad} shadow-sm`}>
+          <Link
+            key={s.key}
+            href={`/customers?status=${s.key}`}
+            className={`relative overflow-hidden rounded-[1.5rem] border p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-gradient-to-br ${s.border} ${s.bg} ${s.grad} shadow-sm`}
+          >
             <div className="relative z-10 flex items-center justify-between mb-2">
               <span className={`text-sm font-bold uppercase tracking-wider ${s.color}`}>{s.label}</span>
               <span className={`h-2.5 w-2.5 rounded-full shadow-sm ${s.badge}`} />
             </div>
             <p className="relative z-10 text-4xl font-extrabold text-slate-900">{stats[s.key] ?? 0}</p>
-          </div>
+          </Link>
         ))}
       </div>
 

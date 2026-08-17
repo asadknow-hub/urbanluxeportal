@@ -15,7 +15,8 @@ import { getStatusColor } from "@/lib/status-colors";
 import { whatsappLink } from "@/lib/phone";
 import { formatAED } from "@/lib/money";
 import { formatDate } from "@/lib/dates";
-import { convertLead, addLeadActivity, updateLead } from "@/server/leads";
+import { addLeadActivity, updateLead } from "@/server/leads";
+import { ConvertLeadDialog } from "@/components/leads/convert-lead-dialog";
 import { toast } from "sonner";
 import {
   MessageCircle,
@@ -46,20 +47,6 @@ export function LeadDrawer({ lead, onClose }: { lead: LeadRow; onClose: () => vo
 
   function handleConvert() {
     setConverting(true);
-  }
-
-  function confirmConvert() {
-    startTransition(async () => {
-      const result = await convertLead(lead.id, {});
-      if (result.ok) {
-        toast.success("Lead converted to pipeline deal");
-        handleClose();
-        router.refresh();
-      } else {
-        toast.error(result.error ?? "Conversion failed");
-      }
-      setConverting(false);
-    });
   }
 
   function handleAddActivity() {
@@ -222,38 +209,10 @@ export function LeadDrawer({ lead, onClose }: { lead: LeadRow; onClose: () => vo
           {/* Actions */}
           {lead.status !== "converted" && lead.status !== "unqualified" && (
             <div className="flex flex-col gap-2">
-              {converting ? (
-                <div className="space-y-2 rounded-lg bg-slate-50 p-3">
-                  <p className="text-sm font-medium text-slate-700">Convert to pipeline deal?</p>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      className="flex-1 bg-emerald-500 hover:bg-emerald-600"
-                      onClick={() => confirmConvert()}
-                      disabled={pending}
-                    >
-                      Confirm Conversion
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="flex-1"
-                      onClick={() => setConverting(false)}
-                      disabled={pending}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <Button
-                  className="bg-emerald-500 hover:bg-emerald-600"
-                  onClick={handleConvert}
-                >
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Convert to Pipeline Deal
-                </Button>
-              )}
+              <Button className="bg-primary text-primary-foreground hover:bg-[#8A6D2C]" onClick={handleConvert}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Convert to customer + deal
+              </Button>
               <Button
                 variant="outline"
                 className="text-red-600 hover:bg-red-50 hover:text-red-700"
@@ -267,6 +226,20 @@ export function LeadDrawer({ lead, onClose }: { lead: LeadRow; onClose: () => vo
           )}
         </div>
       </SheetContent>
+      <ConvertLeadDialog
+        open={converting}
+        onOpenChange={(open) => {
+          setConverting(open);
+          if (!open) router.refresh();
+        }}
+        lead={{
+          id: lead.id,
+          name: lead.name,
+          interest: lead.interest,
+          budget_min: lead.budget_min,
+          budget_max: lead.budget_max,
+        }}
+      />
     </Sheet>
   );
 }

@@ -5,6 +5,8 @@ import { formatAED } from "@/lib/money";
 import { formatDate } from "@/lib/dates";
 import { getStatusColor } from "@/lib/status-colors";
 import { whatsappLink } from "@/lib/phone";
+import { ConversionPath } from "@/components/crm/conversion-path";
+import { CustomerNewDealDialog } from "@/components/customers/customer-new-deal-dialog";
 import Link from "next/link";
 import {
   Phone,
@@ -89,11 +91,18 @@ export default async function CustomerDetailPage({
         </div>
         <Link
           href="/customers"
-          className="text-sm text-slate-500 hover:text-slate-700"
+          className="text-sm text-muted-foreground hover:text-foreground"
         >
           ← Back to Customers
         </Link>
       </div>
+
+      <ConversionPath
+        current="customer"
+        lead={originatingLead ? { id: originatingLead.id, name: originatingLead.name } : null}
+        customer={{ id: customer.id, name: customer.name, status: customer.status }}
+        deal={deals?.[0] ? { id: deals[0].id, title: deals[0].title, stage: deals[0].stage } : null}
+      />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Left: Profile + KYC */}
@@ -185,9 +194,12 @@ export default async function CustomerDetailPage({
         <div className="space-y-6 lg:col-span-2">
           {/* Deals */}
           <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-            <h2 className="mb-4 text-sm font-semibold text-slate-700">
-              Deals ({deals?.length ?? 0})
-            </h2>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-slate-700">
+                Deals ({deals?.length ?? 0})
+              </h2>
+              <CustomerNewDealDialog customerId={customer.id} customerName={customer.name} />
+            </div>
             <div className="space-y-2">
               {(deals ?? []).length === 0 ? (
                 <p className="text-sm text-slate-400">No deals yet.</p>

@@ -85,7 +85,7 @@ export async function updateDealStage(
 
     if (error) return { ok: false, error: error.message };
 
-    // If moving to "won", activate the customer from the originating lead
+    // If moving to "won", activate the linked customer (created at convert)
     if (parsed.data.stage === "won" && deal) {
       const { data: fullDeal } = await supabase
         .from("deals")
@@ -93,18 +93,16 @@ export async function updateDealStage(
         .eq("id", parsed.data.id)
         .single();
 
-      if (fullDeal?.lead_id) {
-        // Call RPC to create/activate customer from lead
-        await supabase.rpc("create_customer_from_lead", {
-          p_lead_id: fullDeal.lead_id,
-          p_deal_id: parsed.data.id,
-        });
-      } else if (fullDeal?.customer_id) {
-        // Direct customer (no lead) — just update status
+      if (fullDeal?.customer_id) {
         await supabase
           .from("customers")
           .update({ status: "active", updated_at: new Date().toISOString() })
           .eq("id", fullDeal.customer_id);
+      } else if (fullDeal?.lead_id) {
+        await supabase.rpc("create_customer_from_lead", {
+          p_lead_id: fullDeal.lead_id,
+          p_deal_id: parsed.data.id,
+        });
       }
 
       // Log deal activity
@@ -136,6 +134,7 @@ export async function updateDealStage(
 
     revalidatePath("/pipeline");
     revalidatePath(`/pipeline/${parsed.data.id}`);
+    revalidatePath("/deals");
     revalidatePath("/leads");
     return { ok: true };
   } catch (err) {
@@ -180,6 +179,9 @@ export async function createDeal(input: {
     });
 
     revalidatePath("/pipeline");
+    revalidatePath("/deals");
+    revalidatePath("/customers");
+    revalidatePath(`/customers/${input.customer_id}`);
     return { ok: true, data: { id: data.id } };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };

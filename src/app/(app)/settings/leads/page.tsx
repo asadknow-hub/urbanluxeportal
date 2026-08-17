@@ -135,7 +135,7 @@ export default async function LeadsSettingsPage({
               </div>
               <p className="text-sm text-slate-500 font-medium leading-relaxed mb-5">
                 1. Create or capture a lead with the Fields picklists.<br/>
-                2. Move through stages and honor SLA timers.<br/>
+                2. Move through stages and honor SLA timers. Unassigned new leads round-robin to agents.<br/>
                 3. Follow up, qualify, and convert into a customer and deal.
               </p>
               <div className="grid gap-4 sm:grid-cols-2">

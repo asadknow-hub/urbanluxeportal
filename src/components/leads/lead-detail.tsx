@@ -12,6 +12,7 @@ import { OptionMultiPicker } from "@/components/leads/option-multi-picker";
 import { NationalityPicker } from "@/components/leads/nationality-picker";
 import { BlurSaveInput } from "@/components/leads/hover-edit-row";
 import { DocumentUploadDialog } from "@/components/documents/document-upload-dialog";
+import { ConvertLeadDialog } from "@/components/leads/convert-lead-dialog";
 import { LeadDocumentsList, type LeadDocument } from "@/components/leads/lead-documents";
 import {
   Dialog,
@@ -48,7 +49,6 @@ import {
   assignLead,
   scheduleFollowUp,
   completeFollowUp,
-  convertLead,
   updateLead,
   updateLeadStage,
   deleteLead,
@@ -803,6 +803,14 @@ export function LeadDetail({
                   Convert to deal <ArrowRight className="h-4 w-4" />
                 </button>
               )}
+              {customer && (
+                <Link
+                  href={`/customers/${customer.id}`}
+                  className="inline-flex h-[42px] items-center gap-2 rounded-[10px] border border-border bg-card px-5 text-[0.88rem] font-semibold text-muted-foreground hover:border-foreground hover:text-foreground"
+                >
+                  Open customer
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -1324,24 +1332,17 @@ export function LeadDetail({
         </div>
       </div>
 
-      <Dialog open={converting} onOpenChange={setConverting}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Convert to deal</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">This creates a customer and a pipeline deal from this lead.</p>
-          <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setConverting(false)}>Cancel</Button>
-            <Button size="sm" disabled={pending} onClick={() => {
-              startTransition(async () => {
-                const result = await convertLead(optimisticLead.id, {});
-                if (result.ok) { toast.success("Converted to deal"); setConverting(false); router.refresh(); }
-                else toast.error(result.error ?? "Conversion failed");
-              });
-            }}>
-              {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Convert
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConvertLeadDialog
+        open={converting}
+        onOpenChange={setConverting}
+        lead={{
+          id: optimisticLead.id,
+          name: optimisticLead.name,
+          interest: optimisticLead.interest,
+          budget_min: optimisticLead.budget_min,
+          budget_max: optimisticLead.budget_max,
+        }}
+      />
 
       <Dialog open={reasonDialog !== null} onOpenChange={(open) => { if (!open) setReasonDialog(null); }}>
         <DialogContent className="max-w-md">

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
+import { applyLeadRouting } from "@/server/routing";
 import { revalidatePath } from "next/cache";
 
 export type ActionResult<T = unknown> = {
@@ -113,6 +114,8 @@ export async function createLead(
       .single();
 
     if (error) return { ok: false, error: error.message };
+
+    await applyLeadRouting(supabase, data.id, parsed.data.assigned_to, "created");
 
     await logActivity({
       actorId: user.id,
@@ -390,44 +393,81 @@ export async function convertLead(
 
     const supabase = createSupabaseServiceClient();
 
-    // Fetch the lead
     const { data: lead, error: leadError } = await supabase
       .from("leads")
       .select("*")
       .eq("id", leadId)
       .single();
     if (leadError || !lead) return { ok: false, error: "Lead not found" };
+
+    if (lead.converted_deal_id && lead.converted_customer_id) {
+      return {
+        ok: true,
+        data: { customerId: lead.converted_customer_id, dealId: lead.converted_deal_id },
+      };
+    }
     if (lead.status === "converted") return { ok: false, error: "Lead already converted" };
 
-    // Create customer as "prospect" — becomes "active" when deal is won
-    const { data: customer, error: custError } = await supabase
-      .from("customers")
-      .insert({
-        type: "individual",
-        name: lead.name,
-        phone: lead.phone,
-        email: lead.email,
-        nationality: lead.nationality,
-        notes: lead.notes,
-        assigned_to: lead.assigned_to,
-        created_by: user.id,
-        lead_id: leadId,
-        status: "prospect",
-      })
-      .select("id")
-      .single();
-    if (custError) return { ok: false, error: custError.message };
+    let customerId: string | null = lead.converted_customer_id;
+    if (!customerId && lead.phone) {
+      const { data: existing } = await supabase
+        .from("customers")
+        .select("id")
+        .eq("phone", lead.phone)
+        .is("deleted_at", null)
+        .limit(1)
+        .maybeSingle();
+      customerId = existing?.id ?? null;
+    }
 
-    // Always create a deal — this is the unified flow
-    const title = options.dealTitle || `${lead.interest} — ${lead.name}`;
+    if (!customerId) {
+      const { data: customer, error: custError } = await supabase
+        .from("customers")
+        .insert({
+          type: "individual",
+          name: lead.name,
+          phone: lead.phone,
+          email: lead.email,
+          nationality: lead.nationality,
+          notes: lead.notes,
+          assigned_to: lead.assigned_to,
+          created_by: user.id,
+          lead_id: leadId,
+          status: "prospect",
+        })
+        .select("id")
+        .single();
+      if (custError) return { ok: false, error: custError.message };
+      customerId = customer.id;
+    } else {
+      await supabase
+        .from("customers")
+        .update({
+          lead_id: leadId,
+          assigned_to: lead.assigned_to ?? undefined,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", customerId);
+    }
+
+    if (!customerId) return { ok: false, error: "Could not create or match a customer" };
+
+    const title =
+      options.dealTitle?.trim() ||
+      `${String(lead.interest ?? "deal").replace(/_/g, " ")} — ${lead.name}`;
+    const valueFils =
+      options.dealValue != null && options.dealValue > 0
+        ? Math.round(options.dealValue * 100)
+        : (lead.budget_max ?? lead.budget_min ?? 0);
+
     const { data: deal, error: dealError } = await supabase
       .from("deals")
       .insert({
         title,
-        customer_id: customer.id,
+        customer_id: customerId,
         deal_type: lead.interest === "rent" ? "rental" : lead.interest === "off_plan" ? "off_plan" : "sale",
         stage: "inquiry",
-        value: options.dealValue ? Math.round(options.dealValue * 100) : 0,
+        value: valueFils,
         assigned_to: lead.assigned_to,
         created_by: user.id,
         lead_id: leadId,
@@ -436,19 +476,48 @@ export async function convertLead(
       .single();
     if (dealError) return { ok: false, error: dealError.message };
 
-    // Update lead status
+    const { data: convertedStage } = await supabase
+      .from("lead_stages")
+      .select("id")
+      .eq("kind", "won")
+      .eq("is_active", true)
+      .order("sort", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const now = new Date().toISOString();
     const { error: updateError } = await supabase
       .from("leads")
       .update({
         status: "converted",
-        converted_customer_id: customer.id,
+        converted_customer_id: customerId,
         converted_deal_id: deal.id,
-        updated_at: new Date().toISOString(),
+        stage_id: convertedStage?.id ?? lead.stage_id,
+        stage_entered_at: convertedStage?.id ? now : lead.stage_entered_at,
+        updated_at: now,
+        last_activity_at: now,
       })
       .eq("id", leadId);
     if (updateError) return { ok: false, error: updateError.message };
 
-    // Log activities on both lead and deal
+    const { data: leadDocs } = await supabase
+      .from("documents")
+      .select("name, storage_path, mime_type, size_bytes, category, expiry_date")
+      .eq("entity_type", "lead")
+      .eq("entity_id", leadId)
+      .is("deleted_at", null);
+
+    if (leadDocs && leadDocs.length > 0) {
+      await supabase.from("documents").insert(
+        leadDocs.map((doc) => ({
+          ...doc,
+          entity_type: "customer",
+          entity_id: customerId,
+          uploaded_by: user.id,
+        }))
+      );
+    }
+
     await supabase.from("lead_activities").insert({
       lead_id: leadId,
       type: "converted",
@@ -468,14 +537,141 @@ export async function convertLead(
       entityType: "lead",
       entityId: leadId,
       action: "converted",
-      diff: { customerId: customer.id, dealId: deal.id },
+      diff: { customerId, dealId: deal.id },
     });
 
     revalidatePath("/leads");
     revalidatePath(`/leads/${leadId}`);
     revalidatePath("/customers");
+    revalidatePath(`/customers/${customerId}`);
     revalidatePath("/pipeline");
-    return { ok: true, data: { customerId: customer.id, dealId: deal.id } };
+    revalidatePath("/deals");
+    revalidatePath(`/pipeline/${deal.id}`);
+    return { ok: true, data: { customerId, dealId: deal.id } };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+function splitCsvLine(line: string): string[] {
+  const cells: string[] = [];
+  let current = "";
+  let quoted = false;
+  for (let i = 0; i < line.length; i += 1) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (quoted && line[i + 1] === '"') {
+        current += '"';
+        i += 1;
+      } else {
+        quoted = !quoted;
+      }
+    } else if (ch === "," && !quoted) {
+      cells.push(current.trim());
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  cells.push(current.trim());
+  return cells;
+}
+
+export async function importLeads(
+  csvText: string
+): Promise<ActionResult<{ created: number; skipped: number; failed: number; errors: string[] }>> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    if (user.role === "accountant") return { ok: false, error: "Not authorized" };
+
+    const lines = csvText.replace(/^\uFEFF/, "").split(/\r?\n/).filter((line) => line.trim());
+    if (lines.length < 2) return { ok: false, error: "CSV needs a header row and at least one lead" };
+
+    const headers = splitCsvLine(lines[0]).map((h) => h.toLowerCase().replace(/\s+/g, "_"));
+    const nameIdx = headers.findIndex((h) => h === "name" || h === "full_name");
+    if (nameIdx < 0) return { ok: false, error: "CSV must include a name column" };
+
+    const col = (row: string[], key: string) => {
+      const idx = headers.indexOf(key);
+      return idx >= 0 ? row[idx]?.trim() || "" : "";
+    };
+
+    const rows = lines.slice(1, 501).map((line) => splitCsvLine(line));
+    const supabase = createSupabaseServiceClient();
+    const { data: newStage } = await supabase
+      .from("lead_stages")
+      .select("id")
+      .eq("name", "New")
+      .eq("kind", "open")
+      .maybeSingle();
+
+    let created = 0;
+    let skipped = 0;
+    let failed = 0;
+    const errors: string[] = [];
+
+    for (const row of rows) {
+      const name = row[nameIdx]?.trim();
+      if (!name) {
+        skipped += 1;
+        continue;
+      }
+      const phone = col(row, "phone") || col(row, "mobile") || null;
+      const email = col(row, "email") || null;
+      const source = col(row, "source") || "import";
+      const interest = col(row, "interest") || "buy";
+      const notes = col(row, "notes") || null;
+
+      if (phone || email) {
+        let dupQuery = supabase.from("leads").select("id").is("deleted_at", null).limit(1);
+        if (phone) dupQuery = dupQuery.eq("phone", phone);
+        else if (email) dupQuery = dupQuery.eq("email", email);
+        const { data: dup } = await dupQuery.maybeSingle();
+        if (dup) {
+          skipped += 1;
+          continue;
+        }
+      }
+
+      const { data, error } = await supabase
+        .from("leads")
+        .insert({
+          name,
+          phone,
+          email,
+          source,
+          interest,
+          notes,
+          created_by: user.id,
+          stage_id: newStage?.id ?? null,
+          last_activity_at: new Date().toISOString(),
+          stage_entered_at: new Date().toISOString(),
+        })
+        .select("id")
+        .single();
+
+      if (error || !data) {
+        failed += 1;
+        if (errors.length < 8) errors.push(`${name}: ${error?.message ?? "insert failed"}`);
+        continue;
+      }
+
+      await applyLeadRouting(supabase, data.id, null, "import");
+      created += 1;
+    }
+
+    await logActivity({
+      actorId: user.id,
+      entityType: "lead",
+      entityId: user.id,
+      action: "imported",
+      diff: { created, skipped, failed },
+    });
+
+    revalidatePath("/leads");
+    revalidatePath("/leads/imports");
+    return { ok: true, data: { created, skipped, failed, errors } };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
   }

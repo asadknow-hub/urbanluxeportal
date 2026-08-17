@@ -23,6 +23,7 @@ export type CustomerRow = {
   email: string | null;
   nationality: string | null;
   status: string;
+  lead_id: string | null;
   assigned_to: string | null;
   assigned_to_profile: { id: string; full_name: string; avatar_url: string | null } | null;
   created_at: string;
@@ -33,7 +34,7 @@ export function CustomersTable({
   currentFilters,
 }: {
   customers: CustomerRow[];
-  currentFilters: { q?: string; type?: string };
+  currentFilters: { q?: string; type?: string; status?: string };
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -83,6 +84,20 @@ export function CustomersTable({
             <SelectItem value="company">Company</SelectItem>
           </SelectContent>
         </Select>
+        <Select
+          value={currentFilters.status ?? "all"}
+          onValueChange={(v) => updateFilter("status", v ?? "all")}
+        >
+          <SelectTrigger className="w-[140px] border-0 bg-transparent hover:bg-slate-50 focus:ring-0 rounded-xl font-medium shadow-none h-10">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent className="rounded-xl border-slate-200 shadow-xl font-medium">
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="prospect">Prospect</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="overflow-hidden rounded-[1.5rem] bg-white shadow-sm border border-slate-200/60">
@@ -95,6 +110,7 @@ export function CustomersTable({
                 <th className="px-4 py-3">Phone</th>
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Source</th>
                 <th className="px-4 py-3">Agent</th>
                 <th className="px-4 py-3">Created</th>
                 <th className="px-4 py-3 rounded-tr-[2rem]"></th>
@@ -103,7 +119,7 @@ export function CustomersTable({
             <tbody className="divide-y divide-slate-50">
               {customers.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-16 text-center">
+                  <td colSpan={9} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center justify-center">
                       <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">No customers found</p>
                       <p className="text-xs text-slate-400 mt-1">Try adjusting filters or create a new customer.</p>
@@ -154,6 +170,9 @@ export function CustomersTable({
                         }`}>
                           {customer.status}
                         </span>
+                      </td>
+                      <td className="px-4 py-3 text-xs font-medium text-slate-500">
+                        {customer.lead_id ? "Converted lead" : "Direct"}
                       </td>
                       <td className="px-4 py-3 font-medium text-slate-600">
                         {customer.assigned_to_profile?.full_name ?? (

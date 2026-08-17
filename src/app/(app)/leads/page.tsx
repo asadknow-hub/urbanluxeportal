@@ -213,6 +213,14 @@ export default async function LeadsBoardPage({
             nationalities={nationalityNames}
             fieldOptions={groupedOptions}
           />
+          {user.role !== "accountant" && (
+            <Link
+              href="/leads/imports"
+              className="inline-flex h-8 items-center rounded-md border border-border bg-card px-2.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              Import CSV
+            </Link>
+          )}
         </div>
       </div>
 

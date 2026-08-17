@@ -25,6 +25,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Lead Settings", href: "/settings/leads", icon: "Settings2", roles: ["admin", "manager"], group: "CRM" },
   { label: "Leads", href: "/leads", icon: "Users", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
   { label: "Follow-ups", href: "/leads/followups", icon: "CalendarClock", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
+  { label: "Import", href: "/leads/imports", icon: "Upload", roles: ["admin", "manager", "agent"], group: "CRM" },
   { label: "Deals", href: "/deals", icon: "KanbanSquare", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
   { label: "Customers", href: "/customers", icon: "Contact", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
   { label: "Settings", href: "/settings", icon: "Settings", roles: ["admin"], group: "System" },
@@ -33,7 +34,7 @@ export const NAV_ITEMS: NavItem[] = [
 export function isNavActive(pathname: string, href: string): boolean {
   if (href === "/leads") {
     if (pathname === "/leads") return true;
-    if (pathname.startsWith("/leads/followups") || pathname.startsWith("/leads/inflow")) {
+    if (pathname.startsWith("/leads/followups") || pathname.startsWith("/leads/inflow") || pathname.startsWith("/leads/imports")) {
       return false;
     }
     return pathname.startsWith("/leads/");
