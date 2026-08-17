@@ -13,6 +13,7 @@ import { NationalityPicker } from "@/components/leads/nationality-picker";
 import { BlurSaveInput } from "@/components/leads/hover-edit-row";
 import { DocumentUploadDialog } from "@/components/documents/document-upload-dialog";
 import { ConvertLeadDialog } from "@/components/leads/convert-lead-dialog";
+import { ConversionPath } from "@/components/crm/conversion-path";
 import { LeadDocumentsList, type LeadDocument } from "@/components/leads/lead-documents";
 import {
   Dialog,
@@ -619,6 +620,14 @@ export function LeadDetail({
 
   return (
     <div className="mx-auto flex w-full max-w-[1460px] flex-col gap-[18px]">
+      {(customer || deal) && (
+        <ConversionPath
+          current="lead"
+          lead={{ id: optimisticLead.id, name: optimisticLead.name }}
+          customer={customer ? { id: customer.id, name: customer.name } : null}
+          deal={deal ? { id: deal.id, title: deal.title, stage: deal.stage } : null}
+        />
+      )}
       <section className="overflow-visible rounded-[14px] border border-border bg-card">
         <div className="flex flex-col gap-6 px-6 py-7 md:flex-row md:items-start md:gap-[26px] md:px-8">
           <div className="relative grid h-[84px] w-[84px] shrink-0 place-items-center rounded-md border-[1.5px] border-primary bg-[#F5EEDC]">

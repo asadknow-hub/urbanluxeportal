@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LeadFieldsWorkspace } from "@/components/leads/lead-fields-workspace";
 import { StageSlaEditor } from "@/components/leads/stage-sla-editor";
 import { LeadImportWorkspace } from "@/components/leads/lead-import-workspace";
+import { LeadFlowSettings } from "@/components/leads/lead-flow-settings";
 import { fetchLeadTableColumns } from "@/server/lead-areas";
 import { groupLeadFieldOptions, type LeadFieldOption } from "@/lib/lead-field-options";
 import { ArrowRight, CalendarClock, CheckCircle2, Layers3, Settings2, Route, FileText } from "lucide-react";
@@ -14,6 +15,7 @@ export const dynamic = "force-dynamic";
 
 const HUB_TABS = [
   { key: "overview", label: "Overview" },
+  { key: "flow", label: "Lead Flow" },
   { key: "fields", label: "Fields" },
   { key: "stages", label: "Stages" },
   { key: "imports", label: "Imports" },
@@ -149,7 +151,7 @@ export default async function LeadsSettingsPage({
               <ol className="space-y-2 text-sm leading-relaxed text-muted-foreground">
                 <li>1. Capture a lead using the Fields picklists.</li>
                 <li>2. Move it across board stages. SLA timers flag leads that sit too long.</li>
-                <li>3. Unassigned new leads round-robin to agents. Qualify, then convert to a customer and deal.</li>
+                <li>3. Unassigned new leads round-robin to agents. Qualify, then convert to a customer and deal — see <Link href="/settings/leads?tab=flow" className="text-primary hover:underline">Lead Flow</Link>.</li>
               </ol>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-[10px] border border-border bg-muted/40 p-4">
@@ -183,7 +185,7 @@ export default async function LeadsSettingsPage({
                   { href: "/leads?view=list", label: "Leads list" },
                   { href: "/leads/followups", label: "Follow-ups" },
                   { href: "/settings/leads?tab=imports", label: "Import leads" },
-                  { href: "/deals", label: "Deals pipeline" },
+                  { href: "/settings/leads?tab=flow", label: "Lead flow" },
                 ].map((item) => (
                   <Link
                     key={item.href}
@@ -199,6 +201,8 @@ export default async function LeadsSettingsPage({
           </div>
         </div>
       )}
+
+      {tab === "flow" && <LeadFlowSettings />}
 
       {tab === "fields" && (
         <LeadFieldsWorkspace

@@ -17,6 +17,26 @@ export type DealStage =
   | "won"
   | "lost";
 
+export type LeadContextJson = {
+  lead_id: string;
+  captured_at: string;
+  name: string;
+  source: string;
+  interest: string;
+  score: number | null;
+  budget_min: number | null;
+  budget_max: number | null;
+  preferred_areas: string[] | null;
+  nationality: string | null;
+  financing: string | null;
+  timeframe: string | null;
+  purpose: string | null;
+  bedrooms: string | null;
+  category: string | null;
+  tags: string[];
+  notes: string | null;
+};
+
 export type DocCategory =
   | "emirates_id"
   | "passport"
@@ -408,6 +428,9 @@ export interface Database {
           notes: string | null;
           assigned_to: string | null;
           created_by: string | null;
+          lead_id: string | null;
+          status: string;
+          lead_context: LeadContextJson | null;
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
@@ -427,6 +450,9 @@ export interface Database {
           notes?: string | null;
           assigned_to?: string | null;
           created_by?: string | null;
+          lead_id?: string | null;
+          status?: string;
+          lead_context?: LeadContextJson | null;
         };
         Update: Partial<Database["public"]["Tables"]["customers"]["Insert"]>;
       };
@@ -434,7 +460,7 @@ export interface Database {
         Row: {
           id: string;
           title: string;
-          customer_id: string;
+          customer_id: string | null;
           deal_type: DealType;
           stage: DealStage;
           value: number;
@@ -445,6 +471,27 @@ export interface Database {
           lost_reason: string | null;
           stage_changed_at: string | null;
           ejari_no: string | null;
+          lead_id: string | null;
+          lead_context: LeadContextJson | null;
+          finalized_at: string | null;
+          property_title: string | null;
+          property_community: string | null;
+          property_building: string | null;
+          property_unit: string | null;
+          property_ref: string | null;
+          property_snapshot: Record<string, unknown> | null;
+          payment_method: string | null;
+          payment_deposit: number | null;
+          payment_balance: number | null;
+          payment_schedule: Record<string, unknown> | null;
+          payment_notes: string | null;
+          kyc_nationality: string | null;
+          kyc_emirates_id: string | null;
+          kyc_passport_no: string | null;
+          kyc_trn: string | null;
+          buyer_name: string | null;
+          buyer_phone: string | null;
+          buyer_email: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -453,7 +500,7 @@ export interface Database {
         Insert: {
           id?: string;
           title: string;
-          customer_id: string;
+          customer_id?: string | null;
           deal_type?: DealType;
           stage?: DealStage;
           value?: number;
@@ -464,9 +511,74 @@ export interface Database {
           lost_reason?: string | null;
           stage_changed_at?: string | null;
           ejari_no?: string | null;
+          lead_id?: string | null;
+          lead_context?: LeadContextJson | null;
+          finalized_at?: string | null;
+          property_title?: string | null;
+          property_community?: string | null;
+          property_building?: string | null;
+          property_unit?: string | null;
+          property_ref?: string | null;
+          property_snapshot?: Record<string, unknown> | null;
+          payment_method?: string | null;
+          payment_deposit?: number | null;
+          payment_balance?: number | null;
+          payment_schedule?: Record<string, unknown> | null;
+          payment_notes?: string | null;
+          kyc_nationality?: string | null;
+          kyc_emirates_id?: string | null;
+          kyc_passport_no?: string | null;
+          kyc_trn?: string | null;
+          buyer_name?: string | null;
+          buyer_phone?: string | null;
+          buyer_email?: string | null;
           created_by?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["deals"]["Insert"]>;
+      };
+      customer_properties: {
+        Row: {
+          id: string;
+          customer_id: string;
+          deal_id: string | null;
+          deal_type: string;
+          property_title: string;
+          property_community: string | null;
+          property_building: string | null;
+          property_unit: string | null;
+          property_ref: string | null;
+          property_snapshot: Record<string, unknown> | null;
+          value: number;
+          payment_method: string | null;
+          payment_snapshot: Record<string, unknown> | null;
+          assigned_to: string | null;
+          agent_name: string | null;
+          agent_commission_amount: number | null;
+          agent_commission_rate: number | null;
+          acquired_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          customer_id: string;
+          deal_id?: string | null;
+          deal_type?: string;
+          property_title: string;
+          property_community?: string | null;
+          property_building?: string | null;
+          property_unit?: string | null;
+          property_ref?: string | null;
+          property_snapshot?: Record<string, unknown> | null;
+          value?: number;
+          payment_method?: string | null;
+          payment_snapshot?: Record<string, unknown> | null;
+          assigned_to?: string | null;
+          agent_name?: string | null;
+          agent_commission_amount?: number | null;
+          agent_commission_rate?: number | null;
+          acquired_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["customer_properties"]["Insert"]>;
       };
       documents: {
         Row: {

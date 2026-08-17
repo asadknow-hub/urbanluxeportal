@@ -14,6 +14,11 @@ import {
   type LeadImportMappedRow,
 } from "@/lib/lead-import";
 import { groupLeadFieldOptions, scoreFromBand, type LeadFieldOption } from "@/lib/lead-field-options";
+import {
+  buildLeadContext,
+  dealTypeFromInterest,
+  defaultDealTitle,
+} from "@/lib/lead-flow";
 
 export type ActionResult<T = unknown> = {
   ok: boolean;
@@ -394,7 +399,7 @@ export async function updateLead(
 export async function convertLead(
   leadId: string,
   options: { dealTitle?: string; dealValue?: number }
-): Promise<ActionResult<{ customerId: string; dealId: string }>> {
+): Promise<ActionResult<{ customerId: string | null; dealId: string }>> {
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
@@ -408,77 +413,48 @@ export async function convertLead(
       .single();
     if (leadError || !lead) return { ok: false, error: "Lead not found" };
 
-    if (lead.converted_deal_id && lead.converted_customer_id) {
+    if (lead.converted_deal_id) {
+      const { data: existingDeal } = await supabase
+        .from("deals")
+        .select("id, customer_id")
+        .eq("id", lead.converted_deal_id)
+        .maybeSingle();
       return {
         ok: true,
-        data: { customerId: lead.converted_customer_id, dealId: lead.converted_deal_id },
+        data: {
+          customerId: existingDeal?.customer_id ?? lead.converted_customer_id,
+          dealId: lead.converted_deal_id,
+        },
       };
     }
     if (lead.status === "converted") return { ok: false, error: "Lead already converted" };
 
-    let customerId: string | null = lead.converted_customer_id;
-    if (!customerId && lead.phone) {
-      const { data: existing } = await supabase
-        .from("customers")
-        .select("id")
-        .eq("phone", lead.phone)
-        .is("deleted_at", null)
-        .limit(1)
-        .maybeSingle();
-      customerId = existing?.id ?? null;
-    }
-
-    if (!customerId) {
-      const { data: customer, error: custError } = await supabase
-        .from("customers")
-        .insert({
-          type: "individual",
-          name: lead.name,
-          phone: lead.phone,
-          email: lead.email,
-          nationality: lead.nationality,
-          notes: lead.notes,
-          assigned_to: lead.assigned_to,
-          created_by: user.id,
-          lead_id: leadId,
-          status: "prospect",
-        })
-        .select("id")
-        .single();
-      if (custError) return { ok: false, error: custError.message };
-      customerId = customer.id;
-    } else {
-      await supabase
-        .from("customers")
-        .update({
-          lead_id: leadId,
-          assigned_to: lead.assigned_to ?? undefined,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", customerId);
-    }
-
-    if (!customerId) return { ok: false, error: "Could not create or match a customer" };
-
-    const title =
-      options.dealTitle?.trim() ||
-      `${String(lead.interest ?? "deal").replace(/_/g, " ")} — ${lead.name}`;
+    const leadContext = buildLeadContext(lead);
+    const title = options.dealTitle?.trim() || defaultDealTitle(lead);
     const valueFils =
       options.dealValue != null && options.dealValue > 0
         ? Math.round(options.dealValue * 100)
         : (lead.budget_max ?? lead.budget_min ?? 0);
 
+    const preferredArea = lead.preferred_areas?.[0] ?? null;
+
     const { data: deal, error: dealError } = await supabase
       .from("deals")
       .insert({
         title,
-        customer_id: customerId,
-        deal_type: lead.interest === "rent" ? "rental" : lead.interest === "off_plan" ? "off_plan" : "sale",
+        customer_id: null,
+        deal_type: dealTypeFromInterest(lead.interest),
         stage: "inquiry",
         value: valueFils,
         assigned_to: lead.assigned_to,
         created_by: user.id,
         lead_id: leadId,
+        lead_context: leadContext,
+        buyer_name: lead.name,
+        buyer_phone: lead.phone,
+        buyer_email: lead.email,
+        kyc_nationality: lead.nationality,
+        property_community: preferredArea,
       })
       .select("id")
       .single();
@@ -498,7 +474,7 @@ export async function convertLead(
       .from("leads")
       .update({
         status: "converted",
-        converted_customer_id: customerId,
+        converted_customer_id: null,
         converted_deal_id: deal.id,
         stage_id: convertedStage?.id ?? lead.stage_id,
         stage_entered_at: convertedStage?.id ? now : lead.stage_entered_at,
@@ -519,8 +495,8 @@ export async function convertLead(
       await supabase.from("documents").insert(
         leadDocs.map((doc) => ({
           ...doc,
-          entity_type: "customer",
-          entity_id: customerId,
+          entity_type: "deal",
+          entity_id: deal.id,
           uploaded_by: user.id,
         }))
       );
@@ -529,14 +505,14 @@ export async function convertLead(
     await supabase.from("lead_activities").insert({
       lead_id: leadId,
       type: "converted",
-      summary: `Lead converted to pipeline deal: ${title}`,
+      summary: `Lead converted to pipeline deal: ${title}. Customer is created when the deal is won.`,
       created_by: user.id,
     });
 
     await supabase.from("deal_activities").insert({
       deal_id: deal.id,
       type: "created",
-      summary: `Deal created from lead: ${lead.name}`,
+      summary: `Deal opened from lead: ${lead.name}. Add property, payment, and KYC before closing.`,
       created_by: user.id,
     });
 
@@ -545,17 +521,16 @@ export async function convertLead(
       entityType: "lead",
       entityId: leadId,
       action: "converted",
-      diff: { customerId, dealId: deal.id },
+      diff: { dealId: deal.id },
     });
 
     revalidatePath("/leads");
     revalidatePath(`/leads/${leadId}`);
     revalidatePath("/customers");
-    revalidatePath(`/customers/${customerId}`);
     revalidatePath("/pipeline");
     revalidatePath("/deals");
     revalidatePath(`/pipeline/${deal.id}`);
-    return { ok: true, data: { customerId, dealId: deal.id } };
+    return { ok: true, data: { customerId: null, dealId: deal.id } };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
   }

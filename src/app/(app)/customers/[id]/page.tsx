@@ -6,6 +6,9 @@ import { formatDate } from "@/lib/dates";
 import { getStatusColor } from "@/lib/status-colors";
 import { whatsappLink } from "@/lib/phone";
 import { ConversionPath } from "@/components/crm/conversion-path";
+import { LeadContextPanel } from "@/components/crm/lead-context-panel";
+import type { LeadContext } from "@/lib/lead-flow";
+import { formatPropertyLine } from "@/lib/deal-transaction";
 import { CustomerNewDealDialog } from "@/components/customers/customer-new-deal-dialog";
 import Link from "next/link";
 import {
@@ -15,9 +18,18 @@ import {
   MapPin,
   User,
   Building2,
+  ArrowLeft,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
+}
 
 export default async function CustomerDetailPage({
   params,
@@ -42,7 +54,6 @@ export default async function CustomerDetailPage({
 
   if (error || !customer) notFound();
 
-  // Fetch deals
   const { data: deals } = await supabase
     .from("deals")
     .select("*, lead:leads(id, name, source, interest, score)")
@@ -50,7 +61,16 @@ export default async function CustomerDetailPage({
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
-  // Fetch originating lead
+  const { data: properties } = await supabase
+    .from("customer_properties")
+    .select(
+      `*,
+      agent:profiles!customer_properties_assigned_to_fkey(id, full_name)
+      `
+    )
+    .eq("customer_id", id)
+    .order("acquired_at", { ascending: false });
+
   let originatingLead = null;
   if (customer.lead_id) {
     const { data: ld } = await supabase
@@ -61,7 +81,6 @@ export default async function CustomerDetailPage({
     originatingLead = ld;
   }
 
-  // Fetch activity log
   const { data: activities } = await supabase
     .from("activity_log")
     .select("*, actor:profiles!activity_log_actor_id_fkey(full_name)")
@@ -71,31 +90,14 @@ export default async function CustomerDetailPage({
     .limit(15);
 
   const waLink = whatsappLink(customer.phone);
+  const leadContext = customer.lead_context as LeadContext | null;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${customer.type === "company" ? "bg-purple-100" : "bg-blue-100"}`}>
-            {customer.type === "company" ? (
-              <Building2 className="h-6 w-6 text-purple-600" />
-            ) : (
-              <User className="h-6 w-6 text-blue-600" />
-            )}
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">{customer.name}</h1>
-            <p className="text-sm text-slate-500 capitalize">{customer.type}</p>
-          </div>
-        </div>
-        <Link
-          href="/customers"
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          ← Back to Customers
-        </Link>
-      </div>
+    <div className="mx-auto flex w-full max-w-[1460px] flex-col gap-[18px]">
+      <Link href="/customers" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <ArrowLeft className="h-4 w-4" />
+        Back to customers
+      </Link>
 
       <ConversionPath
         current="customer"
@@ -104,105 +106,109 @@ export default async function CustomerDetailPage({
         deal={deals?.[0] ? { id: deals[0].id, title: deals[0].title, stage: deals[0].stage } : null}
       />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* Left: Profile + KYC */}
-        <div className="space-y-6">
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-            <h2 className="mb-4 text-sm font-semibold text-slate-700">Contact</h2>
-            <div className="space-y-3 text-sm">
-              {customer.phone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-slate-400" />
-                  <a href={`tel:${customer.phone}`} className="text-slate-700 hover:text-slate-900">
-                    {customer.phone}
-                  </a>
-                  {waLink && (
-                    <a
-                      href={waLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="ml-auto inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100"
-                    >
-                      <MessageCircle className="h-3 w-3" />
-                      WhatsApp
-                    </a>
-                  )}
-                </div>
-              )}
-              {customer.email && (
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-slate-400" />
-                  <a href={`mailto:${customer.email}`} className="text-slate-700 hover:text-slate-900">
-                    {customer.email}
-                  </a>
-                </div>
-              )}
-              {customer.address && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-slate-400" />
-                  <span className="text-slate-700">{customer.address}</span>
-                </div>
-              )}
-              {customer.assigned_to_profile && (
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-slate-400" />
-                  <span className="text-slate-700">{customer.assigned_to_profile.full_name}</span>
-                </div>
-              )}
+      <section className="overflow-hidden rounded-[14px] border border-border bg-card">
+        <div className="h-0.5 bg-primary" />
+        <div className="flex flex-col gap-4 p-6 md:flex-row md:items-start md:gap-6">
+          <div className="grid h-[72px] w-[72px] shrink-0 place-items-center rounded-[10px] border border-border bg-[#EDEBF4] text-lg font-semibold text-[#4C4470]">
+            {customer.type === "company" ? <Building2 className="h-7 w-7" /> : initials(customer.name)}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Customer</p>
+            <h1
+              className="font-heading text-[1.85rem] leading-tight text-foreground"
+              style={{ fontFamily: "var(--font-display), serif" }}
+            >
+              {customer.name}
+            </h1>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="inline-flex rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-medium capitalize">
+                {customer.type}
+              </span>
+              <span
+                className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
+                  customer.status === "active"
+                    ? "bg-primary/15 text-primary"
+                    : customer.status === "prospect"
+                      ? "bg-amber-100 text-amber-800"
+                      : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {customer.status}
+              </span>
             </div>
           </div>
-
-          {/* KYC Panel */}
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-            <h2 className="mb-4 text-sm font-semibold text-slate-700">KYC</h2>
-            <dl className="space-y-3 text-sm">
-              {customer.nationality && (
-                <div>
-                  <dt className="text-xs text-slate-400">Nationality</dt>
-                  <dd className="font-medium text-slate-700">{customer.nationality}</dd>
-                </div>
-              )}
-              {customer.emirates_id && (
-                <div>
-                  <dt className="text-xs text-slate-400">Emirates ID</dt>
-                  <dd className="font-medium text-slate-700">{customer.emirates_id}</dd>
-                </div>
-              )}
-              {customer.passport_no && (
-                <div>
-                  <dt className="text-xs text-slate-400">Passport No</dt>
-                  <dd className="font-medium text-slate-700">{customer.passport_no}</dd>
-                </div>
-              )}
-              {customer.trn && (
-                <div>
-                  <dt className="text-xs text-slate-400">TRN</dt>
-                  <dd className="font-medium text-slate-700">{customer.trn}</dd>
-                </div>
-              )}
-              {!customer.emirates_id && !customer.passport_no && customer.type === "individual" && (
-                <div className="rounded-md bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
-                  ID document missing
-                </div>
-              )}
-            </dl>
-          </div>
-
         </div>
+      </section>
 
-        {/* Right: Deals + Activity */}
-        <div className="space-y-6 lg:col-span-2">
-          {/* Deals */}
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_360px]">
+        <div className="space-y-4">
+          {(properties ?? []).length > 0 && (
+            <div className="overflow-hidden rounded-[14px] border border-border bg-card p-5">
+              <div className="-mx-5 -mt-5 mb-4 h-0.5 bg-primary" />
+              <h2 className="mb-4 text-sm font-semibold text-foreground">Transactions ({properties?.length ?? 0})</h2>
+              <div className="space-y-3">
+                {(properties ?? []).map((prop) => {
+                  const agentLabel = prop.agent?.full_name ?? prop.agent_name;
+                  return (
+                    <div key={prop.id} className="rounded-[10px] border border-border px-4 py-3">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{formatPropertyLine(prop)}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {formatDate(prop.acquired_at, "dd MMM yyyy")} ·{" "}
+                            <span className="capitalize">{prop.deal_type.replace(/_/g, " ")}</span>
+                            {prop.payment_method && (
+                              <> · <span className="capitalize">{prop.payment_method.replace(/_/g, " ")}</span></>
+                            )}
+                          </p>
+                        </div>
+                        <p className="text-sm font-bold text-foreground">{formatAED(prop.value)}</p>
+                      </div>
+
+                      <div className="mt-3 grid gap-2 border-t border-border pt-3 sm:grid-cols-2">
+                        <div className="rounded-[8px] bg-muted/40 px-3 py-2">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Agent</p>
+                          <p className="mt-0.5 text-sm font-medium text-foreground">{agentLabel ?? "Unassigned"}</p>
+                        </div>
+                        <div className="rounded-[8px] bg-primary/10 px-3 py-2">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Agent cut</p>
+                          <p className="mt-0.5 text-sm font-bold text-foreground">
+                            {prop.agent_commission_amount != null && prop.agent_commission_amount > 0
+                              ? formatAED(prop.agent_commission_amount)
+                              : "—"}
+                            {prop.agent_commission_rate != null && (
+                              <span className="ml-1 text-xs font-medium text-muted-foreground">
+                                ({prop.agent_commission_rate}%)
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+
+                      {prop.deal_id && (
+                        <Link
+                          href={`/pipeline/${prop.deal_id}`}
+                          className="mt-2 inline-block text-xs font-medium text-primary hover:underline"
+                        >
+                          View deal
+                        </Link>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="overflow-hidden rounded-[14px] border border-border bg-card p-5">
+            <div className="-mx-5 -mt-5 mb-4 h-0.5 bg-primary" />
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-slate-700">
-                Deals ({deals?.length ?? 0})
-              </h2>
+              <h2 className="text-sm font-semibold text-foreground">Deals ({deals?.length ?? 0})</h2>
               <CustomerNewDealDialog customerId={customer.id} customerName={customer.name} />
             </div>
             <div className="space-y-2">
               {(deals ?? []).length === 0 ? (
-                <p className="text-sm text-slate-400">No deals yet.</p>
+                <p className="text-sm text-muted-foreground">No deals yet.</p>
               ) : (
                 (deals ?? []).map((deal) => {
                   const colors = getStatusColor(deal.stage);
@@ -210,15 +216,15 @@ export default async function CustomerDetailPage({
                     <Link
                       key={deal.id}
                       href={`/pipeline/${deal.id}`}
-                      className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 hover:bg-slate-50"
+                      className="flex items-center justify-between rounded-[10px] border border-border px-3 py-2.5 transition-colors hover:border-primary/30 hover:bg-muted/30"
                     >
                       <div>
-                        <p className="text-sm font-medium text-slate-900">{deal.title}</p>
-                        <p className="text-xs text-slate-400 capitalize">{deal.deal_type.replace(/_/g, " ")}</p>
+                        <p className="text-sm font-medium text-foreground">{deal.title}</p>
+                        <p className="text-xs capitalize text-muted-foreground">{deal.deal_type.replace(/_/g, " ")}</p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-slate-700">{formatAED(deal.value)}</span>
-                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${colors.bg} ${colors.text}`}>
+                        <span className="text-sm font-semibold text-foreground">{formatAED(deal.value)}</span>
+                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${colors.bg} ${colors.text}`}>
                           {deal.stage}
                         </span>
                       </div>
@@ -229,58 +235,127 @@ export default async function CustomerDetailPage({
             </div>
           </div>
 
-          {/* Originating Lead */}
-          {originatingLead && (
-            <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-              <h2 className="mb-4 text-sm font-semibold text-slate-700">Originating Lead</h2>
-              <Link
-                href={`/leads/${originatingLead.id}`}
-                className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 hover:bg-slate-50"
-              >
-                <div>
-                  <p className="text-sm font-medium text-slate-900">{originatingLead.name}</p>
-                  <p className="text-xs text-slate-400 capitalize">
-                    {originatingLead.source.replace(/_/g, " ")} · {originatingLead.interest.replace(/_/g, " ")}
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  {originatingLead.score !== null && (
-                    <span className={`text-xs font-bold ${originatingLead.score >= 70 ? "text-emerald-600" : originatingLead.score >= 40 ? "text-amber-600" : "text-slate-400"}`}>
-                      Score: {originatingLead.score}
-                    </span>
-                  )}
-                  <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    originatingLead.status === "converted" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
-                  }`}>
-                    {originatingLead.status}
-                  </span>
-                </div>
-              </Link>
-            </div>
-          )}
-
-          {/* Activity */}
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-            <h2 className="mb-4 text-sm font-semibold text-slate-700">Recent Activity</h2>
+          <div className="overflow-hidden rounded-[14px] border border-border bg-card p-5">
+            <h2 className="mb-4 text-sm font-semibold text-foreground">Recent activity</h2>
             <div className="space-y-3">
               {(activities ?? []).length === 0 ? (
-                <p className="text-sm text-slate-400">No activity yet.</p>
+                <p className="text-sm text-muted-foreground">No activity yet.</p>
               ) : (
                 (activities ?? []).map((act) => (
                   <div key={act.id} className="flex items-start gap-3 text-sm">
-                    <div className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-emerald-400" />
+                    <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
                     <div>
-                      <p className="text-slate-700">
-                        <span className="font-medium">{act.actor?.full_name ?? "System"}</span>{" "}
-                        {act.action}
+                      <p className="text-foreground">
+                        <span className="font-medium">{act.actor?.full_name ?? "System"}</span> {act.action}
                       </p>
-                      <p className="text-xs text-slate-400">{formatDate(act.created_at, "dd MMM yyyy, HH:mm")}</p>
+                      <p className="text-xs text-muted-foreground">{formatDate(act.created_at, "dd MMM yyyy, HH:mm")}</p>
                     </div>
                   </div>
                 ))
               )}
             </div>
           </div>
+        </div>
+
+        <div className="space-y-4">
+          <div className="overflow-hidden rounded-[14px] border border-border bg-card p-4">
+            <div className="-mx-4 -mt-4 mb-4 h-0.5 bg-primary" />
+            <h2 className="mb-4 text-sm font-semibold text-foreground">Contact</h2>
+            <div className="space-y-3 text-sm">
+              {customer.phone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <a href={`tel:${customer.phone}`} className="text-foreground hover:text-primary">
+                    {customer.phone}
+                  </a>
+                  {waLink && (
+                    <a
+                      href={waLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-auto inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary"
+                    >
+                      <MessageCircle className="h-3 w-3" />
+                      WhatsApp
+                    </a>
+                  )}
+                </div>
+              )}
+              {customer.email && (
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <a href={`mailto:${customer.email}`} className="text-foreground hover:text-primary">
+                    {customer.email}
+                  </a>
+                </div>
+              )}
+              {customer.address && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-foreground">{customer.address}</span>
+                </div>
+              )}
+              {customer.assigned_to_profile && (
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-foreground">{customer.assigned_to_profile.full_name}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-[14px] border border-border bg-card p-4">
+            <h2 className="mb-4 text-sm font-semibold text-foreground">KYC</h2>
+            <dl className="space-y-3 text-sm">
+              {customer.nationality && (
+                <div>
+                  <dt className="text-xs text-muted-foreground">Nationality</dt>
+                  <dd className="font-medium text-foreground">{customer.nationality}</dd>
+                </div>
+              )}
+              {customer.emirates_id && (
+                <div>
+                  <dt className="text-xs text-muted-foreground">Emirates ID</dt>
+                  <dd className="font-medium text-foreground">{customer.emirates_id}</dd>
+                </div>
+              )}
+              {customer.passport_no && (
+                <div>
+                  <dt className="text-xs text-muted-foreground">Passport</dt>
+                  <dd className="font-medium text-foreground">{customer.passport_no}</dd>
+                </div>
+              )}
+              {customer.trn && (
+                <div>
+                  <dt className="text-xs text-muted-foreground">TRN</dt>
+                  <dd className="font-medium text-foreground">{customer.trn}</dd>
+                </div>
+              )}
+              {!customer.emirates_id && !customer.passport_no && customer.type === "individual" && (
+                <div className="rounded-md bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
+                  ID document missing
+                </div>
+              )}
+            </dl>
+          </div>
+
+          <LeadContextPanel
+            context={leadContext}
+            leadHref={customer.lead_id ? `/leads/${customer.lead_id}` : undefined}
+            variant="compact"
+          />
+
+          {originatingLead && (
+            <div className="overflow-hidden rounded-[14px] border border-border bg-[#1B2430] p-4 text-[#E8E4DC]">
+              <h2 className="mb-3 text-sm font-semibold">Originating lead</h2>
+              <Link href={`/leads/${originatingLead.id}`} className="block hover:underline">
+                <p className="font-medium">{originatingLead.name}</p>
+                <p className="mt-1 text-xs capitalize opacity-80">
+                  {originatingLead.source.replace(/_/g, " ")} · {originatingLead.interest.replace(/_/g, " ")}
+                </p>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

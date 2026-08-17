@@ -26,6 +26,9 @@ import { whatsappLink } from "@/lib/phone";
 import { formatAED } from "@/lib/money";
 import { formatDate, timeAgo } from "@/lib/dates";
 import { ConversionPath } from "@/components/crm/conversion-path";
+import { LeadContextPanel } from "@/components/crm/lead-context-panel";
+import { DealTransactionForm } from "@/components/pipeline/deal-transaction-form";
+import type { LeadContext } from "@/lib/lead-flow";
 import { updateDealStage, addDealActivity, assignDeal, updateDeal } from "@/server/deals";
 import { toast } from "sonner";
 import {
@@ -76,7 +79,7 @@ const ACTIVITY_ICONS: Record<string, React.ComponentType<{ className?: string }>
 type Deal = {
   id: string;
   title: string;
-  customer_id: string;
+  customer_id: string | null;
   deal_type: string;
   stage: string;
   value: number;
@@ -88,6 +91,24 @@ type Deal = {
   stage_changed_at: string | null;
   ejari_no: string | null;
   lead_id: string | null;
+  lead_context: LeadContext | null;
+  finalized_at: string | null;
+  property_title: string | null;
+  property_community: string | null;
+  property_building: string | null;
+  property_unit: string | null;
+  property_ref: string | null;
+  payment_method: string | null;
+  payment_deposit: number | null;
+  payment_balance: number | null;
+  payment_notes: string | null;
+  kyc_nationality: string | null;
+  kyc_emirates_id: string | null;
+  kyc_passport_no: string | null;
+  kyc_trn: string | null;
+  buyer_name: string | null;
+  buyer_phone: string | null;
+  buyer_email: string | null;
   created_at: string;
   updated_at: string;
   customer: {
@@ -157,7 +178,7 @@ export function DealDetail({
   });
 
   const colors = getStatusColor(deal.stage);
-  const waLink = whatsappLink(deal.customer?.phone ?? null);
+  const waLink = whatsappLink(deal.customer?.phone ?? deal.buyer_phone ?? null);
   const canManage = userRole === "admin" || userRole === "manager";
   const canEdit = canManage || deal.assigned_to === userId;
   const currentStageIdx = STAGES.findIndex((s) => s.key === deal.stage);
@@ -172,6 +193,14 @@ export function DealDetail({
       const result = await updateDealStage({ id: deal.id, stage: newStage as "inquiry" | "viewing" | "negotiation" | "offer" | "contract" | "won" | "lost" });
       if (result.ok) {
         toast.success(`Deal moved to ${STAGES.find((s) => s.key === newStage)?.label}`);
+        if (newStage === "won" && result.data?.customerId) {
+          toast.success("Customer created — property saved", {
+            action: {
+              label: "View customer",
+              onClick: () => router.push(`/customers/${result.data!.customerId}`),
+            },
+          });
+        }
         router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
@@ -242,11 +271,10 @@ export function DealDetail({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Back link */}
+    <div className="mx-auto flex w-full max-w-[1460px] flex-col gap-[18px]">
       <Link href="/pipeline" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" />
-        Back to Pipeline
+        Back to pipeline
       </Link>
 
       <ConversionPath
@@ -257,36 +285,46 @@ export function DealDetail({
       />
 
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100">
-            <Briefcase className="h-6 w-6 text-indigo-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">{deal.title}</h1>
-            <div className="flex items-center gap-2 mt-1">
-              <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${colors.bg} ${colors.text}`}>
-                {deal.stage}
-              </span>
-              <span className="text-xs text-slate-400 capitalize">{deal.deal_type.replace(/_/g, " ")}</span>
-              <span className="text-xs text-slate-400">·</span>
-              <span className="text-xs text-slate-400">{formatAED(deal.value)}</span>
+      <section className="overflow-hidden rounded-[14px] border border-border bg-card">
+        <div className="h-0.5 bg-primary" />
+        <div className="flex flex-col gap-4 p-6 md:flex-row md:items-start md:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[10px] border border-border bg-[#EDEBF4] text-[#4C4470]">
+              <Briefcase className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Deal</p>
+              <h1
+                className="font-heading text-[1.85rem] leading-tight text-foreground"
+                style={{ fontFamily: "var(--font-display), serif" }}
+              >
+                {deal.title}
+              </h1>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${colors.bg} ${colors.text}`}>
+                  {deal.stage}
+                </span>
+                <span className="text-xs capitalize text-muted-foreground">{deal.deal_type.replace(/_/g, " ")}</span>
+                <span className="text-xs text-muted-foreground">·</span>
+                <span className="text-sm font-semibold text-foreground">{formatAED(deal.value)}</span>
+              </div>
             </div>
           </div>
+          {canEdit && (
+            <Button variant="outline" size="sm" onClick={() => setEditMode(!editMode)}>
+              {editMode ? "Cancel" : "Edit deal"}
+            </Button>
+          )}
         </div>
-        {canEdit && (
-          <Button variant="outline" size="sm" onClick={() => setEditMode(!editMode)}>
-            {editMode ? "Cancel" : "Edit"}
-          </Button>
-        )}
-      </div>
+      </section>
 
       {/* Stage pipeline bar */}
-      <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-slate-700">Deal Stage</h3>
+      <div className="overflow-hidden rounded-[14px] border border-border bg-card p-5">
+        <div className="-mx-5 -mt-5 mb-4 h-0.5 bg-primary" />
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-foreground">Deal stage</h3>
           {deal.stage_changed_at && (
-            <span className="text-xs text-slate-400">Changed {timeAgo(deal.stage_changed_at)}</span>
+            <span className="text-xs text-muted-foreground">Changed {timeAgo(deal.stage_changed_at)}</span>
           )}
         </div>
         <div className="flex items-center gap-1">
@@ -306,8 +344,8 @@ export function DealDetail({
                     isLost ? "bg-slate-200" :
                     isCurrent ? stage.color :
                     isPast ? stage.color : "bg-slate-200"
-                  } ${isCurrent ? "ring-2 ring-offset-1 ring-slate-300" : ""}`} />
-                  <span className={`text-xs ${isCurrent ? "font-semibold text-slate-700" : "text-slate-400"}`}>
+                  } ${isCurrent ? "ring-2 ring-primary/30 ring-offset-1" : ""}`} />
+                  <span className={`text-xs ${isCurrent ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
                     {stage.label}
                   </span>
                 </button>
@@ -322,7 +360,7 @@ export function DealDetail({
         )}
         {canEdit && deal.stage !== "won" && deal.stage !== "lost" && (
           <div className="mt-3 flex gap-2">
-            <Button size="sm" variant="outline" className="text-emerald-600 border-emerald-200 hover:bg-emerald-50" onClick={() => handleStageChange("won")} disabled={pending}>
+            <Button size="sm" variant="outline" className="border-primary/30 text-primary hover:bg-primary/5" onClick={() => handleStageChange("won")} disabled={pending}>
               <CheckCircle2 className="mr-1 h-4 w-4" /> Mark Won
             </Button>
             <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleStageChange("lost")} disabled={pending}>
@@ -332,213 +370,13 @@ export function DealDetail({
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {/* Left: Deal info + edit */}
-        <div className="space-y-6">
-          {/* Deal details */}
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-            <h2 className="mb-4 text-sm font-semibold text-slate-700">Deal Details</h2>
-            {editMode ? (
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <Label className="text-xs">Title</Label>
-                  <Input value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Value (AED)</Label>
-                  <Input type="number" value={editForm.value} onChange={(e) => setEditForm({ ...editForm, value: e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Expected Close Date</Label>
-                  <Input type="date" value={editForm.expected_close_date} onChange={(e) => setEditForm({ ...editForm, expected_close_date: e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Commission Rate (%)</Label>
-                  <Input type="number" value={editForm.commission_rate} onChange={(e) => setEditForm({ ...editForm, commission_rate: e.target.value })} />
-                </div>
-                <Button size="sm" className="w-full" onClick={handleSaveEdit} disabled={pending}>
-                  {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Save Changes
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Value</span>
-                  <span className="font-medium text-slate-700">{formatAED(deal.value)}</span>
-                </div>
-                {deal.commission_amount && (
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Commission</span>
-                    <span className="font-medium text-emerald-600">{formatAED(deal.commission_amount)}</span>
-                  </div>
-                )}
-                {deal.commission_rate && (
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Commission Rate</span>
-                    <span className="font-medium text-slate-700">{deal.commission_rate}%</span>
-                  </div>
-                )}
-                {deal.expected_close_date && (
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Expected Close</span>
-                    <span className="font-medium text-slate-700">{formatDate(deal.expected_close_date)}</span>
-                  </div>
-                )}
-                {deal.ejari_no && (
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Ejari No</span>
-                    <span className="font-medium text-slate-700">{deal.ejari_no}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Created</span>
-                  <span className="font-medium text-slate-700">{formatDate(deal.created_at)}</span>
-                </div>
-              </div>
-            )}
-          </div>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_360px]">
+        <div className="space-y-4">
+          <DealTransactionForm deal={deal} canEdit={canEdit} />
 
-          {/* Assignment */}
-          {canManage && (
-            <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-              <h2 className="mb-4 text-sm font-semibold text-slate-700">Assignment</h2>
-              <Select
-                value={deal.assigned_to ?? "unassigned"}
-                onValueChange={(v) => handleAssign(v === "unassigned" ? null : v)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {agents.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>{a.full_name} ({a.role})</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {/* Documents */}
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-            <h2 className="mb-4 text-sm font-semibold text-slate-700">Documents ({documents.length})</h2>
-            {documents.length === 0 ? (
-              <p className="text-sm text-slate-400">No documents uploaded yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {documents.map((doc) => (
-                  <a
-                    key={doc.id}
-                    href={doc.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 rounded-lg border border-slate-100 px-3 py-2 hover:bg-slate-50"
-                  >
-                    <FileText className="h-4 w-4 text-slate-400" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-700 truncate">{doc.file_name}</p>
-                      <p className="text-xs text-slate-400">{formatDate(doc.created_at)}</p>
-                    </div>
-                    <ExternalLink className="h-3 w-3 text-slate-400" />
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right: Customer, Lead, Activity timeline */}
-        <div className="space-y-6 lg:col-span-2">
-          {/* Customer info */}
-          {deal.customer && (
-            <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold text-slate-700">Customer</h2>
-                <Link href={`/customers/${deal.customer.id}`} className="inline-flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700">
-                  View Profile <ExternalLink className="h-3 w-3" />
-                </Link>
-              </div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                  <User className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-slate-900">{deal.customer.name}</p>
-                  <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                    deal.customer.status === "active" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
-                  }`}>
-                    {deal.customer.status}
-                  </span>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm">
-                {deal.customer.phone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-slate-400" />
-                    <a href={`tel:${deal.customer.phone}`} className="text-slate-700 hover:text-slate-900">{deal.customer.phone}</a>
-                    {waLink && (
-                      <a href={waLink} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100">
-                        <MessageCircle className="h-3 w-3" /> WhatsApp
-                      </a>
-                    )}
-                  </div>
-                )}
-                {deal.customer.email && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-slate-400" />
-                    <a href={`mailto:${deal.customer.email}`} className="text-slate-700 hover:text-slate-900">{deal.customer.email}</a>
-                  </div>
-                )}
-                {deal.customer.nationality && (
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-slate-400" />
-                    <span className="text-slate-700">{deal.customer.nationality}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Originating lead */}
-          {deal.lead && (
-            <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-sm font-semibold text-slate-700">Originating Lead</h2>
-                <Link href={`/leads/${deal.lead.id}`} className="inline-flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700">
-                  View Lead <ExternalLink className="h-3 w-3" />
-                </Link>
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-xs text-slate-400">Name</p>
-                  <p className="font-medium text-slate-700">{deal.lead.name}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-400">Source</p>
-                  <p className="font-medium text-slate-700 capitalize">{deal.lead.source.replace(/_/g, " ")}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-400">Interest</p>
-                  <p className="font-medium text-slate-700 capitalize">{deal.lead.interest.replace(/_/g, " ")}</p>
-                </div>
-                {deal.lead.score !== null && (
-                  <div>
-                    <p className="text-xs text-slate-400">Lead Score</p>
-                    <p className={`font-bold ${deal.lead.score >= 70 ? "text-emerald-600" : deal.lead.score >= 40 ? "text-amber-600" : "text-slate-400"}`}>
-                      {deal.lead.score}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Activity timeline */}
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-            <h2 className="mb-4 text-sm font-semibold text-slate-700">Activity Timeline</h2>
-
-            {/* Quick add */}
+          <div className="overflow-hidden rounded-[14px] border border-border bg-card p-5">
+            <div className="-mx-5 -mt-5 mb-4 h-0.5 bg-primary" />
+            <h2 className="mb-4 text-sm font-semibold text-foreground">Activity timeline</h2>
             {canEdit && (
               <div className="mb-4 flex gap-2">
                 <Select value={activityType} onValueChange={(v) => setActivityType(v ?? "note")}>
@@ -568,18 +406,18 @@ export function DealDetail({
 
             <div className="space-y-3">
               {activities.length === 0 ? (
-                <p className="text-sm text-slate-400">No activity yet.</p>
+                <p className="text-sm text-muted-foreground">No activity yet.</p>
               ) : (
                 activities.map((act) => {
                   const Icon = ACTIVITY_ICONS[act.type] ?? Activity;
                   return (
                     <div key={act.id} className="flex items-start gap-3 text-sm">
-                      <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-slate-100">
-                        <Icon className="h-3.5 w-3.5 text-slate-500" />
+                      <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted">
+                        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-slate-700">{act.summary}</p>
-                        <p className="text-xs text-slate-400 mt-0.5">
+                        <p className="text-foreground">{act.summary}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
                           {act.created_by_profile?.full_name ?? "System"} · {timeAgo(act.occurred_at)}
                         </p>
                       </div>
@@ -588,6 +426,151 @@ export function DealDetail({
                 })
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Rail: deal ledger + customer */}
+        <div className="space-y-4">
+          <div className="overflow-hidden rounded-[14px] border border-border bg-card p-4">
+            <div className="-mx-4 -mt-4 mb-4 h-0.5 bg-primary" />
+            <h2 className="mb-4 text-sm font-semibold text-foreground">Deal details</h2>
+            {editMode ? (
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Title</Label>
+                  <Input value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Value (AED)</Label>
+                  <Input type="number" value={editForm.value} onChange={(e) => setEditForm({ ...editForm, value: e.target.value })} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Expected close</Label>
+                  <Input type="date" value={editForm.expected_close_date} onChange={(e) => setEditForm({ ...editForm, expected_close_date: e.target.value })} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Commission rate (%)</Label>
+                  <Input type="number" value={editForm.commission_rate} onChange={(e) => setEditForm({ ...editForm, commission_rate: e.target.value })} />
+                </div>
+                <Button size="sm" className="w-full" onClick={handleSaveEdit} disabled={pending}>
+                  {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Save changes
+                </Button>
+              </div>
+            ) : (
+              <dl className="space-y-2.5 text-sm">
+                {[
+                  { label: "Value", value: formatAED(deal.value) },
+                  deal.commission_amount ? { label: "Commission", value: formatAED(deal.commission_amount) } : null,
+                  deal.commission_rate ? { label: "Rate", value: `${deal.commission_rate}%` } : null,
+                  deal.expected_close_date ? { label: "Expected close", value: formatDate(deal.expected_close_date) } : null,
+                  deal.ejari_no ? { label: "Ejari", value: deal.ejari_no } : null,
+                  { label: "Created", value: formatDate(deal.created_at) },
+                ]
+                  .filter(Boolean)
+                  .map((row) => (
+                    <div key={row!.label} className="flex justify-between gap-2">
+                      <dt className="text-muted-foreground">{row!.label}</dt>
+                      <dd className="font-medium text-foreground">{row!.value}</dd>
+                    </div>
+                  ))}
+              </dl>
+            )}
+          </div>
+
+          {canManage && (
+            <div className="overflow-hidden rounded-[14px] border border-border bg-card p-4">
+              <h2 className="mb-3 text-sm font-semibold text-foreground">Assignment</h2>
+              <Select value={deal.assigned_to ?? "unassigned"} onValueChange={(v) => handleAssign(v === "unassigned" ? null : v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                  {agents.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.full_name} ({a.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {deal.customer ? (
+            <div className="overflow-hidden rounded-[14px] border border-border bg-[#1B2430] p-4 text-[#E8E4DC]">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-sm font-semibold">Customer</h2>
+                <Link href={`/customers/${deal.customer.id}`} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                  Profile <ExternalLink className="h-3 w-3" />
+                </Link>
+              </div>
+              <p className="font-medium">{deal.customer.name}</p>
+              <span className="mt-1 inline-flex rounded-full bg-white/10 px-2 py-0.5 text-xs capitalize">
+                {deal.customer.status}
+              </span>
+              <div className="mt-3 space-y-2 text-sm">
+                {deal.customer.phone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 opacity-70" />
+                    <a href={`tel:${deal.customer.phone}`} className="hover:underline">{deal.customer.phone}</a>
+                    {waLink && (
+                      <a href={waLink} target="_blank" rel="noopener noreferrer" className="ml-auto text-primary">
+                        <MessageCircle className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
+                )}
+                {deal.customer.email && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 opacity-70" />
+                    <a href={`mailto:${deal.customer.email}`} className="truncate hover:underline">{deal.customer.email}</a>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-[14px] border border-dashed border-border bg-muted/20 p-4">
+              <h2 className="text-sm font-semibold text-foreground">Customer pending</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Created when this deal is marked won. Buyer details are captured above.
+              </p>
+              {deal.buyer_name && (
+                <p className="mt-2 text-sm font-medium text-foreground">{deal.buyer_name}</p>
+              )}
+            </div>
+          )}
+
+          <LeadContextPanel
+            context={deal.lead_context}
+            leadHref={deal.lead_id ? `/leads/${deal.lead_id}` : deal.lead ? `/leads/${deal.lead.id}` : undefined}
+            variant="compact"
+          />
+
+          <div className="overflow-hidden rounded-[14px] border border-border bg-card p-4">
+            <h2 className="mb-3 text-sm font-semibold text-foreground">Documents ({documents.length})</h2>
+            {documents.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No documents yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {documents.map((doc) => (
+                  <a
+                    key={doc.id}
+                    href={doc.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 hover:bg-muted/50"
+                  >
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-foreground">{doc.file_name}</p>
+                      <p className="text-xs text-muted-foreground">{formatDate(doc.created_at)}</p>
+                    </div>
+                    <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

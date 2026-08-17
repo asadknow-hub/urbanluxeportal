@@ -47,11 +47,7 @@ export default async function CustomersPage({
 
   if (error) console.error("[customers] query error:", error.message);
 
-  // Pipeline summary
-  const statsQuery = supabase
-    .from("customers")
-    .select("status")
-    .is("deleted_at", null);
+  const statsQuery = supabase.from("customers").select("status").is("deleted_at", null);
   const { data: allStatuses } = await statsQuery;
   const stats: Record<string, number> = {};
   (allStatuses ?? []).forEach((c) => {
@@ -66,46 +62,39 @@ export default async function CustomersPage({
     .order("full_name");
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto">
-      {/* Glossy Header Banner */}
-      <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-4 sm:p-5 text-white shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
-        <div className="relative z-10">
-          <h1 className="text-2xl font-bold tracking-tight mb-2">Customers</h1>
-          <p className="text-sm text-slate-300 font-medium">
-            Manage your {count ?? 0} total customers and prospects
-          </p>
-        </div>
-        <div className="relative z-10">
-          <CustomerCreateDialog agents={agents ?? []} />
-        </div>
+    <div className="mx-auto flex max-w-[1600px] flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-muted-foreground">
+          <span className="font-medium tabular-nums text-foreground">{count ?? 0}</span> customers
+        </p>
+        <CustomerCreateDialog agents={agents ?? []} />
       </div>
 
-      {/* Status summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         {[
-          { key: "active", label: "Active", color: "text-emerald-700", border: "border-emerald-200/60", bg: "bg-white", badge: "bg-emerald-500", grad: "from-emerald-50 to-transparent" },
-          { key: "prospect", label: "Prospect", color: "text-amber-700", border: "border-amber-200/60", bg: "bg-white", badge: "bg-amber-500", grad: "from-amber-50 to-transparent" },
-          { key: "inactive", label: "Inactive", color: "text-slate-500", border: "border-slate-200/60", bg: "bg-white", badge: "bg-slate-300", grad: "from-slate-50 to-transparent" },
+          { key: "active", label: "Active", hint: "Won or engaged clients" },
+          { key: "prospect", label: "Prospect", hint: "From lead conversion" },
+          { key: "inactive", label: "Inactive", hint: "Archived relationships" },
         ].map((s) => (
           <Link
             key={s.key}
             href={`/customers?status=${s.key}`}
-            className={`relative overflow-hidden rounded-[1.5rem] border p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-gradient-to-br ${s.border} ${s.bg} ${s.grad} shadow-sm`}
+            className="overflow-hidden rounded-[14px] border border-border bg-card p-4 transition-colors hover:border-primary/30"
           >
-            <div className="relative z-10 flex items-center justify-between mb-2">
-              <span className={`text-sm font-bold uppercase tracking-wider ${s.color}`}>{s.label}</span>
-              <span className={`h-2.5 w-2.5 rounded-full shadow-sm ${s.badge}`} />
-            </div>
-            <p className="relative z-10 text-4xl font-extrabold text-slate-900">{stats[s.key] ?? 0}</p>
+            <div className="-mx-4 -mt-4 mb-3 h-0.5 bg-primary" />
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{s.label}</p>
+            <p
+              className="mt-2 font-heading text-[1.75rem] leading-none text-foreground"
+              style={{ fontFamily: "var(--font-display), serif" }}
+            >
+              {stats[s.key] ?? 0}
+            </p>
+            <p className="mt-1.5 text-xs text-muted-foreground">{s.hint}</p>
           </Link>
         ))}
       </div>
 
-      <CustomersTable
-        customers={customers ?? []}
-        currentFilters={params}
-      />
+      <CustomersTable customers={customers ?? []} currentFilters={params} />
     </div>
   );
 }

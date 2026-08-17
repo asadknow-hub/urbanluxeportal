@@ -46,6 +46,8 @@ export type DealCard = {
   stage: string;
   value: number;
   customer: { id: string; name: string } | null;
+  buyer_name: string | null;
+  property_title: string | null;
   assigned_to: string | null;
   assigned_to_profile: { id: string; full_name: string; avatar_url: string | null } | null;
   stage_changed_at: string | null;
@@ -54,25 +56,32 @@ export type DealCard = {
 
 function DealCardItem({ deal, isDragging }: { deal: DealCard; isDragging?: boolean }) {
   const days = deal.stage_changed_at ? daysSince(deal.stage_changed_at) : 0;
-  const dayColor = days > 30 ? "text-red-700 bg-red-100 border-red-200/60" : days > 14 ? "text-amber-700 bg-amber-100 border-amber-200/60" : "text-slate-600 bg-slate-100 border-slate-200/60";
+  const dayColor = days > 30 ? "text-destructive bg-destructive/10 border-destructive/20" : days > 14 ? "text-amber-700 bg-amber-100/80 border-amber-200/60" : "text-muted-foreground bg-muted border-border";
 
   return (
     <Link
       href={`/pipeline/${deal.id}`}
-      className={`group block rounded-xl border border-slate-200/60 bg-white p-3 transition-all duration-300 ${isDragging ? "shadow-xl opacity-75 scale-[1.02] ring-2 ring-emerald-500" : "hover:-translate-y-1 hover:shadow-md hover:border-emerald-200/60"}`}
+      className={`group block rounded-[12px] border border-border bg-card p-3 transition-all duration-200 ${isDragging ? "scale-[1.02] opacity-75 shadow-lg ring-2 ring-primary/40" : "hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"}`}
     >
       <div className="flex items-start justify-between">
-        <p className="text-[15px] font-bold text-slate-900 line-clamp-1 flex-1 group-hover:text-emerald-600 transition-colors">{deal.title}</p>
+        <p className="line-clamp-1 flex-1 text-[15px] font-semibold text-foreground transition-colors group-hover:text-primary">
+          {deal.title}
+        </p>
       </div>
-      {deal.customer && (
-        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mt-1">{deal.customer.name}</p>
+      {deal.customer ? (
+        <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{deal.customer.name}</p>
+      ) : deal.buyer_name ? (
+        <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{deal.buyer_name}</p>
+      ) : null}
+      {deal.property_title && (
+        <p className="mt-0.5 line-clamp-1 text-[10px] text-muted-foreground">{deal.property_title}</p>
       )}
-      
-      <div className="mt-3 mb-3 border-t border-slate-100"></div>
+
+      <div className="my-3 border-t border-border" />
 
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-extrabold text-slate-800">{formatAEDCompact(deal.value)}</span>
+          <span className="text-sm font-bold text-foreground">{formatAEDCompact(deal.value)}</span>
           <span className={`inline-flex rounded-md border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest ${dayColor}`}>
             {days}d
           </span>
@@ -87,7 +96,7 @@ function DealCardItem({ deal, isDragging }: { deal: DealCard; isDragging?: boole
                  <UserIcon className="h-3 w-3 text-slate-400" />
                </div>
              )}
-            <span className="text-xs font-medium text-slate-600 truncate">{deal.assigned_to_profile.full_name}</span>
+            <span className="truncate text-xs font-medium text-muted-foreground">{deal.assigned_to_profile.full_name}</span>
           </div>
         )}
       </div>
@@ -120,22 +129,23 @@ function DroppableColumn({
   const total = deals.reduce((sum, d) => sum + (d.value ?? 0), 0);
 
   return (
-    <div className="flex flex-col min-w-[320px] w-80 shrink-0">
-      <div className={`mb-2 flex items-center justify-between rounded-t-xl bg-white border-t-[3px] border-slate-200 p-2.5 shadow-sm text-slate-800`}>
+    <div className="flex w-[240px] shrink-0 flex-col min-w-[240px]">
+      <div className="mb-2 flex items-center justify-between rounded-t-[12px] border border-b-0 border-border bg-card px-3 py-2.5">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-bold uppercase tracking-wider">{stage.label}</h3>
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold shadow-sm border border-slate-200/60 text-slate-600">
+          <span className={`h-2 w-2 rounded-full ${stage.color}`} />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">{stage.label}</h3>
+          <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
             {deals.length}
           </span>
         </div>
-        <span className="text-xs font-bold opacity-90">{formatAEDCompact(total)}</span>
+        <span className="text-[10px] font-semibold text-muted-foreground">{formatAEDCompact(total)}</span>
       </div>
       <div
         ref={setNodeRef}
-        className={`flex-1 space-y-3 rounded-b-xl p-2 min-h-[500px] transition-colors border-x border-b border-slate-200/60 shadow-sm ${isOver ? "bg-emerald-50 border-emerald-200" : "bg-slate-50/50"}`}
+        className={`scrollbar-gold min-h-[500px] flex-1 space-y-2 rounded-b-[12px] border border-border p-2 transition-colors ${isOver ? "bg-primary/5" : "bg-muted/20"}`}
       >
         {deals.length === 0 ? (
-          <div className="flex h-32 items-center justify-center text-xs font-bold uppercase tracking-wider text-slate-400">
+          <div className="flex h-32 items-center justify-center text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
             {isOver ? "Drop here" : "Empty"}
           </div>
         ) : (
@@ -268,7 +278,7 @@ export function PipelineBoard({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="scrollbar-gold flex gap-3 overflow-x-auto pb-4">
           {STAGES.map((stage) => (
             <DroppableColumn
               key={stage.key}

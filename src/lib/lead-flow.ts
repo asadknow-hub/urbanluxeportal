@@ -1,0 +1,171 @@
+/** Lead → Deal → Customer lifecycle definitions for settings UI and conversion. */
+
+export type FlowEntity = "lead" | "deal" | "customer";
+
+export type LeadContext = {
+  lead_id: string;
+  captured_at: string;
+  name: string;
+  source: string;
+  interest: string;
+  score: number | null;
+  budget_min: number | null;
+  budget_max: number | null;
+  preferred_areas: string[] | null;
+  nationality: string | null;
+  financing: string | null;
+  timeframe: string | null;
+  purpose: string | null;
+  bedrooms: string | null;
+  category: string | null;
+  tags: string[];
+  notes: string | null;
+};
+
+export const FLOW_STAGES = [
+  {
+    key: "lead" as const,
+    label: "Lead",
+    hint: "Qualify on the leads board",
+    href: "/leads?view=board",
+  },
+  {
+    key: "deal" as const,
+    label: "Deal",
+    hint: "Pipeline from inquiry → won/lost",
+    href: "/pipeline",
+  },
+  {
+    key: "customer" as const,
+    label: "Customer",
+    hint: "Created when deal is won — property & docs saved",
+    href: "/customers",
+  },
+] as const;
+
+export const DEAL_PIPELINE_STAGES = [
+  { key: "inquiry", label: "Inquiry" },
+  { key: "viewing", label: "Viewing" },
+  { key: "negotiation", label: "Negotiation" },
+  { key: "offer", label: "Offer" },
+  { key: "contract", label: "Contract" },
+  { key: "won", label: "Won" },
+  { key: "lost", label: "Lost" },
+] as const;
+
+export const CUSTOMER_STATUSES = [
+  { key: "prospect", label: "Prospect", hint: "Legacy — deals from existing customers" },
+  { key: "active", label: "Active", hint: "Created when a deal is finalized (won)" },
+  { key: "inactive", label: "Inactive", hint: "Manual archive" },
+] as const;
+
+export type FieldMapping = {
+  leadField: string;
+  label: string;
+  customer: "copy" | "link" | "snapshot" | "—";
+  deal: "copy" | "link" | "snapshot" | "—";
+  notes: string;
+};
+
+export const FIELD_MAPPINGS: FieldMapping[] = [
+  { leadField: "name", label: "Name", customer: "copy", deal: "copy", notes: "Buyer contact on deal until won" },
+  { leadField: "phone", label: "Phone", customer: "copy", deal: "copy", notes: "Buyer phone on deal" },
+  { leadField: "email", label: "Email", customer: "copy", deal: "copy", notes: "Buyer email on deal" },
+  { leadField: "nationality", label: "Nationality", customer: "copy", deal: "copy", notes: "Deal KYC → customer on won" },
+  { leadField: "notes", label: "Notes", customer: "copy", deal: "—", notes: "Merged into customer notes" },
+  { leadField: "assigned_to", label: "Assigned agent", customer: "copy", deal: "copy", notes: "Carried to both records" },
+  { leadField: "tags", label: "Tags", customer: "copy", deal: "—", notes: "Union with existing customer tags" },
+  { leadField: "interest", label: "Interest", customer: "snapshot", deal: "copy", notes: "Deal type: sale / rental / off-plan" },
+  { leadField: "budget_min / budget_max", label: "Budget", customer: "snapshot", deal: "copy", notes: "Deal value defaults from budget" },
+  { leadField: "preferred_areas", label: "Preferred areas", customer: "snapshot", deal: "snapshot", notes: "Preserved in lead_context JSON" },
+  { leadField: "source", label: "Source", customer: "snapshot", deal: "snapshot", notes: "Attribution kept on both" },
+  { leadField: "score", label: "Score", customer: "snapshot", deal: "snapshot", notes: "Historical qualification score" },
+  { leadField: "financing / timeframe / purpose / bedrooms / category", label: "Requirements", customer: "snapshot", deal: "snapshot", notes: "Deal requirements panel" },
+  { leadField: "documents", label: "Documents", customer: "copy", deal: "copy", notes: "Lead docs copied to deal; all copied to customer on won" },
+  { leadField: "id", label: "Lead record", customer: "link", deal: "link", notes: "lead_id + conversion path links" },
+];
+
+type LeadLike = {
+  id: string;
+  name: string;
+  source?: string | null;
+  interest?: string | null;
+  score?: number | null;
+  budget_min?: number | null;
+  budget_max?: number | null;
+  preferred_areas?: string[] | null;
+  nationality?: string | null;
+  financing?: string | null;
+  timeframe?: string | null;
+  purpose?: string | null;
+  bedrooms?: string | null;
+  category?: string | null;
+  tags?: string[] | null;
+  notes?: string | null;
+};
+
+export function buildLeadContext(lead: LeadLike): LeadContext {
+  return {
+    lead_id: lead.id,
+    captured_at: new Date().toISOString(),
+    name: lead.name,
+    source: lead.source ?? "unknown",
+    interest: lead.interest ?? "sale",
+    score: lead.score ?? null,
+    budget_min: lead.budget_min ?? null,
+    budget_max: lead.budget_max ?? null,
+    preferred_areas: lead.preferred_areas ?? null,
+    nationality: lead.nationality ?? null,
+    financing: lead.financing ?? null,
+    timeframe: lead.timeframe ?? null,
+    purpose: lead.purpose ?? null,
+    bedrooms: lead.bedrooms ?? null,
+    category: lead.category ?? null,
+    tags: lead.tags ?? [],
+    notes: lead.notes ?? null,
+  };
+}
+
+export function dealTypeFromInterest(interest: string | null | undefined): "sale" | "rental" | "off_plan" {
+  if (interest === "rent") return "rental";
+  if (interest === "off_plan") return "off_plan";
+  return "sale";
+}
+
+export function defaultDealTitle(lead: Pick<LeadLike, "name" | "interest">): string {
+  const interest = String(lead.interest ?? "deal").replace(/_/g, " ");
+  return `${interest} — ${lead.name}`;
+}
+
+export function mergeTags(existing: string[] | null | undefined, incoming: string[] | null | undefined): string[] {
+  const set = new Set([...(existing ?? []), ...(incoming ?? [])].filter(Boolean));
+  return Array.from(set);
+}
+
+export function mergeNotes(existing: string | null | undefined, leadNotes: string | null | undefined): string | null {
+  const a = existing?.trim();
+  const b = leadNotes?.trim();
+  if (a && b && a !== b) return `${a}\n\n— From lead —\n${b}`;
+  return a || b || null;
+}
+
+export function formatLeadContextLabel(key: keyof LeadContext): string {
+  const labels: Partial<Record<keyof LeadContext, string>> = {
+    source: "Source",
+    interest: "Interest",
+    score: "Score",
+    budget_min: "Budget min",
+    budget_max: "Budget max",
+    preferred_areas: "Preferred areas",
+    nationality: "Nationality",
+    financing: "Financing",
+    timeframe: "Timeframe",
+    purpose: "Purpose",
+    bedrooms: "Bedrooms",
+    category: "Category",
+    tags: "Tags",
+    notes: "Lead notes",
+    captured_at: "Captured",
+  };
+  return labels[key] ?? key.replace(/_/g, " ");
+}

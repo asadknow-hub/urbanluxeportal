@@ -39,7 +39,7 @@ export function ConvertLeadDialog({
   const defaultValue = filsToAED(lead.budget_max ?? lead.budget_min);
   const [title, setTitle] = useState(defaultTitle);
   const [value, setValue] = useState(defaultValue ? String(defaultValue) : "");
-  const [result, setResult] = useState<{ customerId: string; dealId: string } | null>(null);
+  const [result, setResult] = useState<{ dealId: string } | null>(null);
 
   function handleOpenChange(next: boolean) {
     if (!next) {
@@ -57,8 +57,8 @@ export function ConvertLeadDialog({
         dealValue: value ? Number(value) : undefined,
       });
       if (converted.ok && converted.data) {
-        toast.success("Converted to customer and deal");
-        setResult(converted.data);
+        toast.success("Deal opened — add property, payment & KYC");
+        setResult({ dealId: converted.data.dealId });
         router.refresh();
       } else {
         toast.error(converted.error ?? "Conversion failed");
@@ -72,10 +72,11 @@ export function ConvertLeadDialog({
         {result ? (
           <>
             <DialogHeader>
-              <DialogTitle>Converted</DialogTitle>
+              <DialogTitle>Deal opened</DialogTitle>
             </DialogHeader>
             <p className="text-sm text-muted-foreground">
-              {lead.name} is now a prospect with an inquiry deal. Work the deal; winning it marks the customer active.
+              {lead.name} is now a pipeline deal. Add the specific property, payment plan, and KYC on the deal.
+              When you mark it won, a customer record is created with that property and documents.
             </p>
             <DialogFooter className="gap-2 sm:justify-start">
               <Link
@@ -84,21 +85,15 @@ export function ConvertLeadDialog({
               >
                 Open deal <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
-              <Link
-                href={`/customers/${result.customerId}`}
-                className="inline-flex h-8 items-center rounded-lg border border-border bg-background px-3 text-sm font-medium"
-              >
-                Open customer
-              </Link>
             </DialogFooter>
           </>
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle>Convert to customer + deal</DialogTitle>
+              <DialogTitle>Convert to deal</DialogTitle>
             </DialogHeader>
             <p className="text-sm text-muted-foreground">
-              Creates a prospect customer and a pipeline deal. Duplicate phone numbers reuse the existing customer.
+              Opens a pipeline deal with buyer details from the lead. Customer is created when the transaction is finalized (won).
             </p>
             <div className="space-y-3">
               <div className="space-y-1.5">
@@ -123,7 +118,7 @@ export function ConvertLeadDialog({
               </Button>
               <Button size="sm" disabled={pending} onClick={handleConvert}>
                 {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Convert
+                Open deal
               </Button>
             </DialogFooter>
           </>
