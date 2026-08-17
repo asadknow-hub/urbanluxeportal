@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ import { ConversionPath } from "@/components/crm/conversion-path";
 import { LeadContextPanel } from "@/components/crm/lead-context-panel";
 import { DealTransactionForm } from "@/components/pipeline/deal-transaction-form";
 import type { LeadContext } from "@/lib/lead-flow";
+import { dealReadyToFinalize, formatPropertyLine } from "@/lib/deal-transaction";
 import { updateDealStage, addDealActivity, assignDeal, updateDeal } from "@/server/deals";
 import { toast } from "sonner";
 import {
@@ -169,6 +170,10 @@ export function DealDetail({
   const [activityType, setActivityType] = useState("note");
   const [editMode, setEditMode] = useState(false);
   const [lostOpen, setLostOpen] = useState(false);
+  const [wonOpen, setWonOpen] = useState(false);
+  const [wonCommission, setWonCommission] = useState(
+    deal.commission_amount ? String(deal.commission_amount / 100) : ""
+  );
   const [lostReason, setLostReason] = useState("");
   const [editForm, setEditForm] = useState({
     title: deal.title,
@@ -183,27 +188,68 @@ export function DealDetail({
   const canEdit = canManage || deal.assigned_to === userId;
   const currentStageIdx = STAGES.findIndex((s) => s.key === deal.stage);
 
+  const agentOptions = useMemo(() => {
+    const list = [...agents];
+    if (
+      deal.assigned_to &&
+      deal.assigned_to_profile &&
+      !list.some((a) => a.id === deal.assigned_to)
+    ) {
+      list.unshift({
+        id: deal.assigned_to,
+        full_name: deal.assigned_to_profile.full_name,
+        role: deal.assigned_to_profile.role,
+      });
+    }
+    return list;
+  }, [agents, deal.assigned_to, deal.assigned_to_profile]);
+
+  const assignedLabel =
+    deal.assigned_to_profile?.full_name ??
+    agentOptions.find((a) => a.id === deal.assigned_to)?.full_name ??
+    "Unassigned";
+
+  const finalizeReadiness = dealReadyToFinalize(deal);
+
   function handleStageChange(newStage: string) {
     if (newStage === deal.stage) return;
     if (newStage === "lost") {
       setLostOpen(true);
       return;
     }
+    if (newStage === "won") {
+      setWonOpen(true);
+      return;
+    }
     startTransition(async () => {
       const result = await updateDealStage({ id: deal.id, stage: newStage as "inquiry" | "viewing" | "negotiation" | "offer" | "contract" | "won" | "lost" });
       if (result.ok) {
         toast.success(`Deal moved to ${STAGES.find((s) => s.key === newStage)?.label}`);
-        if (newStage === "won" && result.data?.customerId) {
-          toast.success("Customer created — property saved", {
-            action: {
-              label: "View customer",
-              onClick: () => router.push(`/customers/${result.data!.customerId}`),
-            },
-          });
-        }
         router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
+      }
+    });
+  }
+
+  function confirmWon() {
+    startTransition(async () => {
+      const result = await updateDealStage({
+        id: deal.id,
+        stage: "won",
+        value: deal.value ? deal.value / 100 : undefined,
+        commission_amount: wonCommission ? Number(wonCommission) : undefined,
+      });
+      if (result.ok) {
+        toast.success("Deal finalized — customer created");
+        setWonOpen(false);
+        if (result.data?.customerId) {
+          router.push(`/customers/${result.data.customerId}`);
+        } else {
+          router.refresh();
+        }
+      } else {
+        toast.error(result.error ?? "Failed to finalize");
       }
     });
   }
@@ -280,7 +326,11 @@ export function DealDetail({
       <ConversionPath
         current="deal"
         lead={deal.lead ? { id: deal.lead.id, name: deal.lead.name } : deal.lead_id ? { id: deal.lead_id, name: "Originating lead" } : null}
-        customer={deal.customer ? { id: deal.customer.id, name: deal.customer.name, status: deal.customer.status } : null}
+        customer={
+          deal.customer && deal.customer.status === "active"
+            ? { id: deal.customer.id, name: deal.customer.name, status: deal.customer.status }
+            : null
+        }
         deal={{ id: deal.id, title: deal.title, stage: deal.stage }}
       />
 
@@ -360,8 +410,8 @@ export function DealDetail({
         )}
         {canEdit && deal.stage !== "won" && deal.stage !== "lost" && (
           <div className="mt-3 flex gap-2">
-            <Button size="sm" variant="outline" className="border-primary/30 text-primary hover:bg-primary/5" onClick={() => handleStageChange("won")} disabled={pending}>
-              <CheckCircle2 className="mr-1 h-4 w-4" /> Mark Won
+            <Button size="sm" variant="outline" className="border-primary/30 text-primary hover:bg-primary/5" onClick={() => setWonOpen(true)} disabled={pending}>
+              <CheckCircle2 className="mr-1 h-4 w-4" /> Mark won
             </Button>
             <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleStageChange("lost")} disabled={pending}>
               <XCircle className="mr-1 h-4 w-4" /> Mark Lost
@@ -483,11 +533,11 @@ export function DealDetail({
               <h2 className="mb-3 text-sm font-semibold text-foreground">Assignment</h2>
               <Select value={deal.assigned_to ?? "unassigned"} onValueChange={(v) => handleAssign(v === "unassigned" ? null : v)}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Unassigned">{assignedLabel}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {agents.map((a) => (
+                  {agentOptions.map((a) => (
                     <SelectItem key={a.id} value={a.id}>
                       {a.full_name} ({a.role})
                     </SelectItem>
@@ -574,6 +624,57 @@ export function DealDetail({
           </div>
         </div>
       </div>
+
+      <Dialog open={wonOpen} onOpenChange={setWonOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Finalize deal?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            This marks the deal as <strong>won</strong> and creates a <strong>customer</strong> record with the
+            property, documents, and agent commission saved under their profile.
+          </p>
+          {!finalizeReadiness.ok && (
+            <p className="rounded-[8px] bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              Still needed: {finalizeReadiness.missing.join(", ")}. Update the deal sections above first.
+            </p>
+          )}
+          <dl className="space-y-2 rounded-[10px] border border-border bg-muted/30 p-3 text-sm">
+            <div className="flex justify-between gap-2">
+              <dt className="text-muted-foreground">Property</dt>
+              <dd className="font-medium text-right">{deal.property_title ? formatPropertyLine(deal) : "—"}</dd>
+            </div>
+            <div className="flex justify-between gap-2">
+              <dt className="text-muted-foreground">Buyer</dt>
+              <dd className="font-medium">{deal.buyer_name ?? "—"}</dd>
+            </div>
+            <div className="flex justify-between gap-2">
+              <dt className="text-muted-foreground">Value</dt>
+              <dd className="font-medium">{formatAED(deal.value)}</dd>
+            </div>
+          </dl>
+          <div className="space-y-1.5">
+            <Label htmlFor="won-commission">Agent commission (AED)</Label>
+            <Input
+              id="won-commission"
+              type="number"
+              min={0}
+              value={wonCommission}
+              onChange={(e) => setWonCommission(e.target.value)}
+              placeholder="Optional — saved on customer transaction"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setWonOpen(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" disabled={pending || !finalizeReadiness.ok} onClick={confirmWon}>
+              {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Yes, create customer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={lostOpen} onOpenChange={setLostOpen}>
         <DialogContent className="max-w-md">

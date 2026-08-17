@@ -235,9 +235,16 @@ export function LeadDrawer({ lead, onClose }: { lead: LeadRow; onClose: () => vo
         lead={{
           id: lead.id,
           name: lead.name,
+          phone: lead.phone,
+          email: lead.email,
+          nationality: null,
           interest: lead.interest,
           budget_min: lead.budget_min,
           budget_max: lead.budget_max,
+          preferred_areas: null,
+          bedrooms: null,
+          category: null,
+          financing: null,
         }}
       />
     </Sheet>

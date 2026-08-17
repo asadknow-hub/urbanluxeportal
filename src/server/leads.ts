@@ -18,7 +18,13 @@ import {
   buildLeadContext,
   dealTypeFromInterest,
   defaultDealTitle,
+  suggestedPropertyTitle,
 } from "@/lib/lead-flow";
+import type { DealTransactionInput } from "@/lib/deal-transaction";
+
+export type ConvertLeadInput = DealTransactionInput & {
+  dealTitle?: string;
+};
 
 export type ActionResult<T = unknown> = {
   ok: boolean;
@@ -398,7 +404,7 @@ export async function updateLead(
 
 export async function convertLead(
   leadId: string,
-  options: { dealTitle?: string; dealValue?: number }
+  options: ConvertLeadInput = {}
 ): Promise<ActionResult<{ customerId: string | null; dealId: string }>> {
   try {
     const user = await getCurrentUser();
@@ -431,12 +437,27 @@ export async function convertLead(
 
     const leadContext = buildLeadContext(lead);
     const title = options.dealTitle?.trim() || defaultDealTitle(lead);
-    const valueFils =
-      options.dealValue != null && options.dealValue > 0
-        ? Math.round(options.dealValue * 100)
-        : (lead.budget_max ?? lead.budget_min ?? 0);
+    const valueFils = lead.budget_max ?? lead.budget_min ?? 0;
 
-    const preferredArea = lead.preferred_areas?.[0] ?? null;
+    const propertyTitle =
+      options.property_title?.trim() ||
+      suggestedPropertyTitle(lead) ||
+      null;
+    const propertyCommunity =
+      options.property_community?.trim() || lead.preferred_areas?.[0] || null;
+
+    const paymentMethod =
+      options.payment_method?.trim() ||
+      (lead.financing && lead.financing !== "undecided" ? lead.financing : null);
+
+    const propertySnapshot = {
+      bedrooms: lead.bedrooms ?? null,
+      category: lead.category ?? null,
+      purpose: lead.purpose ?? null,
+      timeframe: lead.timeframe ?? null,
+      preferred_areas: lead.preferred_areas ?? null,
+      notes: lead.notes ?? null,
+    };
 
     const { data: deal, error: dealError } = await supabase
       .from("deals")
@@ -450,11 +471,25 @@ export async function convertLead(
         created_by: user.id,
         lead_id: leadId,
         lead_context: leadContext,
-        buyer_name: lead.name,
-        buyer_phone: lead.phone,
-        buyer_email: lead.email,
-        kyc_nationality: lead.nationality,
-        property_community: preferredArea,
+        buyer_name: options.buyer_name?.trim() || lead.name,
+        buyer_phone: options.buyer_phone?.trim() || lead.phone,
+        buyer_email: options.buyer_email?.trim() || lead.email,
+        kyc_nationality: options.kyc_nationality?.trim() || lead.nationality,
+        kyc_emirates_id: options.kyc_emirates_id?.trim() || null,
+        kyc_passport_no: options.kyc_passport_no?.trim() || null,
+        kyc_trn: options.kyc_trn?.trim() || null,
+        property_title: propertyTitle,
+        property_community: propertyCommunity,
+        property_building: options.property_building?.trim() || null,
+        property_unit: options.property_unit?.trim() || null,
+        property_ref: options.property_ref?.trim() || null,
+        property_snapshot: propertySnapshot,
+        payment_method: paymentMethod,
+        payment_deposit:
+          options.payment_deposit != null ? Math.round(options.payment_deposit * 100) : null,
+        payment_balance:
+          options.payment_balance != null ? Math.round(options.payment_balance * 100) : null,
+        payment_notes: options.payment_notes?.trim() || null,
       })
       .select("id")
       .single();

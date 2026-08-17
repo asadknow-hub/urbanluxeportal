@@ -112,7 +112,7 @@ export default async function LeadDetailPage({
       .eq("lead_id", id)
       .order("scheduled_at", { ascending: false }),
     lead.converted_customer_id
-      ? supabase.from("customers").select("id, name, phone, email").eq("id", lead.converted_customer_id).single()
+      ? supabase.from("customers").select("id, name, phone, email, status").eq("id", lead.converted_customer_id).single()
       : Promise.resolve({ data: null, error: null }),
     lead.converted_deal_id
       ? supabase.from("deals").select("id, title, stage, value, deal_type").eq("id", lead.converted_deal_id).single()

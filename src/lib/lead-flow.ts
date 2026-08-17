@@ -132,9 +132,16 @@ export function dealTypeFromInterest(interest: string | null | undefined): "sale
   return "sale";
 }
 
-export function defaultDealTitle(lead: Pick<LeadLike, "name" | "interest">): string {
-  const interest = String(lead.interest ?? "deal").replace(/_/g, " ");
-  return `${interest} — ${lead.name}`;
+export function defaultDealTitle(lead: Pick<LeadLike, "name">): string {
+  return lead.name.trim();
+}
+
+export function suggestedPropertyTitle(lead: Pick<LeadLike, "preferred_areas" | "bedrooms" | "category">): string {
+  const area = lead.preferred_areas?.[0];
+  const beds = lead.bedrooms?.replace(/_/g, " ");
+  const category = lead.category?.replace(/_/g, " ");
+  const parts = [area, beds ? `${beds} bed` : null, category].filter(Boolean);
+  return parts.join(" · ");
 }
 
 export function mergeTags(existing: string[] | null | undefined, incoming: string[] | null | undefined): string[] {

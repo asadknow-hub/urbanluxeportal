@@ -379,7 +379,7 @@ export function LeadDetail({
   nationalities: string[];
   fieldOptions: Record<string, LeadFieldOption[]>;
   followUps: LeadFollowUp[];
-  customer: { id: string; name: string; phone: string | null; email: string | null } | null;
+  customer: { id: string; name: string; phone: string | null; email: string | null; status?: string } | null;
   deal: { id: string; title: string; stage: string; value: number; deal_type: string } | null;
   documents: DocumentRow[];
   duplicateMatches: unknown[];
@@ -479,6 +479,15 @@ export function LeadDetail({
   function handleStageChange(stageId: string) {
     const stage = stages.find((s) => s.id === stageId);
     if (!stage) return;
+    if (stage.kind === "won") {
+      const existingDealId = deal?.id ?? optimisticLead.converted_deal_id;
+      if (existingDealId) {
+        router.push(`/pipeline/${existingDealId}`);
+        return;
+      }
+      setConverting(true);
+      return;
+    }
     if (stage.kind === "lost" || stage.kind === "junk") {
       setReasonDialog({ stageId, stageName: stage.name, kind: stage.kind });
       setSelectedReason("");
@@ -620,11 +629,15 @@ export function LeadDetail({
 
   return (
     <div className="mx-auto flex w-full max-w-[1460px] flex-col gap-[18px]">
-      {(customer || deal) && (
+      {(customer?.status === "active" || deal) && (
         <ConversionPath
           current="lead"
           lead={{ id: optimisticLead.id, name: optimisticLead.name }}
-          customer={customer ? { id: customer.id, name: customer.name } : null}
+          customer={
+            customer?.status === "active"
+              ? { id: customer.id, name: customer.name, status: customer.status }
+              : null
+          }
           deal={deal ? { id: deal.id, title: deal.title, stage: deal.stage } : null}
         />
       )}
@@ -812,7 +825,7 @@ export function LeadDetail({
                   Convert to deal <ArrowRight className="h-4 w-4" />
                 </button>
               )}
-              {customer && (
+              {customer?.status === "active" && (
                 <Link
                   href={`/customers/${customer.id}`}
                   className="inline-flex h-[42px] items-center gap-2 rounded-[10px] border border-border bg-card px-5 text-[0.88rem] font-semibold text-muted-foreground hover:border-foreground hover:text-foreground"
@@ -1347,9 +1360,16 @@ export function LeadDetail({
         lead={{
           id: optimisticLead.id,
           name: optimisticLead.name,
+          phone: optimisticLead.phone,
+          email: optimisticLead.email,
+          nationality: optimisticLead.nationality,
           interest: optimisticLead.interest,
           budget_min: optimisticLead.budget_min,
           budget_max: optimisticLead.budget_max,
+          preferred_areas: optimisticLead.preferred_areas,
+          bedrooms: optimisticLead.bedrooms,
+          category: optimisticLead.category,
+          financing: optimisticLead.financing,
         }}
       />
 
