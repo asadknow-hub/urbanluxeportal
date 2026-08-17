@@ -63,7 +63,8 @@ export function LeadFieldsWorkspace({
 
   return (
     <div className="grid items-start gap-4 xl:grid-cols-[minmax(16rem,22rem)_minmax(0,1fr)]">
-      <div className="flex max-h-[calc(100dvh-7.5rem)] flex-col overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex max-h-[calc(100dvh-7.5rem)] flex-col overflow-hidden rounded-[14px] border border-border bg-card">
+        <div className="h-0.5 shrink-0 bg-primary" />
         <div className="shrink-0 border-b border-border px-4 py-3">
           <h2 className="text-sm font-medium text-foreground">Lead fields</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">

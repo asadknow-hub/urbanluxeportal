@@ -32,8 +32,8 @@ export function StageSlaEditor({
   }
 
   return (
-    <label className="mt-3 flex items-center justify-between gap-3 border-t border-slate-200/60 pt-3">
-      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Stage SLA (days)</span>
+    <label className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
+      <span className="text-xs font-medium text-muted-foreground">Stage SLA (days)</span>
       <input
         type="number"
         min={1}
@@ -42,7 +42,7 @@ export function StageSlaEditor({
         disabled={pending}
         value={days}
         placeholder="Off"
-        className="h-8 w-16 rounded-md border border-slate-200 bg-white px-2 text-right text-xs font-semibold text-slate-700 outline-none focus:border-slate-400"
+        className="h-8 w-16 cursor-text rounded-[10px] border border-border bg-card px-2 text-right text-xs font-medium text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-50"
         onChange={(e) => setDays(e.target.value)}
         onBlur={(e) => save(e.target.value)}
         onKeyDown={(e) => {

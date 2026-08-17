@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LeadFieldsWorkspace } from "@/components/leads/lead-fields-workspace";
 import { StageSlaEditor } from "@/components/leads/stage-sla-editor";
 import { fetchLeadTableColumns } from "@/server/lead-areas";
@@ -20,12 +19,30 @@ const HUB_TABS = [
 
 type HubTab = (typeof HUB_TABS)[number]["key"];
 
+const STAGE_DOT: Record<string, string> = {
+  blue: "bg-blue-500",
+  cyan: "bg-sky-500",
+  teal: "bg-teal-600",
+  purple: "bg-violet-500",
+  indigo: "bg-indigo-500",
+  green: "bg-emerald-600",
+  slate: "bg-slate-500",
+  gray: "bg-zinc-500",
+  amber: "bg-amber-500",
+  red: "bg-red-600",
+};
+
 function isHubTab(value: string | undefined): value is HubTab {
   return !!value && HUB_TABS.some((tab) => tab.key === value);
 }
 
 function formatStageKind(kind: string) {
-  return kind.replace(/_/g, " ");
+  const label = kind.replace(/_/g, " ");
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+function stageDot(color: string) {
+  return STAGE_DOT[color] ?? "bg-primary";
 }
 
 export default async function LeadsSettingsPage({
@@ -62,23 +79,24 @@ export default async function LeadsSettingsPage({
     if (row.stage_id) stageCountMap[row.stage_id] = (stageCountMap[row.stage_id] ?? 0) + 1;
   });
 
-  const activeFields = fieldCount;
+  const slaCount = stages.filter((s: { stale_after_days: number | null }) => s.stale_after_days != null).length;
   const areaCount = areasResult.data?.length ?? 0;
 
   return (
     <div className="mx-auto max-w-[1600px] space-y-4">
       <nav
         aria-label="Lead settings sections"
-        className="flex flex-wrap gap-1 rounded-xl border border-border bg-card p-1"
+        className="flex flex-wrap gap-1 rounded-[14px] border border-border bg-card p-1"
       >
         {HUB_TABS.map((item) => (
           <Link
             key={item.key}
             href={item.key === "fields" ? "/settings/leads?tab=fields" : `/settings/leads?tab=${item.key}`}
             className={cn(
-              "inline-flex h-8 items-center rounded-lg px-3 text-xs font-medium transition-colors",
+              "inline-flex h-8 cursor-pointer items-center rounded-lg px-3 text-xs font-medium transition-colors duration-200",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
               tab === item.key
-                ? "bg-secondary text-secondary-foreground"
+                ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
           >
@@ -88,98 +106,91 @@ export default async function LeadsSettingsPage({
       </nav>
 
       {tab === "overview" && (
-        <div className="space-y-6">
-          {/* Top Metrics Bento Grid */}
+        <div className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="group rounded-xl bg-white p-3 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
-               <div className="flex items-center gap-3 mb-4">
-                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
-                   <Route className="h-4 w-4" />
-                 </div>
-                 <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Stages</h3>
-               </div>
-               <div className="text-2xl font-bold text-slate-900">{stages.length}</div>
-               <p className="mt-2 text-xs font-medium text-slate-400">Flow states</p>
-            </div>
-            
-            <div className="group rounded-xl bg-white p-3 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
-               <div className="flex items-center gap-3 mb-4">
-                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
-                   <CalendarClock className="h-4 w-4" />
-                 </div>
-                 <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">SLA</h3>
-               </div>
-               <div className="text-2xl font-bold text-slate-900">{stages.filter((s: { stale_after_days: number | null }) => s.stale_after_days != null).length}</div>
-               <p className="mt-2 text-xs font-medium text-slate-400">Stages with stale timers</p>
-            </div>
-            
-            <div className="group rounded-xl bg-white p-3 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300">
-               <div className="flex items-center gap-3 mb-4">
-                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-50 text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
-                   <FileText className="h-4 w-4" />
-                 </div>
-                 <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">Fields</h3>
-               </div>
-               <div className="text-2xl font-bold text-slate-900">{activeFields}</div>
-               <p className="mt-2 text-xs font-medium text-slate-400">{areaCount} preferred areas configured</p>
-            </div>
+            {[
+              { icon: Route, label: "Stages", value: stages.length, hint: "Columns on the leads board" },
+              { icon: CalendarClock, label: "SLA", value: slaCount, hint: "Stages with a stale timer" },
+              { icon: FileText, label: "Fields", value: fieldCount, hint: `${areaCount} preferred areas` },
+            ].map((metric) => {
+              const Icon = metric.icon;
+              return (
+                <div key={metric.label} className="overflow-hidden rounded-[14px] border border-border bg-card p-4">
+                  <div className="-mx-4 -mt-4 mb-4 h-0.5 bg-primary" />
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <p className="text-sm font-medium text-muted-foreground">{metric.label}</p>
+                  </div>
+                  <p
+                    className="mt-3 font-heading text-[28px] leading-none text-foreground"
+                    style={{ fontFamily: "var(--font-display), serif" }}
+                  >
+                    {metric.value}
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">{metric.hint}</p>
+                </div>
+              );
+            })}
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3">
-            <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200/60 lg:col-span-2">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+            <div className="overflow-hidden rounded-[14px] border border-border bg-card p-5 lg:col-span-2">
+              <div className="-mx-5 -mt-5 mb-5 h-0.5 bg-primary" />
+              <div className="mb-3 flex items-center gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                   <Layers3 className="h-4 w-4" />
-                </div>
-                <h2 className="text-base font-bold text-slate-900">Activation Flow</h2>
+                </span>
+                <h2 className="text-base font-semibold text-foreground">How leads move</h2>
               </div>
-              <p className="text-sm text-slate-500 font-medium leading-relaxed mb-5">
-                1. Create or capture a lead with the Fields picklists.<br/>
-                2. Move through stages and honor SLA timers. Unassigned new leads round-robin to agents.<br/>
-                3. Follow up, qualify, and convert into a customer and deal.
-              </p>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-xl bg-slate-50 p-4 border border-slate-100/50">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Next stop</p>
-                  <div className="mt-3 flex items-center gap-3 text-sm font-bold text-slate-700">
-                    <CalendarClock className="h-5 w-5 text-emerald-500" />
-                    Follow-ups and SLA reclaim
+              <ol className="space-y-2 text-sm leading-relaxed text-muted-foreground">
+                <li>1. Capture a lead using the Fields picklists.</li>
+                <li>2. Move it across board stages. SLA timers flag leads that sit too long.</li>
+                <li>3. Unassigned new leads round-robin to agents. Qualify, then convert to a customer and deal.</li>
+              </ol>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-[10px] border border-border bg-muted/40 p-4">
+                  <p className="text-xs font-medium text-muted-foreground">Next stop</p>
+                  <div className="mt-2 flex items-center gap-2 text-sm font-medium text-foreground">
+                    <CalendarClock className="h-4 w-4 text-primary" />
+                    Follow-ups and SLA
                   </div>
                 </div>
-                <div className="rounded-xl bg-slate-50 p-4 border border-slate-100/50">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Conversion target</p>
-                  <div className="mt-3 flex items-center gap-3 text-sm font-bold text-slate-700">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                    Customer + deal creation
+                <div className="rounded-[10px] border border-border bg-muted/40 p-4">
+                  <p className="text-xs font-medium text-muted-foreground">Conversion</p>
+                  <div className="mt-2 flex items-center gap-2 text-sm font-medium text-foreground">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    Customer + deal
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200/60">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+            <div className="overflow-hidden rounded-[14px] border border-border bg-card p-5">
+              <div className="-mx-5 -mt-5 mb-5 h-0.5 bg-primary" />
+              <div className="mb-3 flex items-center gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
                   <Settings2 className="h-4 w-4" />
-                </div>
-                <h2 className="text-base font-bold text-slate-900">Quick Links</h2>
+                </span>
+                <h2 className="text-base font-semibold text-foreground">Open in CRM</h2>
               </div>
-              <div className="space-y-3">
-                <Link href="/leads?view=board" className="group flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4 transition-all hover:bg-white hover:border-slate-200 hover:shadow-md">
-                  <span className="text-sm font-bold text-slate-700 group-hover:text-emerald-700">Open Leads board</span>
-                  <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
-                </Link>
-                <Link href="/leads?view=list" className="group flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4 transition-all hover:bg-white hover:border-slate-200 hover:shadow-md">
-                  <span className="text-sm font-bold text-slate-700 group-hover:text-emerald-700">Open list view</span>
-                  <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
-                </Link>
-                <Link href="/leads/followups" className="group flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4 transition-all hover:bg-white hover:border-slate-200 hover:shadow-md">
-                  <span className="text-sm font-bold text-slate-700 group-hover:text-emerald-700">Open follow-ups</span>
-                  <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
-                </Link>
-                <Link href="/deals" className="group flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 p-4 transition-all hover:bg-white hover:border-slate-200 hover:shadow-md">
-                  <span className="text-sm font-bold text-slate-700 group-hover:text-emerald-700">Open deals pipeline</span>
-                  <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
-                </Link>
+              <div className="space-y-2">
+                {[
+                  { href: "/leads?view=board", label: "Leads board" },
+                  { href: "/leads?view=list", label: "Leads list" },
+                  { href: "/leads/followups", label: "Follow-ups" },
+                  { href: "/deals", label: "Deals pipeline" },
+                ].map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="group flex cursor-pointer items-center justify-between rounded-[10px] border border-border bg-muted/40 px-4 py-3 text-sm font-medium text-foreground transition-colors duration-200 hover:border-primary/40 hover:bg-muted"
+                  >
+                    {item.label}
+                    <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform duration-200 motion-safe:group-hover:translate-x-0.5" />
+                  </Link>
+                ))}
               </div>
             </div>
           </div>
@@ -196,41 +207,81 @@ export default async function LeadsSettingsPage({
       )}
 
       {tab === "stages" && (
-        <div className="space-y-6">
-          <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200/60">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
-                <Layers3 className="h-4 w-4" />
+        <div className="space-y-5">
+          <div className="overflow-hidden rounded-[14px] border border-border bg-card p-5">
+            <div className="-mx-5 -mt-5 mb-5 h-0.5 bg-primary" />
+            <div className="mb-1 flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-base font-semibold text-foreground">Pipeline stages</h2>
+                <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                  These are the columns on the leads board. Add, rename, or delete stages there.
+                  Set how many days a lead can sit in a stage before it is marked stale.
+                </p>
               </div>
-              <h2 className="text-base font-bold text-slate-900">Activation Stages</h2>
+              <Link
+                href="/leads?view=board"
+                className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-3 text-xs font-medium text-foreground transition-colors duration-200 hover:border-primary/40 hover:bg-muted"
+              >
+                Open board
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {stages.map((stage: { id: string; name: string; color: string; kind: string; sort: number; helper_text: string | null; required_fields: unknown; stale_after_days: number | null }) => (
-                <div key={stage.id} className="rounded-xl border border-slate-100 bg-slate-50 p-4 hover:border-slate-200 hover:shadow-sm transition-all flex flex-col">
+
+            <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {stages.map((stage: {
+                id: string;
+                name: string;
+                color: string;
+                kind: string;
+                sort: number;
+                helper_text: string | null;
+                required_fields: unknown;
+                stale_after_days: number | null;
+              }) => (
+                <div
+                  key={stage.id}
+                  className="flex flex-col rounded-[14px] border border-border bg-muted/30 p-4"
+                >
                   <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-base font-bold text-slate-900">{stage.name}</p>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mt-1">{formatStageKind(stage.kind)} · Sort {stage.sort}</p>
+                    <div className="min-w-0">
+                      <p className="truncate text-[15px] font-semibold tracking-tight text-foreground">{stage.name}</p>
+                      <p className="mt-1 text-xs capitalize text-muted-foreground">
+                        {formatStageKind(stage.kind)} · {stage.sort}
+                      </p>
                     </div>
-                    <span className="rounded-full bg-white px-3 py-1 text-[10px] font-bold tracking-wider text-slate-600 shadow-sm border border-slate-100">{stage.color}</span>
+                    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs text-muted-foreground">
+                      <span className={cn("h-2 w-2 rounded-full", stageDot(stage.color))} />
+                      {stage.color}
+                    </span>
                   </div>
-                  {stage.helper_text && <p className="mt-3 text-sm font-medium text-slate-600 leading-relaxed">{stage.helper_text}</p>}
-                  
-                  <div className="mt-auto pt-3">
-                    <div className="border-t border-slate-200/60 pt-4">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Required Fields</p>
+                  {stage.helper_text ? (
+                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{stage.helper_text}</p>
+                  ) : null}
+
+                  <div className="mt-auto pt-4">
+                    <div className="border-t border-border pt-3">
+                      <p className="mb-2 text-xs font-medium text-muted-foreground">Required fields</p>
                       <div className="flex flex-wrap gap-1.5">
-                        {Array.isArray(stage.required_fields) && stage.required_fields.length > 0 ? stage.required_fields.map((field) => (
-                          <span key={String(field)} className="rounded-md bg-white border border-slate-200/60 px-2 py-1 text-[10px] font-bold text-slate-600">
-                            {String(field).replace(/_/g, " ")}
-                          </span>
-                        )) : <span className="text-xs text-slate-400 font-medium">None</span>}
+                        {Array.isArray(stage.required_fields) && stage.required_fields.length > 0 ? (
+                          stage.required_fields.map((field) => (
+                            <span
+                              key={String(field)}
+                              className="rounded-md border border-border bg-card px-2 py-1 text-xs text-foreground"
+                            >
+                              {String(field).replace(/_/g, " ")}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-muted-foreground">None</span>
+                        )}
                       </div>
                     </div>
                     <StageSlaEditor stageId={stage.id} value={stage.stale_after_days} />
                     <div className="mt-3 flex items-center gap-2">
-                      <span className="flex h-5 items-center justify-center rounded bg-emerald-100 px-2 text-[10px] font-bold text-emerald-700">{stageCountMap[stage.id] ?? 0}</span>
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">Leads in stage</span>
+                      <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-md bg-primary/15 px-2 text-xs font-semibold text-foreground">
+                        {stageCountMap[stage.id] ?? 0}
+                      </span>
+                      <span className="text-xs text-muted-foreground">Leads in this stage</span>
                     </div>
                   </div>
                 </div>
@@ -238,15 +289,33 @@ export default async function LeadsSettingsPage({
             </div>
           </div>
 
-          <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200/60">
-            <h2 className="text-base font-bold text-slate-900 mb-4">Lost and Junk Reasons</h2>
+          <div className="overflow-hidden rounded-[14px] border border-border bg-card p-5">
+            <div className="-mx-5 -mt-5 mb-5 h-0.5 bg-primary" />
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <h2 className="text-base font-semibold text-foreground">Lost and junk reasons</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Shown when a lead is moved to Lost or Junk. Edit the lists under Fields.
+                </p>
+              </div>
+              <Link
+                href="/settings/leads?tab=fields&field=lost_reason"
+                className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-muted/40 px-3 text-xs font-medium text-foreground transition-colors duration-200 hover:border-primary/40 hover:bg-muted"
+              >
+                Edit in Fields
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
             <div className="grid gap-4 md:grid-cols-2">
               {(["lost", "junk"] as const).map((kind) => (
-                <div key={kind} className="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                  <p className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4">{kind}</p>
+                <div key={kind} className="rounded-[14px] border border-border bg-muted/30 p-4">
+                  <p className="mb-3 text-sm font-medium capitalize text-foreground">{kind}</p>
                   <div className="flex flex-wrap gap-2">
                     {(kind === "lost" ? fieldOptions.lost_reason : fieldOptions.junk_reason)?.map((reason) => (
-                      <span key={reason.id} className="rounded-full bg-white border border-slate-200/60 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm">
+                      <span
+                        key={reason.id}
+                        className="rounded-full border border-border bg-card px-3 py-1.5 text-xs text-foreground"
+                      >
                         {reason.label}
                       </span>
                     ))}
