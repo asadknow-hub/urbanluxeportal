@@ -12,11 +12,8 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Users,
-  CalendarClock,
   LayoutGrid,
   List,
-  ChevronDown,
   X,
   User as UserIcon,
   Check,
@@ -28,6 +25,8 @@ import { whatsappLink, telLink } from "@/lib/phone";
 import { formatDate, timeAgo } from "@/lib/dates";
 import { completeFollowUp, snoozeFollowUp } from "@/server/leads";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/primitives/empty-state";
 
 export type FollowUpLead = {
   id: string;
@@ -62,12 +61,12 @@ type SortDir = "asc" | "desc";
 type ViewMode = "grouped" | "table";
 type TimeGroup = "overdue" | "today" | "tomorrow" | "this_week" | "later";
 
-const GROUP_CONFIG: Record<TimeGroup, { label: string; color: string; border: string; bg: string; badge: string; grad: string }> = {
-  overdue: { label: "Overdue", color: "text-red-700", border: "border-red-200/60", bg: "bg-white", badge: "bg-red-500", grad: "from-red-50 to-transparent" },
-  today: { label: "Today", color: "text-amber-700", border: "border-amber-200/60", bg: "bg-white", badge: "bg-amber-500", grad: "from-amber-50 to-transparent" },
-  tomorrow: { label: "Tomorrow", color: "text-blue-700", border: "border-blue-200/60", bg: "bg-white", badge: "bg-blue-500", grad: "from-blue-50 to-transparent" },
-  this_week: { label: "This Week", color: "text-slate-700", border: "border-slate-200/60", bg: "bg-white", badge: "bg-slate-400", grad: "from-slate-50 to-transparent" },
-  later: { label: "Later", color: "text-slate-500", border: "border-slate-200/60", bg: "bg-white", badge: "bg-slate-300", grad: "from-slate-50 to-transparent" },
+const GROUP_CONFIG: Record<TimeGroup, { label: string; tone: string; dot: string }> = {
+  overdue: { label: "Overdue", tone: "text-destructive", dot: "bg-destructive" },
+  today: { label: "Today", tone: "text-foreground", dot: "bg-primary" },
+  tomorrow: { label: "Tomorrow", tone: "text-foreground", dot: "bg-secondary" },
+  this_week: { label: "This week", tone: "text-muted-foreground", dot: "bg-muted-foreground" },
+  later: { label: "Later", tone: "text-muted-foreground", dot: "bg-border" },
 };
 
 const GROUP_ORDER: TimeGroup[] = ["overdue", "today", "tomorrow", "this_week", "later"];
@@ -79,9 +78,9 @@ const STAGE_COLORS: Record<string, { bg: string; text: string; dot: string }> = 
   purple: { bg: "bg-purple-50", text: "text-purple-700", dot: "bg-purple-500" },
   indigo: { bg: "bg-indigo-50", text: "text-indigo-700", dot: "bg-indigo-500" },
   green: { bg: "bg-emerald-50", text: "text-emerald-700", dot: "bg-emerald-500" },
-  slate: { bg: "bg-slate-100", text: "text-slate-600", dot: "bg-slate-400" },
-  gray: { bg: "bg-gray-100", text: "text-gray-600", dot: "bg-gray-400" },
-  amber: { bg: "bg-amber-50", text: "text-amber-700", dot: "bg-amber-500" },
+  slate: { bg: "bg-muted", text: "text-muted-foreground", dot: "bg-muted-foreground" },
+  gray: { bg: "bg-muted", text: "text-muted-foreground", dot: "bg-muted-foreground" },
+  amber: { bg: "bg-amber-50", text: "text-amber-800", dot: "bg-amber-500" },
   red: { bg: "bg-red-50", text: "text-red-700", dot: "bg-red-500" },
 };
 
@@ -121,10 +120,11 @@ function SortButton({
   const isActive = sortField === field;
   return (
     <button
+      type="button"
       onClick={() => onSort(field)}
       className={cn(
-        "inline-flex items-center gap-1 text-xs font-medium transition-colors",
-        isActive ? "text-slate-900" : "text-slate-500 hover:text-slate-700"
+        "inline-flex cursor-pointer items-center gap-1 text-xs font-medium transition-colors duration-200",
+        isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
       )}
     >
       {label}
@@ -148,7 +148,6 @@ export function FollowUpsView({
   agents: FollowUpAgent[];
   userRole: string;
 }) {
-  const router = useRouter();
   const [search, setSearch] = useState("");
   const [sortField, setSortField] = useState<SortField>("next_follow_up_at");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -172,33 +171,30 @@ export function FollowUpsView({
   const filteredLeads = useMemo(() => {
     let result = [...leads];
 
-    // Search
     if (search.trim()) {
       const q = search.toLowerCase().trim();
       result = result.filter(
-        (l) =>
-          l.name.toLowerCase().includes(q) ||
-          l.phone?.toLowerCase().includes(q) ||
-          l.email?.toLowerCase().includes(q)
+        (lead) =>
+          lead.name.toLowerCase().includes(q) ||
+          lead.phone?.toLowerCase().includes(q) ||
+          lead.email?.toLowerCase().includes(q)
       );
     }
 
-    // Stage filter
     if (stageFilter) {
-      result = result.filter((l) => l.stage_id === stageFilter);
+      result = result.filter((lead) => lead.stage_id === stageFilter);
     }
 
-    // Agent filter
-    if (agentFilter) {
-      result = result.filter((l) => l.assigned_to === agentFilter);
+    if (agentFilter === "unassigned") {
+      result = result.filter((lead) => !lead.assigned_to);
+    } else if (agentFilter) {
+      result = result.filter((lead) => lead.assigned_to === agentFilter);
     }
 
-    // Time group filter
     if (groupFilter) {
-      result = result.filter((l) => l.next_follow_up_at && getTimeGroup(l.next_follow_up_at) === groupFilter);
+      result = result.filter((lead) => lead.next_follow_up_at && getTimeGroup(lead.next_follow_up_at) === groupFilter);
     }
 
-    // Sort
     result.sort((a, b) => {
       let cmp = 0;
       switch (sortField) {
@@ -225,7 +221,6 @@ export function FollowUpsView({
     return result;
   }, [leads, search, stageFilter, agentFilter, groupFilter, sortField, sortDir]);
 
-  // Group leads by time
   const groupedLeads = useMemo(() => {
     const map: Record<TimeGroup, FollowUpLead[]> = {
       overdue: [],
@@ -241,17 +236,17 @@ export function FollowUpsView({
     return map;
   }, [filteredLeads]);
 
-  // Stats
   const stats = useMemo(() => {
     const counts: Record<TimeGroup, number> = { overdue: 0, today: 0, tomorrow: 0, this_week: 0, later: 0 };
     for (const lead of leads) {
       if (!lead.next_follow_up_at) continue;
-      counts[getTimeGroup(lead.next_follow_up_at)]++;
+      counts[getTimeGroup(lead.next_follow_up_at)] += 1;
     }
     return counts;
   }, [leads]);
 
-  const hasActiveFilters = stageFilter || agentFilter || groupFilter || search.trim();
+  const hasActiveFilters = Boolean(stageFilter || agentFilter || groupFilter || search.trim());
+  const filterCount = [stageFilter, agentFilter, groupFilter, search.trim()].filter(Boolean).length;
   const clearFilters = () => {
     setStageFilter(null);
     setAgentFilter(null);
@@ -261,91 +256,97 @@ export function FollowUpsView({
 
   return (
     <div className="space-y-4">
-      {/* Stats bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {GROUP_ORDER.map((group) => {
           const cfg = GROUP_CONFIG[group];
           const count = stats[group];
+          const active = groupFilter === group;
           return (
             <button
               key={group}
-              onClick={() => setGroupFilter(groupFilter === group ? null : group)}
+              type="button"
+              onClick={() => setGroupFilter(active ? null : group)}
               className={cn(
-                "relative overflow-hidden rounded-xl border p-3 text-left transition-all duration-300 hover:-translate-y-1 hover:shadow-lg bg-gradient-to-br",
-                cfg.border,
-                cfg.bg,
-                cfg.grad,
-                groupFilter === group ? "ring-2 ring-emerald-500 shadow-md scale-[1.02]" : "shadow-sm"
+                "overflow-hidden rounded-[14px] border bg-card p-4 text-left transition-colors duration-200",
+                "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                active ? "border-primary" : "border-border hover:border-primary/40"
               )}
             >
-              <div className="relative z-10 flex items-center justify-between mb-2">
-                <span className={cn("text-sm font-bold uppercase tracking-wider", cfg.color)}>{cfg.label}</span>
-                <span className={cn("h-2.5 w-2.5 rounded-full shadow-sm", cfg.badge)} />
+              <div className="-mx-4 -mt-4 mb-3 h-0.5 bg-primary" />
+              <div className="flex items-center justify-between">
+                <span className={cn("text-sm font-medium", cfg.tone)}>{cfg.label}</span>
+                <span className={cn("h-2 w-2 rounded-full", cfg.dot)} />
               </div>
-              <p className="relative z-10 text-2xl font-bold text-slate-900">{count}</p>
+              <p
+                className="mt-2 font-heading text-[26px] leading-none text-foreground"
+                style={{ fontFamily: "var(--font-display), serif" }}
+              >
+                {count}
+              </p>
             </button>
           );
         })}
       </div>
 
-      {/* Toolbar */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-white p-2 rounded-xl border border-slate-200/60 shadow-sm">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+      <div className="flex flex-col gap-3 rounded-[14px] border border-border bg-card p-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative max-w-md flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
-            type="text"
-            placeholder="Search by name, phone, email..."
+            type="search"
+            placeholder="Filter this list"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2 pl-9 pr-9 text-xs text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-400 transition-all"
+            className="h-9 w-full rounded-[10px] border border-border bg-muted/40 py-2 pr-9 pl-9 text-sm text-foreground placeholder:text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           />
-          {search && (
+          {search ? (
             <button
+              type="button"
               onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-slate-200 p-1 text-slate-500 hover:bg-slate-300 hover:text-slate-700 transition-colors"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer rounded-full p-1 text-muted-foreground hover:text-foreground"
+              aria-label="Clear filter"
             >
-              <X className="h-3 w-3" />
+              <X className="h-3.5 w-3.5" />
             </button>
-          )}
+          ) : null}
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Filter toggle */}
+        <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => setShowFilters((v) => !v)}
             className={cn(
-              "inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs text-sm font-bold transition-colors shadow-sm",
+              "inline-flex h-9 cursor-pointer items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors duration-200",
               hasActiveFilters
-                ? "border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700"
-                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-card text-foreground hover:bg-muted"
             )}
           >
-            <ArrowUpDown className="h-4 w-4" />
             Filters
-            {hasActiveFilters && (
-              <span className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-white/20 px-1.5 text-[10px]">
-                {[stageFilter, agentFilter, groupFilter, search.trim()].filter(Boolean).length}
+            {hasActiveFilters ? (
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-background/20 px-1.5 text-xs">
+                {filterCount}
               </span>
-            )}
+            ) : null}
           </button>
 
-          {/* View mode toggle */}
-          <div className="flex rounded-xl border border-slate-200 bg-slate-50/50 p-1 shadow-inner">
+          <div className="flex h-9 rounded-lg border border-border bg-muted/40 p-0.5">
             <button
+              type="button"
               onClick={() => setViewMode("grouped")}
               className={cn(
-                "rounded-lg px-3 py-1.5 transition-all duration-200",
-                viewMode === "grouped" ? "bg-white text-slate-900 shadow-sm font-bold" : "text-slate-500 hover:text-slate-700 font-medium"
+                "inline-flex cursor-pointer items-center rounded-md px-2.5 transition-colors duration-200",
+                viewMode === "grouped" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
               )}
               title="Grouped view"
             >
               <LayoutGrid className="h-4 w-4" />
             </button>
             <button
+              type="button"
               onClick={() => setViewMode("table")}
               className={cn(
-                "rounded-lg px-3 py-1.5 transition-all duration-200",
-                viewMode === "table" ? "bg-white text-slate-900 shadow-sm font-bold" : "text-slate-500 hover:text-slate-700 font-medium"
+                "inline-flex cursor-pointer items-center rounded-md px-2.5 transition-colors duration-200",
+                viewMode === "table" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
               )}
               title="Table view"
             >
@@ -355,101 +356,98 @@ export function FollowUpsView({
         </div>
       </div>
 
-      {/* Expandable filters */}
-      {showFilters && (
-        <div className="flex flex-wrap items-center gap-4 rounded-xl border border-slate-200/60 bg-white p-4 shadow-sm animate-in fade-in slide-in-from-top-4 duration-300">
-          {/* Stage filter */}
-          <div className="flex items-center gap-3">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Stage</label>
+      {showFilters ? (
+        <div className="flex flex-wrap items-center gap-3 rounded-[14px] border border-border bg-card p-4">
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
+            Stage
             <select
               value={stageFilter ?? ""}
               onChange={(e) => setStageFilter(e.target.value || null)}
-              className="rounded-xl border border-slate-200 bg-slate-50/50 py-2 pl-3 pr-8 text-sm font-semibold text-slate-700 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+              className="h-9 cursor-pointer rounded-[10px] border border-border bg-muted/40 px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
             >
               <option value="">All stages</option>
-              {stages.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
+              {stages.map((stage) => (
+                <option key={stage.id} value={stage.id}>
+                  {stage.name}
                 </option>
               ))}
             </select>
-          </div>
+          </label>
 
-          {/* Agent filter */}
-          {userRole !== "agent" && agents.length > 0 && (
-            <div className="flex items-center gap-3">
-              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Agent</label>
+          {userRole !== "agent" && agents.length > 0 ? (
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              Agent
               <select
                 value={agentFilter ?? ""}
                 onChange={(e) => setAgentFilter(e.target.value || null)}
-                className="rounded-xl border border-slate-200 bg-slate-50/50 py-2 pl-3 pr-8 text-sm font-semibold text-slate-700 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                className="h-9 cursor-pointer rounded-[10px] border border-border bg-muted/40 px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
               >
                 <option value="">All agents</option>
                 <option value="unassigned">Unassigned</option>
-                {agents.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.full_name}
+                {agents.map((agent) => (
+                  <option key={agent.id} value={agent.id}>
+                    {agent.full_name}
                   </option>
                 ))}
               </select>
-            </div>
-          )}
+            </label>
+          ) : null}
 
-          {/* Time group filter */}
-          <div className="flex items-center gap-3">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">When</label>
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
+            When
             <select
               value={groupFilter ?? ""}
               onChange={(e) => setGroupFilter((e.target.value as TimeGroup) || null)}
-              className="rounded-xl border border-slate-200 bg-slate-50/50 py-2 pl-3 pr-8 text-sm font-semibold text-slate-700 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+              className="h-9 cursor-pointer rounded-[10px] border border-border bg-muted/40 px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
             >
               <option value="">All time</option>
-              {GROUP_ORDER.map((g) => (
-                <option key={g} value={g}>
-                  {GROUP_CONFIG[g].label}
+              {GROUP_ORDER.map((group) => (
+                <option key={group} value={group}>
+                  {GROUP_CONFIG[group].label}
                 </option>
               ))}
             </select>
-          </div>
+          </label>
 
-          {hasActiveFilters && (
+          {hasActiveFilters ? (
             <button
+              type="button"
               onClick={clearFilters}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors ml-auto"
+              className="ml-auto inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-border px-3 text-sm font-medium text-foreground hover:bg-muted"
             >
               <X className="h-3.5 w-3.5" />
-              Clear all
+              Clear
             </button>
-          )}
+          ) : null}
         </div>
-      )}
+      ) : null}
 
-      {/* Results count */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-500">
-          <span className="font-semibold text-slate-900">{filteredLeads.length}</span> follow-up{filteredLeads.length !== 1 ? "s" : ""}
-          {hasActiveFilters && " (filtered)"}
-        </p>
-      </div>
+      <p className="text-sm text-muted-foreground">
+        <span className="font-medium text-foreground tabular-nums">{filteredLeads.length}</span>
+        {" "}follow-up{filteredLeads.length === 1 ? "" : "s"}
+        {hasActiveFilters ? " (filtered)" : ""}
+      </p>
 
-      {/* Content */}
       {filteredLeads.length === 0 ? (
-        <div className="flex h-64 flex-col items-center justify-center gap-2 text-slate-400">
-          <CalendarClock className="h-10 w-10 opacity-40" />
-          <p className="text-sm">
-            {hasActiveFilters
-              ? "No follow-ups match your filters."
-              : "No follow-ups scheduled. Set follow-up dates on your leads to see them here."}
-          </p>
-          {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="text-sm font-medium text-slate-600 underline hover:text-slate-900"
-            >
-              Clear filters
-            </button>
-          )}
-        </div>
+        <EmptyState
+          title={hasActiveFilters ? "No follow-ups match these filters" : "No follow-ups scheduled"}
+          description={
+            hasActiveFilters
+              ? undefined
+              : "Set a follow-up date on a lead to see it here."
+          }
+          action={
+            hasActiveFilters ? (
+              <Button type="button" variant="outline" className="cursor-pointer" onClick={clearFilters}>
+                Clear filters
+              </Button>
+            ) : (
+              <Link href="/leads" className="inline-flex h-8 items-center rounded-lg border border-border px-3 text-sm font-medium text-foreground hover:bg-muted">
+                Open leads
+              </Link>
+            )
+          }
+        />
       ) : viewMode === "grouped" ? (
         <div className="space-y-5">
           {GROUP_ORDER.map((group) => {
@@ -457,14 +455,14 @@ export function FollowUpsView({
             if (items.length === 0) return null;
             const cfg = GROUP_CONFIG[group];
             return (
-              <div key={group} className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-slate-200/60 pb-2">
-                  <h2 className={cn("text-base font-bold", cfg.color)}>{cfg.label}</h2>
-                  <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-500 shadow-sm border border-slate-200/60">
+              <div key={group} className="space-y-3">
+                <div className="flex items-center gap-2 border-b border-border pb-2">
+                  <h2 className={cn("text-sm font-semibold", cfg.tone)}>{cfg.label}</h2>
+                  <span className="rounded-full border border-border bg-muted/40 px-2 py-0.5 text-xs text-muted-foreground">
                     {items.length}
                   </span>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {items.map((lead) => (
                     <FollowUpCard key={lead.id} lead={lead} group={group} />
                   ))}
@@ -474,11 +472,11 @@ export function FollowUpsView({
           })}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-200/60 shadow-sm bg-white">
+        <div className="overflow-hidden rounded-[14px] border border-border bg-card">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-slate-200/80 bg-slate-50/50">
-                <tr className="text-left text-xs font-bold uppercase tracking-widest text-slate-500">
+              <thead className="border-b border-border bg-muted/40">
+                <tr className="text-left text-xs font-medium text-muted-foreground">
                   <th className="px-4 py-3">
                     <SortButton field="name" label="Lead" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
                   </th>
@@ -489,7 +487,7 @@ export function FollowUpsView({
                     <SortButton field="assigned_to" label="Agent" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
                   </th>
                   <th className="hidden px-4 py-3 lg:table-cell">
-                    <SortButton field="last_activity_at" label="Last Activity" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
+                    <SortButton field="last_activity_at" label="Last activity" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
                   </th>
                   <th className="px-4 py-3">
                     <SortButton field="next_follow_up_at" label="Follow-up" sortField={sortField} sortDir={sortDir} onSort={handleSort} />
@@ -497,65 +495,71 @@ export function FollowUpsView({
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-border">
                 {filteredLeads.map((lead) => {
                   const group = lead.next_follow_up_at ? getTimeGroup(lead.next_follow_up_at) : "later";
                   const cfg = GROUP_CONFIG[group];
                   const stageColor = lead.stage ? getStageColor(lead.stage.color) : null;
                   return (
-                    <tr key={lead.id} className="group transition-colors hover:bg-slate-50/80">
+                    <tr key={lead.id} className="transition-colors duration-200 hover:bg-muted/40">
                       <td className="px-4 py-2.5">
                         <Link
                           href={`/leads/${lead.id}`}
-                          className="font-bold text-slate-900 group-hover:text-emerald-600 transition-colors"
+                          className="font-medium text-foreground hover:text-primary"
                         >
                           {lead.name}
                         </Link>
-                        {lead.interest && (
-                          <span className="ml-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md">{lead.interest}</span>
-                        )}
+                        {lead.interest ? (
+                          <span className="ml-2 inline-flex rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-xs capitalize text-muted-foreground">
+                            {lead.interest.replace(/_/g, " ")}
+                          </span>
+                        ) : null}
                       </td>
                       <td className="hidden px-4 py-2.5 md:table-cell">
-                        {lead.stage && stageColor && (
-                          <span className={cn("inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-bold uppercase tracking-wider ring-1 ring-inset border border-transparent", stageColor.bg, stageColor.text)}>
+                        {lead.stage && stageColor ? (
+                          <span className={cn("inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium", stageColor.bg, stageColor.text)}>
+                            <span className={cn("h-1.5 w-1.5 rounded-full", stageColor.dot)} />
                             {lead.stage.name}
                           </span>
-                        )}
+                        ) : null}
                       </td>
                       <td className="hidden px-4 py-2.5 lg:table-cell">
                         {lead.assigned_to_profile ? (
                           <div className="flex items-center gap-2">
-                             {lead.assigned_to_profile.avatar_url ? (
-                               <img src={lead.assigned_to_profile.avatar_url} className="w-6 h-6 rounded-full object-cover" />
-                             ) : (
-                               <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center">
-                                 <UserIcon className="h-3 w-3 text-slate-500" />
-                               </div>
-                             )}
-                            <span className="text-sm font-medium text-slate-700">{lead.assigned_to_profile.full_name}</span>
+                            {lead.assigned_to_profile.avatar_url ? (
+                              <img
+                                src={lead.assigned_to_profile.avatar_url}
+                                alt=""
+                                className="h-6 w-6 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted">
+                                <UserIcon className="h-3 w-3 text-muted-foreground" />
+                              </div>
+                            )}
+                            <span className="text-sm text-foreground">{lead.assigned_to_profile.full_name}</span>
                           </div>
                         ) : (
-                          <span className="text-xs italic text-slate-400">Unassigned</span>
+                          <span className="text-xs text-muted-foreground">Unassigned</span>
                         )}
                       </td>
-                      <td className="hidden px-4 py-2.5 lg:table-cell text-xs font-medium text-slate-500">
+                      <td className="hidden px-4 py-2.5 text-xs text-muted-foreground lg:table-cell">
                         {timeAgo(lead.last_activity_at ?? lead.updated_at)}
                       </td>
                       <td className="px-4 py-2.5">
-                        <span className={cn("inline-flex items-center gap-1.5 text-xs font-bold", cfg.color)}>
-                          {group === "overdue" && <AlertCircle className="h-3.5 w-3.5" />}
-                          <Clock className="h-3.5 w-3.5" />
+                        <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium", cfg.tone)}>
+                          {group === "overdue" ? <AlertCircle className="h-3.5 w-3.5" /> : <Clock className="h-3.5 w-3.5" />}
                           {formatDate(lead.next_follow_up_at, "dd MMM, HH:mm")}
                         </span>
                       </td>
                       <td className="px-4 py-2.5">
-                        <div className="flex items-center justify-end gap-3">
-                          {lead.phone && (
+                        <div className="flex items-center justify-end gap-1.5">
+                          {lead.phone ? (
                             <>
                               <a
                                 href={telLink(lead.phone) ?? "#"}
                                 onClick={(e) => e.stopPropagation()}
-                                className="text-slate-400 transition-colors hover:text-emerald-600 bg-slate-50 hover:bg-emerald-50 p-1.5 rounded-lg"
+                                className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                                 title="Call"
                               >
                                 <Phone className="h-4 w-4" />
@@ -565,17 +569,16 @@ export function FollowUpsView({
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={(e) => e.stopPropagation()}
-                                className="text-emerald-500 transition-colors hover:text-emerald-600 bg-emerald-50/50 hover:bg-emerald-100 p-1.5 rounded-lg"
+                                className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                                 title="WhatsApp"
                               >
                                 <MessageCircle className="h-4 w-4" />
                               </a>
                             </>
-                          )}
+                          ) : null}
                           <Link
                             href={`/leads/${lead.id}`}
-                            onClick={(e) => e.stopPropagation()}
-                            className="text-xs font-bold text-slate-500 transition-colors hover:text-slate-900 bg-slate-50 hover:bg-slate-200 px-3 py-1.5 rounded-lg"
+                            className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
                           >
                             View
                           </Link>
@@ -594,6 +597,7 @@ export function FollowUpsView({
 }
 
 function FollowUpCard({ lead, group }: { lead: FollowUpLead; group: TimeGroup }) {
+  const router = useRouter();
   const cfg = GROUP_CONFIG[group];
   const stageColor = lead.stage ? getStageColor(lead.stage.color) : null;
   const [pending, setPending] = useState<null | "done" | "snooze">(null);
@@ -604,7 +608,7 @@ function FollowUpCard({ lead, group }: { lead: FollowUpLead; group: TimeGroup })
     const result = await completeFollowUp(lead.id, note || undefined);
     if (result.ok) {
       toast.success("Follow-up completed");
-      window.location.reload();
+      router.refresh();
     } else {
       toast.error(result.error ?? "Failed to complete follow-up");
     }
@@ -618,7 +622,7 @@ function FollowUpCard({ lead, group }: { lead: FollowUpLead; group: TimeGroup })
     const result = await snoozeFollowUp(lead.id, next.toISOString(), note || undefined);
     if (result.ok) {
       toast.success(`Snoozed for ${hours}h`);
-      window.location.reload();
+      router.refresh();
     } else {
       toast.error(result.error ?? "Failed to snooze follow-up");
     }
@@ -626,66 +630,58 @@ function FollowUpCard({ lead, group }: { lead: FollowUpLead; group: TimeGroup })
   }
 
   return (
-    <div
-      className={cn(
-        "group flex flex-col gap-3 rounded-xl border p-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md",
-        cfg.border,
-        "bg-white"
-      )}
-    >
+    <div className="flex flex-col gap-3 rounded-[14px] border border-border bg-card p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <Link href={`/leads/${lead.id}`} className="text-[15px] font-bold text-slate-900 group-hover:text-emerald-600 transition-colors line-clamp-1">
+          <Link href={`/leads/${lead.id}`} className="line-clamp-1 text-[15px] font-semibold tracking-tight text-foreground hover:text-primary">
             {lead.name}
           </Link>
-          <div className="mt-1 flex items-center gap-2">
-            {lead.interest && (
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200/60">{lead.interest}</span>
-            )}
-            {lead.stage && stageColor && (
-              <span className={cn("text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md border ring-inset", stageColor.bg, stageColor.text, "border-transparent")}>
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+            {lead.interest ? (
+              <span className="rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-xs capitalize text-muted-foreground">
+                {lead.interest.replace(/_/g, " ")}
+              </span>
+            ) : null}
+            {lead.stage && stageColor ? (
+              <span className={cn("inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium", stageColor.bg, stageColor.text)}>
+                <span className={cn("h-1.5 w-1.5 rounded-full", stageColor.dot)} />
                 {lead.stage.name}
               </span>
-            )}
+            ) : null}
           </div>
         </div>
-        {group === "overdue" && (
-          <div className="bg-red-50 p-1.5 rounded-full ring-1 ring-red-200">
-            <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
-          </div>
-        )}
+        {group === "overdue" ? (
+          <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
+        ) : null}
       </div>
 
-      <div className="flex items-center gap-2">
-        {lead.assigned_to_profile ? (
-          <div className="flex items-center gap-2 mt-1 mb-1 text-xs text-slate-500 truncate">
-             {lead.assigned_to_profile.avatar_url ? (
-               <img src={lead.assigned_to_profile.avatar_url} className="w-5 h-5 rounded-full object-cover" />
-             ) : (
-               <div className="w-5 h-5 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center">
-                 <UserIcon className="h-3 w-3 text-slate-400" />
-               </div>
-             )}
-            <span className="font-medium text-slate-700">{lead.assigned_to_profile.full_name}</span>
-          </div>
-        ) : (
-          <span className="text-xs italic text-slate-400 mt-1 mb-1">Unassigned</span>
-        )}
-      </div>
+      {lead.assigned_to_profile ? (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          {lead.assigned_to_profile.avatar_url ? (
+            <img src={lead.assigned_to_profile.avatar_url} alt="" className="h-5 w-5 rounded-full object-cover" />
+          ) : (
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-muted">
+              <UserIcon className="h-3 w-3" />
+            </span>
+          )}
+          <span className="truncate text-foreground">{lead.assigned_to_profile.full_name}</span>
+        </div>
+      ) : (
+        <span className="text-xs text-muted-foreground">Unassigned</span>
+      )}
 
-      <div className="space-y-3 border-t border-slate-100 pt-3 flex-1 flex flex-col">
+      <div className="mt-auto flex flex-col gap-3 border-t border-border pt-3">
         <div className="flex items-center justify-between">
-          <span className={cn("flex items-center gap-1.5 text-xs font-bold", cfg.color)}>
+          <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium", cfg.tone)}>
             <Clock className="h-4 w-4" />
             {formatDate(lead.next_follow_up_at, "dd MMM, HH:mm")}
           </span>
-          <div className="flex items-center gap-1.5">
-            {lead.phone && (
+          <div className="flex items-center gap-1">
+            {lead.phone ? (
               <>
                 <a
                   href={telLink(lead.phone) ?? "#"}
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-slate-400 transition-colors hover:text-slate-700 bg-slate-50 p-1.5 rounded-md hover:bg-slate-200"
+                  className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                   title="Call"
                 >
                   <Phone className="h-3.5 w-3.5" />
@@ -694,53 +690,45 @@ function FollowUpCard({ lead, group }: { lead: FollowUpLead; group: TimeGroup })
                   href={whatsappLink(lead.phone) ?? "#"}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-emerald-500 transition-colors hover:text-emerald-700 bg-emerald-50 p-1.5 rounded-md hover:bg-emerald-100"
+                  className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                   title="WhatsApp"
                 >
                   <MessageCircle className="h-3.5 w-3.5" />
                 </a>
               </>
-            )}
+            ) : null}
           </div>
         </div>
 
         <input
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-          placeholder="Quick note before action..."
-          className="w-full rounded-lg border border-slate-200/60 bg-slate-50/50 px-3 py-2 text-xs text-slate-700 placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-400 transition-colors mt-auto"
+          placeholder="Note before action"
+          className="h-9 w-full rounded-[10px] border border-border bg-muted/40 px-3 text-sm text-foreground placeholder:text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
         />
 
-        <div className="flex flex-wrap gap-2 pt-1">
-          <button
+        <div className="flex gap-2">
+          <Button
             type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              void handleDone();
-            }}
+            size="sm"
+            className="h-9 flex-1 cursor-pointer"
             disabled={pending !== null}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 px-3 py-2 text-[11px] font-bold text-white transition-all hover:shadow-md disabled:opacity-50"
+            onClick={() => void handleDone()}
           >
-            {pending === "done" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-            DONE
-          </button>
-          <button
+            {pending === "done" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Check className="mr-1.5 h-3.5 w-3.5" />}
+            Done
+          </Button>
+          <Button
             type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              void handleSnooze(2);
-            }}
+            size="sm"
+            variant="outline"
+            className="h-9 flex-1 cursor-pointer"
             disabled={pending !== null}
-            className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-200/60 bg-amber-50 hover:bg-amber-100 px-3 py-2 text-[11px] font-bold text-amber-700 transition-all hover:shadow-sm disabled:opacity-50"
+            onClick={() => void handleSnooze(2)}
           >
-            {pending === "snooze" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Bell className="h-3.5 w-3.5" />}
-            SNOOZE
-          </button>
+            {pending === "snooze" ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Bell className="mr-1.5 h-3.5 w-3.5" />}
+            Snooze 2h
+          </Button>
         </div>
       </div>
     </div>

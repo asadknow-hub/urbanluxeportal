@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { FollowUpsView, type FollowUpLead, type FollowUpStage, type FollowUpAgent } from "@/components/leads/follow-ups-view";
+import { CalendarClock } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -51,17 +52,22 @@ export default async function FollowUpsPage() {
   const agents = (agentsResult.data ?? []) as unknown as FollowUpAgent[];
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto">
-      {/* Minimalist White Header */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-slate-200/60 bg-white p-4 shadow-sm xl:flex-row xl:items-center xl:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-calendar-clock"><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h5"/><path d="M17.5 17.5 16 16.3V14"/><circle cx="16" cy="16" r="6"/></svg>
-          </div>
+    <div className="mx-auto max-w-[1600px] space-y-5">
+      <div className="overflow-hidden rounded-[14px] border border-border bg-card px-5 py-4">
+        <div className="-mx-5 -mt-4 mb-4 h-0.5 bg-primary" />
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+            <CalendarClock className="h-5 w-5" />
+          </span>
           <div>
-            <h1 className="text-lg font-bold text-slate-900 leading-none mb-1">Follow-ups</h1>
-            <p className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">
-              {leads.length} lead{leads.length !== 1 ? "s" : ""} with scheduled follow-ups
+            <h1
+              className="font-heading text-[22px] font-normal tracking-tight text-foreground"
+              style={{ fontFamily: "var(--font-display), serif" }}
+            >
+              Follow-ups
+            </h1>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              {leads.length} lead{leads.length === 1 ? "" : "s"} with a scheduled follow-up
             </p>
           </div>
         </div>
