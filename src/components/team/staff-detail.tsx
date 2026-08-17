@@ -20,8 +20,6 @@ import { formatDate } from "@/lib/dates";
 import { canonicalDocumentPath, normalizeDocCategory } from "@/lib/document-storage";
 import { toast } from "sonner";
 import {
-  ArrowLeft,
-  Save,
   Loader2,
   Mail,
   Phone,
@@ -36,12 +34,12 @@ import {
   ExternalLink,
   FileCheck2,
   X,
-  Activity as ActivityIcon,
   Briefcase,
   Users,
   Clock,
   CalendarDays,
   TrendingUp,
+  RefreshCw,
 } from "lucide-react";
 
 type Staff = {
@@ -95,11 +93,11 @@ const ROLE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = 
 };
 
 const TABS = [
-  { id: "profile", label: "Profile", icon: UserCog },
+  { id: "profile", label: "Profile", icon: User },
   { id: "documents", label: "Documents", icon: FileText },
   { id: "password", label: "Password & Login", icon: KeyRound },
   { id: "portal_activity", label: "Portal Activity", icon: Clock },
-  { id: "activity", label: "Work Activity", icon: ActivityIcon },
+  { id: "activity", label: "Work Activity", icon: TrendingUp },
 ];
 
 function formatBytes(bytes: number): string {
@@ -116,6 +114,7 @@ export function StaffDetail({
   activities,
   currentUserRole,
   sessionStats,
+  metrics,
 }: {
   staff: Staff;
   leads: Lead[];
@@ -124,122 +123,131 @@ export function StaffDetail({
   activities: Activity[];
   currentUserRole: string;
   sessionStats?: SessionStats;
+  metrics?: { leads: number; deals: number; documents: number };
 }) {
   const [activeTab, setActiveTab] = useState("profile");
   const RoleIcon = ROLE_ICONS[staff.role] ?? User;
   const initials = staff.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  const leadCount = metrics?.leads ?? leads.length;
+  const dealCount = metrics?.deals ?? deals.filter((d) => d.stage !== "won" && d.stage !== "lost").length;
+  const docCount = metrics?.documents ?? documents.length;
 
   return (
-    <div className="space-y-6">
-      {/* Back link */}
-      <Link href="/team" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700">
-        <ArrowLeft className="h-4 w-4" />
-        Back to Staff
-      </Link>
-
-      {/* Header card */}
-      <div className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-        <Avatar className="h-16 w-16">
+    <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
+      <section className="flex items-center gap-6 rounded-2xl bg-white px-6 py-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)] xl:col-span-2">
+        <Avatar className="h-20 w-20">
           <AvatarImage src={staff.avatar_url ?? undefined} />
-          <AvatarFallback className="bg-emerald-100 text-emerald-700 text-lg font-medium">
+          <AvatarFallback className="bg-[#1d353a] text-[28px] font-semibold text-[#e0f2fe]">
             {initials}
           </AvatarFallback>
         </Avatar>
-        <div className="flex-1">
-          <h1 className="text-xl font-bold text-slate-900">{staff.full_name}</h1>
-          <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-slate-500">
-            <span className="flex items-center gap-1">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-[22px] font-semibold tracking-tight text-[#1c1c1e]">{staff.full_name}</h1>
+          <div className="mt-1.5 flex flex-wrap items-center gap-3 text-[13px] text-[#636366]">
+            <span className="inline-flex items-center gap-1.5">
               <Mail className="h-3.5 w-3.5" /> {staff.email}
             </span>
             {staff.phone && (
-              <span className="flex items-center gap-1">
+              <span className="inline-flex items-center gap-1.5">
                 <Phone className="h-3.5 w-3.5" /> {staff.phone}
               </span>
             )}
-            <span className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium capitalize ${
-              staff.role === "admin" ? "bg-red-50 text-red-700 border-red-200" :
-              staff.role === "manager" ? "bg-blue-50 text-blue-700 border-blue-200" :
-              staff.role === "agent" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-              "bg-purple-50 text-purple-700 border-purple-200"
-            }`}>
+            <span
+              className={`inline-flex items-center gap-1 rounded-xl px-2 py-0.5 text-[11px] font-semibold capitalize ${
+                staff.role === "admin"
+                  ? "bg-[#ffe5e5] text-[#d93838]"
+                  : staff.role === "manager"
+                    ? "bg-[#e8f0fe] text-[#1a73e8]"
+                    : staff.role === "agent"
+                      ? "bg-[#eef3ff] text-[#3b5bcc]"
+                      : "bg-[#fff4e5] text-[#b06000]"
+              }`}
+            >
               <RoleIcon className="h-3 w-3" />
               {staff.role}
             </span>
-            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-              staff.is_active ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
-            }`}>
+            <span
+              className={`rounded-xl px-2 py-0.5 text-[11px] font-semibold ${
+                staff.is_active ? "bg-[#e6f4ea] text-[#1e8e3e]" : "bg-[#ffe5e5] text-[#d93838]"
+              }`}
+            >
               {staff.is_active ? "Active" : "Inactive"}
             </span>
           </div>
         </div>
+      </section>
+
+      <div className="flex min-w-0 flex-col gap-5 sm:flex-row">
+        <nav aria-label="Staff sections" className="flex w-full shrink-0 flex-row gap-2 overflow-x-auto sm:w-[220px] sm:flex-col sm:overflow-visible">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`inline-flex cursor-pointer items-center gap-3 whitespace-nowrap rounded-[10px] px-4 py-3 text-left text-sm font-medium transition-colors ${
+                  active
+                    ? "bg-[#1d353a] text-white"
+                    : "text-[#48484a] hover:bg-[#eae9e1]"
+                }`}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="min-w-0 flex-1">
+          {activeTab === "profile" && (
+            <ProfileTab staff={staff} currentUserRole={currentUserRole} />
+          )}
+          {activeTab === "documents" && (
+            <DocumentsTab staff={staff} documents={documents} />
+          )}
+          {activeTab === "password" && (
+            <PasswordTab staff={staff} />
+          )}
+          {activeTab === "portal_activity" && (
+            sessionStats ? <PortalActivityTab stats={sessionStats} /> : (
+              <div className="rounded-2xl bg-white p-6 text-sm text-[#8e8e93] shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+                No portal activity recorded yet.
+              </div>
+            )
+          )}
+          {activeTab === "activity" && (
+            <ActivityTab activities={activities} leads={leads} deals={deals} />
+          )}
+        </div>
       </div>
 
-      {/* Quick stats */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200">
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-slate-400" />
-            <p className="text-2xl font-bold text-slate-900">{leads.length}</p>
-          </div>
-          <p className="text-xs text-slate-400">Assigned Leads</p>
+      <aside className="h-fit rounded-2xl bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+        <h2 className="text-sm font-semibold text-[#1c1c1e]">Quick Metrics</h2>
+        <div className="mt-2">
+          {[
+            { icon: Users, value: leadCount, label: "Assigned Leads" },
+            { icon: Briefcase, value: dealCount, label: "Active Deals" },
+            { icon: FileText, value: docCount, label: "Documents" },
+          ].map((metric) => {
+            const Icon = metric.icon;
+            return (
+              <div key={metric.label} className="flex items-center justify-between border-b border-[#f2f2f7] py-3 last:border-b-0">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#f2f2f7] text-[#636366]">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="text-lg font-bold leading-none text-[#1c1c1e]">{metric.value}</p>
+                    <p className="mt-1 text-xs text-[#8e8e93]">{metric.label}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
-        <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200">
-          <div className="flex items-center gap-2">
-            <Briefcase className="h-4 w-4 text-slate-400" />
-            <p className="text-2xl font-bold text-slate-900">{deals.length}</p>
-          </div>
-          <p className="text-xs text-slate-400">Active Deals</p>
-        </div>
-        <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200">
-          <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-slate-400" />
-            <p className="text-2xl font-bold text-slate-900">{documents.length}</p>
-          </div>
-          <p className="text-xs text-slate-400">Documents</p>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex flex-wrap gap-2 border-b border-slate-200">
-        {TABS.map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
-                activeTab === tab.id
-                  ? "border-emerald-500 text-emerald-600"
-                  : "border-transparent text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Tab content */}
-      {activeTab === "profile" && (
-        <ProfileTab staff={staff} currentUserRole={currentUserRole} />
-      )}
-      {activeTab === "documents" && (
-        <DocumentsTab staff={staff} documents={documents} />
-      )}
-      {activeTab === "password" && (
-        <PasswordTab staff={staff} />
-      )}
-      {activeTab === "portal_activity" && sessionStats && (
-        <PortalActivityTab stats={sessionStats} />
-      )}
-      {activeTab === "activity" && (
-        <ActivityTab
-          activities={activities}
-          leads={leads}
-          deals={deals}
-        />
-      )}
+      </aside>
     </div>
   );
 }
@@ -263,28 +271,28 @@ function PortalActivityTab({ stats }: { stats: SessionStats }) {
     <div className="space-y-4">
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200">
+        <div className="rounded-xl bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
           <div className="flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-emerald-500" />
             <p className="text-2xl font-bold text-slate-900">{stats.daysLoggedInThisMonth}</p>
           </div>
           <p className="text-xs text-slate-400">Days Logged In</p>
         </div>
-        <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200">
+        <div className="rounded-xl bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
           <div className="flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-red-400" />
             <p className="text-2xl font-bold text-slate-900">{stats.daysNotLoggedIn}</p>
           </div>
           <p className="text-xs text-slate-400">Days Not Logged In</p>
         </div>
-        <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200">
+        <div className="rounded-xl bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-blue-500" />
             <p className="text-2xl font-bold text-slate-900">{formatDuration(stats.totalActiveSecondsThisMonth)}</p>
           </div>
           <p className="text-xs text-slate-400">Total Active Time</p>
         </div>
-        <div className="rounded-xl bg-white p-4 shadow-sm border border-slate-200">
+        <div className="rounded-xl bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-purple-500" />
             <p className="text-2xl font-bold text-slate-900">{formatDuration(stats.avgDailyActiveSeconds)}</p>
@@ -294,7 +302,7 @@ function PortalActivityTab({ stats }: { stats: SessionStats }) {
       </div>
 
       {/* Daily activity bar chart */}
-      <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
+      <div className="rounded-2xl bg-white p-5 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
         <h3 className="text-sm font-semibold text-slate-900 mb-1">Daily Active Time — {monthName}</h3>
         <p className="text-xs text-slate-400 mb-4">Time spent in portal per day</p>
         {stats.dailyBreakdown.length === 0 ? (
@@ -322,14 +330,14 @@ function PortalActivityTab({ stats }: { stats: SessionStats }) {
       </div>
 
       {/* Session log table */}
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-200">
-        <div className="border-b border-slate-200 p-4">
+      <div className="overflow-hidden rounded-2xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+        <div className="border-b border-[#f2f2f7] p-4">
           <h3 className="text-sm font-semibold text-slate-900">Session Log (Recent 30)</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/50 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+              <tr className="border-b border-[#f2f2f7] bg-slate-50/50 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
                 <th className="px-4 py-3">Date</th>
                 <th className="px-4 py-3">Login Time</th>
                 <th className="px-4 py-3">Logout Time</th>
@@ -417,81 +425,92 @@ function ProfileTab({ staff, currentUserRole }: { staff: Staff; currentUserRole:
 
   const canEditRole = currentUserRole === "admin";
 
+  const fieldClass =
+    "h-10 rounded-[10px] border-[#e5e5ea] bg-[#fafafa] px-3.5 text-[13px] shadow-none focus-visible:ring-[#1d353a]/20";
+
   return (
-    <form onSubmit={handleSave} className="max-w-2xl space-y-4 rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="p_name">Full Name *</Label>
-          <Input id="p_name" value={form.full_name} onChange={(e) => set("full_name", e.target.value)} required />
+    <form onSubmit={handleSave} className="rounded-2xl bg-white p-6 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+      <h2 className="text-base font-semibold text-[#1c1c1e]">Profile Details</h2>
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="p_name" className="text-xs font-semibold text-[#3a3a3c]">Full Name *</Label>
+          <Input id="p_name" className={fieldClass} value={form.full_name} onChange={(e) => set("full_name", e.target.value)} required />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="p_email">Email *</Label>
-          <Input id="p_email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} required />
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="p_email" className="text-xs font-semibold text-[#3a3a3c]">Email *</Label>
+          <Input id="p_email" type="email" className={fieldClass} value={form.email} onChange={(e) => set("email", e.target.value)} required />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="p_phone">Phone</Label>
-          <Input id="p_phone" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+971 50 123 4567" />
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="p_phone" className="text-xs font-semibold text-[#3a3a3c]">Phone</Label>
+          <Input id="p_phone" className={fieldClass} value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+971 50 123 4567" />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="p_brn">BRN (Broker Registration No.)</Label>
-          <Input id="p_brn" value={form.brn} onChange={(e) => set("brn", e.target.value)} placeholder="BRN-12345" />
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="p_brn" className="text-xs font-semibold text-[#3a3a3c]">BRN (Broker Registration No.)</Label>
+          <Input id="p_brn" className={fieldClass} value={form.brn} onChange={(e) => set("brn", e.target.value)} placeholder="BRN-12345" />
         </div>
-        <div className="space-y-2">
-          <Label>Role</Label>
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-xs font-semibold text-[#3a3a3c]">Role</Label>
           <Select
             value={form.role}
             onValueChange={(v) => set("role", v ?? "agent")}
             disabled={!canEditRole}
           >
-            <SelectTrigger>
+            <SelectTrigger className={fieldClass}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="manager">Manager</SelectItem>
-              <SelectItem value="agent">Agent</SelectItem>
-              <SelectItem value="accountant">Accountant</SelectItem>
+              <SelectItem value="admin">admin</SelectItem>
+              <SelectItem value="manager">manager</SelectItem>
+              <SelectItem value="agent">agent</SelectItem>
+              <SelectItem value="accountant">accountant</SelectItem>
             </SelectContent>
           </Select>
           {!canEditRole && (
-            <p className="text-xs text-slate-400">Only admins can change roles.</p>
+            <p className="text-xs text-[#8e8e93]">Only admins can change roles.</p>
           )}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="p_commission">Commission Rate (%)</Label>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="p_commission" className="text-xs font-semibold text-[#3a3a3c]">Commission Rate (%)</Label>
           <Input
             id="p_commission"
             type="number"
             step="0.1"
             min="0"
             max="100"
+            className={fieldClass}
             value={form.commission_rate}
             onChange={(e) => set("commission_rate", e.target.value)}
-            placeholder="2.0"
+            placeholder="0"
           />
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
-        <Label htmlFor="p_active">Account Active</Label>
+      <div className="mt-4 flex items-center justify-between">
+        <span className="text-[13px] font-medium text-[#1c1c1e]">Account Active</span>
         <button
           type="button"
           role="switch"
           aria-checked={form.is_active}
           onClick={() => set("is_active", !form.is_active)}
-          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-            form.is_active ? "bg-emerald-500" : "bg-slate-200"
+          className={`relative h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors ${
+            form.is_active ? "bg-[#34c759]" : "bg-[#e5e5ea]"
           }`}
         >
-          <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition-transform ${
-            form.is_active ? "translate-x-5" : "translate-x-0"
-          }`} />
+          <span
+            className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-[left] ${
+              form.is_active ? "left-[22px]" : "left-0.5"
+            }`}
+          />
         </button>
       </div>
 
-      <div className="flex justify-end">
-        <Button type="submit" disabled={pending}>
-          {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+      <div className="mt-4 flex justify-end">
+        <Button
+          type="submit"
+          disabled={pending}
+          className="h-10 cursor-pointer rounded-lg bg-[#b58d3d] px-5 font-semibold text-white hover:bg-[#a07c32]"
+        >
+          {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
           Save Changes
         </Button>
       </div>
@@ -595,7 +614,7 @@ function DocumentsTab({ staff, documents }: { staff: Staff; documents: Doc[] }) 
   return (
     <div className="space-y-4">
       {/* Upload form */}
-      <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200">
+      <div className="rounded-2xl bg-white p-5 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
         <h3 className="text-sm font-semibold text-slate-900 mb-3">Upload Staff Document</h3>
         <form onSubmit={handleSaveDoc} className="space-y-3">
           <div className="rounded-xl border-2 border-dashed border-slate-200 p-4 text-center">
@@ -666,8 +685,8 @@ function DocumentsTab({ staff, documents }: { staff: Staff; documents: Doc[] }) 
       </div>
 
       {/* Documents list */}
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-200">
-        <div className="border-b border-slate-200 p-4">
+      <div className="overflow-hidden rounded-2xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+        <div className="border-b border-[#f2f2f7] p-4">
           <h3 className="text-sm font-semibold text-slate-900">Staff Documents ({documents.length})</h3>
         </div>
         <div className="divide-y divide-slate-100">
@@ -739,7 +758,7 @@ function PasswordTab({ staff }: { staff: Staff }) {
   return (
     <div className="max-w-lg space-y-4">
       {/* Set password directly */}
-      <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
+      <div className="rounded-2xl bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
         <h3 className="text-sm font-semibold text-slate-900">Set Password Directly</h3>
         <p className="mt-1 text-xs text-slate-400">
           Set a new password for this user. They can use it to log in immediately.
@@ -776,7 +795,7 @@ function PasswordTab({ staff }: { staff: Staff }) {
       </div>
 
       {/* Send reset link */}
-      <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
+      <div className="rounded-2xl bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
         <h3 className="text-sm font-semibold text-slate-900">Send Password Reset Link</h3>
         <p className="mt-1 text-xs text-slate-400">
           Generate a secure recovery link that you can share with the user. They'll set their own password.
@@ -831,8 +850,8 @@ function ActivityTab({
   return (
     <div className="space-y-4">
       {/* Recent activity */}
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-200">
-        <div className="border-b border-slate-200 p-4">
+      <div className="overflow-hidden rounded-2xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+        <div className="border-b border-[#f2f2f7] p-4">
           <h3 className="text-sm font-semibold text-slate-900">Recent Activity</h3>
         </div>
         <div className="divide-y divide-slate-100">
@@ -857,8 +876,8 @@ function ActivityTab({
       </div>
 
       {/* Assigned leads */}
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-200">
-        <div className="border-b border-slate-200 p-4">
+      <div className="overflow-hidden rounded-2xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+        <div className="border-b border-[#f2f2f7] p-4">
           <h3 className="text-sm font-semibold text-slate-900">Assigned Leads ({leads.length})</h3>
         </div>
         <div className="divide-y divide-slate-100">
@@ -879,8 +898,8 @@ function ActivityTab({
       </div>
 
       {/* Assigned deals */}
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm border border-slate-200">
-        <div className="border-b border-slate-200 p-4">
+      <div className="overflow-hidden rounded-2xl bg-white shadow-[0_4px_12px_rgba(0,0,0,0.02)]">
+        <div className="border-b border-[#f2f2f7] p-4">
           <h3 className="text-sm font-semibold text-slate-900">Assigned Deals ({deals.length})</h3>
         </div>
         <div className="divide-y divide-slate-100">
@@ -888,7 +907,7 @@ function ActivityTab({
             <p className="px-4 py-8 text-center text-sm text-slate-400">No deals assigned.</p>
           ) : (
             deals.map((d) => (
-              <Link key={d.id} href={`/pipeline`} className="flex items-center justify-between px-4 py-3 hover:bg-slate-50">
+              <Link key={d.id} href={`/pipeline/${d.id}`} className="flex items-center justify-between px-4 py-3 hover:bg-slate-50">
                 <div>
                   <p className="text-sm font-medium text-slate-900">{d.title}</p>
                   <p className="text-xs text-slate-400 capitalize">{d.stage.replace(/_/g, " ")}</p>

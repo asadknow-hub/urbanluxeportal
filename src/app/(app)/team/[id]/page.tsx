@@ -42,43 +42,57 @@ export default async function StaffDetailPage({
     );
   }
 
-  // Fetch assigned leads
-  const { data: leads } = await supabase
-    .from("leads")
-    .select("id, name, source, status, created_at")
-    .eq("assigned_to", id)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false })
-    .limit(10);
+  const [
+    { data: leads },
+    { data: deals },
+    { data: documents },
+    { data: activities },
+    { count: leadCount },
+    { count: activeDealCount },
+    sessionResult,
+  ] = await Promise.all([
+    supabase
+      .from("leads")
+      .select("id, name, source, status, created_at")
+      .eq("assigned_to", id)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(10),
+    supabase
+      .from("deals")
+      .select("id, title, stage, value, updated_at")
+      .eq("assigned_to", id)
+      .is("deleted_at", null)
+      .order("updated_at", { ascending: false })
+      .limit(10),
+    supabase
+      .from("documents")
+      .select("*")
+      .eq("entity_type", "staff")
+      .eq("entity_id", id)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("activity_log")
+      .select("action, entity_type, entity_id, created_at")
+      .eq("actor_id", id)
+      .order("created_at", { ascending: false })
+      .limit(15),
+    supabase
+      .from("leads")
+      .select("id", { count: "exact", head: true })
+      .eq("assigned_to", id)
+      .is("deleted_at", null),
+    supabase
+      .from("deals")
+      .select("id", { count: "exact", head: true })
+      .eq("assigned_to", id)
+      .is("deleted_at", null)
+      .neq("stage", "won")
+      .neq("stage", "lost"),
+    getStaffActivityStats(id, 1),
+  ]);
 
-  // Fetch assigned deals
-  const { data: deals } = await supabase
-    .from("deals")
-    .select("id, title, stage, value, updated_at")
-    .eq("assigned_to", id)
-    .is("deleted_at", null)
-    .order("updated_at", { ascending: false })
-    .limit(10);
-
-  // Fetch staff documents
-  const { data: documents } = await supabase
-    .from("documents")
-    .select("*")
-    .eq("entity_type", "staff")
-    .eq("entity_id", id)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
-
-  // Fetch activity log
-  const { data: activities } = await supabase
-    .from("activity_log")
-    .select("action, entity_type, entity_id, created_at")
-    .eq("actor_id", id)
-    .order("created_at", { ascending: false })
-    .limit(15);
-
-  // Fetch session stats for portal activity tab
-  const sessionResult = await getStaffActivityStats(id, 1);
   const sessionStats = sessionResult.ok ? sessionResult.data : null;
 
   return (
@@ -91,6 +105,11 @@ export default async function StaffDetailPage({
         activities={activities ?? []}
         currentUserRole={user.role}
         sessionStats={sessionStats ?? undefined}
+        metrics={{
+          leads: leadCount ?? 0,
+          deals: activeDealCount ?? 0,
+          documents: documents?.length ?? 0,
+        }}
       />
     </div>
   );
