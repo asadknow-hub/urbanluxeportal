@@ -19,7 +19,6 @@ import {
   Settings2,
   Wallet,
   UsersRound,
-  Upload,
 } from "lucide-react";
 
 export const NAV_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -41,5 +40,4 @@ export const NAV_ICON_MAP: Record<string, React.ComponentType<{ className?: stri
   Settings2,
   Wallet,
   UsersRound,
-  Upload,
 };

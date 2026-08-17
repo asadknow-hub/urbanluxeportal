@@ -6,6 +6,14 @@ import { getCurrentUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { applyLeadRouting } from "@/server/routing";
 import { revalidatePath } from "next/cache";
+import {
+  LEAD_IMPORT_FIELDS,
+  matchNamedValue,
+  matchOptionValue,
+  splitImportList,
+  type LeadImportMappedRow,
+} from "@/lib/lead-import";
+import { groupLeadFieldOptions, scoreFromBand, type LeadFieldOption } from "@/lib/lead-field-options";
 
 export type ActionResult<T = unknown> = {
   ok: boolean;
@@ -553,75 +561,95 @@ export async function convertLead(
   }
 }
 
-function splitCsvLine(line: string): string[] {
-  const cells: string[] = [];
-  let current = "";
-  let quoted = false;
-  for (let i = 0; i < line.length; i += 1) {
-    const ch = line[i];
-    if (ch === '"') {
-      if (quoted && line[i + 1] === '"') {
-        current += '"';
-        i += 1;
-      } else {
-        quoted = !quoted;
-      }
-    } else if (ch === "," && !quoted) {
-      cells.push(current.trim());
-      current = "";
-    } else {
-      current += ch;
-    }
+function parseAedToFils(raw: string) {
+  const cleaned = raw.replace(/,/g, "").replace(/aed/gi, "").trim();
+  const amount = Number(cleaned);
+  if (!Number.isFinite(amount) || amount < 0) return null;
+  return Math.round(amount * 100);
+}
+
+function budgetFromCell(raw: string, options: LeadFieldOption[] | undefined) {
+  const matched = options?.find((option) => {
+    const needle = raw.trim().toLowerCase();
+    return option.value.toLowerCase() === needle || option.label.toLowerCase() === needle;
+  });
+  if (matched) {
+    const extra = matched.extra ?? {};
+    const min = Number(extra.min_fils);
+    const max = Number(extra.max_fils);
+    return {
+      min: Number.isFinite(min) ? min : null,
+      max: Number.isFinite(max) ? max : null,
+    };
   }
-  cells.push(current.trim());
-  return cells;
+  const fils = parseAedToFils(raw);
+  return { min: fils, max: fils };
+}
+
+function scoreFromCell(raw: string, options: LeadFieldOption[] | undefined) {
+  const asNumber = Number(raw.replace(/,/g, "").trim());
+  if (Number.isFinite(asNumber) && asNumber >= 0 && asNumber <= 100) {
+    return Math.round(asNumber);
+  }
+  const needle = raw.trim().toLowerCase();
+  const band = options?.find(
+    (option) => option.value.toLowerCase() === needle || option.label.toLowerCase() === needle
+  );
+  return band ? scoreFromBand(band) : null;
 }
 
 export async function importLeads(
-  csvText: string
+  rows: LeadImportMappedRow[]
 ): Promise<ActionResult<{ created: number; skipped: number; failed: number; errors: string[] }>> {
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
-    if (user.role === "accountant") return { ok: false, error: "Not authorized" };
+    if (!["admin", "manager"].includes(user.role)) return { ok: false, error: "Not authorized" };
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return { ok: false, error: "No rows to import" };
+    }
 
-    const lines = csvText.replace(/^\uFEFF/, "").split(/\r?\n/).filter((line) => line.trim());
-    if (lines.length < 2) return { ok: false, error: "CSV needs a header row and at least one lead" };
-
-    const headers = splitCsvLine(lines[0]).map((h) => h.toLowerCase().replace(/\s+/g, "_"));
-    const nameIdx = headers.findIndex((h) => h === "name" || h === "full_name");
-    if (nameIdx < 0) return { ok: false, error: "CSV must include a name column" };
-
-    const col = (row: string[], key: string) => {
-      const idx = headers.indexOf(key);
-      return idx >= 0 ? row[idx]?.trim() || "" : "";
-    };
-
-    const rows = lines.slice(1, 501).map((line) => splitCsvLine(line));
+    const incoming = rows.slice(0, 500);
     const supabase = createSupabaseServiceClient();
-    const { data: newStage } = await supabase
-      .from("lead_stages")
-      .select("id")
-      .eq("name", "New")
-      .eq("kind", "open")
-      .maybeSingle();
+    const [{ data: newStage }, { data: optionRows }, { data: areaRows }, { data: nationalityRows }] = await Promise.all([
+      supabase.from("lead_stages").select("id").eq("name", "New").eq("kind", "open").maybeSingle(),
+      supabase.from("lead_field_options").select("id, field_key, value, label, sort, extra"),
+      supabase.from("lead_areas").select("name"),
+      supabase.from("lead_nationalities").select("name"),
+    ]);
+
+    const fieldOptions = groupLeadFieldOptions((optionRows ?? []) as LeadFieldOption[]);
+    const areaNames = (areaRows ?? []).map((row) => row.name);
+    const nationalityNames = (nationalityRows ?? []).map((row) => row.name);
+    const allowedKeys = new Set(LEAD_IMPORT_FIELDS.map((field) => field.key));
 
     let created = 0;
     let skipped = 0;
     let failed = 0;
     const errors: string[] = [];
 
-    for (const row of rows) {
-      const name = row[nameIdx]?.trim();
+    for (const [index, raw] of incoming.entries()) {
+      const row: LeadImportMappedRow = {};
+      for (const [key, value] of Object.entries(raw)) {
+        if (!allowedKeys.has(key) || typeof value !== "string") continue;
+        const trimmed = value.trim();
+        if (trimmed) row[key as keyof LeadImportMappedRow] = trimmed;
+      }
+
+      const name = row.name?.trim();
       if (!name) {
         skipped += 1;
         continue;
       }
-      const phone = col(row, "phone") || col(row, "mobile") || null;
-      const email = col(row, "email") || null;
-      const source = col(row, "source") || "import";
-      const interest = col(row, "interest") || "buy";
-      const notes = col(row, "notes") || null;
+
+      const phone = row.phone || null;
+      const emailRaw = row.email || "";
+      const email = emailRaw || null;
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        failed += 1;
+        if (errors.length < 8) errors.push(`Row ${index + 2}: invalid email for ${name}`);
+        continue;
+      }
 
       if (phone || email) {
         let dupQuery = supabase.from("leads").select("id").is("deleted_at", null).limit(1);
@@ -634,15 +662,34 @@ export async function importLeads(
         }
       }
 
+      const budget = row.budget ? budgetFromCell(row.budget, fieldOptions.budget) : { min: null, max: null };
+      const tags = row.tags ? splitImportList(row.tags).map((tag) => matchOptionValue(fieldOptions.tags, tag)) : [];
+      const preferredAreas = row.preferred_areas
+        ? splitImportList(row.preferred_areas).map((area) => matchNamedValue(areaNames, area))
+        : [];
+
       const { data, error } = await supabase
         .from("leads")
         .insert({
           name,
           phone,
           email,
-          source,
-          interest,
-          notes,
+          nationality: row.nationality ? matchNamedValue(nationalityNames, row.nationality) : null,
+          source: row.source ? matchOptionValue(fieldOptions.source, row.source) : "import",
+          interest: row.interest ? matchOptionValue(fieldOptions.interest, row.interest) : "buy",
+          category: row.category ? matchOptionValue(fieldOptions.category, row.category) : null,
+          bedrooms: row.bedrooms ? matchOptionValue(fieldOptions.bedrooms, row.bedrooms) : null,
+          purpose: row.purpose ? matchOptionValue(fieldOptions.purpose, row.purpose) : null,
+          financing: row.financing ? matchOptionValue(fieldOptions.financing, row.financing) : null,
+          timeframe: row.timeframe ? matchOptionValue(fieldOptions.timeframe, row.timeframe) : null,
+          budget_min: budget.min,
+          budget_max: budget.max,
+          preferred_areas: preferredAreas,
+          tags,
+          notes: row.notes || null,
+          score: row.score ? scoreFromCell(row.score, fieldOptions.score) : null,
+          lost_reason: row.lost_reason ? matchOptionValue(fieldOptions.lost_reason, row.lost_reason) : null,
+          junk_reason: row.junk_reason ? matchOptionValue(fieldOptions.junk_reason, row.junk_reason) : null,
           created_by: user.id,
           stage_id: newStage?.id ?? null,
           last_activity_at: new Date().toISOString(),
@@ -670,7 +717,7 @@ export async function importLeads(
     });
 
     revalidatePath("/leads");
-    revalidatePath("/leads/imports");
+    revalidatePath("/settings/leads");
     return { ok: true, data: { created, skipped, failed, errors } };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };

@@ -10,3 +10,4 @@
 
 - Overview / Fields / Stages hub. Gold active pill, `bg-card` + `border-border`, gold hairline on section cards.
 - Stages tab: pipeline columns + SLA only. Copy explains board is where you add/rename/delete. Lost/junk reasons link to Fields. No ALL CAPS, no emerald brand.
+- Imports tab: CSV/XLSX upload, sample CSV from Fields catalog, mapper modal, then mapped import (max 500). Round-robin unassigned.

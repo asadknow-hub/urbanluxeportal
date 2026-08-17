@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LeadFieldsWorkspace } from "@/components/leads/lead-fields-workspace";
 import { StageSlaEditor } from "@/components/leads/stage-sla-editor";
+import { LeadImportWorkspace } from "@/components/leads/lead-import-workspace";
 import { fetchLeadTableColumns } from "@/server/lead-areas";
 import { groupLeadFieldOptions, type LeadFieldOption } from "@/lib/lead-field-options";
 import { ArrowRight, CalendarClock, CheckCircle2, Layers3, Settings2, Route, FileText } from "lucide-react";
@@ -15,6 +16,7 @@ const HUB_TABS = [
   { key: "overview", label: "Overview" },
   { key: "fields", label: "Fields" },
   { key: "stages", label: "Stages" },
+  { key: "imports", label: "Imports" },
 ] as const;
 
 type HubTab = (typeof HUB_TABS)[number]["key"];
@@ -180,6 +182,7 @@ export default async function LeadsSettingsPage({
                   { href: "/leads?view=board", label: "Leads board" },
                   { href: "/leads?view=list", label: "Leads list" },
                   { href: "/leads/followups", label: "Follow-ups" },
+                  { href: "/settings/leads?tab=imports", label: "Import leads" },
                   { href: "/deals", label: "Deals pipeline" },
                 ].map((item) => (
                   <Link
@@ -205,6 +208,8 @@ export default async function LeadsSettingsPage({
           initialField={params.field}
         />
       )}
+
+      {tab === "imports" && <LeadImportWorkspace />}
 
       {tab === "stages" && (
         <div className="space-y-5">
