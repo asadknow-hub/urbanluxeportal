@@ -222,15 +222,15 @@
 
 @keyframes ul-ken {
   from {
-    transform: scale(1.02);
+    transform: scale(1.04) translate3d(0, 0, 0);
   }
   to {
-    transform: scale(1.1);
+    transform: scale(1.14) translate3d(0, -2%, 0);
   }
 }
 
 .ul-ken {
-  animation: ul-ken 22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: ul-ken 28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes ul-marquee {
@@ -246,6 +246,27 @@
   animation: ul-marquee 42s linear infinite;
 }
 
+.ul-marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes ul-scroll-cue {
+  0%,
+  100% {
+    transform: scaleY(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scaleY(0.45);
+    opacity: 1;
+  }
+}
+
+.ul-scroll-cue {
+  transform-origin: top;
+  animation: ul-scroll-cue 2.4s ease-in-out infinite;
+}
+
 .ul-hide-scroll {
   scrollbar-width: none;
 }
@@ -256,7 +277,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ul-ken,
-  .ul-marquee-track {
+  .ul-marquee-track,
+  .ul-scroll-cue {
     animation: none;
   }
   .ul-reveal.is-pending {

@@ -1,16 +1,23 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { COMMUNITIES, featuredListings, IMAGES, KIND_META } from "@/lib/web/listings";
 import { HeroSearch } from "@/components/web/hero-search";
 import { PropertyCard } from "@/components/web/property-card";
 import { Reveal } from "@/components/web/reveal";
 import { EnquireForm } from "@/components/web/enquire-form";
 
+const INTENT_ART = {
+  sale: IMAGES.villa,
+  rent: IMAGES.living,
+  offplan: IMAGES.creek,
+} as const;
+
 export function HomePage() {
-  const featured = featuredListings();
+  const featured = featuredListings().slice(0, 6);
   const lead = featured[0];
-  const rest = featured.slice(1, 5);
+  const stack = featured.slice(1, 3);
+  const row = featured.slice(3, 6);
   const ticker = [...COMMUNITIES, ...COMMUNITIES];
 
   return (
@@ -18,42 +25,65 @@ export function HomePage() {
       <section className="relative flex min-h-[100svh] items-end overflow-hidden bg-[#14110e]">
         <Image
           src={IMAGES.hero}
-          alt="Dubai skyline at dusk"
+          alt="Aerial view of Palm Jumeirah, Dubai"
           fill
           preload
           sizes="100vw"
-          className="ul-ken object-cover"
+          className="ul-ken object-cover object-[center_45%]"
         />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,17,14,0.35)_0%,rgba(20,17,14,0.15)_35%,rgba(20,17,14,0.78)_100%)]" />
-        <div className="relative z-10 mx-auto w-full max-w-[1440px] px-5 pb-10 pt-32 md:px-10 md:pb-16">
-          <p className="ul-kicker text-[#b0893a]">Dubai · Private brokerage</p>
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,17,14,0.42)_0%,rgba(20,17,14,0.12)_38%,rgba(20,17,14,0.78)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(20,17,14,0.28)_100%)]" />
+
+        <div className="relative z-10 mx-auto w-full max-w-[1440px] px-5 pb-12 pt-32 md:px-10 md:pb-16">
+          <p className="ul-kicker text-[#b0893a]">Dubai · Palm Jumeirah</p>
           <h1 className="mt-6 max-w-4xl text-5xl leading-[0.95] text-[#f6f3ee] md:text-7xl lg:text-[5.75rem]">
             The city,
             <br />
             considered.
           </h1>
-          <p className="mt-6 max-w-lg text-base font-light leading-relaxed text-[#f6f3ee]/75 md:text-lg">
+          <p className="mt-6 max-w-lg text-base font-light leading-relaxed text-[#f6f3ee]/80 md:text-lg">
             Villas, apartments, and off-plan residences placed with the care of a private office — not poured into a
             marketplace.
           </p>
           <div className="mt-10 max-w-3xl">
             <HeroSearch />
           </div>
+          <dl className="mt-8 hidden gap-10 text-[#f6f3ee]/75 sm:flex">
+            {[
+              ["Coast to creek", "Palm · Downtown · Hills"],
+              ["Private viewings", "Arranged within a day"],
+              ["The house", "DIFC · Dubai"],
+            ].map(([k, v]) => (
+              <div key={k}>
+                <dt className="text-[0.62rem] tracking-[0.22em] uppercase text-[#b0893a]">{k}</dt>
+                <dd className="mt-1 text-sm font-light">{v}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
+
+        <a
+          href="#residences"
+          className="absolute bottom-8 right-6 z-10 hidden flex-col items-center gap-2 text-[#f6f3ee]/70 md:flex"
+        >
+          <span className="text-[0.6rem] tracking-[0.28em] uppercase">Scroll</span>
+          <span className="ul-scroll-cue h-14 w-px bg-[#b0893a]" aria-hidden />
+          <ArrowDown className="h-3.5 w-3.5 text-[#b0893a]" />
+        </a>
       </section>
 
-      <div className="overflow-hidden border-y border-[#e4d9c8] bg-[#f6f3ee] py-4">
-        <div className="ul-marquee-track flex w-max gap-10 whitespace-nowrap px-6 text-[0.7rem] tracking-[0.28em] uppercase text-[#8a8178]">
+      <div className="overflow-hidden border-y border-[#e4d9c8] bg-[#14110e] py-4">
+        <div className="ul-marquee-track flex w-max gap-10 whitespace-nowrap px-6 text-[0.7rem] tracking-[0.28em] uppercase text-[#f6f3ee]/55">
           {ticker.map((c, i) => (
             <span key={`${c.slug}-${i}`} className="flex items-center gap-10">
               {c.name}
-              <span className="inline-block h-1 w-1 rotate-45 bg-[#b0893a]" aria-hidden />
+              <span className="inline-block h-1.5 w-1.5 rotate-45 bg-[#b0893a]" aria-hidden />
             </span>
           ))}
         </div>
       </div>
 
-      <section className="mx-auto max-w-[1440px] px-5 py-20 md:px-10 md:py-28">
+      <section id="residences" className="mx-auto max-w-[1440px] px-5 py-20 md:px-10 md:py-28">
         <Reveal>
           <div className="mb-12 flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div>
@@ -68,24 +98,24 @@ export function HomePage() {
             </Link>
           </div>
         </Reveal>
-        <div className="grid gap-5 lg:grid-cols-12">
+
+        <div className="grid gap-4 lg:grid-cols-2 lg:grid-rows-2 lg:h-[42rem]">
           {lead && (
-            <Reveal className="lg:col-span-7">
-              <PropertyCard listing={lead} featured />
+            <Reveal className="h-full min-h-[22rem] lg:row-span-2">
+              <PropertyCard listing={lead} layout="fill" />
             </Reveal>
           )}
-          <div className="grid gap-5 sm:grid-cols-2 lg:col-span-5 lg:grid-cols-1">
-            {rest.slice(0, 2).map((listing, i) => (
-              <Reveal key={listing.slug} delay={i * 80}>
-                <PropertyCard listing={listing} />
-              </Reveal>
-            ))}
-          </div>
+          {stack.map((listing, i) => (
+            <Reveal key={listing.slug} className="h-full min-h-[16rem]" delay={i * 80}>
+              <PropertyCard listing={listing} layout="fill" />
+            </Reveal>
+          ))}
         </div>
-        <div className="mt-5 grid gap-5 md:grid-cols-2">
-          {rest.slice(2, 4).map((listing, i) => (
-            <Reveal key={listing.slug} delay={i * 80}>
-              <PropertyCard listing={listing} featured />
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {row.map((listing, i) => (
+            <Reveal key={listing.slug} delay={i * 70}>
+              <PropertyCard listing={listing} />
             </Reveal>
           ))}
         </div>
@@ -133,31 +163,41 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-[1440px] gap-px bg-[#e4d9c8] px-5 py-20 md:grid-cols-3 md:px-10 md:py-0">
+      <section className="grid md:grid-cols-3">
         {(["sale", "rent", "offplan"] as const).map((kind) => {
           const meta = KIND_META[kind];
           return (
-            <Link
-              key={kind}
-              href={meta.path}
-              className="group bg-[#f6f3ee] px-8 py-16 transition-colors hover:bg-[#14110e] md:py-24"
-            >
-              <p className="ul-kicker group-hover:text-[#b0893a]">{meta.eyebrow}</p>
-              <h3 className="mt-4 text-3xl group-hover:text-[#f6f3ee]">{meta.title}</h3>
-              <p className="mt-4 text-sm font-light leading-relaxed text-[#8a8178] group-hover:text-[#f6f3ee]/65">
-                {meta.lede}
-              </p>
-              <span className="mt-8 inline-flex items-center gap-2 text-[0.7rem] tracking-[0.2em] uppercase text-[#b0893a]">
-                Enter <ArrowUpRight className="h-4 w-4" />
-              </span>
+            <Link key={kind} href={meta.path} className="group relative min-h-[22rem] overflow-hidden md:min-h-[28rem]">
+              <Image
+                src={INTENT_ART[kind]}
+                alt=""
+                fill
+                sizes="33vw"
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-[#14110e]/55 transition-colors duration-500 group-hover:bg-[#14110e]/40" />
+              <div className="relative z-10 flex h-full flex-col justify-end px-8 py-12">
+                <p className="ul-kicker">{meta.eyebrow}</p>
+                <h3 className="mt-3 text-3xl text-[#f6f3ee]">{meta.title}</h3>
+                <p className="mt-3 max-w-xs text-sm font-light leading-relaxed text-[#f6f3ee]/70">{meta.lede}</p>
+                <span className="mt-8 inline-flex items-center gap-2 text-[0.7rem] tracking-[0.2em] uppercase text-[#b0893a]">
+                  Enter <ArrowUpRight className="h-4 w-4" />
+                </span>
+              </div>
             </Link>
           );
         })}
       </section>
 
       <section className="grid lg:grid-cols-2">
-        <div className="relative min-h-[28rem] lg:min-h-[40rem]">
-          <Image src={IMAGES.about} alt="A quiet villa interior" fill sizes="50vw" className="object-cover" />
+        <div className="relative min-h-[28rem] overflow-hidden lg:min-h-[40rem]">
+          <Image
+            src={IMAGES.downtown}
+            alt="Burj Khalifa, Downtown Dubai"
+            fill
+            sizes="50vw"
+            className="object-cover transition-transform duration-[1200ms] hover:scale-105"
+          />
         </div>
         <div className="flex flex-col justify-center bg-[#f6f3ee] px-8 py-20 md:px-16">
           <Reveal>
@@ -215,17 +255,26 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="border-t border-[#e4d9c8] bg-[#fffcf8]">
-        <div className="mx-auto grid max-w-[1440px] lg:grid-cols-2">
+      <section className="relative overflow-hidden border-t border-[#e4d9c8] bg-[#14110e]">
+        <Image
+          src={IMAGES.downtown}
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover opacity-25"
+        />
+        <div className="relative mx-auto grid max-w-[1440px] lg:grid-cols-2">
           <div className="px-5 py-20 md:px-10 md:py-24">
             <p className="ul-kicker">Begin</p>
-            <h2 className="mt-4 text-4xl md:text-5xl">Tell us the brief.</h2>
-            <p className="mt-5 max-w-md text-base font-light text-[#8a8178]">
+            <h2 className="mt-4 text-4xl text-[#f6f3ee] md:text-5xl">Tell us the brief.</h2>
+            <p className="mt-5 max-w-md text-base font-light text-[#f6f3ee]/65">
               A community, a view, a number. We will come back with residences — not a newsletter.
             </p>
           </div>
           <div className="px-5 pb-20 md:px-10 md:py-24">
-            <EnquireForm />
+            <div className="border border-[#f6f3ee]/15 bg-[#f6f3ee] p-6 md:p-8">
+              <EnquireForm />
+            </div>
           </div>
         </div>
       </section>
