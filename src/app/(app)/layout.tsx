@@ -1,8 +1,18 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { SessionHeartbeat } from "@/components/shared/session-heartbeat";
+
+export const metadata: Metadata = {
+  title: {
+    default: "UrbanLuxe Portal",
+    template: "%s · UrbanLuxe Portal",
+  },
+  description: "CRM & ERP for UrbanLuxe Real Estate",
+  robots: { index: false, follow: false },
+};
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();

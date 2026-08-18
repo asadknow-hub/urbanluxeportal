@@ -3,6 +3,20 @@ import { createServerClient } from "@supabase/ssr";
 
 const PUBLIC_PATHS = ["/login"];
 
+const PORTAL_PREFIXES = [
+  "/dashboard",
+  "/leads",
+  "/pipeline",
+  "/customers",
+  "/team",
+  "/settings",
+  "/deals",
+];
+
+function isPortalPath(pathname: string) {
+  return PORTAL_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -41,7 +55,7 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && !PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+  if (!user && isPortalPath(pathname) && !PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
     return NextResponse.redirect(redirectUrl);
