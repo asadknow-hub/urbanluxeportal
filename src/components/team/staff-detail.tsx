@@ -18,7 +18,8 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { updateStaffProfile, sendPasswordResetLink, setStaffPassword } from "@/server/team";
 import { createDocument as createDoc, deleteDocument as deleteDoc, getSignedUrl } from "@/server/documents";
 import { formatDate } from "@/lib/dates";
-import { canonicalDocumentPath, normalizeDocCategory } from "@/lib/document-storage";
+import { canonicalDocumentPath, formatDocCategory, normalizeDocCategory } from "@/lib/document-storage";
+import { defaultDocCapture, type DocCategoryChoice } from "@/lib/lead-field-options";
 import { toast } from "sonner";
 import {
   Loader2,
@@ -66,6 +67,7 @@ type Doc = {
   size_bytes: number;
   category: string;
   expiry_date: string | null;
+  notes: string | null;
   created_at: string;
 };
 type Activity = { action: string; entity_type: string; entity_id: string; created_at: string };
@@ -129,6 +131,7 @@ export function StaffDetail({
   currentUserRole,
   sessionStats,
   metrics,
+  docCategories = [],
 }: {
   staff: Staff;
   leads: Lead[];
@@ -138,6 +141,7 @@ export function StaffDetail({
   currentUserRole: string;
   sessionStats?: SessionStats;
   metrics?: { leads: number; deals: number; documents: number };
+  docCategories?: DocCategoryChoice[];
 }) {
   const [activeTab, setActiveTab] = useState("profile");
   const RoleIcon = ROLE_ICONS[staff.role] ?? User;
@@ -266,7 +270,7 @@ export function StaffDetail({
               <ProfileTab staff={staff} currentUserRole={currentUserRole} />
             )}
             {activeTab === "documents" && (
-              <DocumentsTab staff={staff} documents={documents} />
+              <DocumentsTab staff={staff} documents={documents} categories={docCategories} />
             )}
             {activeTab === "password" && (
               <PasswordTab staff={staff} />
@@ -578,16 +582,36 @@ function ProfileTab({ staff, currentUserRole }: { staff: Staff; currentUserRole:
 // ============================================================
 // DOCUMENTS TAB
 // ============================================================
-function DocumentsTab({ staff, documents }: { staff: Staff; documents: Doc[] }) {
+function DocumentsTab({
+  staff,
+  documents,
+  categories,
+}: {
+  staff: Staff;
+  documents: Doc[];
+  categories: DocCategoryChoice[];
+}) {
   const [pending, startTransition] = useTransition();
   const [uploading, setUploading] = useState(false);
   const [docName, setDocName] = useState("");
-  const [docCategory, setDocCategory] = useState("other");
+  const [docCategory, setDocCategory] = useState("");
   const [docExpiry, setDocExpiry] = useState("");
+  const [docNotes, setDocNotes] = useState("");
   const [uploadedFile, setUploadedFile] = useState<{ path: string; name: string; mime: string; size: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const DOC_CATEGORIES = ["emirates_id", "passport", "visa", "contract", "permit", "brn", "other"];
+  const categoryItems: DocCategoryChoice[] =
+    categories.length > 0
+      ? categories
+      : ["emirates_id", "passport", "visa", "contract", "permit", "brn", "other"].map((value) => ({
+          value,
+          label: formatDocCategory(value),
+          capture: defaultDocCapture(value),
+        }));
+
+  const capture = docCategory
+    ? categoryItems.find((c) => c.value === docCategory)?.capture ?? defaultDocCapture(docCategory)
+    : null;
 
   async function handleFileUpload(file: File | null) {
     if (!file) return;
@@ -597,7 +621,7 @@ function DocumentsTab({ staff, documents }: { staff: Staff; documents: Doc[] }) 
     const path = canonicalDocumentPath({
       entityType: "staff",
       entityId: staff.id,
-      category: docCategory,
+      category: docCategory || "other",
       originalName: file.name,
     });
 
@@ -623,6 +647,10 @@ function DocumentsTab({ staff, documents }: { staff: Staff; documents: Doc[] }) 
       toast.error("Upload a file first");
       return;
     }
+    if (!docCategory) {
+      toast.error("Choose a document category");
+      return;
+    }
     startTransition(async () => {
       const result = await createDoc({
         name: docName || uploadedFile.name,
@@ -632,14 +660,16 @@ function DocumentsTab({ staff, documents }: { staff: Staff; documents: Doc[] }) 
         category: normalizeDocCategory(docCategory),
         entity_type: "staff",
         entity_id: staff.id,
-        expiry_date: docExpiry || null,
+        expiry_date: capture === "expiry" ? docExpiry || null : null,
+        notes: capture === "note" ? docNotes.trim() || null : null,
       });
       if (result.ok) {
         toast.success("Document saved");
         setUploadedFile(null);
         setDocName("");
-        setDocCategory("other");
+        setDocCategory("");
         setDocExpiry("");
+        setDocNotes("");
       } else {
         toast.error(result.error ?? "Failed");
       }
@@ -713,27 +743,48 @@ function DocumentsTab({ staff, documents }: { staff: Staff; documents: Doc[] }) 
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Category</Label>
-              <Select value={docCategory} onValueChange={(v) => setDocCategory(v ?? "other")}>
+              <Select
+                value={docCategory || undefined}
+                onValueChange={(v) => {
+                  setDocCategory(v ?? "");
+                  setDocExpiry("");
+                  setDocNotes("");
+                }}
+              >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Choose" />
                 </SelectTrigger>
                 <SelectContent>
-                  {DOC_CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase())}
+                  {categoryItems.map((c) => (
+                    <SelectItem key={c.value} value={c.value}>
+                      {c.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Expiry</Label>
-              <Input type="date" value={docExpiry} onChange={(e) => setDocExpiry(e.target.value)} />
+              {capture === "note" ? (
+                <>
+                  <Label className="text-xs">Note</Label>
+                  <Input value={docNotes} onChange={(e) => setDocNotes(e.target.value)} placeholder="Optional note" />
+                </>
+              ) : (
+                <>
+                  <Label className="text-xs">Expiry</Label>
+                  <Input
+                    type="date"
+                    value={docExpiry}
+                    onChange={(e) => setDocExpiry(e.target.value)}
+                    disabled={capture !== "expiry"}
+                  />
+                </>
+              )}
             </div>
           </div>
 
           <div className="flex justify-end">
-            <Button type="submit" size="sm" disabled={pending || !uploadedFile}>
+            <Button type="submit" size="sm" disabled={pending || !uploadedFile || !docCategory}>
               {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Document
             </Button>
@@ -750,26 +801,35 @@ function DocumentsTab({ staff, documents }: { staff: Staff; documents: Doc[] }) 
           {documents.length === 0 ? (
             <p className="px-4 py-8 text-center text-sm text-muted-foreground">No documents uploaded yet.</p>
           ) : (
-            documents.map((doc) => (
-              <div key={doc.id} className="group flex items-center gap-3 px-4 py-3 hover:bg-muted/50">
-                <FileText className="h-5 w-5 text-muted-foreground" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{doc.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {doc.category.replace(/_/g, " ")} · {formatBytes(doc.size_bytes)} · {formatDate(doc.created_at)}
-                    {doc.expiry_date && ` · Expires: ${formatDate(doc.expiry_date)}`}
-                  </p>
+            documents.map((doc) => {
+              const mode = categoryItems.find((c) => c.value === doc.category)?.capture ?? defaultDocCapture(doc.category);
+              const extra =
+                mode === "expiry"
+                  ? doc.expiry_date
+                    ? `Expires: ${formatDate(doc.expiry_date)}`
+                    : null
+                  : doc.notes?.trim() || null;
+              return (
+                <div key={doc.id} className="group flex items-center gap-3 px-4 py-3 hover:bg-muted/50">
+                  <FileText className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{doc.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {formatDocCategory(doc.category)} · {formatBytes(doc.size_bytes)} · {formatDate(doc.created_at)}
+                      {extra ? ` · ${extra}` : ""}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    <Button size="sm" variant="ghost" onClick={() => handleView(doc.storage_path)} disabled={pending}>
+                      <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleDelete(doc.id)} disabled={pending}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                  <Button size="sm" variant="ghost" onClick={() => handleView(doc.storage_path)} disabled={pending}>
-                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => handleDelete(doc.id)} disabled={pending}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

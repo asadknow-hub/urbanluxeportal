@@ -10,12 +10,24 @@ import {
   addLeadFieldOption,
   deleteLeadFieldOption,
   mergeLeadFieldOptions,
+  updateLeadFieldOptionExtra,
 } from "@/server/lead-field-options";
-import type { LeadFieldOption } from "@/lib/lead-field-options";
+import {
+  docCaptureMode,
+  type DocCaptureMode,
+  type LeadFieldOption,
+} from "@/lib/lead-field-options";
 import type { ActionResult } from "@/server/leads";
 import { parseAreaNames } from "@/lib/parse-area-list";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function LeadOptionsManager({
   fieldKey,
@@ -180,13 +192,45 @@ export function LeadOptionsManager({
           <p className="text-sm text-muted-foreground">No options yet.</p>
         ) : (
           <ul className="max-h-[28rem] space-y-1 overflow-y-auto">
+            {kind === "list" && fieldKey === "doc_category" && (
+              <li className="grid grid-cols-[minmax(0,1fr)_10.5rem_1.75rem] items-center gap-2 px-1 pb-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                <span>Category</span>
+                <span>On upload</span>
+                <span />
+              </li>
+            )}
             {options.map((row) => (
-              <li key={row.id} className="flex items-center justify-between gap-2 rounded-md px-1 py-1.5">
+              <li
+                key={row.id}
+                className={
+                  fieldKey === "doc_category"
+                    ? "grid grid-cols-[minmax(0,1fr)_10.5rem_1.75rem] items-center gap-2 rounded-md px-1 py-1.5"
+                    : "flex items-center justify-between gap-2 rounded-md px-1 py-1.5"
+                }
+              >
                 <span className="truncate text-sm">
                   {kind === "score"
                     ? `${row.label} (${Number(row.extra?.min_score)}–${Number(row.extra?.max_score)})`
                     : row.label}
                 </span>
+                {fieldKey === "doc_category" && (
+                  <Select
+                    value={docCaptureMode(row)}
+                    onValueChange={(v) => {
+                      const capture = (v === "note" ? "note" : "expiry") as DocCaptureMode;
+                      run(() => updateLeadFieldOptionExtra(row.id, { capture }), "Capture updated");
+                    }}
+                    disabled={pending}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="expiry">Expiry date</SelectItem>
+                      <SelectItem value="note">Note</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
                 <button
                   type="button"
                   className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"

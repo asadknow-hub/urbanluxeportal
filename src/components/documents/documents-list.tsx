@@ -26,6 +26,7 @@ export type DocumentRow = {
   entity_type: string | null;
   entity_id: string | null;
   expiry_date: string | null;
+  notes: string | null;
   created_at: string;
 };
 
@@ -123,7 +124,7 @@ export function DocumentsList({
                 <th className="px-4 py-3">Entity</th>
                 <th className="px-4 py-3">Size</th>
                 <th className="px-4 py-3">Uploaded</th>
-                <th className="px-4 py-3">Expiry</th>
+                <th className="px-4 py-3">Expiry / note</th>
                 <th className="px-4 py-3 rounded-tr-[1.5rem]"></th>
               </tr>
             </thead>
@@ -210,6 +211,8 @@ function DocumentRowItem({ doc }: { doc: DocumentRow }) {
               <AlertTriangle className={`h-4 w-4 ${overdue ? "text-red-500" : "text-amber-500"}`} />
             )}
           </div>
+        ) : doc.notes?.trim() ? (
+          <span className="line-clamp-2 text-xs font-medium text-slate-500">{doc.notes}</span>
         ) : (
           <span className="text-slate-300 font-medium">—</span>
         )}

@@ -21,6 +21,7 @@ import {
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { createDocument } from "@/server/documents";
 import { canonicalDocumentPath, formatDocCategory, normalizeDocCategory, DOC_CATEGORIES } from "@/lib/document-storage";
+import { defaultDocCapture, type DocCategoryChoice } from "@/lib/lead-field-options";
 import { toast } from "sonner";
 import { Loader2, Upload, FileCheck2, X } from "lucide-react";
 
@@ -38,8 +39,8 @@ export function DocumentUploadDialog({
   entityId?: string;
   quiet?: boolean;
   trigger?: ReactNode;
-  onSaved?: (doc?: { id: string; name: string; storage_path: string; mime_type: string; category: string; created_at: string }) => void;
-  categories?: { value: string; label: string }[];
+  onSaved?: (doc?: { id: string; name: string; storage_path: string; mime_type: string; category: string; expiry_date: string | null; notes: string | null; created_at: string }) => void;
+  categories?: DocCategoryChoice[];
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -58,15 +59,28 @@ export function DocumentUploadDialog({
     category: "",
     entity_type: entityType ?? "",
     expiry_date: "",
+    notes: "",
   });
 
-  const categoryItems =
+  const categoryItems: DocCategoryChoice[] =
     categories.length > 0
       ? categories
-      : DOC_CATEGORIES.map((value) => ({ value, label: formatDocCategory(value) }));
+      : DOC_CATEGORIES.map((value) => ({
+          value,
+          label: formatDocCategory(value),
+          capture: defaultDocCapture(value),
+        }));
+
+  const capture = form.category
+    ? categoryItems.find((c) => c.value === form.category)?.capture ?? defaultDocCapture(form.category)
+    : null;
 
   function set<K extends keyof typeof form>(key: K, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function setCategory(value: string) {
+    setForm((prev) => ({ ...prev, category: value, expiry_date: "", notes: "" }));
   }
 
   async function handleFileUpload(file: File | null) {
@@ -122,13 +136,14 @@ export function DocumentUploadDialog({
         category,
         entity_type: linkedType,
         entity_id: entityId ?? null,
-        expiry_date: form.expiry_date || null,
+        expiry_date: capture === "expiry" ? form.expiry_date || null : null,
+        notes: capture === "note" ? form.notes.trim() || null : null,
       });
       if (result.ok) {
         toast.success("Document saved");
         setOpen(false);
         setUploadedFile(null);
-        setForm({ name: "", category: "", entity_type: entityType ?? "", expiry_date: "" });
+        setForm({ name: "", category: "", entity_type: entityType ?? "", expiry_date: "", notes: "" });
         onSaved?.(result.data);
       } else {
         await supabase.storage.from("documents").remove([path]);
@@ -231,7 +246,7 @@ export function DocumentUploadDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Category *</Label>
-              <Select value={form.category || undefined} onValueChange={(v) => set("category", v ?? "")}>
+              <Select value={form.category || undefined} onValueChange={(v) => setCategory(v ?? "")}>
                 <SelectTrigger className="h-11 rounded-[10px]">
                   <SelectValue placeholder="Choose category" />
                 </SelectTrigger>
@@ -244,18 +259,40 @@ export function DocumentUploadDialog({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="doc_expiry" className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                Expiry date
-              </Label>
-              <Input
-                id="doc_expiry"
-                type="date"
-                value={form.expiry_date}
-                onChange={(e) => set("expiry_date", e.target.value)}
-                className="h-11 rounded-[10px]"
-              />
-            </div>
+            {capture === "expiry" ? (
+              <div className="space-y-2">
+                <Label htmlFor="doc_expiry" className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Expiry date
+                </Label>
+                <Input
+                  id="doc_expiry"
+                  type="date"
+                  value={form.expiry_date}
+                  onChange={(e) => set("expiry_date", e.target.value)}
+                  className="h-11 rounded-[10px]"
+                />
+              </div>
+            ) : capture === "note" ? (
+              <div className="space-y-2">
+                <Label htmlFor="doc_notes" className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Note
+                </Label>
+                <Input
+                  id="doc_notes"
+                  value={form.notes}
+                  onChange={(e) => set("notes", e.target.value)}
+                  placeholder="e.g. Original at office"
+                  className="h-11 rounded-[10px]"
+                />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Extra
+                </Label>
+                <p className="flex h-11 items-center text-sm text-muted-foreground">Choose a category first</p>
+              </div>
+            )}
           </div>
 
           {!entityType && (

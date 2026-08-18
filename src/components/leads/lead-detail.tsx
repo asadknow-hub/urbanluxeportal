@@ -41,6 +41,7 @@ import { daysUntil, formatDate, formatDateTime, isOverdue, shortTimeAgo, timeAgo
 import { stageSlaClock } from "@/lib/lead-sla";
 import {
   choiceItems,
+  docCategoryChoices,
   optionLabel,
   scoreBandForValue,
   scoreFromBand,
@@ -798,7 +799,7 @@ export function LeadDetail({
               <DocumentUploadDialog
                 entityType="lead"
                 entityId={optimisticLead.id}
-                categories={choiceItems(fieldOptions.doc_category)}
+                categories={docCategoryChoices(fieldOptions.doc_category)}
                 onSaved={(doc) => {
                   if (doc) setOptimisticDocs((prev) => [{ ...doc, category: doc.category || "other" }, ...prev]);
                   router.refresh();
@@ -1327,7 +1328,7 @@ export function LeadDetail({
             <DocumentUploadDialog
               entityType="lead"
               entityId={optimisticLead.id}
-              categories={choiceItems(fieldOptions.doc_category)}
+              categories={docCategoryChoices(fieldOptions.doc_category)}
               onSaved={(doc) => {
                 if (doc) setOptimisticDocs((prev) => [{ ...doc, category: doc.category || "other" }, ...prev]);
                 router.refresh();
@@ -1342,7 +1343,7 @@ export function LeadDetail({
             <LeadDocumentsList
               documents={optimisticDocs}
               onChange={setOptimisticDocs}
-              categories={choiceItems(fieldOptions.doc_category)}
+              categories={docCategoryChoices(fieldOptions.doc_category)}
             />
           </section>
 

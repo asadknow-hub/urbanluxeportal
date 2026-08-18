@@ -521,7 +521,7 @@ export async function convertLead(
 
     const { data: leadDocs } = await supabase
       .from("documents")
-      .select("name, storage_path, mime_type, size_bytes, category, expiry_date")
+      .select("name, storage_path, mime_type, size_bytes, category, expiry_date, notes")
       .eq("entity_type", "lead")
       .eq("entity_id", leadId)
       .is("deleted_at", null);

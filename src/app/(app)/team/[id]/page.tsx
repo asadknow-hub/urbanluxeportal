@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { StaffDetail } from "@/components/team/staff-detail";
 import { redirect } from "next/navigation";
 import { getStaffActivityStats } from "@/server/staff-sessions";
+import { docCategoryChoices, type LeadFieldOption } from "@/lib/lead-field-options";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,7 @@ export default async function StaffDetailPage({
     { count: leadCount },
     { count: activeDealCount },
     sessionResult,
+    { data: docCategoryRows },
   ] = await Promise.all([
     supabase
       .from("leads")
@@ -91,6 +93,12 @@ export default async function StaffDetailPage({
       .neq("stage", "won")
       .neq("stage", "lost"),
     getStaffActivityStats(id, 1),
+    supabase
+      .from("lead_field_options")
+      .select("id, field_key, value, label, sort, extra")
+      .eq("field_key", "doc_category")
+      .order("sort")
+      .order("label"),
   ]);
 
   const sessionStats = sessionResult.ok ? sessionResult.data : null;
@@ -105,6 +113,7 @@ export default async function StaffDetailPage({
         activities={activities ?? []}
         currentUserRole={user.role}
         sessionStats={sessionStats ?? undefined}
+        docCategories={docCategoryChoices((docCategoryRows ?? []) as LeadFieldOption[])}
         metrics={{
           leads: leadCount ?? 0,
           deals: activeDealCount ?? 0,

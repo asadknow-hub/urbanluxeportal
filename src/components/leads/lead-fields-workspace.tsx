@@ -30,7 +30,7 @@ const OPTION_COPY: Record<string, string> = {
   timeframe: "This list powers Timeframe on add lead and lead detail.",
   financing: "This list powers Financing on add lead and lead detail.",
   budget: "Budget bands set min and max on the lead when an agent picks one.",
-  doc_category: "This list powers the category dropdown when uploading or editing a document.",
+  doc_category: "This list powers the category dropdown when uploading a document. Each category asks for either an expiry date (passport, visa) or a note (invoice, title deed).",
   tags: "This list powers Tags on lead detail. Agents pick from here instead of typing free text.",
   score: "Score bands label the 0–100 score on lead detail. Set min and max for each band.",
   lost_reason: "Shown when a lead is moved to a lost stage.",

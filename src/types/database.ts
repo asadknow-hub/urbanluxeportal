@@ -591,6 +591,7 @@ export interface Database {
           entity_type: string | null;
           entity_id: string | null;
           expiry_date: string | null;
+          notes: string | null;
           ai_extracted: Record<string, unknown> | null;
           uploaded_by: string | null;
           created_at: string;
@@ -606,6 +607,7 @@ export interface Database {
           entity_type?: string | null;
           entity_id?: string | null;
           expiry_date?: string | null;
+          notes?: string | null;
           ai_extracted?: Record<string, unknown> | null;
           uploaded_by?: string | null;
         };

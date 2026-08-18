@@ -13,6 +13,15 @@ export type ActionResult<T = unknown> = {
   error?: string;
 };
 
+function revalidateDocumentPaths(entityType?: string | null, entityId?: string | null) {
+  revalidatePath("/documents");
+  if (!entityType || !entityId) return;
+  if (entityType === "lead") revalidatePath(`/leads/${entityId}`);
+  if (entityType === "deal") revalidatePath(`/pipeline/${entityId}`);
+  if (entityType === "staff") revalidatePath(`/team/${entityId}`);
+  if (entityType === "customer") revalidatePath(`/customers/${entityId}`);
+}
+
 const documentSchema = z.object({
   name: z.string().min(1, "Name required"),
   storage_path: z.string().min(1, "Storage path required"),
@@ -22,11 +31,12 @@ const documentSchema = z.object({
   entity_type: z.string().optional().nullable(),
   entity_id: z.string().min(1).optional().nullable(),
   expiry_date: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
 });
 
 export async function createDocument(
   input: z.infer<typeof documentSchema>
-): Promise<ActionResult<{ id: string; name: string; storage_path: string; mime_type: string; category: string; created_at: string }>> {
+): Promise<ActionResult<{ id: string; name: string; storage_path: string; mime_type: string; category: string; expiry_date: string | null; notes: string | null; created_at: string }>> {
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
@@ -49,9 +59,10 @@ export async function createDocument(
         entity_type: parsed.data.entity_type || null,
         entity_id: parsed.data.entity_id || null,
         expiry_date: parsed.data.expiry_date || null,
+        notes: parsed.data.notes?.trim() || null,
         uploaded_by: user.id,
       })
-      .select("id, name, storage_path, mime_type, category, created_at")
+      .select("id, name, storage_path, mime_type, category, expiry_date, notes, created_at")
       .single();
 
     if (error) return { ok: false, error: error.message };
@@ -70,10 +81,9 @@ export async function createDocument(
         summary: `Uploaded document: ${parsed.data.name}`,
         created_by: user.id,
       });
-      revalidatePath(`/leads/${parsed.data.entity_id}`);
     }
 
-    revalidatePath("/documents");
+    revalidateDocumentPaths(parsed.data.entity_type, parsed.data.entity_id);
     return { ok: true, data: data };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
@@ -103,10 +113,7 @@ export async function deleteDocument(id: string): Promise<ActionResult> {
       action: "deleted",
     });
 
-    if (row?.entity_type === "lead" && row.entity_id) {
-      revalidatePath(`/leads/${row.entity_id}`);
-    }
-    revalidatePath("/documents");
+    revalidateDocumentPaths(row?.entity_type, row?.entity_id);
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
@@ -115,7 +122,7 @@ export async function deleteDocument(id: string): Promise<ActionResult> {
 
 export async function updateDocument(
   id: string,
-  input: { name?: string; category?: string }
+  input: { name?: string; category?: string; expiry_date?: string | null; notes?: string | null }
 ): Promise<ActionResult> {
   try {
     const user = await getCurrentUser();
@@ -123,12 +130,16 @@ export async function updateDocument(
 
     const name = input.name?.trim();
     const category = input.category ? normalizeDocCategory(input.category) : undefined;
-    if (!name && !category) return { ok: false, error: "Nothing to update" };
+    const hasExpiry = "expiry_date" in input;
+    const hasNotes = "notes" in input;
+    if (!name && !category && !hasExpiry && !hasNotes) return { ok: false, error: "Nothing to update" };
 
     const supabase = createSupabaseServiceClient();
     const patch: Record<string, unknown> = {};
     if (name) patch.name = name;
     if (category) patch.category = category;
+    if (hasExpiry) patch.expiry_date = input.expiry_date || null;
+    if (hasNotes) patch.notes = input.notes?.trim() || null;
 
     const { data, error } = await supabase
       .from("documents")
@@ -139,10 +150,7 @@ export async function updateDocument(
 
     if (error) return { ok: false, error: error.message };
 
-    if (data?.entity_type === "lead" && data.entity_id) {
-      revalidatePath(`/leads/${data.entity_id}`);
-    }
-    revalidatePath("/documents");
+    revalidateDocumentPaths(data?.entity_type, data?.entity_id);
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };

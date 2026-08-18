@@ -32,7 +32,7 @@ async function copyEntityDocumentsToCustomer(
   for (const source of sources) {
     const { data: docs } = await supabase
       .from("documents")
-      .select("name, storage_path, mime_type, size_bytes, category, expiry_date")
+      .select("name, storage_path, mime_type, size_bytes, category, expiry_date, notes")
       .eq("entity_type", source.entity_type)
       .eq("entity_id", source.entity_id)
       .is("deleted_at", null);

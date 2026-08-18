@@ -30,6 +30,8 @@ import { LeadContextPanel } from "@/components/crm/lead-context-panel";
 import { DealTransactionForm } from "@/components/pipeline/deal-transaction-form";
 import type { LeadContext } from "@/lib/lead-flow";
 import { dealReadyToFinalize, formatPropertyLine } from "@/lib/deal-transaction";
+import { formatDocCategory } from "@/lib/document-storage";
+import { defaultDocCapture, type DocCategoryChoice } from "@/lib/lead-field-options";
 import { updateDealStage, addDealActivity, assignDeal, updateDeal } from "@/server/deals";
 import { toast } from "sonner";
 import {
@@ -154,13 +156,22 @@ export function DealDetail({
   activities,
   agents,
   documents,
+  docCategories = [],
   userRole,
   userId,
 }: {
   deal: Deal;
   activities: DealActivity[];
   agents: { id: string; full_name: string; role: string }[];
-  documents: { id: string; file_name: string; file_url: string; file_type: string; created_at: string }[];
+  documents: {
+    id: string;
+    name: string;
+    category: string;
+    expiry_date: string | null;
+    notes: string | null;
+    created_at: string;
+  }[];
+  docCategories?: DocCategoryChoice[];
   userRole: string;
   userId: string;
 }) {
@@ -603,22 +614,32 @@ export function DealDetail({
               <p className="text-sm text-muted-foreground">No documents yet.</p>
             ) : (
               <div className="space-y-2">
-                {documents.map((doc) => (
-                  <a
-                    key={doc.id}
-                    href={doc.file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 hover:bg-muted/50"
-                  >
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">{doc.file_name}</p>
-                      <p className="text-xs text-muted-foreground">{formatDate(doc.created_at)}</p>
+                {documents.map((doc) => {
+                  const mode =
+                    docCategories.find((c) => c.value === doc.category)?.capture ?? defaultDocCapture(doc.category);
+                  const extra =
+                    mode === "expiry"
+                      ? doc.expiry_date
+                        ? `Expires ${formatDate(doc.expiry_date)}`
+                        : null
+                      : doc.notes?.trim() || null;
+                  return (
+                    <div
+                      key={doc.id}
+                      className="flex items-center gap-2 rounded-lg border border-border px-3 py-2"
+                    >
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-foreground">{doc.name}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {formatDocCategory(doc.category)}
+                          {extra ? ` · ${extra}` : ""}
+                          {` · ${formatDate(doc.created_at)}`}
+                        </p>
+                      </div>
                     </div>
-                    <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                  </a>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

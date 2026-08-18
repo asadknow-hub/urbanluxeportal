@@ -8,6 +8,7 @@ import {
   isLeadOptionField,
   isRangeOptionField,
   slugifyOptionValue,
+  defaultDocCapture,
   type LeadOptionFieldKey,
 } from "@/lib/lead-field-options";
 import type { ActionResult } from "@/server/leads";
@@ -18,7 +19,9 @@ function canManage(role: string) {
 
 function revalidateLeadPaths() {
   revalidatePath("/settings/leads");
-  revalidatePath("/leads");
+  revalidatePath("/leads", "layout");
+  revalidatePath("/team", "layout");
+  revalidatePath("/pipeline", "layout");
 }
 
 export async function mergeLeadFieldOptions(
@@ -62,10 +65,16 @@ export async function mergeLeadFieldOptions(
 
     if (fresh.length === 0) return { ok: true, data: { added: 0 } };
 
-    const { error } = await supabase.from("lead_field_options").insert(
+      const { error } = await supabase.from("lead_field_options").insert(
       fresh.map((row) => {
         sort += 10;
-        return { field_key: fieldKey, value: row.value, label: row.label, sort };
+        return {
+          field_key: fieldKey,
+          value: row.value,
+          label: row.label,
+          sort,
+          extra: fieldKey === "doc_category" ? { capture: defaultDocCapture(row.value) } : {},
+        };
       })
     );
     if (error) return { ok: false, error: error.message };
@@ -141,6 +150,7 @@ export async function addLeadFieldOption(
         value,
         label,
         sort,
+        extra: fieldKey === "doc_category" ? { capture: defaultDocCapture(value) } : {},
       });
       if (error) return { ok: false, error: error.message };
     }
@@ -160,6 +170,41 @@ export async function deleteLeadFieldOption(id: string): Promise<ActionResult> {
 
     const supabase = createSupabaseServiceClient();
     const { error } = await supabase.from("lead_field_options").delete().eq("id", id);
+    if (error) return { ok: false, error: error.message };
+
+    revalidateLeadPaths();
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function updateLeadFieldOptionExtra(
+  id: string,
+  patch: Record<string, unknown>
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    if (!canManage(user.role)) return { ok: false, error: "Not authorized" };
+
+    const supabase = createSupabaseServiceClient();
+    if (patch.capture != null && patch.capture !== "expiry" && patch.capture !== "note") {
+      return { ok: false, error: "Capture must be expiry or note" };
+    }
+
+    const { data: row, error: readError } = await supabase
+      .from("lead_field_options")
+      .select("field_key, extra")
+      .eq("id", id)
+      .single();
+    if (readError) return { ok: false, error: readError.message };
+    if (patch.capture != null && row?.field_key !== "doc_category") {
+      return { ok: false, error: "Capture only applies to document categories" };
+    }
+
+    const extra = { ...((row?.extra as Record<string, unknown> | null) ?? {}), ...patch };
+    const { error } = await supabase.from("lead_field_options").update({ extra }).eq("id", id);
     if (error) return { ok: false, error: error.message };
 
     revalidateLeadPaths();

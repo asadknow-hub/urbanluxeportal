@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { DealDetail } from "@/components/pipeline/deal-detail";
+import { docCategoryChoices, type LeadFieldOption } from "@/lib/lead-field-options";
 
 export const dynamic = "force-dynamic";
 
@@ -59,14 +60,22 @@ export default async function DealDetailPage({
     .eq("is_active", true)
     .order("full_name");
 
-  // Fetch deal documents
-  const { data: documents } = await supabase
-    .from("documents")
-    .select("*")
-    .eq("entity_type", "deal")
-    .eq("entity_id", id)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+  // Fetch deal documents and document category capture settings
+  const [{ data: documents }, { data: docCategoryRows }] = await Promise.all([
+    supabase
+      .from("documents")
+      .select("*")
+      .eq("entity_type", "deal")
+      .eq("entity_id", id)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("lead_field_options")
+      .select("id, field_key, value, label, sort, extra")
+      .eq("field_key", "doc_category")
+      .order("sort")
+      .order("label"),
+  ]);
 
   return (
     <DealDetail
@@ -74,6 +83,7 @@ export default async function DealDetailPage({
       activities={activities ?? []}
       agents={agents ?? []}
       documents={documents ?? []}
+      docCategories={docCategoryChoices((docCategoryRows ?? []) as LeadFieldOption[])}
       userRole={user.role}
       userId={user.id}
     />

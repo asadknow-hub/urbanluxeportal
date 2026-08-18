@@ -47,6 +47,45 @@ export function choiceItems(options: LeadFieldOption[] | undefined) {
   return (options ?? []).map((row) => ({ value: row.value, label: row.label }));
 }
 
+export type DocCaptureMode = "expiry" | "note";
+
+const DOC_EXPIRY_DEFAULTS = new Set([
+  "emirates_id",
+  "passport",
+  "visa",
+  "tenancy_contract",
+  "permit",
+  "noc",
+  "brn",
+]);
+
+export function defaultDocCapture(value: string): DocCaptureMode {
+  return DOC_EXPIRY_DEFAULTS.has(value) ? "expiry" : "note";
+}
+
+export function docCaptureMode(
+  option: LeadFieldOption | undefined,
+  value?: string
+): DocCaptureMode {
+  const raw = option?.extra?.capture;
+  if (raw === "expiry" || raw === "note") return raw;
+  return defaultDocCapture(option?.value ?? value ?? "");
+}
+
+export type DocCategoryChoice = {
+  value: string;
+  label: string;
+  capture: DocCaptureMode;
+};
+
+export function docCategoryChoices(options: LeadFieldOption[] | undefined): DocCategoryChoice[] {
+  return (options ?? []).map((row) => ({
+    value: row.value,
+    label: row.label,
+    capture: docCaptureMode(row),
+  }));
+}
+
 export function groupLeadFieldOptions(rows: LeadFieldOption[]) {
   const grouped: Record<string, LeadFieldOption[]> = {};
   for (const row of rows) {
