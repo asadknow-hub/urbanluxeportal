@@ -26,15 +26,15 @@ export default function AboutPage() {
             <h2 className="text-3xl md:text-4xl">How we work</h2>
             <ul className="mt-8 space-y-6 text-base font-light leading-relaxed text-[#8a8178]">
               <li>
-                <span className="block text-[0.7rem] tracking-[0.2em] uppercase text-[#b0893a]">01 — Brief</span>
+                <span className="block text-[0.7rem] tracking-[0.2em] uppercase text-[#2dd4bf]">01 — Brief</span>
                 A conversation, not a form with forty fields. Community, light, number, timing.
               </li>
               <li>
-                <span className="block text-[0.7rem] tracking-[0.2em] uppercase text-[#b0893a]">02 — Edit</span>
+                <span className="block text-[0.7rem] tracking-[0.2em] uppercase text-[#2dd4bf]">02 — Edit</span>
                 Three to five residences. If none fit, we wait — we do not pad the list.
               </li>
               <li>
-                <span className="block text-[0.7rem] tracking-[0.2em] uppercase text-[#b0893a]">03 — Close</span>
+                <span className="block text-[0.7rem] tracking-[0.2em] uppercase text-[#2dd4bf]">03 — Close</span>
                 Viewings, papers, and the unglamorous work between offer and keys. Then we disappear until you need us.
               </li>
             </ul>

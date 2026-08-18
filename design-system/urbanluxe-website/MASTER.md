@@ -37,14 +37,14 @@ This is the **public marketing site** (urbanluxe.com). The CRM portal design sys
 
 ## Color tokens — LOCKED
 
-Same house as the portal. Do not introduce teal.
+Paper + ink stay locked. **Public accent is teal** (`#2dd4bf`) — requested for the marketing site. Portal CRM keeps gold.
 
 | Token | Hex | Role |
 |---|---|---|
 | Paper | `#F6F3EE` | Page canvas |
 | Ink | `#14110E` | Text, dark bands, footer |
-| Gold | `#B0893A` | CTA, rules, focus |
-| On gold | `#14110E` | Text on gold |
+| Accent | `#2DD4BF` | CTA, rules, focus (was gold) |
+| On accent | `#14110E` | Text on teal |
 | Navy | `#1B2430` | Secondary dark |
 | Card | `#FFFCF8` | Surfaces |
 | Muted | `#8A8178` | Meta |

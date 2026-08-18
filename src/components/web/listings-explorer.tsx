@@ -46,7 +46,7 @@ export function ListingsExplorer({
   }
 
   const selectClass =
-    "h-11 border border-[#e4d9c8] bg-[#fffcf8] px-3 text-sm text-[#14110e] outline-none focus:border-[#b0893a]";
+    "h-11 border border-[#e4d9c8] bg-[#fffcf8] px-3 text-sm text-[#14110e] outline-none focus:border-[#2dd4bf]";
 
   return (
     <div>

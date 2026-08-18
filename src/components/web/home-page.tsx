@@ -35,7 +35,7 @@ export function HomePage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(20,17,14,0.28)_100%)]" />
 
         <div className="relative z-10 mx-auto w-full max-w-[1440px] px-5 pb-12 pt-32 md:px-10 md:pb-16">
-          <p className="ul-kicker text-[#b0893a]">Dubai · Palm Jumeirah</p>
+          <p className="ul-kicker text-[#2dd4bf]">Dubai · Palm Jumeirah</p>
           <h1 className="mt-6 max-w-4xl text-5xl leading-[0.95] text-[#f6f3ee] md:text-7xl lg:text-[5.75rem]">
             The city,
             <br />
@@ -55,7 +55,7 @@ export function HomePage() {
               ["The house", "DIFC · Dubai"],
             ].map(([k, v]) => (
               <div key={k}>
-                <dt className="text-[0.62rem] tracking-[0.22em] uppercase text-[#b0893a]">{k}</dt>
+                <dt className="text-[0.62rem] tracking-[0.22em] uppercase text-[#2dd4bf]">{k}</dt>
                 <dd className="mt-1 text-sm font-light">{v}</dd>
               </div>
             ))}
@@ -67,8 +67,8 @@ export function HomePage() {
           className="absolute bottom-8 right-6 z-10 hidden flex-col items-center gap-2 text-[#f6f3ee]/70 md:flex"
         >
           <span className="text-[0.6rem] tracking-[0.28em] uppercase">Scroll</span>
-          <span className="ul-scroll-cue h-14 w-px bg-[#b0893a]" aria-hidden />
-          <ArrowDown className="h-3.5 w-3.5 text-[#b0893a]" />
+          <span className="ul-scroll-cue h-14 w-px bg-[#2dd4bf]" aria-hidden />
+          <ArrowDown className="h-3.5 w-3.5 text-[#2dd4bf]" />
         </a>
       </section>
 
@@ -77,7 +77,7 @@ export function HomePage() {
           {ticker.map((c, i) => (
             <span key={`${c.slug}-${i}`} className="flex items-center gap-10">
               {c.name}
-              <span className="inline-block h-1.5 w-1.5 rotate-45 bg-[#b0893a]" aria-hidden />
+              <span className="inline-block h-1.5 w-1.5 rotate-45 bg-[#2dd4bf]" aria-hidden />
             </span>
           ))}
         </div>
@@ -92,7 +92,7 @@ export function HomePage() {
             </div>
             <Link
               href="/buy"
-              className="inline-flex items-center gap-2 text-[0.72rem] font-semibold tracking-[0.2em] uppercase text-[#14110e] hover:text-[#b0893a]"
+              className="inline-flex items-center gap-2 text-[0.72rem] font-semibold tracking-[0.2em] uppercase text-[#14110e] hover:text-[#2dd4bf]"
             >
               All for sale <ArrowUpRight className="h-4 w-4" />
             </Link>
@@ -131,7 +131,7 @@ export function HomePage() {
               </div>
               <Link
                 href="/communities"
-                className="hidden text-[0.72rem] font-semibold tracking-[0.2em] uppercase text-[#b0893a] md:inline-flex"
+                className="hidden text-[0.72rem] font-semibold tracking-[0.2em] uppercase text-[#2dd4bf] md:inline-flex"
               >
                 All communities
               </Link>
@@ -154,7 +154,7 @@ export function HomePage() {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#14110e] via-[#14110e]/20 to-transparent" />
               <div className="absolute inset-x-5 bottom-6">
-                <p className="text-[0.65rem] tracking-[0.24em] uppercase text-[#b0893a]">{c.region}</p>
+                <p className="text-[0.65rem] tracking-[0.24em] uppercase text-[#2dd4bf]">{c.region}</p>
                 <h3 className="mt-1 text-2xl">{c.name}</h3>
                 <p className="mt-2 text-sm font-light text-[#f6f3ee]/70">{c.blurb}</p>
               </div>
@@ -180,7 +180,7 @@ export function HomePage() {
                 <p className="ul-kicker">{meta.eyebrow}</p>
                 <h3 className="mt-3 text-3xl text-[#f6f3ee]">{meta.title}</h3>
                 <p className="mt-3 max-w-xs text-sm font-light leading-relaxed text-[#f6f3ee]/70">{meta.lede}</p>
-                <span className="mt-8 inline-flex items-center gap-2 text-[0.7rem] tracking-[0.2em] uppercase text-[#b0893a]">
+                <span className="mt-8 inline-flex items-center gap-2 text-[0.7rem] tracking-[0.2em] uppercase text-[#2dd4bf]">
                   Enter <ArrowUpRight className="h-4 w-4" />
                 </span>
               </div>
@@ -244,7 +244,7 @@ export function HomePage() {
             },
           ].map((t, i) => (
             <Reveal key={t.name} delay={i * 90}>
-              <blockquote className="border-t border-[#b0893a] pt-8">
+              <blockquote className="border-t border-[#2dd4bf] pt-8">
                 <p className="text-lg font-light leading-relaxed text-[#14110e]">“{t.quote}”</p>
                 <footer className="mt-6 text-[0.7rem] tracking-[0.18em] uppercase text-[#8a8178]">
                   {t.name} · {t.role}

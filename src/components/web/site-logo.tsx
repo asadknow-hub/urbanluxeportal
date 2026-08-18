@@ -22,7 +22,7 @@ export function SiteLogo({
         aria-hidden
       >
         <span className="absolute inset-0 border border-current/40" />
-        <span className="absolute inset-[5px] border border-[#b0893a]" />
+        <span className="absolute inset-[5px] border border-[#2dd4bf]" />
       </span>
       <span
         className={cn(

@@ -40,7 +40,7 @@ export function HeroSearch() {
             onClick={() => setIntent(item.id)}
             className={
               intent === item.id
-                ? "flex-1 bg-[#b0893a] px-3 py-2 text-[0.65rem] font-semibold tracking-[0.22em] uppercase text-[#14110e]"
+                ? "flex-1 bg-[#2dd4bf] px-3 py-2 text-[0.65rem] font-semibold tracking-[0.22em] uppercase text-[#14110e]"
                 : "flex-1 px-3 py-2 text-[0.65rem] font-medium tracking-[0.22em] uppercase text-[#f6f3ee]/70 hover:text-[#f6f3ee]"
             }
           >
@@ -82,7 +82,7 @@ export function HeroSearch() {
         </select>
         <button
           type="submit"
-          className="inline-flex h-12 items-center justify-center gap-2 bg-[#b0893a] px-8 text-[0.72rem] font-semibold tracking-[0.22em] uppercase text-[#14110e] transition-colors hover:bg-[#c49a4a]"
+          className="inline-flex h-12 items-center justify-center gap-2 bg-[#2dd4bf] px-8 text-[0.72rem] font-semibold tracking-[0.22em] uppercase text-[#14110e] transition-colors hover:bg-[#14b8a6]"
         >
           <Search className="h-4 w-4" />
           Search

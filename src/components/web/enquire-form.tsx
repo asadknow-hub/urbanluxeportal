@@ -24,7 +24,7 @@ export function EnquireForm({
   }
 
   const field =
-    "h-12 w-full border border-[#e4d9c8] bg-[#fffcf8] px-4 text-sm text-[#14110e] outline-none placeholder:text-[#8a8178] focus:border-[#b0893a]";
+    "h-12 w-full border border-[#e4d9c8] bg-[#fffcf8] px-4 text-sm text-[#14110e] outline-none placeholder:text-[#8a8178] focus:border-[#2dd4bf]";
 
   return (
     <form onSubmit={onSubmit} className="space-y-3">
@@ -48,13 +48,13 @@ export function EnquireForm({
         name="message"
         rows={compact ? 3 : 4}
         placeholder="Tell us what you are looking for"
-        className="w-full border border-[#e4d9c8] bg-[#fffcf8] px-4 py-3 text-sm text-[#14110e] outline-none placeholder:text-[#8a8178] focus:border-[#b0893a]"
+        className="w-full border border-[#e4d9c8] bg-[#fffcf8] px-4 py-3 text-sm text-[#14110e] outline-none placeholder:text-[#8a8178] focus:border-[#2dd4bf]"
         defaultValue={propertyTitle ? `Please share details for ${propertyTitle}.` : ""}
       />
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex h-12 w-full items-center justify-center bg-[#b0893a] text-[0.72rem] font-semibold tracking-[0.22em] uppercase text-[#14110e] transition-colors hover:bg-[#9a7632] disabled:opacity-60"
+        className="inline-flex h-12 w-full items-center justify-center bg-[#2dd4bf] text-[0.72rem] font-semibold tracking-[0.22em] uppercase text-[#14110e] transition-colors hover:bg-[#14b8a6] disabled:opacity-60"
       >
         {pending ? "Sending…" : "Send enquiry"}
       </button>

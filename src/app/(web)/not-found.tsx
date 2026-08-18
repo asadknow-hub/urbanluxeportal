@@ -10,7 +10,7 @@ export default function WebNotFound() {
       </p>
       <Link
         href="/"
-        className="mt-10 inline-flex h-12 items-center bg-[#b0893a] px-8 text-[0.72rem] font-semibold tracking-[0.22em] uppercase text-[#14110e]"
+        className="mt-10 inline-flex h-12 items-center bg-[#2dd4bf] px-8 text-[0.72rem] font-semibold tracking-[0.22em] uppercase text-[#14110e]"
       >
         Return home
       </Link>

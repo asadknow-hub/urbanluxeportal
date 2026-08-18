@@ -24,7 +24,7 @@ export default function ContactPage() {
             <div>
               <dt className="ul-kicker">Telephone</dt>
               <dd className="mt-2">
-                <a href={`tel:${SITE.phoneTel}`} className="text-lg hover:text-[#b0893a]">
+                <a href={`tel:${SITE.phoneTel}`} className="text-lg hover:text-[#2dd4bf]">
                   {SITE.phoneDisplay}
                 </a>
               </dd>
@@ -32,7 +32,7 @@ export default function ContactPage() {
             <div>
               <dt className="ul-kicker">Email</dt>
               <dd className="mt-2">
-                <a href={`mailto:${SITE.email}`} className="text-lg hover:text-[#b0893a]">
+                <a href={`mailto:${SITE.email}`} className="text-lg hover:text-[#2dd4bf]">
                   {SITE.email}
                 </a>
               </dd>

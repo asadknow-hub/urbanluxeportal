@@ -51,8 +51,8 @@ export function SiteNav() {
                 href={item.href}
                 className={cn(
                   "text-[0.8rem] font-medium tracking-[0.16em] uppercase transition-colors duration-200",
-                  overHero ? "hover:text-[#b0893a]" : "hover:text-[#b0893a]",
-                  active ? "text-[#b0893a]" : overHero ? "text-[#f6f3ee]/90" : "text-[#14110e]/80"
+                  overHero ? "hover:text-[#2dd4bf]" : "hover:text-[#2dd4bf]",
+                  active ? "text-[#2dd4bf]" : overHero ? "text-[#f6f3ee]/90" : "text-[#14110e]/80"
                 )}
               >
                 {item.label}
@@ -67,8 +67,8 @@ export function SiteNav() {
             className={cn(
               "hidden h-10 items-center px-5 text-[0.7rem] font-semibold tracking-[0.22em] uppercase transition-colors duration-200 sm:inline-flex",
               overHero
-                ? "border border-[#f6f3ee]/40 text-[#f6f3ee] hover:border-[#b0893a] hover:text-[#b0893a]"
-                : "bg-[#b0893a] text-[#14110e] hover:bg-[#9a7632]"
+                ? "border border-[#f6f3ee]/40 text-[#f6f3ee] hover:border-[#2dd4bf] hover:text-[#2dd4bf]"
+                : "bg-[#2dd4bf] text-[#14110e] hover:bg-[#14b8a6]"
             )}
           >
             Enquire
@@ -99,7 +99,7 @@ export function SiteNav() {
             ))}
             <Link
               href="/contact"
-              className="mt-6 inline-flex h-12 items-center justify-center bg-[#b0893a] text-[0.75rem] font-semibold tracking-[0.22em] uppercase text-[#14110e]"
+              className="mt-6 inline-flex h-12 items-center justify-center bg-[#2dd4bf] text-[0.75rem] font-semibold tracking-[0.22em] uppercase text-[#14110e]"
             >
               Enquire
             </Link>

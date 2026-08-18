@@ -34,6 +34,11 @@ export type Listing = {
   amenities: string[];
   status: "ready" | "offplan";
   handover?: string;
+  developer?: string;
+  exclusive?: boolean;
+  monthlyAed?: number;
+  downPaymentAed?: number;
+  paymentPlan?: { label: string; pct: number }[];
 };
 
 const u = (id: string, w = 1800) =>
@@ -135,6 +140,7 @@ export const LISTINGS: Listing[] = [
     image: IMAGES.villa,
     gallery: [IMAGES.villa, IMAGES.pool, IMAGES.interior, IMAGES.living, IMAGES.palm],
     featured: true,
+    exclusive: true,
     ref: "UL-P-1042",
     description:
       "A quiet plot on Frond G, set back from the spine, with a private beach that does not share its horizon. The house is arranged for living, not display: a double-height salon to the water, a kitchen that can disappear, and a garden that runs to the sand without a fence in the photograph. Staff quarters, a cinema, and a garage for four sit below the line of sight.",
@@ -267,6 +273,15 @@ export const LISTINGS: Listing[] = [
     amenities: ["Creek view", "Payment plan", "Park access", "Retail below", "Pool", "Gym"],
     status: "offplan",
     handover: "Q4 2027",
+    developer: "Emaar",
+    monthlyAed: 25000,
+    downPaymentAed: 285000,
+    paymentPlan: [
+      { label: "Booking", pct: 10 },
+      { label: "Construction", pct: 40 },
+      { label: "Handover", pct: 30 },
+      { label: "Post", pct: 20 },
+    ],
   },
   {
     slug: "tilal-lagoon-townhouse",
@@ -289,6 +304,137 @@ export const LISTINGS: Listing[] = [
     amenities: ["Lagoon frontage", "Private garden", "Community beach", "Schools planned", "Payment plan"],
     status: "offplan",
     handover: "Q2 2028",
+    developer: "Majid Al Futtaim",
+    monthlyAed: 32000,
+    downPaymentAed: 420000,
+    paymentPlan: [
+      { label: "Booking", pct: 10 },
+      { label: "Every 4 months", pct: 40 },
+      { label: "Handover", pct: 30 },
+      { label: "Post", pct: 20 },
+    ],
+  },
+  {
+    slug: "address-residences-downtown",
+    title: "Address Residences Downtown",
+    subtitle: "Branded living on the fountain axis",
+    community: "Downtown Dubai",
+    communitySlug: "downtown-dubai",
+    kind: "offplan",
+    type: "apartment",
+    priceAed: 2100000,
+    beds: 1,
+    baths: 2,
+    sqft: 890,
+    image: IMAGES.downtown,
+    gallery: [IMAGES.downtown, IMAGES.penthouse, IMAGES.living],
+    featured: true,
+    ref: "UL-CH-5102",
+    description:
+      "A one-bedroom in a branded Downtown stack, with a payment plan that does not ask for the building on day one. Fountain light, hotel service, and a handover that is still a date you can write down.",
+    amenities: ["Branded residence", "Fountain view", "Payment plan", "Concierge", "Pool", "Gym"],
+    status: "offplan",
+    handover: "Q3 2027",
+    developer: "Emaar",
+    monthlyAed: 22000,
+    downPaymentAed: 210000,
+    paymentPlan: [
+      { label: "Booking", pct: 10 },
+      { label: "Construction", pct: 50 },
+      { label: "Handover", pct: 40 },
+    ],
+  },
+  {
+    slug: "sobha-hartland-creek",
+    title: "Sobha Hartland II",
+    subtitle: "Low-rise on the creek park",
+    community: "Dubai Creek Harbour",
+    communitySlug: "dubai-creek-harbour",
+    kind: "offplan",
+    type: "apartment",
+    priceAed: 1750000,
+    beds: 1,
+    baths: 1,
+    sqft: 760,
+    image: IMAGES.creek,
+    gallery: [IMAGES.creek, IMAGES.interior, IMAGES.kitchen],
+    featured: true,
+    ref: "UL-CH-6110",
+    description:
+      "A quieter off-plan than the towers: park, creek, and a developer that finishes what it starts. Studio-to-one-bed inventory with a monthly that still looks like rent.",
+    amenities: ["Park", "Creek", "Payment plan", "Community retail", "Pool"],
+    status: "offplan",
+    handover: "Q1 2028",
+    developer: "Sobha",
+    monthlyAed: 18000,
+    downPaymentAed: 175000,
+    paymentPlan: [
+      { label: "Booking", pct: 20 },
+      { label: "Construction", pct: 40 },
+      { label: "Handover", pct: 40 },
+    ],
+  },
+  {
+    slug: "nakheel-palm-east",
+    title: "Palm East waterfront",
+    subtitle: "A new line on the trunk",
+    community: "Palm Jumeirah",
+    communitySlug: "palm-jumeirah",
+    kind: "offplan",
+    type: "apartment",
+    priceAed: 3900000,
+    beds: 2,
+    baths: 3,
+    sqft: 1450,
+    image: IMAGES.palm,
+    gallery: [IMAGES.palm, IMAGES.water, IMAGES.terrace],
+    featured: true,
+    ref: "UL-P-7204",
+    description:
+      "East-facing water on the Palm, still on a plan. Two bedrooms, a proper terrace, and a construction schedule you can actually read.",
+    amenities: ["Palm waterfront", "Payment plan", "Beach access", "Gym", "Parking"],
+    status: "offplan",
+    handover: "Q4 2028",
+    developer: "Nakheel",
+    monthlyAed: 35000,
+    downPaymentAed: 390000,
+    paymentPlan: [
+      { label: "Booking", pct: 10 },
+      { label: "Construction", pct: 40 },
+      { label: "Handover", pct: 50 },
+    ],
+  },
+  {
+    slug: "damac-lagoons-morocco",
+    title: "Morocco by Damac Lagoons",
+    subtitle: "Townhouse, lagoon, vacant on paper",
+    community: "Tilal Al Ghaf",
+    communitySlug: "tilal-al-ghaf",
+    kind: "offplan",
+    type: "townhouse",
+    priceAed: 5000000,
+    beds: 3,
+    baths: 4,
+    sqft: 3100,
+    image: IMAGES.house,
+    gallery: [IMAGES.house, IMAGES.pool, IMAGES.interior, IMAGES.living],
+    featured: true,
+    exclusive: true,
+    ref: "UL-TG-8301",
+    description:
+      "A three-bedroom corner townhouse on the lagoon cluster — maid’s, vacant on handover, and a plan that front-loads less than you expect.",
+    amenities: ["Lagoon", "Maid’s room", "Garden", "Community beach", "Payment plan"],
+    status: "offplan",
+    handover: "Q2 2027",
+    developer: "Damac",
+    monthlyAed: 30000,
+    downPaymentAed: 100000,
+    paymentPlan: [
+      { label: "Booking", pct: 10 },
+      { label: "Every 4 months", pct: 30 },
+      { label: "Construction", pct: 40 },
+      { label: "Handover", pct: 20 },
+    ],
   },
   {
     slug: "downtown-boulevard-two-bed",
@@ -382,6 +528,20 @@ export function formatAed(value: number, kind: ListingKind) {
   }).format(value);
   if (kind === "rent") return `${formatted} / year`;
   return formatted;
+}
+
+export function formatAedPlain(value: number) {
+  return new Intl.NumberFormat("en-AE", {
+    style: "currency",
+    currency: "AED",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+export function monthlyFor(listing: Listing) {
+  if (listing.monthlyAed) return listing.monthlyAed;
+  if (listing.kind === "offplan") return Math.round(listing.priceAed / 48);
+  return null;
 }
 
 export function listingBySlug(slug: string) {
