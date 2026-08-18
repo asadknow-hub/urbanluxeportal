@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, type ComponentType } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -22,17 +22,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getStatusColor } from "@/lib/status-colors";
-import { whatsappLink } from "@/lib/phone";
 import { formatAED } from "@/lib/money";
 import { formatDate, timeAgo } from "@/lib/dates";
-import { ConversionPath } from "@/components/crm/conversion-path";
 import { LeadContextPanel } from "@/components/crm/lead-context-panel";
 import { DealTransactionForm } from "@/components/pipeline/deal-transaction-form";
 import type { LeadContext } from "@/lib/lead-flow";
 import { dealReadyToFinalize, formatPropertyLine } from "@/lib/deal-transaction";
+import {
+  DEAL_PIPELINE_STAGES,
+  dealStageLabel,
+  isDealClosed,
+  isDealLost,
+  normalizeDealStage,
+} from "@/lib/deal-stages";
 import { formatDocCategory } from "@/lib/document-storage";
 import { defaultDocCapture, type DocCategoryChoice } from "@/lib/lead-field-options";
-import { updateDealStage, addDealActivity, assignDeal, updateDeal } from "@/server/deals";
+import { updateDealStage, addDealActivity } from "@/server/deals";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -46,26 +51,14 @@ import {
   Briefcase,
   Home,
   Tag,
-  Calendar,
   FileText,
-  TrendingUp,
   CheckCircle2,
   XCircle,
-  User,
-  Building2,
 } from "lucide-react";
 
-const STAGES = [
-  { key: "inquiry", label: "Inquiry", color: "bg-blue-500" },
-  { key: "viewing", label: "Viewing", color: "bg-cyan-500" },
-  { key: "negotiation", label: "Negotiation", color: "bg-amber-500" },
-  { key: "offer", label: "Offer", color: "bg-purple-500" },
-  { key: "contract", label: "Contract", color: "bg-indigo-500" },
-  { key: "won", label: "Won", color: "bg-emerald-500" },
-  { key: "lost", label: "Lost", color: "bg-red-500" },
-] as const;
+const STAGES = DEAL_PIPELINE_STAGES;
 
-const ACTIVITY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+const ACTIVITY_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   note: Activity,
   call: Phone,
   whatsapp: MessageCircle,
@@ -76,6 +69,7 @@ const ACTIVITY_ICONS: Record<string, React.ComponentType<{ className?: string }>
   stage_change: Tag,
   created: Briefcase,
   won: CheckCircle2,
+  closed: CheckCircle2,
   lost: XCircle,
 };
 
@@ -179,25 +173,18 @@ export function DealDetail({
   const router = useRouter();
   const [activityText, setActivityText] = useState("");
   const [activityType, setActivityType] = useState("note");
-  const [editMode, setEditMode] = useState(false);
   const [lostOpen, setLostOpen] = useState(false);
-  const [wonOpen, setWonOpen] = useState(false);
-  const [wonCommission, setWonCommission] = useState(
+  const [closedOpen, setClosedOpen] = useState(false);
+  const [closedCommission, setClosedCommission] = useState(
     deal.commission_amount ? String(deal.commission_amount / 100) : ""
   );
   const [lostReason, setLostReason] = useState("");
-  const [editForm, setEditForm] = useState({
-    title: deal.title,
-    value: deal.value ? String(deal.value / 100) : "",
-    expected_close_date: deal.expected_close_date ?? "",
-    commission_rate: deal.commission_rate ? String(deal.commission_rate) : "",
-  });
 
-  const colors = getStatusColor(deal.stage);
-  const waLink = whatsappLink(deal.customer?.phone ?? deal.buyer_phone ?? null);
+  const colors = getStatusColor(normalizeDealStage(deal.stage));
   const canManage = userRole === "admin" || userRole === "manager";
   const canEdit = canManage || deal.assigned_to === userId;
-  const currentStageIdx = STAGES.findIndex((s) => s.key === deal.stage);
+  const currentStageKey = normalizeDealStage(deal.stage);
+  const currentStageIdx = STAGES.findIndex((s) => s.key === currentStageKey);
 
   const agentOptions = useMemo(() => {
     const list = [...agents];
@@ -215,25 +202,23 @@ export function DealDetail({
     return list;
   }, [agents, deal.assigned_to, deal.assigned_to_profile]);
 
-  const assignedLabel =
-    deal.assigned_to_profile?.full_name ??
-    agentOptions.find((a) => a.id === deal.assigned_to)?.full_name ??
-    "Unassigned";
-
   const finalizeReadiness = dealReadyToFinalize(deal);
 
   function handleStageChange(newStage: string) {
-    if (newStage === deal.stage) return;
+    if (newStage === currentStageKey) return;
     if (newStage === "lost") {
       setLostOpen(true);
       return;
     }
-    if (newStage === "won") {
-      setWonOpen(true);
+    if (newStage === "closed") {
+      setClosedOpen(true);
       return;
     }
     startTransition(async () => {
-      const result = await updateDealStage({ id: deal.id, stage: newStage as "inquiry" | "viewing" | "negotiation" | "offer" | "contract" | "won" | "lost" });
+      const result = await updateDealStage({
+        id: deal.id,
+        stage: newStage as "new" | "negotiations" | "contract" | "closed" | "lost",
+      });
       if (result.ok) {
         toast.success(`Deal moved to ${STAGES.find((s) => s.key === newStage)?.label}`);
         router.refresh();
@@ -243,24 +228,24 @@ export function DealDetail({
     });
   }
 
-  function confirmWon() {
+  function confirmClosed() {
     startTransition(async () => {
       const result = await updateDealStage({
         id: deal.id,
-        stage: "won",
+        stage: "closed",
         value: deal.value ? deal.value / 100 : undefined,
-        commission_amount: wonCommission ? Number(wonCommission) : undefined,
+        commission_amount: closedCommission ? Number(closedCommission) : undefined,
       });
       if (result.ok) {
-        toast.success("Deal finalized — customer created");
-        setWonOpen(false);
+        toast.success("Deal closed — customer created");
+        setClosedOpen(false);
         if (result.data?.customerId) {
           router.push(`/customers/${result.data.customerId}`);
         } else {
           router.refresh();
         }
       } else {
-        toast.error(result.error ?? "Failed to finalize");
+        toast.error(result.error ?? "Failed to close");
       }
     });
   }
@@ -283,18 +268,6 @@ export function DealDetail({
     });
   }
 
-  function handleAssign(agentId: string | null) {
-    startTransition(async () => {
-      const result = await assignDeal(deal.id, agentId);
-      if (result.ok) {
-        toast.success(agentId ? "Deal assigned" : "Deal unassigned");
-        router.refresh();
-      } else {
-        toast.error(result.error ?? "Failed");
-      }
-    });
-  }
-
   function handleAddActivity() {
     if (!activityText.trim()) return;
     startTransition(async () => {
@@ -309,24 +282,6 @@ export function DealDetail({
     });
   }
 
-  function handleSaveEdit() {
-    startTransition(async () => {
-      const result = await updateDeal(deal.id, {
-        title: editForm.title,
-        value: editForm.value ? Number(editForm.value) : undefined,
-        expected_close_date: editForm.expected_close_date || null,
-        commission_rate: editForm.commission_rate ? Number(editForm.commission_rate) : null,
-      });
-      if (result.ok) {
-        toast.success("Deal updated");
-        setEditMode(false);
-        router.refresh();
-      } else {
-        toast.error(result.error ?? "Failed");
-      }
-    });
-  }
-
   return (
     <div className="mx-auto flex w-full max-w-[1460px] flex-col gap-[18px]">
       <Link href="/pipeline" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
@@ -334,48 +289,29 @@ export function DealDetail({
         Back to pipeline
       </Link>
 
-      <ConversionPath
-        current="deal"
-        lead={deal.lead ? { id: deal.lead.id, name: deal.lead.name } : deal.lead_id ? { id: deal.lead_id, name: "Originating lead" } : null}
-        customer={
-          deal.customer && deal.customer.status === "active"
-            ? { id: deal.customer.id, name: deal.customer.name, status: deal.customer.status }
-            : null
-        }
-        deal={{ id: deal.id, title: deal.title, stage: deal.stage }}
-      />
-
-      {/* Header */}
       <section className="overflow-hidden rounded-[14px] border border-border bg-card">
         <div className="h-0.5 bg-primary" />
-        <div className="flex flex-col gap-4 p-6 md:flex-row md:items-start md:justify-between">
-          <div className="flex items-start gap-4">
-            <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[10px] border border-border bg-[#EDEBF4] text-[#4C4470]">
-              <Briefcase className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Deal</p>
-              <h1
-                className="font-heading text-[1.85rem] leading-tight text-foreground"
-                style={{ fontFamily: "var(--font-display), serif" }}
-              >
-                {deal.title}
-              </h1>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${colors.bg} ${colors.text}`}>
-                  {deal.stage}
-                </span>
-                <span className="text-xs capitalize text-muted-foreground">{deal.deal_type.replace(/_/g, " ")}</span>
-                <span className="text-xs text-muted-foreground">·</span>
-                <span className="text-sm font-semibold text-foreground">{formatAED(deal.value)}</span>
-              </div>
+        <div className="flex items-start gap-4 p-6">
+          <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[10px] border border-border bg-[#EDEBF4] text-[#4C4470]">
+            <Briefcase className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Deal</p>
+            <h1
+              className="font-heading text-[1.85rem] leading-tight text-foreground"
+              style={{ fontFamily: "var(--font-display), serif" }}
+            >
+              {deal.title}
+            </h1>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${colors.bg} ${colors.text}`}>
+                {dealStageLabel(deal.stage)}
+              </span>
+              <span className="text-xs capitalize text-muted-foreground">{deal.deal_type.replace(/_/g, " ")}</span>
+              <span className="text-xs text-muted-foreground">·</span>
+              <span className="text-sm font-semibold text-foreground">{formatAED(deal.value)}</span>
             </div>
           </div>
-          {canEdit && (
-            <Button variant="outline" size="sm" onClick={() => setEditMode(!editMode)}>
-              {editMode ? "Cancel" : "Edit deal"}
-            </Button>
-          )}
         </div>
       </section>
 
@@ -389,17 +325,17 @@ export function DealDetail({
           )}
         </div>
         <div className="flex items-center gap-1">
-          {STAGES.filter((s) => s.key !== "lost").map((stage, idx) => {
+          {STAGES.map((stage) => {
             const stageIdx = STAGES.findIndex((s) => s.key === stage.key);
             const isPast = stageIdx < currentStageIdx;
-            const isCurrent = stage.key === deal.stage;
-            const isLost = deal.stage === "lost";
+            const isCurrent = stage.key === currentStageKey;
+            const isLost = isDealLost(deal.stage);
             return (
-              <div key={stage.key} className="flex items-center flex-1">
+              <div key={stage.key} className="flex flex-1 items-center">
                 <button
                   onClick={() => canEdit && handleStageChange(stage.key)}
                   disabled={!canEdit || pending}
-                  className={`flex flex-col items-center gap-1 flex-1 ${canEdit ? "cursor-pointer" : "cursor-default"}`}
+                  className={`flex flex-1 flex-col items-center gap-1 ${canEdit ? "cursor-pointer" : "cursor-default"}`}
                 >
                   <div className={`h-2.5 w-full rounded-full transition-colors ${
                     isLost ? "bg-slate-200" :
@@ -414,18 +350,18 @@ export function DealDetail({
             );
           })}
         </div>
-        {deal.stage === "lost" && deal.lost_reason && (
+        {isDealLost(deal.stage) && deal.lost_reason && (
           <div className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
             <strong>Lost:</strong> {deal.lost_reason}
           </div>
         )}
-        {canEdit && deal.stage !== "won" && deal.stage !== "lost" && (
+        {canEdit && !isDealClosed(deal.stage) && !isDealLost(deal.stage) && (
           <div className="mt-3 flex gap-2">
-            <Button size="sm" variant="outline" className="border-primary/30 text-primary hover:bg-primary/5" onClick={() => setWonOpen(true)} disabled={pending}>
-              <CheckCircle2 className="mr-1 h-4 w-4" /> Mark won
+            <Button size="sm" variant="outline" className="border-primary/30 text-primary hover:bg-primary/5" onClick={() => setClosedOpen(true)} disabled={pending}>
+              <CheckCircle2 className="mr-1 h-4 w-4" /> Mark closed
             </Button>
             <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleStageChange("lost")} disabled={pending}>
-              <XCircle className="mr-1 h-4 w-4" /> Mark Lost
+              <XCircle className="mr-1 h-4 w-4" /> Mark lost
             </Button>
           </div>
         )}
@@ -433,7 +369,7 @@ export function DealDetail({
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_360px]">
         <div className="space-y-4">
-          <DealTransactionForm deal={deal} canEdit={canEdit} />
+          <DealTransactionForm deal={deal} canEdit={canEdit} canManage={canManage} agents={agentOptions} />
 
           <div className="overflow-hidden rounded-[14px] border border-border bg-card p-5">
             <div className="-mx-5 -mt-5 mb-4 h-0.5 bg-primary" />
@@ -490,74 +426,7 @@ export function DealDetail({
           </div>
         </div>
 
-        {/* Rail: deal ledger + customer */}
         <div className="space-y-4">
-          <div className="overflow-hidden rounded-[14px] border border-border bg-card p-4">
-            <div className="-mx-4 -mt-4 mb-4 h-0.5 bg-primary" />
-            <h2 className="mb-4 text-sm font-semibold text-foreground">Deal details</h2>
-            {editMode ? (
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <Label className="text-xs">Title</Label>
-                  <Input value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Value (AED)</Label>
-                  <Input type="number" value={editForm.value} onChange={(e) => setEditForm({ ...editForm, value: e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Expected close</Label>
-                  <Input type="date" value={editForm.expected_close_date} onChange={(e) => setEditForm({ ...editForm, expected_close_date: e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Commission rate (%)</Label>
-                  <Input type="number" value={editForm.commission_rate} onChange={(e) => setEditForm({ ...editForm, commission_rate: e.target.value })} />
-                </div>
-                <Button size="sm" className="w-full" onClick={handleSaveEdit} disabled={pending}>
-                  {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                  Save changes
-                </Button>
-              </div>
-            ) : (
-              <dl className="space-y-2.5 text-sm">
-                {[
-                  { label: "Value", value: formatAED(deal.value) },
-                  deal.commission_amount ? { label: "Commission", value: formatAED(deal.commission_amount) } : null,
-                  deal.commission_rate ? { label: "Rate", value: `${deal.commission_rate}%` } : null,
-                  deal.expected_close_date ? { label: "Expected close", value: formatDate(deal.expected_close_date) } : null,
-                  deal.ejari_no ? { label: "Ejari", value: deal.ejari_no } : null,
-                  { label: "Created", value: formatDate(deal.created_at) },
-                ]
-                  .filter(Boolean)
-                  .map((row) => (
-                    <div key={row!.label} className="flex justify-between gap-2">
-                      <dt className="text-muted-foreground">{row!.label}</dt>
-                      <dd className="font-medium text-foreground">{row!.value}</dd>
-                    </div>
-                  ))}
-              </dl>
-            )}
-          </div>
-
-          {canManage && (
-            <div className="overflow-hidden rounded-[14px] border border-border bg-card p-4">
-              <h2 className="mb-3 text-sm font-semibold text-foreground">Assignment</h2>
-              <Select value={deal.assigned_to ?? "unassigned"} onValueChange={(v) => handleAssign(v === "unassigned" ? null : v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Unassigned">{assignedLabel}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {agentOptions.map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {a.full_name} ({a.role})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
           {deal.customer ? (
             <div className="overflow-hidden rounded-[14px] border border-border bg-[#1B2430] p-4 text-[#E8E4DC]">
               <div className="mb-3 flex items-center justify-between">
@@ -570,37 +439,8 @@ export function DealDetail({
               <span className="mt-1 inline-flex rounded-full bg-white/10 px-2 py-0.5 text-xs capitalize">
                 {deal.customer.status}
               </span>
-              <div className="mt-3 space-y-2 text-sm">
-                {deal.customer.phone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 opacity-70" />
-                    <a href={`tel:${deal.customer.phone}`} className="hover:underline">{deal.customer.phone}</a>
-                    {waLink && (
-                      <a href={waLink} target="_blank" rel="noopener noreferrer" className="ml-auto text-primary">
-                        <MessageCircle className="h-4 w-4" />
-                      </a>
-                    )}
-                  </div>
-                )}
-                {deal.customer.email && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 opacity-70" />
-                    <a href={`mailto:${deal.customer.email}`} className="truncate hover:underline">{deal.customer.email}</a>
-                  </div>
-                )}
-              </div>
             </div>
-          ) : (
-            <div className="overflow-hidden rounded-[14px] border border-dashed border-border bg-muted/20 p-4">
-              <h2 className="text-sm font-semibold text-foreground">Customer pending</h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Created when this deal is marked won. Buyer details are captured above.
-              </p>
-              {deal.buyer_name && (
-                <p className="mt-2 text-sm font-medium text-foreground">{deal.buyer_name}</p>
-              )}
-            </div>
-          )}
+          ) : null}
 
           <LeadContextPanel
             context={deal.lead_context}
@@ -646,24 +486,24 @@ export function DealDetail({
         </div>
       </div>
 
-      <Dialog open={wonOpen} onOpenChange={setWonOpen}>
+      <Dialog open={closedOpen} onOpenChange={setClosedOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Finalize deal?</DialogTitle>
+            <DialogTitle>Close deal?</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            This marks the deal as <strong>won</strong> and creates a <strong>customer</strong> record with the
-            property, documents, and agent commission saved under their profile.
+            This marks the deal as <strong>closed</strong> and creates a <strong>customer</strong> record with the
+            property, documents, and agent commission.
           </p>
           {!finalizeReadiness.ok && (
             <p className="rounded-[8px] bg-amber-50 px-3 py-2 text-sm text-amber-900">
-              Still needed: {finalizeReadiness.missing.join(", ")}. Update the deal sections above first.
+              Still needed: {finalizeReadiness.missing.join(", ")}. Update the sections above first.
             </p>
           )}
           <dl className="space-y-2 rounded-[10px] border border-border bg-muted/30 p-3 text-sm">
             <div className="flex justify-between gap-2">
               <dt className="text-muted-foreground">Property</dt>
-              <dd className="font-medium text-right">{deal.property_title ? formatPropertyLine(deal) : "—"}</dd>
+              <dd className="text-right font-medium">{deal.property_title ? formatPropertyLine(deal) : "—"}</dd>
             </div>
             <div className="flex justify-between gap-2">
               <dt className="text-muted-foreground">Buyer</dt>
@@ -675,21 +515,21 @@ export function DealDetail({
             </div>
           </dl>
           <div className="space-y-1.5">
-            <Label htmlFor="won-commission">Agent commission (AED)</Label>
+            <Label htmlFor="closed-commission">Agent commission (AED)</Label>
             <Input
-              id="won-commission"
+              id="closed-commission"
               type="number"
               min={0}
-              value={wonCommission}
-              onChange={(e) => setWonCommission(e.target.value)}
-              placeholder="Optional — saved on customer transaction"
+              value={closedCommission}
+              onChange={(e) => setClosedCommission(e.target.value)}
+              placeholder="Optional — saved on the customer transaction"
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setWonOpen(false)}>
+            <Button variant="outline" size="sm" onClick={() => setClosedOpen(false)}>
               Cancel
             </Button>
-            <Button size="sm" disabled={pending || !finalizeReadiness.ok} onClick={confirmWon}>
+            <Button size="sm" disabled={pending || !finalizeReadiness.ok} onClick={confirmClosed}>
               {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Yes, create customer
             </Button>

@@ -2,18 +2,11 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PipelineBoard } from "@/components/pipeline/pipeline-board";
 import { formatAEDCompact } from "@/lib/money";
+import { DEAL_PIPELINE_STAGES, isDealOpen, normalizeDealStage } from "@/lib/deal-stages";
 
 export const dynamic = "force-dynamic";
 
-const STAGES = [
-  { key: "inquiry", label: "Inquiry", weight: 0.10 },
-  { key: "viewing", label: "Viewing", weight: 0.25 },
-  { key: "negotiation", label: "Negotiation", weight: 0.40 },
-  { key: "offer", label: "Offer", weight: 0.60 },
-  { key: "contract", label: "Contract", weight: 0.80 },
-  { key: "won", label: "Won", weight: 1.0 },
-  { key: "lost", label: "Lost", weight: 0 },
-] as const;
+const STAGES = DEAL_PIPELINE_STAGES;
 
 export default async function PipelinePage() {
   const user = await getCurrentUser();
@@ -40,10 +33,10 @@ export default async function PipelinePage() {
   if (error) console.error("[pipeline] query error:", error.message);
 
   const allDeals = deals ?? [];
-  const activeDeals = allDeals.filter((d) => d.stage !== "won" && d.stage !== "lost");
+  const activeDeals = allDeals.filter((d) => isDealOpen(d.stage));
   const totalPipeline = activeDeals.reduce((sum, d) => sum + (d.value ?? 0), 0);
   const weightedValue = activeDeals.reduce((sum, d) => {
-    const stage = STAGES.find((s) => s.key === d.stage);
+    const stage = STAGES.find((s) => s.key === normalizeDealStage(d.stage));
     return sum + (d.value ?? 0) * (stage?.weight ?? 0);
   }, 0);
 
@@ -57,7 +50,7 @@ export default async function PipelinePage() {
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         {[
-          { label: "Active deals", value: String(activeDeals.length), hint: "Excludes won & lost" },
+          { label: "Active deals", value: String(activeDeals.length), hint: "Excludes closed & lost" },
           { label: "Pipeline value", value: formatAEDCompact(totalPipeline), hint: "Sum of open deals" },
           { label: "Weighted forecast", value: formatAEDCompact(weightedValue), hint: "Stage-adjusted projection" },
         ].map((metric) => (

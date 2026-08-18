@@ -126,7 +126,7 @@ export function ConvertLeadDialog({
             </DialogHeader>
             <p className="text-sm text-muted-foreground">
               The deal is in your pipeline with this buyer and property. Payment is captured on the deal
-              before you mark it won.
+              before you mark it closed.
             </p>
             <DialogFooter className="gap-2 sm:justify-start">
               <Link

@@ -12,12 +12,14 @@ export const STATUS_COLORS: Record<string, StatusColor> = {
   unqualified: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200" },
   converted: { bg: "bg-teal-50", text: "text-teal-700", border: "border-teal-200" },
 
-  // Deal stages
+  // Deal stages (`new` shares the lead-status color above)
+  negotiations: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
   inquiry: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
   viewing: { bg: "bg-cyan-50", text: "text-cyan-700", border: "border-cyan-200" },
   negotiation: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
   offer: { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-200" },
   contract: { bg: "bg-indigo-50", text: "text-indigo-700", border: "border-indigo-200" },
+  closed: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
   won: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
   lost: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200" },
 

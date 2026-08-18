@@ -9,6 +9,7 @@ import { ConversionPath } from "@/components/crm/conversion-path";
 import { LeadContextPanel } from "@/components/crm/lead-context-panel";
 import type { LeadContext } from "@/lib/lead-flow";
 import { formatPropertyLine } from "@/lib/deal-transaction";
+import { dealStageLabel, normalizeDealStage } from "@/lib/deal-stages";
 import { CustomerNewDealDialog } from "@/components/customers/customer-new-deal-dialog";
 import Link from "next/link";
 import {
@@ -211,7 +212,7 @@ export default async function CustomerDetailPage({
                 <p className="text-sm text-muted-foreground">No deals yet.</p>
               ) : (
                 (deals ?? []).map((deal) => {
-                  const colors = getStatusColor(deal.stage);
+                  const colors = getStatusColor(normalizeDealStage(deal.stage));
                   return (
                     <Link
                       key={deal.id}
@@ -225,7 +226,7 @@ export default async function CustomerDetailPage({
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-semibold text-foreground">{formatAED(deal.value)}</span>
                         <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${colors.bg} ${colors.text}`}>
-                          {deal.stage}
+                          {dealStageLabel(deal.stage)}
                         </span>
                       </div>
                     </Link>

@@ -18,6 +18,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { updateStaffProfile, sendPasswordResetLink, setStaffPassword } from "@/server/team";
 import { createDocument as createDoc, deleteDocument as deleteDoc, getSignedUrl } from "@/server/documents";
 import { formatDate } from "@/lib/dates";
+import { dealStageLabel } from "@/lib/deal-stages";
 import { canonicalDocumentPath, formatDocCategory, normalizeDocCategory } from "@/lib/document-storage";
 import { defaultDocCapture, type DocCategoryChoice } from "@/lib/lead-field-options";
 import { toast } from "sonner";
@@ -147,7 +148,7 @@ export function StaffDetail({
   const RoleIcon = ROLE_ICONS[staff.role] ?? User;
   const initials = staff.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
   const leadCount = metrics?.leads ?? leads.length;
-  const dealCount = metrics?.deals ?? deals.filter((d) => d.stage !== "won" && d.stage !== "lost").length;
+  const dealCount = metrics?.deals ?? deals.filter((d) => d.stage !== "closed" && d.stage !== "won" && d.stage !== "lost").length;
   const docCount = metrics?.documents ?? documents.length;
 
   const activeMeta = TABS.find((t) => t.id === activeTab) ?? TABS[0];
@@ -1027,7 +1028,7 @@ function ActivityTab({
               <Link key={d.id} href={`/pipeline/${d.id}`} className="flex items-center justify-between px-4 py-3 hover:bg-muted/50">
                 <div>
                   <p className="text-sm font-medium text-foreground">{d.title}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{d.stage.replace(/_/g, " ")}</p>
+                  <p className="text-xs text-muted-foreground">{dealStageLabel(d.stage)}</p>
                 </div>
                 <p className="text-xs text-muted-foreground">{formatDate(d.updated_at)}</p>
               </Link>

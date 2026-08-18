@@ -58,12 +58,10 @@ async function copyEntityDocumentsToCustomer(
 const dealStageSchema = z.object({
   id: z.string().min(1),
   stage: z.enum([
-    "inquiry",
-    "viewing",
-    "negotiation",
-    "offer",
+    "new",
+    "negotiations",
     "contract",
-    "won",
+    "closed",
     "lost",
   ]),
   value: z.number().optional(),
@@ -104,7 +102,7 @@ export async function updateDealStage(
 
     let customerId: string | undefined = deal.customer_id ?? undefined;
 
-    if (parsed.data.stage === "won") {
+    if (parsed.data.stage === "closed") {
       const readiness = dealReadyToFinalize(deal);
       if (!readiness.ok) {
         return {
@@ -163,11 +161,11 @@ export async function updateDealStage(
 
     if (error) return { ok: false, error: error.message };
 
-    if (parsed.data.stage === "won") {
+    if (parsed.data.stage === "closed") {
       await supabase.from("deal_activities").insert({
         deal_id: parsed.data.id,
         type: "won",
-        summary: `Deal finalized — customer created with property${parsed.data.value ? ` (${parsed.data.value} AED)` : ""}`,
+        summary: `Deal closed — customer created with property${parsed.data.value ? ` (${parsed.data.value} AED)` : ""}`,
         created_by: user.id,
       });
 
@@ -224,7 +222,7 @@ export async function createDeal(input: {
         title: input.title,
         customer_id: input.customer_id,
         deal_type: (input.deal_type as "sale" | "rental" | "off_plan") ?? "sale",
-        stage: "inquiry",
+        stage: "new",
         value: input.value ? Math.round(input.value * 100) : 0,
         assigned_to: input.assigned_to ?? user.id,
         created_by: user.id,
@@ -331,6 +329,7 @@ export async function updateDeal(
     value?: number;
     expected_close_date?: string | null;
     commission_rate?: number | null;
+    commission_amount?: number | null;
   }
 ): Promise<ActionResult> {
   try {
@@ -346,6 +345,9 @@ export async function updateDeal(
     if (input.value !== undefined) updateData.value = Math.round(input.value * 100);
     if (input.expected_close_date !== undefined) updateData.expected_close_date = input.expected_close_date;
     if (input.commission_rate !== undefined) updateData.commission_rate = input.commission_rate;
+    if (input.commission_amount !== undefined) {
+      updateData.commission_amount = input.commission_amount != null ? Math.round(input.commission_amount * 100) : null;
+    }
 
     const { error } = await supabase.from("deals").update(updateData).eq("id", dealId);
 

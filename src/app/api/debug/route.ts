@@ -40,7 +40,7 @@ export async function GET() {
         .from("deals")
         .select("value")
         .is("deleted_at", null)
-        .in("stage", ["inquiry", "viewing", "offer", "negotiation", "contract"]);
+        .in("stage", ["new", "negotiations", "contract", "inquiry", "viewing", "offer", "negotiation"]);
 
       results.deals = {
         count: deals?.length ?? 0,

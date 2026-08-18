@@ -9,13 +9,16 @@ export type CustomerType = "individual" | "company";
 export type DealType = "sale" | "rental" | "off_plan";
 
 export type DealStage =
+  | "new"
+  | "negotiations"
+  | "contract"
+  | "closed"
+  | "lost"
   | "inquiry"
   | "viewing"
   | "negotiation"
   | "offer"
-  | "contract"
-  | "won"
-  | "lost";
+  | "won";
 
 export type LeadContextJson = {
   lead_id: string;

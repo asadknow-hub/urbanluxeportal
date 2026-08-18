@@ -459,7 +459,7 @@ export async function convertLead(
         title,
         customer_id: null,
         deal_type: dealTypeFromInterest(lead.interest),
-        stage: "inquiry",
+        stage: "new",
         value: valueFils,
         assigned_to: lead.assigned_to,
         created_by: user.id,
@@ -528,7 +528,7 @@ export async function convertLead(
     await supabase.from("lead_activities").insert({
       lead_id: leadId,
       type: "converted",
-      summary: `Lead converted to pipeline deal: ${title}. Customer is created when the deal is won.`,
+      summary: `Lead converted to pipeline deal: ${title}. Customer is created when the deal is closed.`,
       created_by: user.id,
     });
 

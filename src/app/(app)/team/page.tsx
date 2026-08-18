@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { TeamList } from "@/components/team/team-list";
 import { StaffStats } from "@/components/team/staff-stats";
+import { isDealClosed } from "@/lib/deal-stages";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -63,7 +64,7 @@ export default async function TeamPage({
     if (!d.assigned_to) return;
     if (!dealMap[d.assigned_to]) dealMap[d.assigned_to] = { total: 0, won: 0 };
     dealMap[d.assigned_to].total++;
-    if (d.stage === "won") dealMap[d.assigned_to].won++;
+    if (isDealClosed(d.stage)) dealMap[d.assigned_to].won++;
   });
 
   return (

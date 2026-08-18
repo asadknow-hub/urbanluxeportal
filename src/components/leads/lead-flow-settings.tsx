@@ -48,7 +48,7 @@ export function LeadFlowSettings() {
             <div>
               <h2 className="text-base font-semibold text-foreground">Lead flow</h2>
               <p className="text-sm text-muted-foreground">
-                Qualify a lead, convert to a deal and customer, then advance the deal to won.
+                Qualify a lead, convert to a deal, then close the deal to create the customer.
               </p>
             </div>
           </div>
@@ -92,7 +92,7 @@ export function LeadFlowSettings() {
               <p className="text-xs font-medium text-muted-foreground">Finalize transaction</p>
               <p className="mt-2 text-sm text-foreground">
                 On the deal, set the <strong>property</strong>, <strong>payment</strong>, and <strong>KYC</strong>.
-                Marking the deal <strong>won</strong> creates the customer, saves the property under them, and copies documents.
+                Marking the deal <strong>closed</strong> creates the customer, saves the property under them, and copies documents.
               </p>
             </div>
           </div>
@@ -105,7 +105,7 @@ export function LeadFlowSettings() {
           <div className="h-0.5 bg-primary" />
           <div className="p-5">
             <h3 className="text-sm font-semibold text-foreground">Deal pipeline stages</h3>
-            <p className="mt-1 text-xs text-muted-foreground">Each converted lead starts at Inquiry.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Each converted lead starts at New.</p>
             <ol className="mt-4 space-y-2">
               {DEAL_PIPELINE_STAGES.map((stage, i) => (
                 <li

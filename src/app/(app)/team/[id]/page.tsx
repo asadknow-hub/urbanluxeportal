@@ -91,6 +91,7 @@ export default async function StaffDetailPage({
       .eq("assigned_to", id)
       .is("deleted_at", null)
       .neq("stage", "won")
+      .neq("stage", "closed")
       .neq("stage", "lost"),
     getStaffActivityStats(id, 1),
     supabase

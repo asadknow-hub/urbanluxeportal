@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { dealStageLabel } from "@/lib/deal-stages";
 
 export function ConversionPath({
   lead,
@@ -18,7 +19,7 @@ export function ConversionPath({
       ? { key: "customer" as const, href: `/customers/${customer.id}`, label: customer.name, hint: customer.status ?? "Customer" }
       : null,
     deal
-      ? { key: "deal" as const, href: `/pipeline/${deal.id}`, label: deal.title, hint: deal.stage ?? "Deal" }
+      ? { key: "deal" as const, href: `/pipeline/${deal.id}`, label: deal.title, hint: dealStageLabel(deal.stage) }
       : null,
   ].filter(Boolean) as { key: "lead" | "customer" | "deal"; href: string; label: string; hint: string }[];
 

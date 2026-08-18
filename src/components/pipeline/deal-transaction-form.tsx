@@ -1,27 +1,22 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
+import type { ComponentType, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { updateDealTransaction } from "@/server/deals";
-import { PAYMENT_METHODS, dealReadyToFinalize, formatPropertyLine } from "@/lib/deal-transaction";
+import { assignDeal, updateDeal, updateDealTransaction } from "@/server/deals";
+import { PAYMENT_METHODS, dealReadyToFinalize } from "@/lib/deal-transaction";
+import { isDealClosed, isDealLost } from "@/lib/deal-stages";
 import { formatAED } from "@/lib/money";
 import { toast } from "sonner";
-import { Building2, CreditCard, Loader2, ShieldCheck, UserRound } from "lucide-react";
+import { Building2, CreditCard, UserRound } from "lucide-react";
 
 export type DealTransactionDeal = {
   id: string;
   stage: string;
+  value: number;
+  assigned_to: string | null;
+  commission_amount: number | null;
+  commission_rate: number | null;
   finalized_at?: string | null;
   property_title: string | null;
   property_community: string | null;
@@ -41,232 +36,404 @@ export type DealTransactionDeal = {
   buyer_email: string | null;
 };
 
-function filsToAedInput(fils: number | null) {
+function emptyPlaceholder(text = "Not captured") {
+  return text;
+}
+
+function filsToAed(fils: number | null) {
   return fils != null && fils > 0 ? String(fils / 100) : "";
 }
 
 export function DealTransactionForm({
   deal,
   canEdit,
+  canManage,
+  agents,
 }: {
   deal: DealTransactionDeal;
   canEdit: boolean;
+  canManage: boolean;
+  agents: { id: string; full_name: string; role: string }[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [form, setForm] = useState({
-    property_title: deal.property_title ?? "",
-    property_community: deal.property_community ?? "",
-    property_building: deal.property_building ?? "",
-    property_unit: deal.property_unit ?? "",
-    property_ref: deal.property_ref ?? "",
-    payment_method: deal.payment_method ?? "",
-    payment_deposit: filsToAedInput(deal.payment_deposit),
-    payment_balance: filsToAedInput(deal.payment_balance),
-    payment_notes: deal.payment_notes ?? "",
-    kyc_nationality: deal.kyc_nationality ?? "",
-    kyc_emirates_id: deal.kyc_emirates_id ?? "",
-    kyc_passport_no: deal.kyc_passport_no ?? "",
-    kyc_trn: deal.kyc_trn ?? "",
-    buyer_name: deal.buyer_name ?? "",
-    buyer_phone: deal.buyer_phone ?? "",
-    buyer_email: deal.buyer_email ?? "",
-  });
+  const locked = !!deal.finalized_at || isDealClosed(deal.stage);
+  const editable = canEdit && !locked;
+  const assigned = agents.find((a) => a.id === deal.assigned_to);
+  const readiness = dealReadyToFinalize(deal);
 
-  const readiness = dealReadyToFinalize({ ...deal, ...form });
-  const locked = !!deal.finalized_at || deal.stage === "won";
-
-  function save() {
+  function saveTx(patch: Parameters<typeof updateDealTransaction>[1]) {
     startTransition(async () => {
-      const result = await updateDealTransaction(deal.id, {
-        property_title: form.property_title.trim() || null,
-        property_community: form.property_community.trim() || null,
-        property_building: form.property_building.trim() || null,
-        property_unit: form.property_unit.trim() || null,
-        property_ref: form.property_ref.trim() || null,
-        payment_method: form.payment_method || null,
-        payment_deposit: form.payment_deposit ? Number(form.payment_deposit) : null,
-        payment_balance: form.payment_balance ? Number(form.payment_balance) : null,
-        payment_notes: form.payment_notes.trim() || null,
-        kyc_nationality: form.kyc_nationality.trim() || null,
-        kyc_emirates_id: form.kyc_emirates_id.trim() || null,
-        kyc_passport_no: form.kyc_passport_no.trim() || null,
-        kyc_trn: form.kyc_trn.trim() || null,
-        buyer_name: form.buyer_name.trim() || null,
-        buyer_phone: form.buyer_phone.trim() || null,
-        buyer_email: form.buyer_email.trim() || null,
-      });
+      const result = await updateDealTransaction(deal.id, patch);
       if (result.ok) {
-        toast.success("Transaction details saved");
         router.refresh();
       } else {
-        toast.error(result.error ?? "Save failed");
+        toast.error(result.error ?? "Could not save");
       }
     });
   }
 
-  const sections = [
-    {
-      icon: Building2,
-      title: "Property",
-      children: (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label>Property title / listing</Label>
-            <Input
-              disabled={!canEdit || locked}
-              value={form.property_title}
-              onChange={(e) => setForm({ ...form, property_title: e.target.value })}
-              placeholder="e.g. Marina Gate 2 — 2BR sea view"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Community</Label>
-            <Input disabled={!canEdit || locked} value={form.property_community} onChange={(e) => setForm({ ...form, property_community: e.target.value })} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Building</Label>
-            <Input disabled={!canEdit || locked} value={form.property_building} onChange={(e) => setForm({ ...form, property_building: e.target.value })} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Unit</Label>
-            <Input disabled={!canEdit || locked} value={form.property_unit} onChange={(e) => setForm({ ...form, property_unit: e.target.value })} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Reference / permit no.</Label>
-            <Input disabled={!canEdit || locked} value={form.property_ref} onChange={(e) => setForm({ ...form, property_ref: e.target.value })} />
-          </div>
-        </div>
-      ),
-    },
-    {
-      icon: CreditCard,
-      title: "Payment",
-      children: (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label>Method</Label>
-            <Select
-              value={form.payment_method || "none"}
-              onValueChange={(v) => setForm({ ...form, payment_method: !v || v === "none" ? "" : v })}
-              disabled={!canEdit || locked}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select method" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Not set</SelectItem>
-                {PAYMENT_METHODS.map((m) => (
-                  <SelectItem key={m.value} value={m.value}>
-                    {m.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Deposit (AED)</Label>
-            <Input type="number" min={0} disabled={!canEdit || locked} value={form.payment_deposit} onChange={(e) => setForm({ ...form, payment_deposit: e.target.value })} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Balance (AED)</Label>
-            <Input type="number" min={0} disabled={!canEdit || locked} value={form.payment_balance} onChange={(e) => setForm({ ...form, payment_balance: e.target.value })} />
-          </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label>Payment notes</Label>
-            <Textarea disabled={!canEdit || locked} value={form.payment_notes} onChange={(e) => setForm({ ...form, payment_notes: e.target.value })} rows={2} />
-          </div>
-          {(deal.payment_deposit != null || deal.payment_balance != null) && locked && (
-            <p className="sm:col-span-2 text-xs text-muted-foreground">
-              Recorded: {formatAED(deal.payment_deposit ?? 0)} deposit
-              {deal.payment_balance ? ` · ${formatAED(deal.payment_balance)} balance` : ""}
-            </p>
-          )}
-        </div>
-      ),
-    },
-    {
-      icon: ShieldCheck,
-      title: "KYC",
-      children: (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label>Nationality</Label>
-            <Input disabled={!canEdit || locked} value={form.kyc_nationality} onChange={(e) => setForm({ ...form, kyc_nationality: e.target.value })} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Emirates ID</Label>
-            <Input disabled={!canEdit || locked} value={form.kyc_emirates_id} onChange={(e) => setForm({ ...form, kyc_emirates_id: e.target.value })} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Passport no.</Label>
-            <Input disabled={!canEdit || locked} value={form.kyc_passport_no} onChange={(e) => setForm({ ...form, kyc_passport_no: e.target.value })} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>TRN</Label>
-            <Input disabled={!canEdit || locked} value={form.kyc_trn} onChange={(e) => setForm({ ...form, kyc_trn: e.target.value })} />
-          </div>
-        </div>
-      ),
-    },
-    {
-      icon: UserRound,
-      title: "Buyer contact",
-      children: (
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label>Buyer name</Label>
-            <Input disabled={!canEdit || locked} value={form.buyer_name} onChange={(e) => setForm({ ...form, buyer_name: e.target.value })} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Phone</Label>
-            <Input disabled={!canEdit || locked} value={form.buyer_phone} onChange={(e) => setForm({ ...form, buyer_phone: e.target.value })} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Email</Label>
-            <Input disabled={!canEdit || locked} value={form.buyer_email} onChange={(e) => setForm({ ...form, buyer_email: e.target.value })} />
-          </div>
-        </div>
-      ),
-    },
-  ];
+  function saveDeal(patch: Parameters<typeof updateDeal>[1]) {
+    startTransition(async () => {
+      const result = await updateDeal(deal.id, patch);
+      if (result.ok) {
+        router.refresh();
+      } else {
+        toast.error(result.error ?? "Could not save");
+      }
+    });
+  }
+
+  function saveText(
+    key:
+      | "property_title"
+      | "property_community"
+      | "property_building"
+      | "property_unit"
+      | "property_ref"
+      | "payment_notes"
+      | "kyc_nationality"
+      | "kyc_emirates_id"
+      | "kyc_passport_no"
+      | "kyc_trn"
+      | "buyer_name"
+      | "buyer_phone"
+      | "buyer_email",
+    next: string
+  ) {
+    const value = next.trim() || null;
+    if ((deal[key] ?? null) === value) return;
+    saveTx({ [key]: value });
+  }
 
   return (
     <div className="space-y-4">
-      {!readiness.ok && deal.stage !== "won" && deal.stage !== "lost" && (
+      {!readiness.ok && !isDealClosed(deal.stage) && !isDealLost(deal.stage) && (
         <div className="rounded-[10px] border border-amber-200/60 bg-amber-50/80 px-4 py-3 text-sm text-amber-900">
-          Before marking won: complete {readiness.missing.join(", ")}.
+          Before marking closed: complete {readiness.missing.join(", ")}.
         </div>
       )}
 
-      {deal.property_title && (
-        <p className="text-sm text-muted-foreground">
-          {formatPropertyLine(deal)}
-        </p>
-      )}
+      <Section icon={Building2} title="Property details">
+        <LedgerRow label="Title">
+          <QuietSaveInput
+            value={deal.property_title ?? ""}
+            disabled={!editable}
+            placeholder={emptyPlaceholder("Property title")}
+            onSave={(v) => saveText("property_title", v)}
+          />
+        </LedgerRow>
+        <LedgerRow label="Community">
+          <QuietSaveInput
+            value={deal.property_community ?? ""}
+            disabled={!editable}
+            placeholder={emptyPlaceholder()}
+            onSave={(v) => saveText("property_community", v)}
+          />
+        </LedgerRow>
+        <LedgerRow label="Building">
+          <QuietSaveInput
+            value={deal.property_building ?? ""}
+            disabled={!editable}
+            placeholder={emptyPlaceholder()}
+            onSave={(v) => saveText("property_building", v)}
+          />
+        </LedgerRow>
+        <LedgerRow label="Unit">
+          <QuietSaveInput
+            value={deal.property_unit ?? ""}
+            disabled={!editable}
+            placeholder={emptyPlaceholder()}
+            onSave={(v) => saveText("property_unit", v)}
+          />
+        </LedgerRow>
+        <LedgerRow label="Reference">
+          <QuietSaveInput
+            value={deal.property_ref ?? ""}
+            disabled={!editable}
+            placeholder={emptyPlaceholder("Permit / ref no.")}
+            onSave={(v) => saveText("property_ref", v)}
+          />
+        </LedgerRow>
+      </Section>
 
-      {sections.map((section) => {
-        const Icon = section.icon;
-        return (
-          <div key={section.title} className="overflow-hidden rounded-[14px] border border-border bg-card">
-            <div className="h-0.5 bg-primary" />
-            <div className="p-4">
-              <div className="mb-3 flex items-center gap-2">
-                <Icon className="h-4 w-4 text-primary" />
-                <h3 className="text-sm font-semibold text-foreground">{section.title}</h3>
-              </div>
-              {section.children}
-            </div>
-          </div>
-        );
-      })}
+      <Section icon={UserRound} title="Customer details">
+        <LedgerRow label="Name">
+          <QuietSaveInput
+            value={deal.buyer_name ?? ""}
+            disabled={!editable}
+            placeholder={emptyPlaceholder("Buyer name")}
+            onSave={(v) => saveText("buyer_name", v)}
+          />
+        </LedgerRow>
+        <LedgerRow label="Phone">
+          <QuietSaveInput
+            value={deal.buyer_phone ?? ""}
+            disabled={!editable}
+            placeholder={emptyPlaceholder()}
+            onSave={(v) => saveText("buyer_phone", v)}
+          />
+        </LedgerRow>
+        <LedgerRow label="Email">
+          <QuietSaveInput
+            value={deal.buyer_email ?? ""}
+            disabled={!editable}
+            placeholder={emptyPlaceholder()}
+            onSave={(v) => saveText("buyer_email", v)}
+          />
+        </LedgerRow>
+        <LedgerRow label="Nationality">
+          <QuietSaveInput
+            value={deal.kyc_nationality ?? ""}
+            disabled={!editable}
+            placeholder={emptyPlaceholder()}
+            onSave={(v) => saveText("kyc_nationality", v)}
+          />
+        </LedgerRow>
+        <LedgerRow label="Emirates ID">
+          <QuietSaveInput
+            value={deal.kyc_emirates_id ?? ""}
+            disabled={!editable}
+            placeholder={emptyPlaceholder()}
+            onSave={(v) => saveText("kyc_emirates_id", v)}
+          />
+        </LedgerRow>
+        <LedgerRow label="Passport">
+          <QuietSaveInput
+            value={deal.kyc_passport_no ?? ""}
+            disabled={!editable}
+            placeholder={emptyPlaceholder()}
+            onSave={(v) => saveText("kyc_passport_no", v)}
+          />
+        </LedgerRow>
+        <LedgerRow label="TRN">
+          <QuietSaveInput
+            value={deal.kyc_trn ?? ""}
+            disabled={!editable}
+            placeholder={emptyPlaceholder()}
+            onSave={(v) => saveText("kyc_trn", v)}
+          />
+        </LedgerRow>
+      </Section>
 
-      {canEdit && !locked && (
-        <Button onClick={save} disabled={pending} className="w-full sm:w-auto">
-          {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Save transaction details
-        </Button>
-      )}
+      <Section icon={CreditCard} title="Payment & agent">
+        <LedgerRow label="Method">
+          <QuietSelect
+            value={deal.payment_method ?? ""}
+            disabled={!editable}
+            placeholder="Not captured"
+            options={PAYMENT_METHODS.map((m) => ({ value: m.value, label: m.label }))}
+            onChange={(v) => saveTx({ payment_method: v || null })}
+          />
+        </LedgerRow>
+        <LedgerRow label="Deposit">
+          <QuietSaveInput
+            type="number"
+            value={filsToAed(deal.payment_deposit)}
+            disabled={!editable}
+            placeholder={emptyPlaceholder("AED")}
+            onSave={(v) => {
+              const next = v.trim() ? Number(v) : null;
+              const current = deal.payment_deposit != null && deal.payment_deposit > 0 ? deal.payment_deposit / 100 : null;
+              if (next === current) return;
+              saveTx({ payment_deposit: next });
+            }}
+          />
+        </LedgerRow>
+        <LedgerRow label="Balance">
+          <QuietSaveInput
+            type="number"
+            value={filsToAed(deal.payment_balance)}
+            disabled={!editable}
+            placeholder={emptyPlaceholder("AED")}
+            onSave={(v) => {
+              const next = v.trim() ? Number(v) : null;
+              const current = deal.payment_balance != null && deal.payment_balance > 0 ? deal.payment_balance / 100 : null;
+              if (next === current) return;
+              saveTx({ payment_balance: next });
+            }}
+          />
+        </LedgerRow>
+        <LedgerRow label="Deal value">
+          <QuietSaveInput
+            type="number"
+            value={deal.value ? String(deal.value / 100) : ""}
+            disabled={!editable}
+            placeholder={emptyPlaceholder("AED")}
+            onSave={(v) => {
+              const next = v.trim() ? Number(v) : 0;
+              if (next === deal.value / 100) return;
+              saveDeal({ value: next });
+            }}
+          />
+        </LedgerRow>
+        <LedgerRow label="Notes">
+          <QuietSaveInput
+            value={deal.payment_notes ?? ""}
+            disabled={!editable}
+            placeholder={emptyPlaceholder()}
+            onSave={(v) => saveText("payment_notes", v)}
+          />
+        </LedgerRow>
+        <LedgerRow label="Agent">
+          <QuietSelect
+            value={deal.assigned_to ?? ""}
+            disabled={!canManage || locked}
+            placeholder="Unassigned"
+            options={agents.map((a) => ({ value: a.id, label: a.full_name }))}
+            onChange={(v) => {
+              startTransition(async () => {
+                const result = await assignDeal(deal.id, v || null);
+                if (result.ok) router.refresh();
+                else toast.error(result.error ?? "Could not assign");
+              });
+            }}
+          />
+        </LedgerRow>
+        <LedgerRow label="Comm. rate">
+          <QuietSaveInput
+            type="number"
+            value={deal.commission_rate != null ? String(deal.commission_rate) : ""}
+            disabled={!editable}
+            placeholder={emptyPlaceholder("%")}
+            onSave={(v) => {
+              const next = v.trim() ? Number(v) : null;
+              if (next === (deal.commission_rate ?? null)) return;
+              saveDeal({ commission_rate: next });
+            }}
+          />
+        </LedgerRow>
+        <LedgerRow label="Commission">
+          <QuietSaveInput
+            type="number"
+            value={deal.commission_amount ? String(deal.commission_amount / 100) : ""}
+            disabled={!editable}
+            placeholder={
+              deal.commission_rate != null && deal.value > 0 && !deal.commission_amount
+                ? `Est. ${formatAED(Math.round((deal.value * deal.commission_rate) / 100)).replace("AED ", "")}`
+                : emptyPlaceholder("AED")
+            }
+            onSave={(v) => {
+              const next = v.trim() ? Number(v) : null;
+              const current = deal.commission_amount ? deal.commission_amount / 100 : null;
+              if (next === current) return;
+              saveDeal({ commission_amount: next });
+            }}
+          />
+        </LedgerRow>
+        {assigned && deal.commission_amount ? (
+          <p className="pt-2 text-xs text-muted-foreground">
+            {assigned.full_name} · {formatAED(deal.commission_amount)}
+            {deal.commission_rate != null ? ` (${deal.commission_rate}%)` : ""}
+          </p>
+        ) : null}
+        {pending ? <p className="pt-1 text-[11px] text-muted-foreground">Saving…</p> : null}
+      </Section>
     </div>
+  );
+}
+
+function Section({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: ComponentType<{ className?: string }>;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="overflow-hidden rounded-[14px] border border-border bg-card">
+      <div className="h-0.5 bg-primary" />
+      <div className="px-[22px] py-4">
+        <h3
+          className="mb-3 text-center font-heading text-[1.12rem] text-foreground"
+          style={{ fontFamily: "var(--font-display), serif" }}
+        >
+          <span className="inline-flex items-center gap-2">
+            <Icon className="h-4 w-4 text-primary" />
+            {title}
+          </span>
+        </h3>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function LedgerRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="grid grid-cols-1 items-center gap-0 border-b border-border py-[6px] last:border-b-0 sm:grid-cols-[108px_1fr]">
+      <span className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground sm:border-r sm:border-border sm:pr-3">
+        {label}
+      </span>
+      <div className="min-w-0 sm:pl-3">{children}</div>
+    </div>
+  );
+}
+
+function QuietSaveInput({
+  value,
+  type = "text",
+  disabled,
+  placeholder,
+  onSave,
+}: {
+  value: string;
+  type?: string;
+  disabled?: boolean;
+  placeholder?: string;
+  onSave: (next: string) => void;
+}) {
+  return (
+    <input
+      key={`${type}-${value}`}
+      type={type}
+      defaultValue={value}
+      disabled={disabled}
+      placeholder={placeholder}
+      className="h-7 w-full rounded-md bg-transparent px-1 text-[0.86rem] text-foreground outline-none placeholder:text-[#B9B6AB] hover:bg-muted/70 focus:bg-muted/80 disabled:cursor-default"
+      onBlur={(e) => {
+        if (e.target.value.trim() === value.trim()) return;
+        onSave(e.target.value);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
+        if (e.key === "Escape") {
+          e.currentTarget.value = value;
+          e.currentTarget.blur();
+        }
+      }}
+    />
+  );
+}
+
+function QuietSelect({
+  value,
+  disabled,
+  placeholder,
+  options,
+  onChange,
+}: {
+  value: string;
+  disabled?: boolean;
+  placeholder: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <select
+      value={value}
+      disabled={disabled}
+      onChange={(e) => onChange(e.target.value)}
+      className="h-7 w-full cursor-pointer appearance-none rounded-md bg-transparent px-1 text-[0.86rem] text-foreground outline-none hover:bg-muted/70 focus:bg-muted/80 disabled:cursor-default disabled:hover:bg-transparent"
+    >
+      <option value="">{placeholder}</option>
+      {options.map((opt) => (
+        <option key={opt.value} value={opt.value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
   );
 }

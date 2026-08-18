@@ -32,30 +32,26 @@ export const FLOW_STAGES = [
   {
     key: "deal" as const,
     label: "Deal",
-    hint: "Pipeline from inquiry → won/lost",
+    hint: "Pipeline from new → closed / lost",
     href: "/pipeline",
   },
   {
     key: "customer" as const,
     label: "Customer",
-    hint: "Created when deal is won — property & docs saved",
+    hint: "Created when deal is closed — property & docs saved",
     href: "/customers",
   },
 ] as const;
 
-export const DEAL_PIPELINE_STAGES = [
-  { key: "inquiry", label: "Inquiry" },
-  { key: "viewing", label: "Viewing" },
-  { key: "negotiation", label: "Negotiation" },
-  { key: "offer", label: "Offer" },
-  { key: "contract", label: "Contract" },
-  { key: "won", label: "Won" },
-  { key: "lost", label: "Lost" },
-] as const;
+import { DEAL_PIPELINE_STAGES, DEAL_LOST_STAGE } from "@/lib/deal-stages";
+
+export { DEAL_PIPELINE_STAGES };
+
+export const DEAL_PIPELINE_STAGES_WITH_LOST = [...DEAL_PIPELINE_STAGES, DEAL_LOST_STAGE];
 
 export const CUSTOMER_STATUSES = [
   { key: "prospect", label: "Prospect", hint: "Legacy — deals from existing customers" },
-  { key: "active", label: "Active", hint: "Created when a deal is finalized (won)" },
+  { key: "active", label: "Active", hint: "Created when a deal is finalized (closed)" },
   { key: "inactive", label: "Inactive", hint: "Manual archive" },
 ] as const;
 
@@ -68,10 +64,10 @@ export type FieldMapping = {
 };
 
 export const FIELD_MAPPINGS: FieldMapping[] = [
-  { leadField: "name", label: "Name", customer: "copy", deal: "copy", notes: "Buyer contact on deal until won" },
+  { leadField: "name", label: "Name", customer: "copy", deal: "copy", notes: "Buyer contact on deal until closed" },
   { leadField: "phone", label: "Phone", customer: "copy", deal: "copy", notes: "Buyer phone on deal" },
   { leadField: "email", label: "Email", customer: "copy", deal: "copy", notes: "Buyer email on deal" },
-  { leadField: "nationality", label: "Nationality", customer: "copy", deal: "copy", notes: "Deal KYC → customer on won" },
+  { leadField: "nationality", label: "Nationality", customer: "copy", deal: "copy", notes: "Deal KYC → customer on close" },
   { leadField: "notes", label: "Notes", customer: "copy", deal: "—", notes: "Merged into customer notes" },
   { leadField: "assigned_to", label: "Assigned agent", customer: "copy", deal: "copy", notes: "Carried to both records" },
   { leadField: "tags", label: "Tags", customer: "copy", deal: "—", notes: "Union with existing customer tags" },
@@ -81,7 +77,7 @@ export const FIELD_MAPPINGS: FieldMapping[] = [
   { leadField: "source", label: "Source", customer: "snapshot", deal: "snapshot", notes: "Attribution kept on both" },
   { leadField: "score", label: "Score", customer: "snapshot", deal: "snapshot", notes: "Historical qualification score" },
   { leadField: "financing / timeframe / purpose / bedrooms / category", label: "Requirements", customer: "snapshot", deal: "snapshot", notes: "Deal requirements panel" },
-  { leadField: "documents", label: "Documents", customer: "copy", deal: "copy", notes: "Lead docs copied to deal; all copied to customer on won" },
+  { leadField: "documents", label: "Documents", customer: "copy", deal: "copy", notes: "Lead docs copied to deal; all copied to customer on close" },
   { leadField: "id", label: "Lead record", customer: "link", deal: "link", notes: "lead_id + conversion path links" },
 ];
 

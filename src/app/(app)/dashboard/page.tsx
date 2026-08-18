@@ -16,7 +16,7 @@ export default async function DashboardPage() {
     .from("deals")
     .select("value")
     .is("deleted_at", null)
-    .in("stage", ["inquiry", "viewing", "offer", "negotiation", "contract"]);
+    .in("stage", ["new", "negotiations", "contract", "inquiry", "viewing", "offer", "negotiation"]);
 
   let openLeadsQuery = supabase
     .from("leads")

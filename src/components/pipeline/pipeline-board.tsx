@@ -17,6 +17,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { formatAEDCompact } from "@/lib/money";
 import { daysSince } from "@/lib/dates";
 import { updateDealStage } from "@/server/deals";
+import { DEAL_BOARD_STAGES, isDealClosed, isDealLost, normalizeDealStage } from "@/lib/deal-stages";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -30,15 +31,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ExternalLink, User as UserIcon } from "lucide-react";
 
-const STAGES = [
-  { key: "inquiry", label: "Inquiry", color: "bg-blue-500", grad: "from-blue-500 to-blue-600" },
-  { key: "viewing", label: "Viewing", color: "bg-cyan-500", grad: "from-cyan-500 to-cyan-600" },
-  { key: "negotiation", label: "Negotiation", color: "bg-amber-500", grad: "from-amber-500 to-amber-600" },
-  { key: "offer", label: "Offer", color: "bg-purple-500", grad: "from-purple-500 to-purple-600" },
-  { key: "contract", label: "Contract", color: "bg-indigo-500", grad: "from-indigo-500 to-indigo-600" },
-  { key: "won", label: "Won", color: "bg-emerald-500", grad: "from-emerald-500 to-emerald-600" },
-  { key: "lost", label: "Lost", color: "bg-red-500", grad: "from-red-500 to-red-600" },
-] as const;
+const STAGES = DEAL_BOARD_STAGES;
 
 export type DealCard = {
   id: string;
@@ -190,7 +183,7 @@ export function PipelineBoard({
     const dealId = e.active.id as string;
     const newStage = e.over.id as string;
     const deal = deals.find((d) => d.id === dealId);
-    if (!deal || deal.stage === newStage) return;
+    if (!deal || normalizeDealStage(deal.stage) === newStage) return;
 
     // Agents can only move their own deals
     if (userRole === "agent" && deal.assigned_to !== userId) {
@@ -198,13 +191,13 @@ export function PipelineBoard({
       return;
     }
 
-    if (newStage === "won") {
+    if (isDealClosed(newStage)) {
       setWonValue(String((deal.value ?? 0) / 100));
       setWonDialog(deal);
       return;
     }
 
-    if (newStage === "lost") {
+    if (isDealLost(newStage)) {
       setLostDialog(deal);
       return;
     }
@@ -226,12 +219,12 @@ export function PipelineBoard({
     startTransition(async () => {
       const result = await updateDealStage({
         id: wonDialog.id,
-        stage: "won",
+        stage: "closed",
         value: wonValue ? Number(wonValue) : undefined,
         commission_amount: wonCommission ? Number(wonCommission) : undefined,
       });
       if (result.ok) {
-        toast.success("Deal moved to Won!");
+        toast.success("Deal closed");
         setWonDialog(null);
         router.refresh();
       } else {
@@ -265,7 +258,7 @@ export function PipelineBoard({
   // Group deals by stage
   const dealsByStage = STAGES.reduce(
     (acc, stage) => {
-      acc[stage.key] = deals.filter((d) => d.stage === stage.key);
+      acc[stage.key] = deals.filter((d) => normalizeDealStage(d.stage) === stage.key);
       return acc;
     },
     {} as Record<string, DealCard[]>
@@ -299,7 +292,7 @@ export function PipelineBoard({
         <DialogContent className="sm:max-w-md rounded-2xl border-0 p-0 overflow-hidden shadow-2xl">
           <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-4 text-white">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold tracking-tight text-white">Deal Won!</DialogTitle>
+              <DialogTitle className="text-xl font-bold tracking-tight text-white">Close deal</DialogTitle>
             </DialogHeader>
             <p className="text-sm text-emerald-100 mt-1">{wonDialog?.title}</p>
           </div>
@@ -329,7 +322,7 @@ export function PipelineBoard({
                 Cancel
               </Button>
               <Button className="rounded-xl bg-emerald-500 hover:bg-emerald-600 font-bold" onClick={confirmWon} disabled={pending}>
-                Confirm Win 🚀
+                Confirm close
               </Button>
             </div>
           </div>
