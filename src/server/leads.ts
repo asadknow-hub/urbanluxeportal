@@ -17,7 +17,6 @@ import { groupLeadFieldOptions, scoreFromBand, type LeadFieldOption } from "@/li
 import {
   buildLeadContext,
   dealTypeFromInterest,
-  defaultDealTitle,
   suggestedPropertyTitle,
 } from "@/lib/lead-flow";
 import type { DealTransactionInput } from "@/lib/deal-transaction";
@@ -436,19 +435,14 @@ export async function convertLead(
     if (lead.status === "converted") return { ok: false, error: "Lead already converted" };
 
     const leadContext = buildLeadContext(lead);
-    const title = options.dealTitle?.trim() || defaultDealTitle(lead);
-    const valueFils = lead.budget_max ?? lead.budget_min ?? 0;
-
     const propertyTitle =
       options.property_title?.trim() ||
       suggestedPropertyTitle(lead) ||
       null;
+    const title = options.dealTitle?.trim() || propertyTitle || lead.name;
+    const valueFils = lead.budget_max ?? lead.budget_min ?? 0;
     const propertyCommunity =
       options.property_community?.trim() || lead.preferred_areas?.[0] || null;
-
-    const paymentMethod =
-      options.payment_method?.trim() ||
-      (lead.financing && lead.financing !== "undecided" ? lead.financing : null);
 
     const propertySnapshot = {
       bedrooms: lead.bedrooms ?? null,
@@ -484,12 +478,6 @@ export async function convertLead(
         property_unit: options.property_unit?.trim() || null,
         property_ref: options.property_ref?.trim() || null,
         property_snapshot: propertySnapshot,
-        payment_method: paymentMethod,
-        payment_deposit:
-          options.payment_deposit != null ? Math.round(options.payment_deposit * 100) : null,
-        payment_balance:
-          options.payment_balance != null ? Math.round(options.payment_balance * 100) : null,
-        payment_notes: options.payment_notes?.trim() || null,
       })
       .select("id")
       .single();
@@ -547,7 +535,7 @@ export async function convertLead(
     await supabase.from("deal_activities").insert({
       deal_id: deal.id,
       type: "created",
-      summary: `Deal opened from lead: ${lead.name}. Add property, payment, and KYC before closing.`,
+      summary: `Deal opened from lead: ${lead.name}.`,
       created_by: user.id,
     });
 

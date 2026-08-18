@@ -13,18 +13,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { convertLead, type ConvertLeadInput } from "@/server/leads";
 import { formatAEDRange } from "@/lib/money";
 import { suggestedPropertyTitle } from "@/lib/lead-flow";
-import { PAYMENT_METHODS } from "@/lib/deal-transaction";
 import { toast } from "sonner";
 import { ArrowRight, Loader2 } from "lucide-react";
 
@@ -43,12 +34,6 @@ export type ConvertLeadPayload = {
   financing: string | null;
 };
 
-function mapFinancingToPayment(financing: string | null) {
-  if (!financing || financing === "undecided") return "";
-  if (financing === "mortgage" || financing === "cash" || financing === "cheque") return financing;
-  return "";
-}
-
 export function ConvertLeadDialog({
   open,
   onOpenChange,
@@ -64,16 +49,11 @@ export function ConvertLeadDialog({
 
   const defaults = useMemo(
     () => ({
-      dealTitle: lead.name,
       property_title: suggestedPropertyTitle(lead),
       property_community: lead.preferred_areas?.[0] ?? "",
       property_building: "",
       property_unit: "",
       property_ref: "",
-      payment_method: mapFinancingToPayment(lead.financing),
-      payment_deposit: "",
-      payment_balance: "",
-      payment_notes: "",
       kyc_nationality: lead.nationality ?? "",
       kyc_emirates_id: "",
       kyc_passport_no: "",
@@ -99,26 +79,25 @@ export function ConvertLeadDialog({
   }
 
   function handleConvert() {
+    if (!form.buyer_name.trim()) {
+      toast.error("Buyer name is required");
+      return;
+    }
     if (!form.property_title.trim()) {
       toast.error("Property title is required to open the deal");
       return;
     }
 
     const payload: ConvertLeadInput = {
-      dealTitle: form.dealTitle.trim() || lead.name,
       property_title: form.property_title.trim(),
       property_community: form.property_community.trim() || null,
       property_building: form.property_building.trim() || null,
       property_unit: form.property_unit.trim() || null,
       property_ref: form.property_ref.trim() || null,
-      payment_method: form.payment_method || null,
-      payment_deposit: form.payment_deposit ? Number(form.payment_deposit) : null,
-      payment_balance: form.payment_balance ? Number(form.payment_balance) : null,
-      payment_notes: form.payment_notes.trim() || null,
       kyc_nationality: form.kyc_nationality.trim() || null,
       kyc_emirates_id: form.kyc_emirates_id.trim() || null,
       kyc_passport_no: form.kyc_passport_no.trim() || null,
-      buyer_name: form.buyer_name.trim() || lead.name,
+      buyer_name: form.buyer_name.trim(),
       buyer_phone: form.buyer_phone.trim() || null,
       buyer_email: form.buyer_email.trim() || null,
     };
@@ -139,15 +118,15 @@ export function ConvertLeadDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+      <DialogContent className="max-h-[90vh] w-[min(48rem,calc(100vw-2rem))] gap-5 overflow-y-auto p-6 sm:max-w-3xl">
         {result ? (
           <>
             <DialogHeader>
               <DialogTitle>Deal opened</DialogTitle>
             </DialogHeader>
             <p className="text-sm text-muted-foreground">
-              The deal is in your pipeline with property and buyer details from this lead. When you mark it won, a
-              customer record is created with the property and documents.
+              The deal is in your pipeline with this buyer and property. Payment is captured on the deal
+              before you mark it won.
             </p>
             <DialogFooter className="gap-2 sm:justify-start">
               <Link
@@ -164,110 +143,113 @@ export function ConvertLeadDialog({
               <DialogTitle>Convert to deal</DialogTitle>
             </DialogHeader>
             <p className="text-sm text-muted-foreground">
-              Capture execution details now. Budget from the lead
-              {budgetLabel ? ` (${budgetLabel})` : ""} carries over automatically — no need to re-enter it.
+              Confirm the buyer, then the property. Lead budget
+              {budgetLabel ? ` (${budgetLabel})` : ""} becomes the deal value.
             </p>
 
             <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="deal-title">Deal name</Label>
-                <Input
-                  id="deal-title"
-                  value={form.dealTitle}
-                  onChange={(e) => setForm({ ...form, dealTitle: e.target.value })}
-                  placeholder={lead.name}
-                />
-              </div>
-
-              <div className="rounded-[10px] border border-border bg-muted/30 p-3">
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Property</p>
+              <div className="rounded-[10px] border border-border bg-muted/30 p-4">
+                <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  Buyer
+                </p>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5 sm:col-span-2">
-                    <Label>Property title *</Label>
+                    <Label htmlFor="convert-buyer-name">Buyer name *</Label>
                     <Input
+                      id="convert-buyer-name"
+                      value={form.buyer_name}
+                      onChange={(e) => setForm({ ...form, buyer_name: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="convert-buyer-phone">Phone</Label>
+                    <Input
+                      id="convert-buyer-phone"
+                      value={form.buyer_phone}
+                      onChange={(e) => setForm({ ...form, buyer_phone: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="convert-buyer-email">Email</Label>
+                    <Input
+                      id="convert-buyer-email"
+                      type="email"
+                      value={form.buyer_email}
+                      onChange={(e) => setForm({ ...form, buyer_email: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="convert-kyc-nationality">Nationality</Label>
+                    <Input
+                      id="convert-kyc-nationality"
+                      value={form.kyc_nationality}
+                      onChange={(e) => setForm({ ...form, kyc_nationality: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="convert-kyc-eid">Emirates ID</Label>
+                    <Input
+                      id="convert-kyc-eid"
+                      value={form.kyc_emirates_id}
+                      onChange={(e) => setForm({ ...form, kyc_emirates_id: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label htmlFor="convert-kyc-passport">Passport no.</Label>
+                    <Input
+                      id="convert-kyc-passport"
+                      value={form.kyc_passport_no}
+                      onChange={(e) => setForm({ ...form, kyc_passport_no: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-[10px] border border-border bg-muted/30 p-4">
+                <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  Property
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label htmlFor="convert-property-title">Property title *</Label>
+                    <Input
+                      id="convert-property-title"
                       value={form.property_title}
                       onChange={(e) => setForm({ ...form, property_title: e.target.value })}
                       placeholder="e.g. Marina Gate 2 — 2BR sea view"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Community</Label>
-                    <Input value={form.property_community} onChange={(e) => setForm({ ...form, property_community: e.target.value })} />
+                    <Label htmlFor="convert-community">Community</Label>
+                    <Input
+                      id="convert-community"
+                      value={form.property_community}
+                      onChange={(e) => setForm({ ...form, property_community: e.target.value })}
+                    />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Building</Label>
-                    <Input value={form.property_building} onChange={(e) => setForm({ ...form, property_building: e.target.value })} />
+                    <Label htmlFor="convert-building">Building</Label>
+                    <Input
+                      id="convert-building"
+                      value={form.property_building}
+                      onChange={(e) => setForm({ ...form, property_building: e.target.value })}
+                    />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Unit</Label>
-                    <Input value={form.property_unit} onChange={(e) => setForm({ ...form, property_unit: e.target.value })} />
+                    <Label htmlFor="convert-unit">Unit</Label>
+                    <Input
+                      id="convert-unit"
+                      value={form.property_unit}
+                      onChange={(e) => setForm({ ...form, property_unit: e.target.value })}
+                    />
                   </div>
                   <div className="space-y-1.5">
-                    <Label>Reference / permit</Label>
-                    <Input value={form.property_ref} onChange={(e) => setForm({ ...form, property_ref: e.target.value })} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-[10px] border border-border bg-muted/30 p-3">
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Payment</p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label>Method</Label>
-                    <Select
-                      value={form.payment_method || "none"}
-                      onValueChange={(v) => setForm({ ...form, payment_method: !v || v === "none" ? "" : v })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select method" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Not set</SelectItem>
-                        {PAYMENT_METHODS.map((m) => (
-                          <SelectItem key={m.value} value={m.value}>
-                            {m.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Deposit (AED)</Label>
-                    <Input type="number" min={0} value={form.payment_deposit} onChange={(e) => setForm({ ...form, payment_deposit: e.target.value })} />
-                  </div>
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label>Notes</Label>
-                    <Textarea rows={2} value={form.payment_notes} onChange={(e) => setForm({ ...form, payment_notes: e.target.value })} />
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-[10px] border border-border bg-muted/30 p-3">
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Buyer & KYC</p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label>Buyer name</Label>
-                    <Input value={form.buyer_name} onChange={(e) => setForm({ ...form, buyer_name: e.target.value })} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Phone</Label>
-                    <Input value={form.buyer_phone} onChange={(e) => setForm({ ...form, buyer_phone: e.target.value })} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Email</Label>
-                    <Input value={form.buyer_email} onChange={(e) => setForm({ ...form, buyer_email: e.target.value })} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Nationality</Label>
-                    <Input value={form.kyc_nationality} onChange={(e) => setForm({ ...form, kyc_nationality: e.target.value })} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Emirates ID</Label>
-                    <Input value={form.kyc_emirates_id} onChange={(e) => setForm({ ...form, kyc_emirates_id: e.target.value })} />
-                  </div>
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label>Passport no.</Label>
-                    <Input value={form.kyc_passport_no} onChange={(e) => setForm({ ...form, kyc_passport_no: e.target.value })} />
+                    <Label htmlFor="convert-ref">Reference / permit</Label>
+                    <Input
+                      id="convert-ref"
+                      value={form.property_ref}
+                      onChange={(e) => setForm({ ...form, property_ref: e.target.value })}
+                    />
                   </div>
                 </div>
               </div>
