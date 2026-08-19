@@ -52,7 +52,7 @@ export function Topbar({ user }: { user: SessionUser }) {
           <span key={`${crumb.label}-${i}`} className="flex items-center gap-1.5">
             {i > 0 && <span className="text-muted-foreground/50">/</span>}
             {crumb.href && i < crumbs.length - 1 ? (
-              <Link href={crumb.href} className="truncate text-muted-foreground hover:text-foreground">
+              <Link href={crumb.href} prefetch className="truncate text-muted-foreground hover:text-foreground">
                 {crumb.label}
               </Link>
             ) : (

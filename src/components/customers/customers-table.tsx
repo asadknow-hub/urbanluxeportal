@@ -133,7 +133,7 @@ export function CustomersTable({
                   return (
                     <tr key={customer.id} className="group transition-colors hover:bg-muted/30">
                       <td className="px-4 py-3 font-semibold text-foreground group-hover:text-primary">
-                        <Link href={`/customers/${customer.id}`}>{customer.name}</Link>
+                        <Link href={`/customers/${customer.id}`} prefetch>{customer.name}</Link>
                       </td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest ${customer.type === "company" ? "border-violet-200/60 bg-violet-50 text-violet-700" : "border-border bg-muted text-foreground"}`}>
@@ -183,6 +183,7 @@ export function CustomersTable({
                       <td className="px-4 py-3 text-right">
                         <Link
                           href={`/customers/${customer.id}`}
+                          prefetch
                           className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-muted-foreground opacity-0 shadow-sm transition-all group-hover:opacity-100 hover:border-primary/30 hover:bg-primary/5 hover:text-primary"
                         >
                           <ChevronRight className="h-4 w-4" />

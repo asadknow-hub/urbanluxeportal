@@ -124,6 +124,7 @@ function LeadCard({
       <div className="flex items-start justify-between gap-2">
         <Link
           href={`/leads/${lead.id}`}
+          prefetch
           className="min-w-0 text-[13px] font-medium leading-tight text-foreground hover:text-primary"
           onClick={(e) => e.stopPropagation()}
         >
