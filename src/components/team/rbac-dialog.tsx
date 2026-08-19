@@ -50,7 +50,7 @@ export function RbacDialog({ canManageUsers }: { canManageUsers: boolean }) {
             </DialogTitle>
           </DialogHeader>
           <p className="mt-2 text-sm text-secondary-foreground/70">
-            Capabilities granted by role across the CRM. Assign roles when inviting staff or from user management.
+            Capabilities granted by role across the CRM. Assign roles when creating staff from the Staff page.
           </p>
         </div>
 

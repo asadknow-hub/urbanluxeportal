@@ -36,6 +36,18 @@ export const LEAD_SNAPSHOT_FIELDS: LeadSnapshotField[] = [
   { key: "doc_category", label: "Document category", kind: "options", group: "Documents" },
 ];
 
+/** Hidden on Add lead — pipeline/document chrome is set later on the lead. */
+export const LEAD_CREATE_HIDDEN_KEYS = new Set(["lost_reason", "junk_reason", "doc_category"]);
+
+export function leadCreateFieldGroups() {
+  return snapshotFieldGroups()
+    .map((group) => ({
+      ...group,
+      fields: group.fields.filter((field) => !LEAD_CREATE_HIDDEN_KEYS.has(field.key)),
+    }))
+    .filter((group) => group.fields.length > 0);
+}
+
 export function snapshotFieldGroups() {
   const groups: { name: string; fields: LeadSnapshotField[] }[] = [];
   for (const field of LEAD_SNAPSHOT_FIELDS) {

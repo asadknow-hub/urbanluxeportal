@@ -6,9 +6,10 @@ import { revalidatePath } from "next/cache";
 import { fallbackLeadTableColumns } from "@/lib/lead-table-fields";
 import { parseAreaNames } from "@/lib/parse-area-list";
 import type { ActionResult } from "@/server/leads";
+import { canManageCrm } from "@/lib/permissions";
 
 function canManage(role: string) {
-  return role === "admin" || role === "manager";
+  return canManageCrm(role);
 }
 
 export async function mergeLeadAreas(rawNames: string[]): Promise<ActionResult<{ added: number }>> {

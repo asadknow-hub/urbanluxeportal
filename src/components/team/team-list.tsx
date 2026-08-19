@@ -30,7 +30,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { EmptyState } from "@/components/primitives/empty-state";
 import { RbacDialog } from "@/components/team/rbac-dialog";
-import { inviteStaff, toggleStaffActive } from "@/server/team";
+import { createStaff, toggleStaffActive } from "@/server/team";
+import { isManagerLike, roleLabel, STAFF_ROLE_OPTIONS } from "@/lib/permissions";
 import { toast } from "sonner";
 import {
   Search,
@@ -62,6 +63,7 @@ export type StaffRow = {
 const ROLE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   admin: Shield,
   manager: UserCog,
+  reception: UserCog,
   agent: User,
   accountant: UserCog,
 };
@@ -79,6 +81,7 @@ function roleChipClass(role: string) {
     case "admin":
       return "bg-[#eeeafa] text-[#5943a4]";
     case "manager":
+    case "reception":
       return "bg-[#f5eddd] text-[#8a6d2c]";
     case "accountant":
       return "bg-[#fff0dc] text-[#b26a15]";
@@ -113,8 +116,14 @@ export function TeamList({
   const [inviteName, setInviteName] = useState("");
   const [inviteRole, setInviteRole] = useState("agent");
   const [invitePhone, setInvitePhone] = useState("");
+  const [invitePassword, setInvitePassword] = useState("");
+  const [invitePasswordConfirm, setInvitePasswordConfirm] = useState("");
   const [pending, startTransition] = useTransition();
   const canManageUsers = currentUserRole === "admin";
+  const creatableRoles =
+    currentUserRole === "admin"
+      ? STAFF_ROLE_OPTIONS
+      : STAFF_ROLE_OPTIONS.filter((row) => row.value === "agent" || row.value === "accountant");
 
   function updateFilter(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -133,17 +142,30 @@ export function TeamList({
 
   function handleInvite(e: React.FormEvent) {
     e.preventDefault();
+    if (invitePassword !== invitePasswordConfirm) {
+      toast.error("Passwords do not match");
+      return;
+    }
     startTransition(async () => {
-      const result = await inviteStaff(inviteEmail, inviteName, inviteRole, invitePhone);
+      const result = await createStaff({
+        email: inviteEmail,
+        fullName: inviteName,
+        role: inviteRole,
+        phone: invitePhone,
+        password: invitePassword,
+      });
       if (result.ok) {
-        toast.success(`Invitation sent to ${inviteEmail}`);
+        toast.success(`${inviteName} can log in now with that email and password`);
         setInviteOpen(false);
         setInviteEmail("");
         setInviteName("");
         setInviteRole("agent");
         setInvitePhone("");
+        setInvitePassword("");
+        setInvitePasswordConfirm("");
+        router.refresh();
       } else {
-        toast.error(result.error ?? "Failed to invite");
+        toast.error(result.error ?? "Failed to create staff");
       }
     });
   }
@@ -182,10 +204,11 @@ export function TeamList({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All roles</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="manager">Manager</SelectItem>
-              <SelectItem value="agent">Agent</SelectItem>
-              <SelectItem value="accountant">Accountant</SelectItem>
+              {STAFF_ROLE_OPTIONS.map((row) => (
+                <SelectItem key={row.value} value={row.value}>
+                  {row.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -201,7 +224,7 @@ export function TeamList({
                   className="h-[42px] gap-2 rounded-[11px] bg-[#b78a2c] px-[18px] text-[13px] font-semibold text-white hover:bg-[#a77b22]"
                 >
                   <UserPlus className="h-4 w-4" />
-                  Invite staff
+                  Add staff
                 </Button>
               )}
             />
@@ -212,11 +235,11 @@ export function TeamList({
                     <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
                       <UserPlus className="h-4 w-4" />
                     </span>
-                    Invite staff
+                    Add staff
                   </DialogTitle>
                 </DialogHeader>
                 <p className="mt-2 text-sm text-secondary-foreground/70">
-                  Send an invite so they can set a password and join the workspace.
+                  Create a login they can use immediately. Share the password with them in person or over WhatsApp.
                 </p>
               </div>
 
@@ -268,22 +291,59 @@ export function TeamList({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="agent">Agent</SelectItem>
-                        <SelectItem value="accountant">Accountant</SelectItem>
+                        {creatableRoles.map((row) => (
+                          <SelectItem key={row.value} value={row.value}>
+                            {row.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="inv_password" className="text-xs text-muted-foreground">
+                      Password
+                    </Label>
+                    <Input
+                      id="inv_password"
+                      type="password"
+                      value={invitePassword}
+                      onChange={(e) => setInvitePassword(e.target.value)}
+                      required
+                      minLength={8}
+                      placeholder="At least 8 characters"
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="inv_password2" className="text-xs text-muted-foreground">
+                      Confirm password
+                    </Label>
+                    <Input
+                      id="inv_password2"
+                      type="password"
+                      value={invitePasswordConfirm}
+                      onChange={(e) => setInvitePasswordConfirm(e.target.value)}
+                      required
+                      minLength={8}
+                      className="h-9"
+                    />
+                  </div>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  They sign in at the login page with this email and password. Reception has the same access as Manager.
+                </p>
+
                 <div className="flex items-center justify-end gap-2 border-t border-border pt-4">
                   <Button type="button" variant="ghost" size="sm" onClick={() => setInviteOpen(false)}>
                     Cancel
                   </Button>
-                  <Button type="submit" size="sm" disabled={pending || !inviteEmail || !inviteName}>
+                  <Button type="submit" size="sm" disabled={pending || !inviteEmail || !inviteName || invitePassword.length < 8}>
                     {pending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
-                    Send invitation
+                    Create login
                   </Button>
                 </div>
               </form>
@@ -319,7 +379,7 @@ export function TeamList({
                 .toUpperCase()
                 .slice(0, 2);
               const avatarTone = AVATAR_TONES[index % AVATAR_TONES.length];
-              const canToggle = !(currentUserRole === "manager" && s.role === "admin");
+              const canToggle = !(isManagerLike(currentUserRole) && s.role === "admin");
               const href = `/team/${s.id}`;
 
               return (
@@ -374,7 +434,7 @@ export function TeamList({
                         )}
                       >
                         <RoleIcon className="h-3.5 w-3.5" />
-                        {s.role}
+                        {roleLabel(s.role)}
                       </span>
                       <span
                         className={cn(

@@ -11,7 +11,8 @@ This is **UrbanLuxe Portal**, a CRM/ERP for Dubai real estate. Owner: Asad (soft
 
 - **GitHub repo:** https://github.com/asadknow-hub/urbanluxeportal.git
 - **Default branch:** `main` — all work happens on `main` unless Asad explicitly asks for a different branch
-- **Backend / DB / Auth / Storage:** Supabase (Postgres, Auth, Storage). Schema and changes live in `supabase/migrations/`. Prefer `supabase db push` / new numbered migrations over ad-hoc dashboard-only schema.
+- **Backend / DB / Auth / Storage:** Supabase (Postgres, Auth, Storage). Schema and changes live in `supabase/migrations/`. Prefer new numbered migrations over ad-hoc dashboard-only schema.
+- **Postgres access:** REST/Auth/Storage use `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`. That cannot run DDL. If `.env.local` has `DATABASE_URL` (direct or session pooler URI, port 5432), apply SQL yourself with `node scripts/db.mjs --file supabase/migrations/00xx.sql` or `--query "…"`. Do not wait for Asad to paste SQL in the dashboard. If `DATABASE_URL` is missing, ask for it immediately — do not ship schema that production cannot apply.
 - **Hosting:** Vercel. Production is deployed from GitHub (`main`). Cron: `/api/cron/daily` in `vercel.json`.
 - **App:** Next.js App Router (TypeScript). Read `node_modules/next/dist/docs/` before using Next APIs. UI: Tailwind + shadcn/ui.
 

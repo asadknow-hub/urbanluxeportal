@@ -18,9 +18,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { createStaff, toggleStaffActive } from "@/server/team";
+import { roleLabel, STAFF_ROLE_OPTIONS } from "@/lib/permissions";
 import { formatDate } from "@/lib/dates";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { UserPlus, Loader2, Shield, User, UserCog } from "lucide-react";
 
 type UserRow = {
@@ -37,63 +39,50 @@ type UserRow = {
 const ROLE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   admin: Shield,
   manager: UserCog,
+  reception: UserCog,
   agent: User,
   accountant: UserCog,
 };
 
 export function UsersList({ users }: { users: UserRow[] }) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteName, setInviteName] = useState("");
   const [inviteRole, setInviteRole] = useState("agent");
+  const [invitePassword, setInvitePassword] = useState("");
 
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault();
     startTransition(async () => {
-      const supabase = createSupabaseBrowserClient();
-      const { error } = await supabase.auth.admin.inviteUserByEmail(inviteEmail, {
-        redirectTo: `${window.location.origin}/login`,
-      });
-
-      if (error) {
-        toast.error(`Invite failed: ${error.message}`);
-        return;
-      }
-
-      // Create profile
-      const { error: profileError } = await supabase.from("profiles").upsert({
+      const result = await createStaff({
         email: inviteEmail,
-        full_name: inviteName,
+        fullName: inviteName,
         role: inviteRole,
-        is_active: true,
-      }, { onConflict: "email" });
-
-      if (profileError) {
-        toast.error(`Profile creation failed: ${profileError.message}`);
+        password: invitePassword,
+      });
+      if (!result.ok) {
+        toast.error(result.error ?? "Could not create staff");
         return;
       }
-
-      toast.success(`Invitation sent to ${inviteEmail}`);
+      toast.success(`${inviteName} can log in now`);
       setInviteOpen(false);
       setInviteEmail("");
       setInviteName("");
       setInviteRole("agent");
+      setInvitePassword("");
+      router.refresh();
     });
   }
 
   async function toggleActive(user: UserRow) {
     startTransition(async () => {
-      const supabase = createSupabaseBrowserClient();
-      const { error } = await supabase
-        .from("profiles")
-        .update({ is_active: !user.is_active })
-        .eq("id", user.id);
-
-      if (error) {
-        toast.error(error.message);
-      } else {
+      const result = await toggleStaffActive(user.id, user.is_active);
+      if (!result.ok) toast.error(result.error ?? "Failed");
+      else {
         toast.success(`${user.full_name} ${!user.is_active ? "activated" : "deactivated"}`);
+        router.refresh();
       }
     });
   }
@@ -106,13 +95,13 @@ export function UsersList({ users }: { users: UserRow[] }) {
             render={(props) => (
               <Button {...props} className="bg-emerald-500 hover:bg-emerald-600">
                 <UserPlus className="mr-2 h-4 w-4" />
-                Invite User
+                Add staff
               </Button>
             )}
           />
           <DialogContent className="max-w-sm">
             <DialogHeader>
-              <DialogTitle>Invite New User</DialogTitle>
+              <DialogTitle>Add staff login</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleInvite} className="space-y-4">
               <div className="space-y-2">
@@ -143,20 +132,33 @@ export function UsersList({ users }: { users: UserRow[] }) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="agent">Agent</SelectItem>
-                    <SelectItem value="accountant">Accountant</SelectItem>
+                    {STAFF_ROLE_OPTIONS.map((row) => (
+                      <SelectItem key={row.value} value={row.value}>
+                        {row.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="invite_password">Password *</Label>
+                <Input
+                  id="invite_password"
+                  type="password"
+                  value={invitePassword}
+                  onChange={(e) => setInvitePassword(e.target.value)}
+                  required
+                  minLength={8}
+                  placeholder="At least 8 characters"
+                />
               </div>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setInviteOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={pending || !inviteEmail || !inviteName}>
+                <Button type="submit" disabled={pending || !inviteEmail || !inviteName || invitePassword.length < 8}>
                   {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Send Invite
+                  Create login
                 </Button>
               </div>
             </form>
@@ -189,7 +191,7 @@ export function UsersList({ users }: { users: UserRow[] }) {
                     <td className="px-4 py-3">
                       <span className="flex items-center gap-1.5">
                         <RoleIcon className="h-3.5 w-3.5 text-slate-400" />
-                        <span className="capitalize text-slate-600">{u.role}</span>
+                        <span className="text-slate-600">{roleLabel(u.role)}</span>
                       </span>
                     </td>
                     <td className="px-4 py-3 text-slate-500">{u.brn ?? "—"}</td>

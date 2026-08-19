@@ -5,9 +5,10 @@ import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { parseAreaNames } from "@/lib/parse-area-list";
 import type { ActionResult } from "@/server/leads";
+import { canManageCrm } from "@/lib/permissions";
 
 function canManage(role: string) {
-  return role === "admin" || role === "manager";
+  return canManageCrm(role);
 }
 
 export async function mergeLeadNationalities(rawNames: string[]): Promise<ActionResult<{ added: number }>> {

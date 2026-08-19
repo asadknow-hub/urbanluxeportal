@@ -36,6 +36,7 @@ Required variables:
 - `NEXT_PUBLIC_SUPABASE_URL` — your Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase anon key
 - `SUPABASE_SERVICE_ROLE_KEY` — server-only service role key
+- `DATABASE_URL` — Postgres URI (direct or session pooler, port 5432) so migrations can be applied locally with `npm run db -- --file supabase/migrations/00xx.sql`
 - `ANTHROPIC_API_KEY` — Anthropic API key (for AI features)
 - `RESEND_API_KEY` — Resend API key (for transactional email)
 - `APP_BASE_URL` — app URL (e.g. http://localhost:3000)
@@ -46,8 +47,10 @@ Required variables:
 Run migrations in order:
 
 ```bash
-supabase db push
+npm run db -- --file supabase/migrations/0026_ensure_deal_buyer_schema.sql
 ```
+
+Or `supabase db push` if the CLI is linked.
 
 Or manually run the SQL files in `supabase/migrations/` in order (0001 → 0005).
 

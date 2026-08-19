@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
+import { canManageCrm } from "@/lib/permissions";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LeadFieldsWorkspace } from "@/components/leads/lead-fields-workspace";
 import { StageSlaEditor } from "@/components/leads/stage-sla-editor";
@@ -56,7 +57,7 @@ export default async function LeadsSettingsPage({
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (user.role !== "admin" && user.role !== "manager") redirect("/dashboard");
+  if (!canManageCrm(user.role)) redirect("/dashboard");
 
   const supabase = await createSupabaseServerClient();
   const params = await searchParams;

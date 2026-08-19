@@ -39,6 +39,7 @@ import { telLink, whatsappLink } from "@/lib/phone";
 import { formatAEDRange } from "@/lib/money";
 import { daysUntil, formatDate, formatDateTime, isOverdue, shortTimeAgo, timeAgo } from "@/lib/dates";
 import { stageSlaClock } from "@/lib/lead-sla";
+import { canManageCrm } from "@/lib/permissions";
 import {
   choiceItems,
   docCategoryChoices,
@@ -421,7 +422,7 @@ export function LeadDetail({
   const waLink = whatsappLink(optimisticLead.phone);
   const mailLink = optimisticLead.email ? `mailto:${optimisticLead.email}` : null;
   const phoneHref = telLink(optimisticLead.phone);
-  const canManage = userRole === "admin" || userRole === "manager";
+  const canManage = canManageCrm(userRole);
   const canEdit = canManage || userRole === "agent";
   const score = optimisticLead.score ?? 0;
   const scoreBand = scoreBandForValue(fieldOptions.score, score);

@@ -39,7 +39,7 @@ export default async function FollowUpsPage() {
       .from("profiles")
       .select("id, full_name, avatar_url")
       .eq("is_active", true)
-      .in("role", ["admin", "manager", "agent"])
+      .in("role", ["admin", "manager", "reception", "agent"])
       .order("full_name", { ascending: true }),
   ]);
 

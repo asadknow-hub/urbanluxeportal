@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { whatsappLink } from "@/lib/phone";
 import { formatAEDRange } from "@/lib/money";
+import { canManageCrm } from "@/lib/permissions";
 import { formatDate } from "@/lib/dates";
 import { bulkAssignLeads } from "@/server/leads";
 import { optionLabel, scoreBandForValue, type LeadFieldOption } from "@/lib/lead-field-options";
@@ -59,7 +60,7 @@ export function LeadsTable({
   const [bulkAgent, setBulkAgent] = useState("");
   const [pending, startTransition] = useTransition();
 
-  const canBulkAssign = userRole === "admin" || userRole === "manager";
+  const canBulkAssign = canManageCrm(userRole);
 
   function updateFilter(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());

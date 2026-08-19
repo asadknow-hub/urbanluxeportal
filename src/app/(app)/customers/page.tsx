@@ -57,7 +57,7 @@ export default async function CustomersPage({
   const { data: agents } = await supabase
     .from("profiles")
     .select("id, full_name, role")
-    .in("role", ["admin", "manager", "agent"])
+    .in("role", ["admin", "manager", "reception", "agent"])
     .eq("is_active", true)
     .order("full_name");
 

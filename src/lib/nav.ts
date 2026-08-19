@@ -20,13 +20,13 @@ export const NAV_GROUPS = [
 ] as const;
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard", roles: ["admin", "manager", "agent", "accountant"], group: "Workspace" },
-  { label: "Staff", href: "/team", icon: "UsersRound", roles: ["admin", "manager"], group: "Workspace" },
-  { label: "Lead Settings", href: "/settings/leads", icon: "Settings2", roles: ["admin", "manager"], group: "CRM" },
-  { label: "Leads", href: "/leads", icon: "Users", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
-  { label: "Follow-ups", href: "/leads/followups", icon: "CalendarClock", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
-  { label: "Deals", href: "/deals", icon: "KanbanSquare", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
-  { label: "Customers", href: "/customers", icon: "Contact", roles: ["admin", "manager", "agent", "accountant"], group: "CRM" },
+  { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "Workspace" },
+  { label: "Staff", href: "/team", icon: "UsersRound", roles: ["admin", "manager", "reception"], group: "Workspace" },
+  { label: "Lead Settings", href: "/settings/leads", icon: "Settings2", roles: ["admin", "manager", "reception"], group: "CRM" },
+  { label: "Leads", href: "/leads", icon: "Users", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
+  { label: "Follow-ups", href: "/leads/followups", icon: "CalendarClock", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
+  { label: "Deals", href: "/deals", icon: "KanbanSquare", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
+  { label: "Customers", href: "/customers", icon: "Contact", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
   { label: "Settings", href: "/settings", icon: "Settings", roles: ["admin"], group: "System" },
 ];
 

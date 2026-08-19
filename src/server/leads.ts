@@ -20,6 +20,7 @@ import {
   suggestedPropertyTitle,
 } from "@/lib/lead-flow";
 import type { DealTransactionInput } from "@/lib/deal-transaction";
+import { canManageCrm } from "@/lib/permissions";
 
 export type ConvertLeadInput = DealTransactionInput & {
   dealTitle?: string;
@@ -51,6 +52,7 @@ const leadSchema = z.object({
   bedrooms: z.string().optional().nullable(),
   category: z.string().optional().nullable(),
   tags: z.array(z.string()).optional().default([]),
+  score: z.number().min(0).max(100).optional().nullable(),
 });
 
 export async function createLead(
@@ -125,6 +127,7 @@ export async function createLead(
         bedrooms: parsed.data.bedrooms || null,
         category: parsed.data.category || null,
         tags: parsed.data.tags ?? [],
+        score: parsed.data.score ?? null,
         last_activity_at: new Date().toISOString(),
         stage_entered_at: new Date().toISOString(),
       })
@@ -602,7 +605,7 @@ export async function importLeads(
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
-    if (!["admin", "manager"].includes(user.role)) return { ok: false, error: "Not authorized" };
+    if (!canManageCrm(user.role)) return { ok: false, error: "Not authorized" };
     if (!Array.isArray(rows) || rows.length === 0) {
       return { ok: false, error: "No rows to import" };
     }
@@ -768,7 +771,7 @@ export async function assignLead(
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
-    if (!["admin", "manager"].includes(user.role)) {
+    if (!canManageCrm(user.role)) {
       return { ok: false, error: "Not authorized" };
     }
 
@@ -820,7 +823,7 @@ export async function bulkAssignLeads(
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
-    if (!["admin", "manager"].includes(user.role)) {
+    if (!canManageCrm(user.role)) {
       return { ok: false, error: "Not authorized" };
     }
 
@@ -1091,7 +1094,7 @@ export async function deleteLead(leadId: string): Promise<ActionResult> {
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
-    if (!["admin", "manager"].includes(user.role)) {
+    if (!canManageCrm(user.role)) {
       return { ok: false, error: "Only admins and managers can delete leads" };
     }
 
@@ -1131,7 +1134,7 @@ export async function createLeadStage(
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
-    if (!["admin", "manager"].includes(user.role)) {
+    if (!canManageCrm(user.role)) {
       return { ok: false, error: "Not authorized" };
     }
 
@@ -1175,7 +1178,7 @@ export async function updateLeadStageName(
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
-    if (!["admin", "manager"].includes(user.role)) {
+    if (!canManageCrm(user.role)) {
       return { ok: false, error: "Not authorized" };
     }
 
@@ -1213,7 +1216,7 @@ export async function updateLeadStageSla(
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
-    if (!["admin", "manager"].includes(user.role)) {
+    if (!canManageCrm(user.role)) {
       return { ok: false, error: "Not authorized" };
     }
 
@@ -1237,7 +1240,7 @@ export async function deleteLeadStage(id: string): Promise<ActionResult> {
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
-    if (!["admin", "manager"].includes(user.role)) {
+    if (!canManageCrm(user.role)) {
       return { ok: false, error: "Not authorized" };
     }
 

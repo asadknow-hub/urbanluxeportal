@@ -4,6 +4,7 @@ import { StaffDetail } from "@/components/team/staff-detail";
 import { redirect } from "next/navigation";
 import { getStaffActivityStats } from "@/server/staff-sessions";
 import { docCategoryChoices, type LeadFieldOption } from "@/lib/lead-field-options";
+import { canManageCrm, isManagerLike } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ export default async function StaffDetailPage({
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (!["admin", "manager"].includes(user.role)) redirect("/dashboard");
+  if (!canManageCrm(user.role)) redirect("/dashboard");
 
   const { id } = await params;
   const supabase = await createSupabaseServerClient();
@@ -35,7 +36,7 @@ export default async function StaffDetailPage({
   }
 
   // Managers can't view admin profiles
-  if (user.role === "manager" && staff.role === "admin") {
+  if (isManagerLike(user.role) && staff.role === "admin") {
     return (
       <div className="p-4">
         <p className="text-sm text-slate-500">You don't have permission to view this profile.</p>

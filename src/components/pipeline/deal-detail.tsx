@@ -35,6 +35,7 @@ import {
   isDealLost,
   normalizeDealStage,
 } from "@/lib/deal-stages";
+import { canManageCrm } from "@/lib/permissions";
 import { formatDocCategory } from "@/lib/document-storage";
 import { defaultDocCapture, type DocCategoryChoice } from "@/lib/lead-field-options";
 import { updateDealStage, addDealActivity } from "@/server/deals";
@@ -181,7 +182,7 @@ export function DealDetail({
   const [lostReason, setLostReason] = useState("");
 
   const colors = getStatusColor(normalizeDealStage(deal.stage));
-  const canManage = userRole === "admin" || userRole === "manager";
+  const canManage = canManageCrm(userRole);
   const canEdit = canManage || deal.assigned_to === userId;
   const currentStageKey = normalizeDealStage(deal.stage);
   const currentStageIdx = STAGES.findIndex((s) => s.key === currentStageKey);

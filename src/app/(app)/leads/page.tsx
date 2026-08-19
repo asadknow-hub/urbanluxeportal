@@ -116,7 +116,7 @@ export default async function LeadsBoardPage({
       supabase
         .from("profiles")
         .select("id, full_name, role")
-        .in("role", ["admin", "manager", "agent"])
+        .in("role", ["admin", "manager", "reception", "agent"])
         .eq("is_active", true)
         .order("full_name"),
       supabase
@@ -142,7 +142,7 @@ export default async function LeadsBoardPage({
     supabase
       .from("profiles")
       .select("id, full_name, role")
-      .in("role", ["admin", "manager", "agent"])
+      .in("role", ["admin", "manager", "reception", "agent"])
       .eq("is_active", true)
       .order("full_name"),
     supabase.from("lead_areas").select("name").order("name"),

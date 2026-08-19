@@ -2,6 +2,7 @@
 
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
+import { canManageCrm } from "@/lib/permissions";
 
 export type ActionResult<T = unknown> = {
   ok: boolean;
@@ -87,7 +88,7 @@ export async function getStaffActivityStats(
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
-    if (!["admin", "manager"].includes(user.role)) {
+    if (!canManageCrm(user.role)) {
       return { ok: false, error: "Not authorized" };
     }
 

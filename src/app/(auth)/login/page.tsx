@@ -29,6 +29,34 @@ function LoginForm() {
       setLoading(false);
       return;
     }
+
+    const { data: auth } = await supabase.auth.getUser();
+    const userId = auth.user?.id;
+    if (!userId) {
+      toast.error("Sign-in did not return a user");
+      setLoading(false);
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_active")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (!profile) {
+      await supabase.auth.signOut();
+      toast.error("This login has no staff profile. Ask an admin to create your account from Staff.");
+      setLoading(false);
+      return;
+    }
+    if (!profile.is_active) {
+      await supabase.auth.signOut();
+      toast.error("Your account has been deactivated. Contact an admin.");
+      setLoading(false);
+      return;
+    }
+
     toast.success("Welcome back");
     router.push("/dashboard");
     router.refresh();

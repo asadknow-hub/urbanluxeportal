@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { revalidatePath } from "next/cache";
 import { dealReadyToFinalize, type DealTransactionInput } from "@/lib/deal-transaction";
+import { canManageCrm } from "@/lib/permissions";
 
 export type ActionResult<T = unknown> = {
   ok: boolean;
@@ -291,7 +292,7 @@ export async function assignDeal(
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
-    if (!["admin", "manager"].includes(user.role)) {
+    if (!canManageCrm(user.role)) {
       return { ok: false, error: "Not authorized" };
     }
 
@@ -382,8 +383,7 @@ export async function updateDealTransaction(
     if (deal.finalized_at) return { ok: false, error: "Deal is already finalized" };
 
     const canEdit =
-      user.role === "admin" ||
-      user.role === "manager" ||
+      canManageCrm(user.role) ||
       deal.assigned_to === user.id;
     if (!canEdit) return { ok: false, error: "Not authorized" };
 

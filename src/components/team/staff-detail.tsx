@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { updateStaffProfile, sendPasswordResetLink, setStaffPassword } from "@/server/team";
+import { STAFF_ROLE_OPTIONS, roleLabel } from "@/lib/permissions";
 import { createDocument as createDoc, deleteDocument as deleteDoc, getSignedUrl } from "@/server/documents";
 import { formatDate } from "@/lib/dates";
 import { dealStageLabel } from "@/lib/deal-stages";
@@ -92,6 +93,7 @@ type SessionStats = {
 const ROLE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   admin: Shield,
   manager: UserCog,
+  reception: UserCog,
   agent: User,
   accountant: UserCog,
 };
@@ -109,6 +111,7 @@ function roleChipClass(role: string) {
     case "admin":
       return "bg-[#eeeafa] text-[#5943a4]";
     case "manager":
+    case "reception":
       return "bg-[#e8f0fe] text-[#1a73e8]";
     case "agent":
       return "bg-[#eef3ff] text-[#3b5bcc]";
@@ -186,7 +189,7 @@ export function StaffDetail({
               )}
             >
               <RoleIcon className="h-3 w-3" />
-              {staff.role}
+              {roleLabel(staff.role)}
             </span>
             <span
               className={cn(
@@ -474,7 +477,7 @@ function ProfileTab({ staff, currentUserRole }: { staff: Staff; currentUserRole:
         full_name: form.full_name,
         email: form.email,
         phone: form.phone || null,
-        role: form.role as "admin" | "manager" | "agent" | "accountant",
+        role: form.role as "admin" | "manager" | "reception" | "agent" | "accountant",
         brn: form.brn || null,
         commission_rate: form.commission_rate ? parseFloat(form.commission_rate) : null,
         is_active: form.is_active,
@@ -523,10 +526,11 @@ function ProfileTab({ staff, currentUserRole }: { staff: Staff; currentUserRole:
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="manager">Manager</SelectItem>
-              <SelectItem value="agent">Agent</SelectItem>
-              <SelectItem value="accountant">Accountant</SelectItem>
+              {STAFF_ROLE_OPTIONS.map((row) => (
+                <SelectItem key={row.value} value={row.value}>
+                  {row.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           {!canEditRole && (

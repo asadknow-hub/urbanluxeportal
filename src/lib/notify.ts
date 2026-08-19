@@ -1,4 +1,5 @@
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { withInheritedRoles } from "@/lib/permissions";
 
 type NotifyParams = {
   userIds: string[];
@@ -30,7 +31,7 @@ export async function notifyByRole(
   const { data: users } = await supabase
     .from("profiles")
     .select("id")
-    .in("role", roles)
+    .in("role", withInheritedRoles(roles))
     .eq("is_active", true);
 
   if (!users || users.length === 0) return;

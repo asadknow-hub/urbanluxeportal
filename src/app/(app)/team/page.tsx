@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { TeamList } from "@/components/team/team-list";
 import { StaffStats } from "@/components/team/staff-stats";
 import { isDealClosed } from "@/lib/deal-stages";
+import { canManageCrm } from "@/lib/permissions";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +15,7 @@ export default async function TeamPage({
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  if (!["admin", "manager"].includes(user.role)) redirect("/dashboard");
+  if (!canManageCrm(user.role)) redirect("/dashboard");
 
   const supabase = await createSupabaseServerClient();
   const params = await searchParams;

@@ -12,9 +12,10 @@ import {
   type LeadOptionFieldKey,
 } from "@/lib/lead-field-options";
 import type { ActionResult } from "@/server/leads";
+import { canManageCrm } from "@/lib/permissions";
 
 function canManage(role: string) {
-  return role === "admin" || role === "manager";
+  return canManageCrm(role);
 }
 
 function revalidateLeadPaths() {
