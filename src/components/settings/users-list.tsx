@@ -77,11 +77,11 @@ export function UsersList({ users }: { users: UserRow[] }) {
   }
 
   async function toggleActive(user: UserRow) {
+    toast.success(`${user.full_name} ${!user.is_active ? "activated" : "deactivated"}`);
     startTransition(async () => {
       const result = await toggleStaffActive(user.id, user.is_active);
       if (!result.ok) toast.error(result.error ?? "Failed");
       else {
-        toast.success(`${user.full_name} ${!user.is_active ? "activated" : "deactivated"}`);
         router.refresh();
       }
     });

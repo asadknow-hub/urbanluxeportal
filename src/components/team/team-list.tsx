@@ -171,10 +171,11 @@ export function TeamList({
   }
 
   function handleToggleActive(s: StaffRow) {
+    toast.success(`${s.full_name} ${!s.is_active ? "activated" : "deactivated"}`);
     startTransition(async () => {
       const result = await toggleStaffActive(s.id, s.is_active);
       if (result.ok) {
-        toast.success(`${s.full_name} ${!s.is_active ? "activated" : "deactivated"}`);
+        router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
       }
@@ -521,6 +522,7 @@ export function TeamList({
 
                       <Link
                         href={href}
+                        prefetch
                         onClick={(e) => e.stopPropagation()}
                         className="inline-flex h-[42px] items-center gap-2 rounded-[11px] bg-[#17202d] px-[17px] text-xs font-semibold text-white transition-colors hover:bg-[#253142]"
                       >

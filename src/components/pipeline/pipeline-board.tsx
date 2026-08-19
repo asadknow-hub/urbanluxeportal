@@ -54,6 +54,7 @@ function DealCardItem({ deal, isDragging }: { deal: DealCard; isDragging?: boole
   return (
     <Link
       href={`/pipeline/${deal.id}`}
+      prefetch
       className={`group block rounded-[12px] border border-border bg-card p-3 transition-all duration-200 ${isDragging ? "scale-[1.02] opacity-75 shadow-lg ring-2 ring-primary/40" : "hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"}`}
     >
       <div className="flex items-start justify-between">
@@ -226,6 +227,8 @@ export function PipelineBoard({
       if (result.ok) {
         toast.success("Deal closed");
         setWonDialog(null);
+        setWonValue("");
+        setWonCommission("");
         router.refresh();
       } else {
         toast.error(result.error ?? "Failed");

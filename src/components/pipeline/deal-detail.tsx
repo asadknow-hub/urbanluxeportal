@@ -215,13 +215,13 @@ export function DealDetail({
       setClosedOpen(true);
       return;
     }
+    toast.success(`Deal moved to ${STAGES.find((s) => s.key === newStage)?.label}`);
     startTransition(async () => {
       const result = await updateDealStage({
         id: deal.id,
         stage: newStage as "new" | "negotiations" | "contract" | "closed" | "lost",
       });
       if (result.ok) {
-        toast.success(`Deal moved to ${STAGES.find((s) => s.key === newStage)?.label}`);
         router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
@@ -271,11 +271,12 @@ export function DealDetail({
 
   function handleAddActivity() {
     if (!activityText.trim()) return;
+    const text = activityText;
+    setActivityText("");
+    toast.success("Activity logged");
     startTransition(async () => {
-      const result = await addDealActivity(deal.id, activityType, activityText);
+      const result = await addDealActivity(deal.id, activityType, text);
       if (result.ok) {
-        setActivityText("");
-        toast.success("Activity logged");
         router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
