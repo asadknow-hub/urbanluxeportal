@@ -21,6 +21,7 @@ import {
 } from "@/lib/lead-flow";
 import type { DealTransactionInput } from "@/lib/deal-transaction";
 import { canManageCrm } from "@/lib/permissions";
+import { leadStatusForStageKind, resolveDefaultLeadStageId } from "@/lib/lead-stages";
 
 export type ConvertLeadInput = DealTransactionInput & {
   dealTitle?: string;
@@ -91,17 +92,9 @@ export async function createLead(
       }
     }
 
-    // Get the 'New' stage as default — use service client to bypass RLS
     let stageId = parsed.data.stage_id;
     if (!stageId) {
-      const serviceClient = createSupabaseServiceClient();
-      const { data: newStage } = await serviceClient
-        .from("lead_stages")
-        .select("id")
-        .eq("name", "New")
-        .eq("kind", "open")
-        .single();
-      stageId = newStage?.id ?? null;
+      stageId = await resolveDefaultLeadStageId(supabase);
     }
 
     const { data, error } = await supabase
@@ -120,6 +113,7 @@ export async function createLead(
         next_follow_up_at: parsed.data.next_follow_up_at || null,
         created_by: user.id,
         stage_id: stageId,
+        status: "new",
         nationality: parsed.data.nationality || null,
         financing: parsed.data.financing || null,
         timeframe: parsed.data.timeframe || null,
@@ -223,7 +217,9 @@ export async function updateLeadStage(
     // Only use stage.kind (dynamic, DB-driven) — never match on stage names
     if (stage.kind === "won") updateData.status = "converted";
     else if (stage.kind === "lost" || stage.kind === "junk") updateData.status = "unqualified";
-    else if (stage.kind === "active") updateData.status = stage.sort <= 1 ? "new" : "qualified";
+    else if (stage.kind === "open") {
+      updateData.status = leadStatusForStageKind(stage.kind, stage.sort);
+    }
 
     if (extra?.lost_reason) updateData.lost_reason = extra.lost_reason;
     if (extra?.junk_reason) updateData.junk_reason = extra.junk_reason;
@@ -612,11 +608,11 @@ export async function importLeads(
 
     const incoming = rows.slice(0, 500);
     const supabase = createSupabaseServiceClient();
-    const [{ data: newStage }, { data: optionRows }, { data: areaRows }, { data: nationalityRows }] = await Promise.all([
-      supabase.from("lead_stages").select("id").eq("name", "New").eq("kind", "open").maybeSingle(),
+    const [{ data: optionRows }, { data: areaRows }, { data: nationalityRows }, defaultStageId] = await Promise.all([
       supabase.from("lead_field_options").select("id, field_key, value, label, sort, extra"),
       supabase.from("lead_areas").select("name"),
       supabase.from("lead_nationalities").select("name"),
+      resolveDefaultLeadStageId(supabase),
     ]);
 
     const fieldOptions = groupLeadFieldOptions((optionRows ?? []) as LeadFieldOption[]);
@@ -692,7 +688,8 @@ export async function importLeads(
           lost_reason: row.lost_reason ? matchOptionValue(fieldOptions.lost_reason, row.lost_reason) : null,
           junk_reason: row.junk_reason ? matchOptionValue(fieldOptions.junk_reason, row.junk_reason) : null,
           created_by: user.id,
-          stage_id: newStage?.id ?? null,
+          stage_id: defaultStageId,
+          status: "new",
           last_activity_at: new Date().toISOString(),
           stage_entered_at: new Date().toISOString(),
         })

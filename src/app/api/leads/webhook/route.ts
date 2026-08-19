@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { applyLeadRouting } from "@/server/routing";
+import { resolveDefaultLeadStageId } from "@/lib/lead-stages";
 
 // POST /api/leads/webhook
 // Accepts lead data from external sources (website forms, portals, etc.)
@@ -46,6 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Insert lead
+    const defaultStageId = await resolveDefaultLeadStageId(supabase);
     const { data, error } = await supabase
       .from("leads")
       .insert({
@@ -59,6 +61,9 @@ export async function POST(req: NextRequest) {
         preferred_areas: body.preferred_areas || [],
         notes: body.notes || null,
         status: "new",
+        stage_id: defaultStageId,
+        stage_entered_at: new Date().toISOString(),
+        last_activity_at: new Date().toISOString(),
         assigned_to: body.assigned_to || null,
       })
       .select("id")
