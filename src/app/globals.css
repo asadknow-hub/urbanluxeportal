@@ -162,20 +162,24 @@
   background-color: var(--primary);
 }
 
-/* —— Public website (urbanluxe.com) —— */
+/* —— Public website brand (locked) ——
+   Primary #0B1D3D · Secondary #1E7A4A · 3rd #F2F2F2 · 4th #222222
+   Source of truth also: src/lib/web/brand.ts
+*/
 .ul-site {
   --ul-primary: #0b1d3d;
   --ul-secondary: #1e7a4a;
-  --ul-surface: #f2f2f2;
-  --ul-footer: #222222;
+  --ul-tertiary: #f2f2f2;
+  --ul-quaternary: #222222;
+  /* aliases */
+  --ul-surface: var(--ul-tertiary);
+  --ul-footer: var(--ul-quaternary);
   --ul-paper: #ffffff;
-  --ul-ink: #0b1d3d;
-  --ul-gold: #1e7a4a;
+  --ul-ink: var(--ul-primary);
+  --ul-gold: var(--ul-secondary);
   --ul-accent-deep: #155c38;
   --ul-muted: #6b7280;
   --ul-hair: #e5e7eb;
-  --ul-card-warm: #e8e4de;
-  --ul-card-cool: #dce8ef;
   font-family: var(--font-poppins), system-ui, sans-serif;
   background: var(--ul-paper);
   color: var(--ul-ink);
@@ -277,7 +281,7 @@
   height: 4px;
   width: 100%;
   cursor: pointer;
-  accent-color: #2dd4bf;
+  accent-color: var(--ul-secondary);
 }
 
 .ul-reveal {

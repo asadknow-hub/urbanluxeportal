@@ -10,8 +10,8 @@ const CATEGORY_CARDS = [
   {
     href: "/buy",
     image: IMAGES.night,
-    bg: "bg-[#0B1D3D]",
-    text: "text-white",
+    panel: "bg-[var(--ul-primary)] text-white",
+    wash: "from-[var(--ul-primary)]/55",
     kicker: "Buy",
     title: "Starting from AED 1.2M",
     link: "View properties",
@@ -19,8 +19,8 @@ const CATEGORY_CARDS = [
   {
     href: "/rent",
     image: IMAGES.living,
-    bg: "bg-[#F2F2F2]",
-    text: "text-[#0B1D3D]",
+    panel: "bg-[var(--ul-tertiary)] text-[var(--ul-primary)]",
+    wash: "from-[var(--ul-tertiary)]/80",
     kicker: "Rent",
     title: "Best price for luxury flats",
     link: "View properties",
@@ -28,8 +28,8 @@ const CATEGORY_CARDS = [
   {
     href: "/off-plan",
     image: IMAGES.marina,
-    bg: "bg-[#E1EBF2]",
-    text: "text-[#0B1D3D]",
+    panel: "bg-[var(--ul-secondary)] text-white",
+    wash: "from-[var(--ul-secondary)]/50",
     kicker: "Offplan",
     title: "New projects coming soon",
     link: "View projects",
@@ -39,22 +39,19 @@ const CATEGORY_CARDS = [
 const FEATURED_NEWS = [
   {
     image: IMAGES.downtown,
-    bg: "bg-[#0B1D3D]",
-    text: "text-white",
+    panel: "bg-[var(--ul-primary)] text-white",
     title: "Downtown Dubai market update",
     href: "/about",
   },
   {
     image: IMAGES.villa,
-    bg: "bg-[#E8E4DE]",
-    text: "text-[#0B1D3D]",
+    panel: "bg-[var(--ul-tertiary)] text-[var(--ul-primary)]",
     title: "Villa sales reach new highs",
     href: "/buy",
   },
   {
     image: IMAGES.creek,
-    bg: "bg-[#DCE8EF]",
-    text: "text-[#0B1D3D]",
+    panel: "bg-[var(--ul-secondary)] text-white",
     title: "Off-plan launches this quarter",
     href: "/off-plan",
   },
@@ -65,33 +62,39 @@ export function HomePage() {
     <>
       <HeroSection />
 
-      {/* Category cards — Buy · Rent · Offplan only */}
-      <section className="isolate bg-white px-5 py-10 md:px-10 md:py-14">
-        <div className="mx-auto grid max-w-[1440px] gap-5 md:grid-cols-3">
+      {/* Category cards — Buy · Rent · Offplan · brand-washed · laptop viewport */}
+      <section className="flex min-h-svh items-center bg-[var(--ul-tertiary)] px-5 py-12 md:px-10 md:py-16">
+        <div className="mx-auto grid w-full max-w-5xl gap-5 md:grid-cols-3 md:gap-6">
           {CATEGORY_CARDS.map((card, i) => (
             <Reveal key={card.href} delay={i * 60}>
               <Link
                 href={card.href}
                 prefetch
-                className="group flex h-full flex-col overflow-hidden rounded-xl shadow-[0_4px_24px_rgba(11,29,61,0.06)] transition-shadow hover:shadow-[0_8px_32px_rgba(11,29,61,0.1)]"
+                className="group flex h-full max-h-[28rem] flex-col overflow-hidden rounded-xl bg-white shadow-[0_8px_32px_rgba(11,29,61,0.08)] transition-shadow hover:shadow-[0_12px_40px_rgba(11,29,61,0.12)]"
               >
-                <div className="relative aspect-[16/11] overflow-hidden">
+                <div className="relative aspect-[5/4] overflow-hidden">
                   <Image
                     src={card.image}
                     alt={card.kicker}
                     fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
+                    sizes="(max-width: 768px) 100vw, 280px"
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
+                  <div
+                    className={cn(
+                      "pointer-events-none absolute inset-0 bg-gradient-to-t to-transparent",
+                      card.wash
+                    )}
+                  />
                 </div>
-                <div className={cn("flex flex-1 flex-col px-6 py-6", card.bg, card.text)}>
-                  <p className="text-[0.6875rem] font-semibold tracking-[0.18em] uppercase opacity-75">
+                <div className={cn("flex flex-col px-5 py-5", card.panel)}>
+                  <p className="text-[0.65rem] font-semibold tracking-[0.18em] uppercase opacity-80">
                     {card.kicker}
                   </p>
-                  <p className="mt-2 text-xl font-semibold leading-snug tracking-tight md:text-[1.35rem]">
+                  <p className="mt-1.5 text-lg font-semibold leading-snug tracking-tight">
                     {card.title}
                   </p>
-                  <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium opacity-90 transition-all group-hover:gap-2.5">
+                  <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium opacity-90 transition-all group-hover:gap-2.5">
                     {card.link} <ArrowRight className="h-3.5 w-3.5" />
                   </span>
                 </div>
@@ -319,7 +322,7 @@ export function HomePage() {
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   </div>
-                  <div className={`${item.bg} ${item.text} px-5 py-4`}>
+                  <div className={cn("px-5 py-4", item.panel)}>
                     <p className="font-semibold leading-snug">{item.title}</p>
                     <span className="mt-2 inline-flex items-center gap-1.5 text-sm opacity-90 group-hover:gap-2.5 transition-all">
                       Read more <ArrowRight className="h-3.5 w-3.5" />
