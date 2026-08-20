@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Globe, Menu, User, X } from "lucide-react";
-import { NAV, SITE } from "@/lib/web/site";
+import { ChevronDown, Menu, Search, User, X } from "lucide-react";
+import { NAV } from "@/lib/web/site";
 import { SiteLogo } from "@/components/web/site-logo";
 import { cn } from "@/lib/utils";
 
@@ -33,37 +33,16 @@ export function SiteNav() {
 
   return (
     <header className="sticky top-0 z-50">
-      {/* Top utility bar */}
-      <div className="hidden border-b border-white/10 bg-[#222222] text-white/80 sm:block">
-        <div className="mx-auto flex h-9 max-w-[1440px] items-center justify-between px-5 md:px-10">
-          <p className="text-[0.65rem] tracking-[0.12em] uppercase">
-            Property in Dubai — your dream home awaits
-          </p>
-          <div className="flex items-center gap-4 text-[0.65rem] tracking-wide">
-            <a href={`tel:${SITE.phoneTel}`} className="transition-colors hover:text-white">
-              {SITE.phoneDisplay}
-            </a>
-            <span className="text-white/30" aria-hidden>
-              |
-            </span>
-            <a href={`mailto:${SITE.email}`} className="transition-colors hover:text-white">
-              {SITE.email}
-            </a>
-          </div>
-        </div>
-      </div>
-
-      {/* Main header */}
       <div
         className={cn(
-          "border-b border-[#e5e7eb] bg-white transition-shadow duration-300",
+          "border-b border-[#e5e7eb]/80 bg-white transition-shadow duration-300",
           scrolled && "shadow-sm"
         )}
       >
-        <div className="mx-auto flex h-[4.25rem] max-w-[1440px] items-center justify-between gap-6 px-5 md:px-10">
+        <div className="mx-auto flex h-[4.25rem] max-w-[1440px] items-center justify-between gap-4 px-5 md:px-10">
           <SiteLogo />
 
-          <nav className="hidden items-center gap-7 lg:flex" aria-label="Primary">
+          <nav className="hidden items-center gap-6 xl:gap-8 lg:flex" aria-label="Primary">
             {NAV.map((item) => {
               const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
@@ -72,8 +51,8 @@ export function SiteNav() {
                   href={item.href}
                   prefetch
                   className={cn(
-                    "text-[0.8125rem] font-medium transition-colors duration-200",
-                    active ? "text-[#1E7A4A]" : "text-[#0B1D3D]/80 hover:text-[#0B1D3D]"
+                    "whitespace-nowrap text-[0.8125rem] font-medium transition-colors duration-200",
+                    active ? "text-[#0B1D3D]" : "text-[#0B1D3D]/75 hover:text-[#0B1D3D]"
                   )}
                 >
                   {item.label}
@@ -86,28 +65,44 @@ export function SiteNav() {
             <Link
               href="/sell"
               prefetch
-              className="hidden text-[0.8125rem] font-medium text-[#0B1D3D]/80 transition-colors hover:text-[#0B1D3D] md:inline-flex"
+              className="hidden h-9 items-center rounded-md bg-[#0B1D3D] px-4 text-[0.8125rem] font-medium text-white transition-colors hover:bg-[#0a172e] md:inline-flex"
             >
-              List with Us
+              List Your Property
             </Link>
+
+            <button
+              type="button"
+              className="hidden h-9 items-center gap-1.5 rounded-md px-2 text-[0.8125rem] font-medium text-[#0B1D3D] transition-colors hover:bg-[#F2F2F2] lg:inline-flex"
+              aria-label="Currency: AED"
+            >
+              <span className="text-base leading-none" aria-hidden>
+                🇦🇪
+              </span>
+              AED
+              <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+            </button>
+
+            <Link
+              href="/buy"
+              prefetch
+              className="hidden h-9 w-9 items-center justify-center rounded-md text-[#0B1D3D] transition-colors hover:bg-[#F2F2F2] lg:inline-flex"
+              aria-label="Search properties"
+            >
+              <Search className="h-[1.125rem] w-[1.125rem]" strokeWidth={2} />
+            </Link>
+
             <Link
               href="/login"
               prefetch
-              className="hidden h-9 items-center gap-1.5 rounded border border-[#0B1D3D]/15 px-3 text-[0.8125rem] font-medium text-[#0B1D3D] transition-colors hover:border-[#0B1D3D]/30 sm:inline-flex"
+              className="hidden h-9 w-9 items-center justify-center rounded-md text-[#0B1D3D] transition-colors hover:bg-[#F2F2F2] lg:inline-flex"
+              aria-label="Sign in"
             >
-              <User className="h-3.5 w-3.5" />
-              Sign In
+              <User className="h-[1.125rem] w-[1.125rem]" strokeWidth={2} />
             </Link>
+
             <button
               type="button"
-              className="hidden h-9 w-9 items-center justify-center rounded text-[#0B1D3D]/70 transition-colors hover:text-[#0B1D3D] lg:inline-flex"
-              aria-label="Language"
-            >
-              <Globe className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded text-[#0B1D3D] lg:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-md text-[#0B1D3D] lg:hidden"
               aria-expanded={open}
               aria-label={open ? "Close menu" : "Open menu"}
               onClick={() => setOpen((v) => !v)}
@@ -131,14 +126,9 @@ export function SiteNav() {
                 {item.label}
               </Link>
             ))}
-            <div className="mt-4 flex flex-col gap-2">
-              <Link href="/sell" prefetch className="ul-btn-outline h-11">
-                List with Us
-              </Link>
-              <Link href="/login" prefetch className="ul-btn-primary h-11">
-                Sign In
-              </Link>
-            </div>
+            <Link href="/sell" prefetch className="ul-btn-primary mt-4 h-11">
+              List Your Property
+            </Link>
           </nav>
         </div>
       )}

@@ -13,12 +13,11 @@ export const SITE = {
 } as const;
 
 export const NAV = [
-  { href: "/buy", label: "Buy" },
-  { href: "/rent", label: "Rent" },
-  { href: "/off-plan", label: "Off-plan" },
-  { href: "/communities", label: "Communities" },
-  { href: "/about", label: "About Us" },
-  { href: "/contact", label: "Contact" },
+  { href: "/buy", label: "Portfolio" },
+  { href: "/off-plan", label: "Investments" },
+  { href: "/sell", label: "Services" },
+  { href: "/about", label: "Urban Living Blog" },
+  { href: "/contact", label: "Media Hub" },
 ] as const;
 
 export const FOOTER_PROPERTY = [

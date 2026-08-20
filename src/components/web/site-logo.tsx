@@ -12,27 +12,16 @@ export function SiteLogo({
     <Link
       href="/"
       prefetch
-      className={cn("group flex items-center gap-2.5", className)}
-      aria-label="UrbanLuxe home"
+      className={cn("group inline-flex items-center", className)}
+      aria-label="Urban Luxe home"
     >
       <span
         className={cn(
-          "relative flex h-8 w-8 items-center justify-center rounded-sm",
-          inverted ? "bg-white/10" : "bg-[#0B1D3D]"
-        )}
-        aria-hidden
-      >
-        <span className={cn("text-xs font-bold tracking-tighter", inverted ? "text-white" : "text-white")}>
-          UL
-        </span>
-      </span>
-      <span
-        className={cn(
-          "text-[1.05rem] font-semibold tracking-[0.08em]",
+          "text-[1.125rem] font-bold tracking-[0.06em] md:text-[1.2rem]",
           inverted ? "text-white" : "text-[#0B1D3D]"
         )}
       >
-        URBANLUXE
+        URBAN LUXE
       </span>
     </Link>
   );

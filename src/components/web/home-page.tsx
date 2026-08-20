@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Play } from "lucide-react";
 import { IMAGES } from "@/lib/web/listings";
-import { HeroSearch } from "@/components/web/hero-search";
+import { HeroSection } from "@/components/web/hero-section";
 import { Reveal } from "@/components/web/reveal";
 import { cn } from "@/lib/utils";
 
@@ -63,19 +63,7 @@ const FEATURED_NEWS = [
 export function HomePage() {
   return (
     <>
-      {/* Hero */}
-      <section className="bg-[#F2F2F2] px-5 pb-16 pt-14 md:px-10 md:pb-24 md:pt-20">
-        <div className="mx-auto max-w-[1440px]">
-          <Reveal>
-            <h1 className="max-w-2xl text-4xl leading-[1.05] text-[#0B1D3D] md:text-6xl lg:text-7xl">
-              Find your place.
-            </h1>
-          </Reveal>
-          <Reveal delay={80} className="mt-10">
-            <HeroSearch />
-          </Reveal>
-        </div>
-      </section>
+      <HeroSection />
 
       {/* Category cards */}
       <section className="px-5 py-4 md:px-10">

@@ -61,6 +61,7 @@ export const IMAGES = {
   water: u("photo-1571896349842-33c89424de2d", 2000),
   penthouse: u("photo-1600607687644-c7171b42498f", 2000),
   terrace: u("photo-1600210492493-0946911123ea", 2000),
+  heroRefined: u("photo-1600210492493-0946911123ea", 2560),
   bedroom: u("photo-1616594039964-aac4c3eac7f4", 1800),
   about: u("photo-1600585154526-990dced4db0d", 2000),
 };
