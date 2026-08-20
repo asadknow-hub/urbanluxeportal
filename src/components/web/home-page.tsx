@@ -209,11 +209,11 @@ export function HomePage() {
       {/* 7 · Why our agents */}
       <WhyAgentsSection />
 
-      {/* 8 · Developers marquee */}
-      <DevelopersMarquee />
-
-      {/* 9 · Market growth & appreciation */}
+      {/* 8 · Market growth & appreciation */}
       <MarketGrowthSection />
+
+      {/* 9 · Developers marquee */}
+      <DevelopersMarquee />
 
       {/* 10 · Insights */}
       <section className="bg-white px-5 py-16 md:px-10 md:py-24">
