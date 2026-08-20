@@ -64,20 +64,20 @@ export function HomePage() {
 
       {/* Category cards — Buy · Rent · Offplan · brand-washed · laptop viewport */}
       <section className="flex min-h-svh items-center bg-[var(--ul-tertiary)] px-5 py-12 md:px-10 md:py-16">
-        <div className="mx-auto grid w-full max-w-5xl gap-5 md:grid-cols-3 md:gap-6">
+        <div className="mx-auto grid w-full max-w-[1280px] gap-6 md:grid-cols-3 md:gap-8">
           {CATEGORY_CARDS.map((card, i) => (
             <Reveal key={card.href} delay={i * 60}>
               <Link
                 href={card.href}
                 prefetch
-                className="group flex h-full max-h-[28rem] flex-col overflow-hidden rounded-xl bg-white shadow-[0_8px_32px_rgba(11,29,61,0.08)] transition-shadow hover:shadow-[0_12px_40px_rgba(11,29,61,0.12)]"
+                className="group flex h-full min-h-[22rem] flex-col overflow-hidden rounded-sm bg-white shadow-[0_8px_32px_rgba(11,29,61,0.08)] transition-shadow hover:shadow-[0_12px_40px_rgba(11,29,61,0.12)] md:min-h-[26rem]"
               >
-                <div className="relative aspect-[5/4] overflow-hidden">
+                <div className="relative min-h-[14rem] flex-1 overflow-hidden md:min-h-[18rem]">
                   <Image
                     src={card.image}
                     alt={card.kicker}
                     fill
-                    sizes="(max-width: 768px) 100vw, 280px"
+                    sizes="(max-width: 768px) 100vw, 400px"
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   <div
@@ -87,15 +87,15 @@ export function HomePage() {
                     )}
                   />
                 </div>
-                <div className={cn("flex flex-col px-5 py-5", card.panel)}>
-                  <p className="text-[0.65rem] font-semibold tracking-[0.18em] uppercase opacity-80">
+                <div className={cn("flex flex-col px-6 py-6 md:px-7 md:py-7", card.panel)}>
+                  <p className="text-xs font-semibold tracking-[0.18em] uppercase opacity-80">
                     {card.kicker}
                   </p>
-                  <p className="mt-1.5 text-lg font-semibold leading-snug tracking-tight">
+                  <p className="mt-2 text-xl font-semibold leading-snug tracking-tight md:text-2xl">
                     {card.title}
                   </p>
-                  <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium opacity-90 transition-all group-hover:gap-2.5">
-                    {card.link} <ArrowRight className="h-3.5 w-3.5" />
+                  <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium opacity-90 transition-all group-hover:gap-2.5 md:text-base">
+                    {card.link} <ArrowRight className="h-4 w-4" />
                   </span>
                 </div>
               </Link>
