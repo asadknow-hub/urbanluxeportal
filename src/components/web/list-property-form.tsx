@@ -19,7 +19,7 @@ const PROPERTY_TYPES = [
   "Other",
 ] as const;
 
-export function ListPropertyForm() {
+export function ListPropertyForm({ defaultIntent = "sell" }: { defaultIntent?: string }) {
   const [pending, setPending] = useState(false);
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -53,7 +53,7 @@ export function ListPropertyForm() {
         className={field}
         autoComplete="tel"
       />
-      <select name="intent" required className={field} defaultValue="sell">
+      <select name="intent" required className={field} defaultValue={defaultIntent}>
         {INTENT.map((item) => (
           <option key={item.value} value={item.value}>
             {item.label}

@@ -37,9 +37,9 @@ export const FOOTER_PROPERTY = [
 
 export const FOOTER_SERVICES = [
   { href: "/sell", label: "List with Us" },
-  { href: "/contact", label: "Property Management" },
+  { href: "/property-management", label: "Property Management" },
   { href: "/mortgages", label: "Mortgage Advisory" },
-  { href: "/contact", label: "Valuations" },
+  { href: "/valuations", label: "Valuations" },
 ] as const;
 
 export const FOOTER_LINKS = [

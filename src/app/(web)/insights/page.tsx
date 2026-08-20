@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Clock3, TrendingUp } from "lucide-react";
-import { IMAGES } from "@/lib/web/listings";
+import { featuredInsight, latestInsights } from "@/lib/web/insights";
 import { Reveal } from "@/components/web/reveal";
 import { cn } from "@/lib/utils";
 
@@ -20,86 +20,6 @@ const TOPICS = [
   { label: "Investment", href: "#snapshot" },
 ] as const;
 
-const FEATURED = {
-  image: IMAGES.downtown,
-  category: "Market",
-  readMins: 6,
-  date: "Aug 2026",
-  title: "Downtown Dubai: where demand is concentrating this season",
-  excerpt:
-    "Fountain-facing stacks and Opera District residences continue to clear first. Here is how pricing, stock, and buyer profiles are shifting — and what that means if you are viewing this quarter.",
-  href: "/buy?community=downtown-dubai",
-} as const;
-
-const ARTICLES = [
-  {
-    image: IMAGES.penthouse,
-    category: "Sales",
-    readMins: 4,
-    date: "Aug 2026",
-    title: "Villa sales reach new highs",
-    excerpt:
-      "Family compounds in Hills and Emirates Hills are trading with shorter negotiation windows. Why listings that photograph well still win.",
-    href: "/buy?type=villa",
-    panel: "bg-[var(--ul-primary)] text-white",
-  },
-  {
-    image: IMAGES.creek,
-    category: "Off-plan",
-    readMins: 5,
-    date: "Jul 2026",
-    title: "Off-plan launches this quarter",
-    excerpt:
-      "Payment plans, handover timing, and which Creek and South launches are worth a private briefing before the brochure hits portals.",
-    href: "/off-plan",
-    panel: "bg-[var(--ul-secondary)] text-white",
-  },
-  {
-    image: IMAGES.marina,
-    category: "Communities",
-    readMins: 5,
-    date: "Jul 2026",
-    title: "Marina living: yield vs lifestyle",
-    excerpt:
-      "A practical split between investor-grade towers and residences that still feel like homes — plus rent comps that matter.",
-    href: "/rent",
-    panel: "bg-[var(--ul-tertiary)] text-[var(--ul-primary)]",
-  },
-  {
-    image: IMAGES.hills,
-    category: "Investment",
-    readMins: 7,
-    date: "Jun 2026",
-    title: "Holding periods that actually pay",
-    excerpt:
-      "Appreciation is not uniform. Three hold scenarios we walk clients through before they stretch for a villa plot.",
-    href: "/mortgages",
-    panel: "bg-[var(--ul-primary)] text-white",
-  },
-  {
-    image: IMAGES.palm,
-    category: "Buying guide",
-    readMins: 6,
-    date: "Jun 2026",
-    title: "Palm fronds: what to check before offer",
-    excerpt:
-      "Beach access, plot privacy, and service charges — the diligence list we use on Frond viewings.",
-    href: "/buy?community=palm-jumeirah",
-    panel: "bg-[var(--ul-secondary)] text-white",
-  },
-  {
-    image: IMAGES.interior,
-    category: "Buying guide",
-    readMins: 4,
-    date: "May 2026",
-    title: "Furnished or vacant: a renter’s decision tree",
-    excerpt:
-      "When furniture saves time, when it costs yield, and how landlords should price either path.",
-    href: "/rent",
-    panel: "bg-[var(--ul-tertiary)] text-[var(--ul-primary)]",
-  },
-] as const;
-
 const SNAPSHOT = [
   { label: "Median ready sale lift", value: "+12%", sub: "YoY · select communities" },
   { label: "Avg. days on market", value: "28", sub: "Prime villa stock" },
@@ -111,17 +31,17 @@ const GUIDES = [
   {
     title: "First viewing checklist",
     body: "Light, noise, service charge, and the three questions that reveal a rushed listing.",
-    href: "/contact",
+    href: "/insights/palm-fronds-what-to-check-before-offer",
   },
   {
     title: "Offer strategy in a competitive week",
     body: "When to move fast, when to wait, and how to structure conditions without losing the house.",
-    href: "/contact",
+    href: "/insights/villa-sales-reach-new-highs",
   },
   {
     title: "Rent vs buy in Dubai — 2026 frame",
     body: "A clear model for five-year holds, residency plans, and opportunity cost.",
-    href: "/mortgages",
+    href: "/insights/holding-periods-that-actually-pay",
   },
 ] as const;
 
@@ -143,7 +63,7 @@ function MetaRow({
         light ? "text-white/70" : "text-[#0B1D3D]/45"
       )}
     >
-      <span className={light ? "text-[#1E7A4A]" : "text-[#1E7A4A]"}>{category}</span>
+      <span className="text-[#1E7A4A]">{category}</span>
       <span aria-hidden>·</span>
       <span>{date}</span>
       <span aria-hidden>·</span>
@@ -156,9 +76,11 @@ function MetaRow({
 }
 
 export default function InsightsPage() {
+  const featured = featuredInsight();
+  const articles = latestInsights(featured.slug);
+
   return (
     <>
-      {/* Hero */}
       <section className="bg-[#0B1D3D] px-5 pb-12 pt-12 text-white md:px-10 md:pb-14 md:pt-16">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
@@ -185,7 +107,6 @@ export default function InsightsPage() {
         </div>
       </section>
 
-      {/* Featured */}
       <section id="featured" className="bg-white px-5 py-12 md:px-10 md:py-16">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
@@ -206,14 +127,14 @@ export default function InsightsPage() {
 
           <Reveal>
             <Link
-              href={FEATURED.href}
+              href={`/insights/${featured.slug}`}
               prefetch
               className="group grid overflow-hidden rounded-2xl border border-[#e5e7eb] bg-[#F2F2F2] shadow-[0_4px_24px_rgba(11,29,61,0.05)] transition-shadow hover:shadow-[0_10px_36px_rgba(11,29,61,0.1)] lg:grid-cols-2"
             >
               <div className="relative min-h-[240px] lg:min-h-[380px]">
                 <Image
-                  src={FEATURED.image}
-                  alt={FEATURED.title}
+                  src={featured.image}
+                  alt={featured.title}
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
@@ -222,15 +143,15 @@ export default function InsightsPage() {
               </div>
               <div className="flex flex-col justify-center px-6 py-8 md:px-10 md:py-12">
                 <MetaRow
-                  category={FEATURED.category}
-                  date={FEATURED.date}
-                  readMins={FEATURED.readMins}
+                  category={featured.category}
+                  date={featured.date}
+                  readMins={featured.readMins}
                 />
                 <h3 className="mt-4 text-2xl font-bold leading-snug text-[#0B1D3D] transition-colors group-hover:text-[#1E7A4A] md:text-3xl">
-                  {FEATURED.title}
+                  {featured.title}
                 </h3>
                 <p className="mt-4 text-sm leading-relaxed text-[#0B1D3D]/70 md:text-base">
-                  {FEATURED.excerpt}
+                  {featured.excerpt}
                 </p>
                 <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#0B1D3D] transition-all group-hover:gap-2.5">
                   Read the brief <ArrowRight className="h-4 w-4" />
@@ -241,7 +162,6 @@ export default function InsightsPage() {
         </div>
       </section>
 
-      {/* Snapshot */}
       <section id="snapshot" className="border-y border-[#e5e7eb] bg-[#F2F2F2] px-5 py-10 md:px-10 md:py-12">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
@@ -267,7 +187,6 @@ export default function InsightsPage() {
         </div>
       </section>
 
-      {/* Latest grid */}
       <section id="latest" className="bg-white px-5 py-14 md:px-10 md:py-20">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
@@ -280,10 +199,10 @@ export default function InsightsPage() {
           </Reveal>
 
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {ARTICLES.map((item, i) => (
-              <Reveal key={item.title} delay={i * 50}>
+            {articles.map((item, i) => (
+              <Reveal key={item.slug} delay={i * 50}>
                 <Link
-                  href={item.href}
+                  href={`/insights/${item.slug}`}
                   prefetch
                   className="group flex h-full flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_2px_12px_rgba(11,29,61,0.04)] transition-shadow hover:shadow-[0_8px_28px_rgba(11,29,61,0.1)]"
                 >
@@ -323,7 +242,6 @@ export default function InsightsPage() {
         </div>
       </section>
 
-      {/* Guides */}
       <section id="guides" className="border-t border-[#e5e7eb] bg-[#F2F2F2] px-5 py-14 md:px-10 md:py-20">
         <div className="mx-auto grid max-w-[1280px] gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           <Reveal>
@@ -365,7 +283,6 @@ export default function InsightsPage() {
         </div>
       </section>
 
-      {/* Newsletter / CTA */}
       <section className="bg-[#0B1D3D] px-5 py-14 md:px-10 md:py-16">
         <Reveal className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           <div className="max-w-xl">

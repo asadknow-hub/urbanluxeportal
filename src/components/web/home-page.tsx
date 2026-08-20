@@ -44,19 +44,19 @@ const FEATURED_NEWS = [
     image: IMAGES.downtown,
     panel: "bg-[var(--ul-primary)] text-white",
     title: "Downtown Dubai market update",
-    href: "/insights",
+    href: "/insights/downtown-dubai-demand-this-season",
   },
   {
     image: IMAGES.penthouse,
     panel: "bg-[var(--ul-tertiary)] text-[var(--ul-primary)]",
     title: "Villa sales reach new highs",
-    href: "/insights",
+    href: "/insights/villa-sales-reach-new-highs",
   },
   {
     image: IMAGES.creek,
     panel: "bg-[var(--ul-secondary)] text-white",
     title: "Off-plan launches this quarter",
-    href: "/insights",
+    href: "/insights/off-plan-launches-this-quarter",
   },
 ] as const;
 
