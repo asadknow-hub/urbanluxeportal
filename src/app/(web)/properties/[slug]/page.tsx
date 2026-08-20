@@ -12,7 +12,8 @@ import {
 import { EnquireForm } from "@/components/web/enquire-form";
 import { PropertyCard } from "@/components/web/property-card";
 import { PropertyGallery } from "@/components/web/property-gallery";
-import { waLink } from "@/lib/web/site";
+import { waLinkFor } from "@/lib/company-brand";
+import { getPublicBrand } from "@/server/company-settings";
 
 export function generateStaticParams() {
   return LISTINGS.map((l) => ({ slug: l.slug }));
@@ -40,8 +41,13 @@ export default async function PropertyPage({
   const { slug } = await params;
   const listing = listingBySlug(slug);
   if (!listing) notFound();
+  const brand = await getPublicBrand();
   const similar = similarListings(listing);
   const kindMeta = KIND_META[listing.kind];
+  const chatHref = waLinkFor(
+    brand.whatsapp,
+    `Interested in ${listing.title} at ${formatAed(listing.priceAed, listing.kind)}?`
+  );
   const kindLabel =
     listing.kind === "rent" ? "Property to rent in Dubai" : listing.kind === "offplan" ? "Off-plan in Dubai" : "Property for sale in Dubai";
 
@@ -150,7 +156,7 @@ export default async function PropertyPage({
       </div>
 
       <a
-        href={waLink(`Interested in ${listing.title} at ${formatAed(listing.priceAed, listing.kind)}?`)}
+        href={chatHref}
         target="_blank"
         rel="noreferrer"
         className="pointer-events-none fixed bottom-24 right-5 z-40 hidden max-w-[16rem] rounded-2xl bg-white p-3 text-left text-xs leading-relaxed text-[#14110e] shadow-[0_12px_40px_rgba(20,17,14,0.18)] md:pointer-events-auto md:block"

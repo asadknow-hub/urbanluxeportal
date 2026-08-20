@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Bath, BedDouble, Camera, MapPin, Maximize2, Phone } from "lucide-react";
 import { formatAedPlain, type Listing } from "@/lib/web/listings";
-import { SITE, waLink } from "@/lib/web/site";
+import { useBrand, useWaLink } from "@/components/brand/brand-provider";
 import { cn } from "@/lib/utils";
 
 const AGENTS = [
@@ -64,6 +64,7 @@ function BrandMark({ className }: { className?: string }) {
 }
 
 export function ListingResultCard({ listing }: { listing: Listing }) {
+  const brand = useBrand();
   const agent = agentFor(listing);
   const gallery = [listing.image, ...listing.gallery.filter((g) => g !== listing.image)].slice(0, 4);
   while (gallery.length < 4) gallery.push(gallery[gallery.length - 1] ?? listing.image);
@@ -73,8 +74,8 @@ export function ListingResultCard({ listing }: { listing: Listing }) {
     listing.kind === "rent"
       ? `${formatAedPlain(listing.priceAed)} / year`
       : formatAedPlain(listing.priceAed);
-  const wa = waLink(
-    `Hi Urban Luxe — I'm interested in ${listing.title} (${listing.ref}) in ${listing.community}.`
+  const wa = useWaLink(
+    `Hi ${brand.name} — I'm interested in ${listing.title} (${listing.ref}) in ${listing.community}.`
   );
 
   return (
@@ -154,7 +155,7 @@ export function ListingResultCard({ listing }: { listing: Listing }) {
             </div>
             <div className="flex items-center gap-2.5">
               <a
-                href={`tel:${SITE.phoneTel}`}
+                href={`tel:${brand.phoneTel}`}
                 className="inline-flex h-10 items-center gap-1.5 rounded-full border border-[#0B1D3D]/25 px-4 text-sm font-semibold text-[#0B1D3D] transition-colors hover:border-[#0B1D3D] hover:bg-[#F2F2F2]"
               >
                 <Phone className="h-3.5 w-3.5" strokeWidth={2.25} />

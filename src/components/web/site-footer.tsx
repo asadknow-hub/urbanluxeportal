@@ -3,11 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { FOOTER_LINKS, FOOTER_PROPERTY, FOOTER_SERVICES, SITE } from "@/lib/web/site";
+import { FOOTER_LINKS, FOOTER_PROPERTY, FOOTER_SERVICES } from "@/lib/web/site";
 import { SiteLogo } from "@/components/web/site-logo";
+import { useBrand } from "@/components/brand/brand-provider";
 import { toast } from "sonner";
 
 export function SiteFooter() {
+  const brand = useBrand();
   const [email, setEmail] = useState("");
   const [pending, setPending] = useState(false);
 
@@ -30,7 +32,7 @@ export function SiteFooter() {
           <div className="lg:col-span-5">
             <SiteLogo inverted />
             <p className="mt-6 max-w-sm text-sm leading-relaxed text-white/65">
-              {SITE.tagline} A Dubai brokerage for villas, apartments, and off-plan residences —
+              {brand.tagline} A Dubai brokerage for villas, apartments, and off-plan residences —
               placed with the care of a private office.
             </p>
             <form onSubmit={onSubscribe} className="mt-8 flex max-w-md gap-0">
@@ -119,17 +121,17 @@ export function SiteFooter() {
               </p>
               <ul className="mt-4 space-y-2.5 text-sm text-white/70">
                 <li>
-                  <a href={`tel:${SITE.phoneTel}`} className="transition-colors hover:text-white">
-                    {SITE.phoneDisplay}
+                  <a href={`tel:${brand.phoneTel}`} className="transition-colors hover:text-white">
+                    {brand.phoneDisplay}
                   </a>
                 </li>
                 <li>
-                  <a href={`mailto:${SITE.email}`} className="transition-colors hover:text-white">
-                    {SITE.email}
+                  <a href={`mailto:${brand.email}`} className="transition-colors hover:text-white">
+                    {brand.email}
                   </a>
                 </li>
-                <li className="leading-relaxed">{SITE.address}</li>
-                <li className="text-white/50">{SITE.rera}</li>
+                <li className="leading-relaxed">{brand.address}</li>
+                <li className="text-white/50">{brand.rera}</li>
               </ul>
             </div>
           </div>
@@ -137,7 +139,7 @@ export function SiteFooter() {
 
         <div className="mt-14 flex flex-col gap-4 border-t border-white/10 pt-8 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-white/40">
-            © {new Date().getFullYear()} UrbanLuxe Real Estate. All rights reserved.
+            © {new Date().getFullYear()} {brand.name}. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <a

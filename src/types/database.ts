@@ -97,6 +97,9 @@ export interface Database {
           phone: string | null;
           email: string | null;
           logo_url: string | null;
+          logo_dark_url: string | null;
+          whatsapp: string | null;
+          tagline: string | null;
           vat_rate: number;
           quotation_prefix: string;
           invoice_prefix: string;

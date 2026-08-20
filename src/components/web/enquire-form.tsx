@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { SITE } from "@/lib/web/site";
+import { useBrand } from "@/components/brand/brand-provider";
 
 export function EnquireForm({
   propertyTitle,
@@ -11,6 +11,7 @@ export function EnquireForm({
   propertyTitle?: string;
   compact?: boolean;
 }) {
+  const brand = useBrand();
   const [pending, setPending] = useState(false);
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -60,8 +61,11 @@ export function EnquireForm({
       </button>
       <p className="text-center text-xs text-[#6b7280]">
         Or call{" "}
-        <a href={`tel:${SITE.phoneTel}`} className="text-[#0B1D3D] underline-offset-4 hover:underline">
-          {SITE.phoneDisplay}
+        <a
+          href={`tel:${brand.phoneTel}`}
+          className="text-[#0B1D3D] underline-offset-4 hover:underline"
+        >
+          {brand.phoneDisplay}
         </a>
       </p>
     </form>

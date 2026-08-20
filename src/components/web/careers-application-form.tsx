@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { SITE } from "@/lib/web/site";
+import { useBrand } from "@/components/brand/brand-provider";
 
 const ROLES = [
   "Sales Advisor",
@@ -14,6 +14,7 @@ const ROLES = [
 ] as const;
 
 export function CareersApplicationForm({ defaultRole }: { defaultRole?: string }) {
+  const brand = useBrand();
   const [pending, setPending] = useState(false);
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -90,10 +91,10 @@ export function CareersApplicationForm({ defaultRole }: { defaultRole?: string }
       <p className="text-center text-xs text-[#6b7280]">
         Prefer email? Write to{" "}
         <a
-          href={`mailto:${SITE.email}?subject=Career%20application`}
+          href={`mailto:${brand.email}?subject=Career%20application`}
           className="text-[#0B1D3D] underline-offset-4 hover:underline"
         >
-          {SITE.email}
+          {brand.email}
         </a>
       </p>
     </form>
