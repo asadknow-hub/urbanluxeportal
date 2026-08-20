@@ -192,33 +192,7 @@ export function HomePage() {
       {/* 7 · Market growth & appreciation */}
       <MarketGrowthSection />
 
-      {/* 8 · Dedicated service */}
-      <section className="bg-[var(--ul-primary)]">
-        <div className="mx-auto grid max-w-[1280px] items-stretch gap-0 md:grid-cols-2">
-          <Reveal className="flex flex-col justify-center px-5 py-16 md:px-10 md:py-20">
-            <p className="text-xs font-semibold tracking-[0.18em] uppercase text-[var(--ul-secondary)]">
-              Dedicated service
-            </p>
-            <h2 className="mt-3 max-w-lg text-3xl leading-tight text-white md:text-4xl">
-              We make sure you choose your perfect home — and grow your investment.
-            </h2>
-            <Link href="/contact" prefetch className="ul-link-arrow-light mt-8">
-              Contact us <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Reveal>
-          <Reveal delay={80} className="relative min-h-[18rem] md:min-h-[24rem]">
-            <Image
-              src={IMAGES.skyline}
-              alt="Dubai skyline"
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-            />
-          </Reveal>
-        </div>
-      </section>
-
-      {/* 9 · Insights */}
+      {/* 8 · Insights */}
       <section className="bg-white px-5 py-16 md:px-10 md:py-24">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
@@ -255,7 +229,7 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* 10 · CTA */}
+      {/* 9 · CTA */}
       <section className="border-t border-[var(--ul-hair)] bg-[var(--ul-tertiary)] px-5 py-16 md:px-10 md:py-20">
         <Reveal className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           <div>
