@@ -370,6 +370,10 @@
   animation: ul-marquee 48s linear infinite;
 }
 
+.ul-marquee-slow {
+  animation-duration: 72s;
+}
+
 .ul-marquee-track:hover {
   animation-play-state: paused;
 }
