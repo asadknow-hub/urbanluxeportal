@@ -135,8 +135,10 @@ export function ListingsExplorer({
 
   const filtered = useMemo(() => {
     let rows = listings.filter((l) => {
-      if (status === "ready" && l.status !== "ready") return false;
-      if (status === "offplan" && l.status !== "offplan") return false;
+      if (!isRent) {
+        if (status === "ready" && l.status !== "ready") return false;
+        if (status === "offplan" && l.status !== "offplan") return false;
+      }
       if (type && l.type !== type) return false;
       if (community && l.communitySlug !== community) return false;
       if (beds) {
@@ -161,7 +163,7 @@ export function ListingsExplorer({
     else if (sort === "beds") rows.sort((a, b) => b.beds - a.beds);
 
     return rows;
-  }, [listings, status, type, community, beds, priceMin, priceMax, query, sort]);
+  }, [listings, status, type, community, beds, priceMin, priceMax, query, sort, isRent]);
 
   const title =
     kind === "rent" ? "Properties For Rent In Dubai" : "Properties For Sale In Dubai";
@@ -292,45 +294,47 @@ export function ListingsExplorer({
         )}
       </div>
 
-      <div className="mt-6 flex flex-col gap-4 border-b border-[#e5e7eb] pb-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mt-6 flex flex-col gap-4 border-b border-[#e5e7eb] pb-5 lg:flex-row lg:items-center lg:justify-between lg:pb-6">
         <p className="text-sm text-[#0B1D3D]/70 md:text-[0.9375rem]">
           {title}{" "}
           <span className="font-bold text-[#0B1D3D]">| {filtered.length} results</span>
         </p>
 
         <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-[#0B1D3D]/65">Show:</span>
-            <div className="inline-flex overflow-hidden rounded-md border border-[#d1d5db]">
-              {(
-                [
-                  { id: "ready" as const, label: "Ready" },
-                  { id: "offplan" as const, label: "Off Plan" },
-                ] as const
-              ).map((opt) => {
-                const active = status === opt.id;
-                return (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => {
-                      setStatus(opt.id);
-                      syncUrl({ status: opt.id });
-                    }}
-                    className={cn(
-                      "inline-flex h-9 items-center gap-1.5 px-3 text-sm font-semibold transition-colors",
-                      active
-                        ? "bg-[#0B1D3D] text-white"
-                        : "bg-white text-[#0B1D3D] hover:bg-[#F2F2F2]"
-                    )}
-                  >
-                    {active ? <Check className="h-3.5 w-3.5" strokeWidth={2.5} /> : null}
-                    {opt.label}
-                  </button>
-                );
-              })}
+          {!isRent && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-[#0B1D3D]/65">Show:</span>
+              <div className="inline-flex overflow-hidden rounded-md border border-[#d1d5db]">
+                {(
+                  [
+                    { id: "ready" as const, label: "Ready" },
+                    { id: "offplan" as const, label: "Off Plan" },
+                  ] as const
+                ).map((opt) => {
+                  const active = status === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => {
+                        setStatus(opt.id);
+                        syncUrl({ status: opt.id });
+                      }}
+                      className={cn(
+                        "inline-flex h-9 items-center gap-1.5 px-3 text-sm font-semibold transition-colors",
+                        active
+                          ? "bg-[#0B1D3D] text-white"
+                          : "bg-white text-[#0B1D3D] hover:bg-[#F2F2F2]"
+                      )}
+                    >
+                      {active ? <Check className="h-3.5 w-3.5" strokeWidth={2.5} /> : null}
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="relative">
             <ArrowUpDown className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#0B1D3D]/45" />
@@ -362,7 +366,7 @@ export function ListingsExplorer({
         </div>
       </div>
 
-      <div className="mt-5 space-y-4 pb-10">
+      <div className="mt-8 space-y-6 pb-12 md:mt-10 md:space-y-8">
         {filtered.length === 0 ? (
           <p className="rounded-lg border border-dashed border-[#d1d5db] px-6 py-16 text-center text-sm text-[#0B1D3D]/55">
             No properties match these filters. Try widening your search.
