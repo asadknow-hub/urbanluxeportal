@@ -65,16 +65,16 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
   const developers = new Set(listings.map((l) => l.developer).filter(Boolean)).size;
 
   return (
-    <div className="mx-auto max-w-[1280px] px-5 md:px-8">
-      <div className="mb-6 flex items-end justify-between gap-4">
-        <div>
+    <div className="mx-auto max-w-[1280px] px-4 sm:px-5 md:px-8">
+      <div className="mb-5 flex items-end justify-between gap-3 sm:mb-6 sm:gap-4">
+        <div className="min-w-0">
           <p className="ul-kicker">Off-plan</p>
-          <h1 className="mt-2 text-3xl md:text-4xl">Find your perfect property</h1>
+          <h1 className="mt-2 text-2xl leading-tight sm:text-3xl md:text-4xl">Find your perfect property</h1>
         </div>
         <button
           type="button"
-          className="inline-flex h-11 items-center gap-2 rounded-lg border border-[#e4d9c8] bg-white px-4 text-sm lg:hidden"
-          onClick={() => setFiltersOpen((v) => !v)}
+          className="inline-flex h-11 shrink-0 items-center gap-2 rounded-lg border border-[#e4d9c8] bg-white px-3.5 text-sm sm:px-4 lg:hidden"
+          onClick={() => setFiltersOpen(true)}
         >
           <SlidersHorizontal className="h-4 w-4" />
           Filters
@@ -82,13 +82,32 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+        {filtersOpen && (
+          <button
+            type="button"
+            className="fixed inset-0 z-40 bg-[#0B1D3D]/45 lg:hidden"
+            aria-label="Close filters"
+            onClick={() => setFiltersOpen(false)}
+          />
+        )}
         <aside
           className={cn(
-            "rounded-2xl bg-[#1b2430] p-6 text-[#f6f3ee]",
-            filtersOpen ? "block" : "hidden lg:block"
+            "rounded-2xl bg-[#1b2430] p-5 text-[#f6f3ee] sm:p-6",
+            "max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-50 max-lg:max-h-[88svh] max-lg:overflow-y-auto max-lg:rounded-b-none max-lg:rounded-t-2xl max-lg:pb-[calc(1.25rem+var(--ul-safe-bottom,0px))]",
+            filtersOpen ? "max-lg:block" : "max-lg:hidden",
+            "lg:sticky lg:top-24 lg:block lg:self-start"
           )}
         >
-          <p className="text-sm font-medium tracking-wide">Search filters</p>
+          <div className="mb-2 flex items-center justify-between lg:block">
+            <p className="text-sm font-medium tracking-wide">Search filters</p>
+            <button
+              type="button"
+              className="text-sm font-semibold text-[#2dd4bf] lg:hidden"
+              onClick={() => setFiltersOpen(false)}
+            >
+              Done
+            </button>
+          </div>
 
           <label className="mt-6 block text-[0.65rem] tracking-[0.18em] uppercase text-[#2dd4bf]">Location</label>
           <select

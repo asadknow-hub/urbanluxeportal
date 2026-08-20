@@ -31,8 +31,8 @@ export function PropertyGallery({ listing }: { listing: Listing }) {
 
   return (
     <>
-      <div className="grid gap-2.5 md:grid-cols-3 md:grid-rows-2 md:h-[28rem] lg:h-[32rem]">
-        <div className="relative min-h-[16rem] overflow-hidden rounded-2xl md:col-span-2 md:row-span-2 md:min-h-0">
+      <div className="grid gap-2 md:grid-cols-3 md:grid-rows-2 md:h-[28rem] lg:h-[32rem]">
+        <div className="relative aspect-[4/3] overflow-hidden rounded-xl sm:aspect-[16/10] sm:rounded-2xl md:col-span-2 md:row-span-2 md:aspect-auto md:min-h-0">
           <button type="button" onClick={() => show(0)} className="absolute inset-0" aria-label="Open photos">
             {main && (
               <Image src={main} alt={listing.title} fill preload sizes="(max-width: 768px) 100vw, 70vw" className="object-cover" />
@@ -43,11 +43,11 @@ export function PropertyGallery({ listing }: { listing: Listing }) {
               Exclusive listing
             </span>
           )}
-          <div className="absolute bottom-4 left-4 z-10 flex gap-2">
+          <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-wrap gap-2 sm:bottom-4 sm:left-4">
             <button
               type="button"
               onClick={() => show(0)}
-              className="inline-flex items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 text-xs font-medium text-[#14110e] shadow-sm"
+              className="inline-flex min-h-9 items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 text-xs font-medium text-[#14110e] shadow-sm"
             >
               <Camera className="h-3.5 w-3.5" />
               {images.length} photos
@@ -56,7 +56,7 @@ export function PropertyGallery({ listing }: { listing: Listing }) {
               href={maps}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 text-xs font-medium text-[#14110e] shadow-sm hover:bg-white"
+              className="inline-flex min-h-9 items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 text-xs font-medium text-[#14110e] shadow-sm hover:bg-white"
             >
               <MapPin className="h-3.5 w-3.5" />
               Map

@@ -35,28 +35,28 @@ const HIGHLIGHTS = [
 export default function MortgagesPage() {
   return (
     <>
-      <section className="bg-[#0B1D3D] px-5 pb-10 pt-12 text-white md:px-10 md:pb-12 md:pt-16">
+      <section className="bg-[#0B1D3D] px-4 pb-8 pt-10 text-white sm:px-5 sm:pb-10 sm:pt-12 md:px-10 md:pb-12 md:pt-16">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <p className="ul-kicker text-[#1E7A4A]">Mortgages</p>
-            <h1 className="mt-4 max-w-3xl text-3xl leading-[1.12] md:text-5xl">
+            <h1 className="mt-3 max-w-3xl text-[1.85rem] leading-[1.12] sm:mt-4 sm:text-3xl md:text-5xl">
               Finance the right home — with clarity.
             </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/70 md:text-base">
+            <p className="mt-4 max-w-2xl text-[0.9375rem] leading-relaxed text-white/70 sm:text-sm md:text-base">
               Indicative calculations, straight answers on Dubai lending, and introductions to
               advisors who move at the pace of your offer.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link
                 href="#calculator"
-                className="inline-flex h-11 items-center justify-center rounded-full bg-[#1E7A4A] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#155c38]"
+                className="inline-flex h-12 items-center justify-center rounded-full bg-[#1E7A4A] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#155c38] sm:h-11"
               >
                 Calculate repayments
               </Link>
               <Link
                 href="/contact"
                 prefetch
-                className="inline-flex h-11 items-center justify-center rounded-full border border-white/35 bg-transparent px-6 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                className="inline-flex h-12 items-center justify-center rounded-full border border-white/35 bg-transparent px-6 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:h-11"
               >
                 Speak to an advisor
               </Link>

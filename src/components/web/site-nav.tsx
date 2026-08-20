@@ -40,7 +40,7 @@ export function SiteNav() {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-50">
+    <header className="sticky top-0 z-50 pt-[var(--ul-safe-top,0px)]">
       <div
         className={cn(
           "border-b border-[#e5e7eb]/80 bg-white transition-[box-shadow,height] duration-300 ease-out",
@@ -49,13 +49,13 @@ export function SiteNav() {
       >
         <div
           className={cn(
-            "mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-5 transition-[height,padding] duration-300 ease-out md:px-10",
-            scrolled ? "h-12" : "h-[4.25rem]"
+            "mx-auto flex max-w-[1440px] items-center justify-between gap-3 px-4 transition-[height,padding] duration-300 ease-out sm:gap-4 sm:px-5 md:px-10",
+            scrolled ? "h-12" : "h-14 sm:h-[4.25rem]"
           )}
         >
           <SiteLogo
             className={cn(
-              "transition-transform duration-300 ease-out",
+              "min-w-0 transition-transform duration-300 ease-out",
               scrolled && "scale-[0.88] origin-left"
             )}
           />
@@ -86,7 +86,7 @@ export function SiteNav() {
             })}
           </nav>
 
-          <div className={cn("flex items-center", scrolled ? "gap-1.5 sm:gap-2" : "gap-2 sm:gap-3")}>
+          <div className={cn("flex shrink-0 items-center", scrolled ? "gap-1 sm:gap-2" : "gap-1.5 sm:gap-3")}>
             <Link
               href="/sell"
               prefetch
@@ -154,7 +154,7 @@ export function SiteNav() {
 
             <button
               type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-md text-[#0B1D3D] lg:hidden"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-md text-[#0B1D3D] lg:hidden"
               aria-expanded={open}
               aria-label={open ? "Close menu" : "Open menu"}
               onClick={() => setOpen((v) => !v)}
@@ -166,30 +166,40 @@ export function SiteNav() {
       </div>
 
       {open && (
-        <div className="border-b border-[#e5e7eb] bg-white lg:hidden">
-          <nav className="flex flex-col px-5 py-4" aria-label="Mobile">
-            {NAV.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                prefetch
-                className="border-b border-[#f2f2f2] py-3.5 text-sm font-bold text-[#0B1D3D]"
-              >
-                {item.label}
-              </Link>
-            ))}
-            <div className="border-b border-[#f2f2f2] py-3.5">
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#0B1D3D]/50">
+        <div className="fixed inset-x-0 bottom-0 top-[calc(3.5rem+var(--ul-safe-top,0px))] z-50 flex flex-col bg-white sm:top-[calc(4.25rem+var(--ul-safe-top,0px))] lg:hidden">
+          <nav
+            className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 pb-[calc(1.25rem+var(--ul-safe-bottom,0px))] pt-2"
+            aria-label="Mobile"
+          >
+            {NAV.map((item) => {
+              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  prefetch
+                  className={cn(
+                    "border-b border-[#f2f2f2] py-4 text-base font-bold text-[#0B1D3D]",
+                    active && "text-[#1E7A4A]"
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+
+            <div className="border-b border-[#f2f2f2] py-4">
+              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-[#0B1D3D]/50">
                 Currency
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 {CURRENCIES.map((item) => (
                   <button
                     key={item.code}
                     type="button"
                     onClick={() => setCurrency(item.code)}
                     className={cn(
-                      "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                      "min-h-11 rounded-md px-2 py-2.5 text-sm font-semibold transition-colors",
                       currency === item.code
                         ? "bg-[#0B1D3D] text-white"
                         : "bg-[#F2F2F2] text-[#0B1D3D]"
@@ -200,9 +210,28 @@ export function SiteNav() {
                 ))}
               </div>
             </div>
-            <Link href="/sell" prefetch className="ul-btn-primary mt-4 h-11">
-              List Your Property
-            </Link>
+
+            <div className="mt-auto grid gap-3 pt-6">
+              <Link
+                href="/buy"
+                prefetch
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-[#e5e7eb] text-sm font-semibold text-[#0B1D3D]"
+              >
+                <Search className="h-4 w-4" />
+                Search properties
+              </Link>
+              <Link
+                href="/login"
+                prefetch
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-[#e5e7eb] text-sm font-semibold text-[#0B1D3D]"
+              >
+                <User className="h-4 w-4" />
+                Sign in
+              </Link>
+              <Link href="/sell" prefetch className="ul-btn-primary h-12 w-full">
+                List Your Property
+              </Link>
+            </div>
           </nav>
         </div>
       )}

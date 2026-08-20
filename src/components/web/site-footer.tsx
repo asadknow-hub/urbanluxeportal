@@ -26,16 +26,16 @@ export function SiteFooter() {
 
   return (
     <footer className="bg-[#222222] text-white">
-      <div className="mx-auto max-w-[1440px] px-5 py-16 md:px-10 md:py-20">
-        <div className="grid gap-12 lg:grid-cols-12">
+      <div className="mx-auto max-w-[1440px] px-4 py-12 sm:px-5 sm:py-16 md:px-10 md:py-20">
+        <div className="grid gap-10 sm:gap-12 lg:grid-cols-12">
           {/* About + newsletter */}
           <div className="lg:col-span-5">
             <SiteLogo inverted />
-            <p className="mt-6 max-w-sm text-sm leading-relaxed text-white/65">
+            <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/65 sm:mt-6">
               {brand.tagline} A Dubai brokerage for villas, apartments, and off-plan residences —
               placed with the care of a private office.
             </p>
-            <form onSubmit={onSubscribe} className="mt-8 flex max-w-md gap-0">
+            <form onSubmit={onSubscribe} className="mt-6 flex max-w-md gap-0 sm:mt-8">
               <label className="sr-only" htmlFor="footer-email">
                 Email address
               </label>
@@ -46,7 +46,7 @@ export function SiteFooter() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Your email address"
-                className="h-12 min-w-0 flex-1 rounded-l bg-white px-4 text-sm text-[#222222] outline-none placeholder:text-[#6b7280]"
+                className="h-12 min-w-0 flex-1 rounded-l bg-white px-4 text-base text-[#222222] outline-none placeholder:text-[#6b7280] sm:text-sm"
               />
               <button
                 type="submit"
@@ -60,7 +60,7 @@ export function SiteFooter() {
           </div>
 
           {/* Link columns */}
-          <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 lg:col-span-7 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 sm:gap-10 lg:col-span-7 lg:grid-cols-4">
             <div>
               <p className="text-xs font-semibold tracking-[0.14em] uppercase text-white/50">
                 Property

@@ -81,23 +81,23 @@ export default function InsightsPage() {
 
   return (
     <>
-      <section className="bg-[#0B1D3D] px-5 pb-12 pt-12 text-white md:px-10 md:pb-14 md:pt-16">
+      <section className="bg-[#0B1D3D] px-4 pb-10 pt-10 text-white sm:px-5 sm:pb-12 sm:pt-12 md:px-10 md:pb-14 md:pt-16">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <p className="ul-kicker text-[#1E7A4A]">Insights</p>
-            <h1 className="mt-4 max-w-3xl text-3xl leading-[1.12] md:text-5xl">
+            <h1 className="mt-3 max-w-3xl text-[1.85rem] leading-[1.12] sm:mt-4 sm:text-3xl md:text-5xl">
               Notes from the desk — market, communities, and how to buy well.
             </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/70 md:text-base">
+            <p className="mt-4 max-w-2xl text-[0.9375rem] leading-relaxed text-white/70 sm:text-sm md:text-base">
               Short briefs for clients who want signal over noise: launches worth a private look,
               pricing that moved, and guidance before you write an offer.
             </p>
-            <div className="mt-7 flex flex-wrap gap-2">
+            <div className="ul-hide-scroll mt-6 flex gap-2 overflow-x-auto pb-1 sm:mt-7 sm:flex-wrap sm:overflow-visible sm:pb-0">
               {TOPICS.map((topic) => (
                 <Link
                   key={topic.label}
                   href={topic.href}
-                  className="rounded-full border border-white/20 px-3.5 py-1.5 text-xs font-semibold text-white/85 transition-colors hover:border-white/50 hover:bg-white/10"
+                  className="shrink-0 rounded-full border border-white/20 px-3.5 py-2 text-xs font-semibold text-white/85 transition-colors hover:border-white/50 hover:bg-white/10"
                 >
                   {topic.label}
                 </Link>
@@ -107,7 +107,7 @@ export default function InsightsPage() {
         </div>
       </section>
 
-      <section id="featured" className="bg-white px-5 py-12 md:px-10 md:py-16">
+      <section id="featured" className="bg-white px-4 py-10 sm:px-5 sm:py-12 md:px-10 md:py-16">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <div className="mb-6 flex items-end justify-between gap-4">

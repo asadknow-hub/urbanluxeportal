@@ -38,28 +38,28 @@ const PILLARS = [
 export default function ValuationsPage() {
   return (
     <>
-      <section className="bg-[#0B1D3D] px-5 pb-12 pt-12 text-white md:px-10 md:pb-14 md:pt-16">
+      <section className="bg-[#0B1D3D] px-4 pb-10 pt-10 text-white sm:px-5 sm:pb-12 sm:pt-12 md:px-10 md:pb-14 md:pt-16">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <p className="ul-kicker text-[#1E7A4A]">Services</p>
-            <h1 className="mt-4 max-w-3xl text-3xl leading-[1.12] md:text-5xl">
+            <h1 className="mt-3 max-w-3xl text-[1.85rem] leading-[1.12] sm:mt-4 sm:text-3xl md:text-5xl">
               A valuation that is a conversation — not a postcode PDF.
             </h1>
-            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/70 md:text-base">
+            <p className="mt-4 max-w-2xl text-[0.9375rem] leading-relaxed text-white/70 sm:text-sm md:text-base">
               We look at what sold last season, how your residence actually lives, and whether the
               market is ready for it. If it is not, we will say so.
             </p>
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-6 flex flex-col gap-3 sm:mt-7 sm:flex-row">
               <Link
                 href="#request"
-                className="inline-flex h-11 items-center justify-center rounded-full bg-[#1E7A4A] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#155c38]"
+                className="inline-flex h-12 items-center justify-center rounded-full bg-[#1E7A4A] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#155c38] sm:h-11"
               >
                 Request a valuation
               </Link>
               <Link
                 href="/sell"
                 prefetch
-                className="inline-flex h-11 items-center justify-center rounded-full border border-white/35 px-6 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                className="inline-flex h-12 items-center justify-center rounded-full border border-white/35 px-6 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:h-11"
               >
                 Ready to instruct a sale
               </Link>

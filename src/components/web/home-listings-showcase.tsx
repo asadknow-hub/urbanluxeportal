@@ -14,22 +14,22 @@ export function HomeListingsShowcase({ kind }: { kind: Extract<ListingKind, "sal
     <section
       className={
         kind === "sale"
-          ? "bg-white px-5 py-16 md:px-10 md:py-24"
-          : "bg-[var(--ul-tertiary)] px-5 py-16 md:px-10 md:py-24"
+          ? "bg-white px-4 py-12 sm:px-5 sm:py-16 md:px-10 md:py-24"
+          : "bg-[var(--ul-tertiary)] px-4 py-12 sm:px-5 sm:py-16 md:px-10 md:py-24"
       }
     >
       <div className="mx-auto max-w-[1280px]">
-        <Reveal className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <Reveal className="mb-8 flex flex-col justify-between gap-4 sm:mb-10 md:flex-row md:items-end">
           <div>
             <p className="ul-kicker">{meta.eyebrow}</p>
-            <h2 className="ul-section-heading mt-3 text-3xl md:text-4xl">{meta.title}</h2>
-            <p className="ul-section-lede mt-3 max-w-xl text-base">{meta.lede}</p>
+            <h2 className="ul-section-heading mt-3 text-2xl sm:text-3xl md:text-4xl">{meta.title}</h2>
+            <p className="ul-section-lede mt-3 max-w-xl text-[0.9375rem] sm:text-base">{meta.lede}</p>
           </div>
           <Link href={meta.path} prefetch className="ul-link-arrow shrink-0">
             View all <ArrowRight className="h-4 w-4" />
           </Link>
         </Reveal>
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-5 sm:gap-6 md:grid-cols-3">
           {listings.map((listing, i) => (
             <Reveal key={listing.slug} delay={i * 70}>
               <HomePropertyCard listing={listing} />

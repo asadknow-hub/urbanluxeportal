@@ -105,6 +105,7 @@ export function ListingsExplorer({
   });
   const [sort, setSort] = useState<SortKey>((searchParams.get("sort") as SortKey) || "recent");
   const [moreOpen, setMoreOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [community, setCommunity] = useState(searchParams.get("community") ?? "");
 
   const isRent = kind === "rent";
@@ -168,6 +169,76 @@ export function ListingsExplorer({
   const title =
     kind === "rent" ? "Properties For Rent In Dubai" : "Properties For Sale In Dubai";
 
+  const activeFilterCount = [type, beds, priceMin, priceMax, community].filter(Boolean).length;
+
+  const filterFields = (
+    <>
+      <FilterSelect
+        aria-label="Property type"
+        className="w-full lg:w-[9.5rem]"
+        value={type}
+        onChange={(v) => {
+          setType(v);
+          syncUrl({ type: v });
+        }}
+      >
+        <option value="">Property Type</option>
+        <option value="apartment">Apartment</option>
+        <option value="villa">Villa</option>
+        <option value="penthouse">Penthouse</option>
+        <option value="townhouse">Townhouse</option>
+      </FilterSelect>
+
+      <FilterSelect
+        aria-label="Minimum price"
+        className="w-full lg:w-[9rem]"
+        value={priceMin}
+        onChange={(v) => {
+          setPriceMin(v);
+          syncUrl({ min: v });
+        }}
+      >
+        {minOptions.map((o) => (
+          <option key={o.label} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </FilterSelect>
+
+      <FilterSelect
+        aria-label="Maximum price"
+        className="w-full lg:w-[9rem]"
+        value={priceMax}
+        onChange={(v) => {
+          setPriceMax(v);
+          syncUrl({ max: v });
+        }}
+      >
+        {maxOptions.map((o) => (
+          <option key={o.label} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </FilterSelect>
+
+      <FilterSelect
+        aria-label="Bedrooms"
+        className="w-full lg:w-[6.5rem]"
+        value={beds}
+        onChange={(v) => {
+          setBeds(v);
+          syncUrl({ beds: v });
+        }}
+      >
+        <option value="">Beds</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4+</option>
+      </FilterSelect>
+    </>
+  );
+
   return (
     <div>
       <div className="rounded-lg border border-[#e5e7eb] bg-white p-3 shadow-[0_1px_2px_rgba(11,29,61,0.04)] md:p-3.5">
@@ -192,79 +263,34 @@ export function ListingsExplorer({
                 syncUrl({ q: e.target.value });
               }}
               placeholder="Community or building"
-              className="h-11 w-full rounded-md border border-[#d1d5db] bg-white py-2 pl-10 pr-3 text-sm text-[#0B1D3D] outline-none placeholder:text-[#0B1D3D]/40 hover:border-[#0B1D3D]/40 focus:border-[#0B1D3D]"
+              className="h-11 w-full rounded-md border border-[#d1d5db] bg-white py-2 pl-10 pr-3 text-base text-[#0B1D3D] outline-none placeholder:text-[#0B1D3D]/40 hover:border-[#0B1D3D]/40 focus:border-[#0B1D3D] sm:text-sm"
             />
           </div>
 
-          <FilterSelect
-            aria-label="Property type"
-            className="w-full lg:w-[9.5rem]"
-            value={type}
-            onChange={(v) => {
-              setType(v);
-              syncUrl({ type: v });
-            }}
-          >
-            <option value="">Property Type</option>
-            <option value="apartment">Apartment</option>
-            <option value="villa">Villa</option>
-            <option value="penthouse">Penthouse</option>
-            <option value="townhouse">Townhouse</option>
-          </FilterSelect>
+          <div className="hidden lg:contents">{filterFields}</div>
 
-          <FilterSelect
-            aria-label="Minimum price"
-            className="w-full lg:w-[9rem]"
-            value={priceMin}
-            onChange={(v) => {
-              setPriceMin(v);
-              syncUrl({ min: v });
-            }}
+          <button
+            type="button"
+            onClick={() => setFiltersOpen(true)}
+            className={cn(
+              "inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-md border border-[#d1d5db] px-3.5 text-sm font-semibold text-[#0B1D3D] transition-colors hover:border-[#0B1D3D]/40 lg:hidden",
+              activeFilterCount > 0 && "border-[#0B1D3D] bg-[#F2F2F2]"
+            )}
           >
-            {minOptions.map((o) => (
-              <option key={o.label} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </FilterSelect>
-
-          <FilterSelect
-            aria-label="Maximum price"
-            className="w-full lg:w-[9rem]"
-            value={priceMax}
-            onChange={(v) => {
-              setPriceMax(v);
-              syncUrl({ max: v });
-            }}
-          >
-            {maxOptions.map((o) => (
-              <option key={o.label} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </FilterSelect>
-
-          <FilterSelect
-            aria-label="Bedrooms"
-            className="w-full lg:w-[6.5rem]"
-            value={beds}
-            onChange={(v) => {
-              setBeds(v);
-              syncUrl({ beds: v });
-            }}
-          >
-            <option value="">Beds</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4+</option>
-          </FilterSelect>
+            <SlidersHorizontal className="h-4 w-4" strokeWidth={2} />
+            Filters
+            {activeFilterCount > 0 ? (
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#0B1D3D] px-1.5 text-[0.7rem] text-white">
+                {activeFilterCount}
+              </span>
+            ) : null}
+          </button>
 
           <button
             type="button"
             onClick={() => setMoreOpen((v) => !v)}
             className={cn(
-              "inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-md border border-[#d1d5db] px-3.5 text-sm font-semibold text-[#0B1D3D] transition-colors hover:border-[#0B1D3D]/40",
+              "hidden h-11 shrink-0 items-center justify-center gap-2 rounded-md border border-[#d1d5db] px-3.5 text-sm font-semibold text-[#0B1D3D] transition-colors hover:border-[#0B1D3D]/40 lg:inline-flex",
               moreOpen && "border-[#0B1D3D] bg-[#F2F2F2]"
             )}
           >
@@ -274,7 +300,7 @@ export function ListingsExplorer({
         </div>
 
         {moreOpen && (
-          <div className="mt-3 grid gap-2.5 border-t border-[#eee] pt-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-3 hidden gap-2.5 border-t border-[#eee] pt-3 sm:grid-cols-2 lg:grid lg:grid-cols-3">
             <FilterSelect
               aria-label="Community"
               value={community}
@@ -294,17 +320,72 @@ export function ListingsExplorer({
         )}
       </div>
 
-      <div className="mt-6 flex flex-col gap-4 border-b border-[#e5e7eb] pb-5 lg:flex-row lg:items-center lg:justify-between lg:pb-6">
+      {filtersOpen && (
+        <div className="fixed inset-0 z-[55] lg:hidden" role="dialog" aria-modal="true" aria-label="Listing filters">
+          <button
+            type="button"
+            className="absolute inset-0 bg-[#0B1D3D]/45"
+            aria-label="Close filters"
+            onClick={() => setFiltersOpen(false)}
+          />
+          <div className="absolute inset-x-0 bottom-0 max-h-[88svh] overflow-y-auto rounded-t-2xl bg-white px-4 pb-[calc(1.25rem+var(--ul-safe-bottom,0px))] pt-3 shadow-[0_-12px_40px_rgba(11,29,61,0.18)]">
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[#d1d5db]" />
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="text-lg font-bold text-[#0B1D3D]">Filters</h2>
+              <button
+                type="button"
+                className="text-sm font-semibold text-[#1E7A4A]"
+                onClick={() => {
+                  setType("");
+                  setBeds("");
+                  setPriceMin("");
+                  setPriceMax("");
+                  setCommunity("");
+                  syncUrl({ type: "", beds: "", min: "", max: "", community: "" });
+                }}
+              >
+                Clear all
+              </button>
+            </div>
+            <div className="grid gap-3">{filterFields}</div>
+            <FilterSelect
+              aria-label="Community"
+              className="mt-3"
+              value={community}
+              onChange={(v) => {
+                setCommunity(v);
+                syncUrl({ community: v });
+              }}
+            >
+              <option value="">All communities</option>
+              {COMMUNITIES.map((c) => (
+                <option key={c.slug} value={c.slug}>
+                  {c.name}
+                </option>
+              ))}
+            </FilterSelect>
+            <button
+              type="button"
+              className="ul-btn-primary mt-5 h-12 w-full"
+              onClick={() => setFiltersOpen(false)}
+            >
+              Show {filtered.length} results
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-5 flex flex-col gap-4 border-b border-[#e5e7eb] pb-4 sm:mt-6 sm:pb-5 lg:flex-row lg:items-center lg:justify-between lg:pb-6">
         <p className="text-sm text-[#0B1D3D]/70 md:text-[0.9375rem]">
           {title}{" "}
           <span className="font-bold text-[#0B1D3D]">| {filtered.length} results</span>
         </p>
 
-        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-4">
           {!isRent && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-[#0B1D3D]/65">Show:</span>
-              <div className="inline-flex overflow-hidden rounded-md border border-[#d1d5db]">
+            <div className="flex w-full items-center gap-2 sm:w-auto">
+              <span className="hidden text-sm text-[#0B1D3D]/65 sm:inline">Show:</span>
+              <div className="inline-flex w-full overflow-hidden rounded-md border border-[#d1d5db] sm:w-auto">
                 {(
                   [
                     { id: "ready" as const, label: "Ready" },
@@ -321,7 +402,7 @@ export function ListingsExplorer({
                         syncUrl({ status: opt.id });
                       }}
                       className={cn(
-                        "inline-flex h-9 items-center gap-1.5 px-3 text-sm font-semibold transition-colors",
+                        "inline-flex h-10 flex-1 items-center justify-center gap-1.5 px-3 text-sm font-semibold transition-colors sm:h-9 sm:flex-none",
                         active
                           ? "bg-[#0B1D3D] text-white"
                           : "bg-white text-[#0B1D3D] hover:bg-[#F2F2F2]"
@@ -336,11 +417,11 @@ export function ListingsExplorer({
             </div>
           )}
 
-          <div className="relative">
+          <div className="relative min-w-0 flex-1 sm:flex-none">
             <ArrowUpDown className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#0B1D3D]/45" />
             <select
               aria-label="Sort listings"
-              className="h-9 appearance-none rounded-md border border-[#d1d5db] bg-white py-1.5 pl-8 pr-8 text-sm font-medium text-[#0B1D3D] outline-none hover:border-[#0B1D3D]/40 focus:border-[#0B1D3D]"
+              className="h-10 w-full appearance-none rounded-md border border-[#d1d5db] bg-white py-1.5 pl-8 pr-8 text-sm font-medium text-[#0B1D3D] outline-none hover:border-[#0B1D3D]/40 focus:border-[#0B1D3D] sm:h-9 sm:w-auto"
               value={sort}
               onChange={(e) => {
                 const v = e.target.value as SortKey;
@@ -358,17 +439,17 @@ export function ListingsExplorer({
 
           <button
             type="button"
-            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-[#d1d5db] px-3 text-sm font-semibold text-[#0B1D3D] transition-colors hover:border-[#0B1D3D]/40 hover:bg-[#F2F2F2]"
+            className="inline-flex h-10 items-center gap-1.5 rounded-md border border-[#d1d5db] px-3 text-sm font-semibold text-[#0B1D3D] transition-colors hover:border-[#0B1D3D]/40 hover:bg-[#F2F2F2] sm:h-9"
           >
             <Map className="h-3.5 w-3.5" strokeWidth={2} />
-            Map View
+            Map
           </button>
         </div>
       </div>
 
-      <div className="mt-8 space-y-6 pb-12 md:mt-10 md:space-y-8">
+      <div className="mt-6 space-y-5 pb-8 sm:mt-8 sm:space-y-6 md:mt-10 md:space-y-8 md:pb-12">
         {filtered.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-[#d1d5db] px-6 py-16 text-center text-sm text-[#0B1D3D]/55">
+          <p className="rounded-lg border border-dashed border-[#d1d5db] px-5 py-12 text-center text-sm text-[#0B1D3D]/55 sm:px-6 sm:py-16">
             No properties match these filters. Try widening your search.
           </p>
         ) : (

@@ -21,9 +21,9 @@ export default function AboutPage() {
         <div className="relative min-h-[22rem] lg:min-h-[36rem]">
           <Image src={IMAGES.interior} alt="Interior of a Dubai residence" fill sizes="50vw" className="object-cover" />
         </div>
-        <div className="flex flex-col justify-center px-8 py-16 md:px-16">
+        <div className="flex flex-col justify-center px-5 py-12 sm:px-8 sm:py-16 md:px-16">
           <Reveal>
-            <h2 className="text-3xl md:text-4xl">How we work</h2>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl">How we work</h2>
             <ul className="mt-8 space-y-6 text-base font-light leading-relaxed text-[#8a8178]">
               <li>
                 <span className="block text-[0.7rem] tracking-[0.2em] uppercase text-[#2dd4bf]">01 — Brief</span>

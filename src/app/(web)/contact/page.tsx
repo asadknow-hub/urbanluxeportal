@@ -18,9 +18,9 @@ export default async function ContactPage() {
         title="Write, call, or walk in."
         lede="Enquiries are read by people, not a queue. If you already have a reference, put it in the message."
       />
-      <section className="mx-auto grid max-w-[1440px] gap-12 px-5 py-16 md:px-10 lg:grid-cols-2">
+      <section className="mx-auto grid max-w-[1440px] gap-10 px-4 py-12 sm:gap-12 sm:px-5 sm:py-16 md:px-10 lg:grid-cols-2">
         <div>
-          <h2 className="text-3xl text-[#0B1D3D]">The office</h2>
+          <h2 className="text-2xl text-[#0B1D3D] sm:text-3xl">The office</h2>
           <p className="mt-5 max-w-sm text-base leading-relaxed text-[#0B1D3D]/65">
             {brand.address}
           </p>

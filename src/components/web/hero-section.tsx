@@ -7,7 +7,7 @@ function UlMonogram() {
     <svg
       viewBox="0 0 240 240"
       fill="none"
-      className="pointer-events-none absolute -left-4 -top-6 h-48 w-48 text-[#0B1D3D]/[0.08] md:-left-6 md:-top-10 md:h-56 md:w-56"
+      className="pointer-events-none absolute -left-2 -top-4 h-36 w-36 text-[#0B1D3D]/[0.08] sm:-left-4 sm:-top-6 sm:h-48 sm:w-48 md:-left-6 md:-top-10 md:h-56 md:w-56"
       aria-hidden
     >
       <path
@@ -24,25 +24,25 @@ function UlMonogram() {
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-[calc(100svh-4.25rem)] overflow-hidden">
+    <section className="relative min-h-[min(100svh,52rem)] overflow-hidden sm:min-h-[calc(100svh-4.25rem)]">
       <Image
         src={IMAGES.heroRefined}
         alt="Luxury penthouse terrace overlooking Dubai at dusk"
         fill
         priority
         sizes="100vw"
-        className="object-cover object-center"
+        className="object-cover object-[center_35%] sm:object-center"
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-white/75 via-white/35 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-white/10" />
+      <div className="absolute inset-0 bg-gradient-to-r from-white/85 via-white/45 to-transparent sm:from-white/75 sm:via-white/35" />
+      <div className="absolute inset-0 bg-gradient-to-t from-white/55 via-transparent to-white/15 sm:from-white/20 sm:to-white/10" />
 
-      <div className="relative mx-auto flex min-h-[calc(100svh-4.25rem)] max-w-[1440px] flex-col justify-end px-5 pb-14 pt-16 md:px-10 md:pb-20 md:pt-20">
+      <div className="relative mx-auto flex min-h-[min(100svh,52rem)] max-w-[1440px] flex-col justify-end px-4 pb-10 pt-12 sm:min-h-[calc(100svh-4.25rem)] sm:px-5 sm:pb-14 sm:pt-16 md:px-10 md:pb-20 md:pt-20">
         <div className="relative max-w-2xl">
           <UlMonogram />
-          <h1 className="ul-hero-title relative text-[clamp(2.5rem,6vw,4.5rem)] leading-[1.08] text-[#0B1D3D]">
+          <h1 className="ul-hero-title relative text-[clamp(2.05rem,9vw,4.5rem)] leading-[1.08] text-[#0B1D3D]">
             Find your refined life.
           </h1>
-          <div className="relative mt-10 md:mt-12">
+          <div className="relative mt-7 sm:mt-10 md:mt-12">
             <HeroSearch />
           </div>
         </div>

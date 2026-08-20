@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cinzel, Geist, Geist_Mono, Josefin_Sans, Poppins } from "next/font/google";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -39,6 +39,13 @@ export const metadata: Metadata = {
   },
   description:
     "A private Dubai brokerage for villas, apartments, and off-plan residences — placed with discretion.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0B1D3D",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

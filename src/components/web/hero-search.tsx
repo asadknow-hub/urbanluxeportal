@@ -2,14 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ChevronDown, Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import { COMMUNITIES } from "@/lib/web/listings";
 import { cn } from "@/lib/utils";
 
 const TABS = [
-  { id: "residential", label: "Residential", path: "/buy" },
-  { id: "commercial", label: "Commercial", path: "/buy" },
-  { id: "global", label: "Global Projects", path: "/off-plan" },
+  { id: "residential", label: "Residential", short: "Home", path: "/buy" },
+  { id: "commercial", label: "Commercial", short: "Office", path: "/buy" },
+  { id: "global", label: "Global Projects", short: "Off-plan", path: "/off-plan" },
 ] as const;
 
 export function HeroSearch() {
@@ -36,8 +36,7 @@ export function HeroSearch() {
 
   return (
     <form onSubmit={submit} className="w-full max-w-2xl">
-      {/* Tabs */}
-      <div className="flex items-end gap-0.5">
+      <div className="ul-hide-scroll -mx-1 flex items-end gap-0.5 overflow-x-auto px-1 pb-px">
         {TABS.map((item) => {
           const active = tab === item.id;
           return (
@@ -46,19 +45,19 @@ export function HeroSearch() {
               type="button"
               onClick={() => setTab(item.id)}
               className={cn(
-                "px-5 py-2.5 text-[0.6875rem] font-semibold tracking-[0.14em] uppercase transition-colors",
+                "shrink-0 px-3.5 py-2.5 text-[0.6875rem] font-semibold tracking-[0.12em] uppercase transition-colors sm:px-5 sm:tracking-[0.14em]",
                 active
                   ? "rounded-t-md bg-white text-[#0B1D3D]"
                   : "rounded-t-md bg-[#F2F2F2]/90 text-[#0B1D3D]/70 hover:text-[#0B1D3D]"
               )}
             >
-              {item.label}
+              <span className="sm:hidden">{item.short}</span>
+              <span className="hidden sm:inline">{item.label}</span>
             </button>
           );
         })}
       </div>
 
-      {/* Search bar */}
       <div className="flex items-center overflow-hidden rounded-b-lg rounded-tr-lg bg-white shadow-[0_12px_48px_rgba(11,29,61,0.14)]">
         <label className="sr-only" htmlFor="hero-location">
           City or property type
@@ -68,23 +67,24 @@ export function HeroSearch() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Enter city or property type"
-          className="h-[3.25rem] min-w-0 flex-1 bg-transparent px-5 text-sm text-[#0B1D3D] outline-none placeholder:text-[#0B1D3D]/40"
+          placeholder="City or property type"
+          className="h-12 min-w-0 flex-1 bg-transparent px-4 text-base text-[#0B1D3D] outline-none placeholder:text-[#0B1D3D]/40 sm:h-[3.25rem] sm:px-5 sm:text-sm"
         />
 
         <button
           type="button"
           onClick={() => setShowFilters((v) => !v)}
-          className="hidden h-[3.25rem] shrink-0 items-center gap-2 border-l border-[#0B1D3D]/8 px-5 text-sm font-medium text-[#0B1D3D]/80 transition-colors hover:text-[#0B1D3D] sm:inline-flex"
+          className="inline-flex h-12 w-12 shrink-0 items-center justify-center border-l border-[#0B1D3D]/8 text-[#0B1D3D]/80 transition-colors hover:text-[#0B1D3D] sm:h-[3.25rem] sm:w-auto sm:gap-2 sm:px-5 sm:text-sm sm:font-medium"
           aria-expanded={showFilters}
+          aria-label="Filters"
         >
-          Filter
+          <span className="hidden sm:inline">Filter</span>
           <SlidersHorizontal className="h-4 w-4" />
         </button>
 
         <button
           type="submit"
-          className="flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center bg-[#1E7A4A] text-white transition-colors hover:bg-[#155c38]"
+          className="flex h-12 w-12 shrink-0 items-center justify-center bg-[#1E7A4A] text-white transition-colors hover:bg-[#155c38] sm:h-[3.25rem] sm:w-[3.25rem]"
           aria-label="Search properties"
         >
           <Search className="h-[1.125rem] w-[1.125rem]" strokeWidth={2.25} />
@@ -99,7 +99,7 @@ export function HeroSearch() {
           <select
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="h-10 w-full rounded border border-[#0B1D3D]/12 px-3 text-sm text-[#0B1D3D] outline-none focus:border-[#1E7A4A]"
+            className="h-11 w-full rounded border border-[#0B1D3D]/12 px-3 text-base text-[#0B1D3D] outline-none focus:border-[#1E7A4A] sm:h-10 sm:text-sm"
           >
             <option value="">Any area</option>
             {COMMUNITIES.map((c) => (

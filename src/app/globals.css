@@ -180,11 +180,41 @@
   --ul-accent-deep: #155c38;
   --ul-muted: #6b7280;
   --ul-hair: #e5e7eb;
+  --ul-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --ul-safe-top: env(safe-area-inset-top, 0px);
+  --ul-dock-space: calc(5.5rem + var(--ul-safe-bottom));
   font-family: var(--font-poppins), system-ui, sans-serif;
   background: var(--ul-paper);
   color: var(--ul-ink);
   letter-spacing: 0;
   accent-color: var(--ul-secondary);
+  overflow-x: clip;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Avoid iOS auto-zoom on focus; keep tap targets comfortable */
+.ul-site input,
+.ul-site select,
+.ul-site textarea {
+  font-size: 1rem;
+}
+
+@media (min-width: 768px) {
+  .ul-site input,
+  .ul-site select,
+  .ul-site textarea {
+    font-size: 0.875rem;
+  }
+}
+
+.ul-site main {
+  padding-bottom: var(--ul-dock-space);
+}
+
+@media (min-width: 1024px) {
+  .ul-site main {
+    padding-bottom: 0;
+  }
 }
 
 .ul-site h1,

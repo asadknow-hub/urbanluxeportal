@@ -94,8 +94,8 @@ function SplitSection({
   bg?: string;
 }) {
   return (
-    <section className={cn(bg, "px-5 py-16 md:px-10 md:py-24")}>
-      <div className="mx-auto grid max-w-[1280px] items-center gap-10 md:grid-cols-2 md:gap-16">
+    <section className={cn(bg, "px-4 py-12 sm:px-5 sm:py-16 md:px-10 md:py-24")}>
+      <div className="mx-auto grid max-w-[1280px] items-center gap-8 sm:gap-10 md:grid-cols-2 md:gap-16">
         <Reveal className={reverse ? "md:order-2" : undefined}>{children}</Reveal>
         <Reveal delay={80} className={reverse ? "md:order-1" : undefined}>
           {image}
@@ -112,16 +112,16 @@ export function HomePage() {
       <HeroSection />
 
       {/* 2 · Categories — Buy · Rent · Offplan */}
-      <section className="flex min-h-svh items-center bg-[var(--ul-tertiary)] px-5 py-12 md:px-10 md:py-16">
-        <div className="mx-auto grid w-full max-w-[1280px] gap-6 md:grid-cols-3 md:gap-8">
+      <section className="bg-[var(--ul-tertiary)] px-4 py-10 sm:px-5 sm:py-12 md:px-10 md:py-16 lg:flex lg:min-h-svh lg:items-center">
+        <div className="mx-auto grid w-full max-w-[1280px] gap-5 sm:gap-6 md:grid-cols-3 md:gap-8">
           {CATEGORY_CARDS.map((card, i) => (
             <Reveal key={card.href} delay={i * 60}>
               <Link
                 href={card.href}
                 prefetch
-                className="group flex h-full min-h-[22rem] flex-col overflow-hidden rounded-sm bg-white shadow-[0_8px_32px_rgba(11,29,61,0.08)] transition-shadow hover:shadow-[0_12px_40px_rgba(11,29,61,0.12)] md:min-h-[26rem]"
+                className="group flex h-full min-h-[18rem] flex-col overflow-hidden rounded-sm bg-white shadow-[0_8px_32px_rgba(11,29,61,0.08)] transition-shadow hover:shadow-[0_12px_40px_rgba(11,29,61,0.12)] sm:min-h-[22rem] md:min-h-[26rem]"
               >
-                <div className="relative min-h-[14rem] flex-1 overflow-hidden bg-[var(--ul-tertiary)] md:min-h-[18rem]">
+                <div className="relative min-h-[11rem] flex-1 overflow-hidden bg-[var(--ul-tertiary)] sm:min-h-[14rem] md:min-h-[18rem]">
                   <Image
                     src={card.image}
                     alt={card.kicker}
@@ -130,7 +130,7 @@ export function HomePage() {
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
-                <div className={cn("flex flex-col px-6 py-6 md:px-7 md:py-7", card.panel)}>
+                <div className={cn("flex flex-col px-5 py-5 sm:px-6 sm:py-6 md:px-7 md:py-7", card.panel)}>
                   <p className="text-xs font-semibold tracking-[0.18em] uppercase opacity-80">
                     {card.kicker}
                   </p>
