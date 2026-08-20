@@ -12,6 +12,7 @@ import {
 import { EnquireForm } from "@/components/web/enquire-form";
 import { PropertyCard } from "@/components/web/property-card";
 import { PropertyGallery } from "@/components/web/property-gallery";
+import { PriceText } from "@/components/web/price-text";
 import { waLinkFor } from "@/lib/company-brand";
 import { getPublicBrand } from "@/server/company-settings";
 
@@ -83,7 +84,9 @@ export default async function PropertyPage({
             <p className="ul-kicker">{listing.community}</p>
             <h1 className="mt-3 text-3xl md:text-5xl">{listing.title}</h1>
             <p className="mt-3 text-lg font-light text-[#8a8178]">{listing.subtitle}</p>
-            <p className="mt-5 text-2xl text-[#14110e]">{formatAed(listing.priceAed, listing.kind)}</p>
+            <p className="mt-5 text-2xl text-[#14110e]">
+              <PriceText amountAed={listing.priceAed} kind={listing.kind} />
+            </p>
             <p className="mt-1 text-[0.7rem] tracking-[0.16em] uppercase text-[#8a8178]">Ref {listing.ref}</p>
 
             <dl className="mt-8 grid grid-cols-3 gap-4 rounded-2xl border border-[#e4d9c8] bg-[#fffcf8] px-5 py-6">

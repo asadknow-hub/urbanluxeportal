@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import { formatAedPlain } from "@/lib/web/listings";
+import { useCurrency } from "@/components/web/currency-provider";
 
 const PRICE_MIN = 200_000;
 const PRICE_MAX = 35_000_000;
@@ -86,6 +86,7 @@ function CompactField({
 }
 
 export function MortgageCalculator() {
+  const { format } = useCurrency();
   const [price, setPrice] = useState(1_000_000);
   const [downPct, setDownPct] = useState(20);
   const [years, setYears] = useState(25);
@@ -146,7 +147,7 @@ export function MortgageCalculator() {
         <div className="sm:text-right">
           <p className="text-[0.7rem] text-[#0B1D3D]/50">Monthly repayment</p>
           <p className="text-xl font-bold tracking-tight text-[#0B1D3D] md:text-2xl">
-            {formatAedPlain(Math.round(monthly))}
+            {format(Math.round(monthly))}
           </p>
         </div>
       </div>
@@ -287,7 +288,7 @@ export function MortgageCalculator() {
       </div>
 
       <p className="mt-3 text-[0.65rem] leading-relaxed text-[#0B1D3D]/40">
-        * Estimate for {formatAedPlain(price)} at {formatNumber(rate, 2)}% fixed — not a bank offer.
+        * Estimate for {format(price)} at {formatNumber(rate, 2)}% fixed — not a bank offer.
       </p>
     </div>
   );

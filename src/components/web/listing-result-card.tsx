@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Bath, BedDouble, Camera, MapPin, Maximize2, Phone } from "lucide-react";
-import { formatAedPlain, type Listing } from "@/lib/web/listings";
+import { type Listing } from "@/lib/web/listings";
 import { useBrand, useWaLink } from "@/components/brand/brand-provider";
+import { useCurrency } from "@/components/web/currency-provider";
 import { cn } from "@/lib/utils";
 
 const AGENTS = [
@@ -65,15 +66,15 @@ function BrandMark({ className }: { className?: string }) {
 
 export function ListingResultCard({ listing }: { listing: Listing }) {
   const brand = useBrand();
+  const { format } = useCurrency();
   const agent = agentFor(listing);
   const gallery = [listing.image, ...listing.gallery.filter((g) => g !== listing.image)].slice(0, 4);
   while (gallery.length < 4) gallery.push(gallery[gallery.length - 1] ?? listing.image);
   const [main, ...thumbs] = gallery;
   const photoCount = Math.max(listing.gallery.length, 4);
-  const price =
-    listing.kind === "rent"
-      ? `${formatAedPlain(listing.priceAed)} / year`
-      : formatAedPlain(listing.priceAed);
+  const price = format(listing.priceAed, {
+    kind: listing.kind === "rent" ? "rent" : listing.kind,
+  });
   const wa = useWaLink(
     `Hi ${brand.name} — I'm interested in ${listing.title} (${listing.ref}) in ${listing.community}.`
   );

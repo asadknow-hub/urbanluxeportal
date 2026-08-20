@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Check, ChevronDown, Menu, Search, User, X } from "lucide-react";
 import { CURRENCIES, NAV } from "@/lib/web/site";
 import { SiteLogo } from "@/components/web/site-logo";
+import { useCurrency } from "@/components/web/currency-provider";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,26 +15,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-const CURRENCY_KEY = "urbanluxe-currency";
-
 export function SiteNav() {
   const pathname = usePathname();
+  const { currency, setCurrency } = useCurrency();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const [currency, setCurrency] = useState<(typeof CURRENCIES)[number]["code"]>("AED");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem(CURRENCY_KEY);
-    if (stored && CURRENCIES.some((c) => c.code === stored)) {
-      setCurrency(stored as (typeof CURRENCIES)[number]["code"]);
-    }
   }, []);
 
   useEffect(() => {
@@ -46,11 +38,6 @@ export function SiteNav() {
       document.body.style.overflow = "";
     };
   }, [open]);
-
-  function selectCurrency(code: (typeof CURRENCIES)[number]["code"]) {
-    setCurrency(code);
-    window.localStorage.setItem(CURRENCY_KEY, code);
-  }
 
   return (
     <header className="sticky top-0 z-50">
@@ -126,7 +113,7 @@ export function SiteNav() {
                 {CURRENCIES.map((item) => (
                   <DropdownMenuItem
                     key={item.code}
-                    onClick={() => selectCurrency(item.code)}
+                    onClick={() => setCurrency(item.code)}
                     className="flex cursor-pointer items-center justify-between gap-3"
                   >
                     <span>
@@ -200,7 +187,7 @@ export function SiteNav() {
                   <button
                     key={item.code}
                     type="button"
-                    onClick={() => selectCurrency(item.code)}
+                    onClick={() => setCurrency(item.code)}
                     className={cn(
                       "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
                       currency === item.code

@@ -1,7 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Bed, Maximize2 } from "lucide-react";
-import { formatAed, type Listing } from "@/lib/web/listings";
+import { type Listing } from "@/lib/web/listings";
+import { useCurrency } from "@/components/web/currency-provider";
 import { cn } from "@/lib/utils";
 
 export function HomePropertyCard({
@@ -11,10 +14,8 @@ export function HomePropertyCard({
   listing: Listing;
   className?: string;
 }) {
-  const price =
-    listing.kind === "rent"
-      ? formatAed(listing.priceAed, "rent")
-      : formatAed(listing.priceAed, listing.kind);
+  const { format } = useCurrency();
+  const price = format(listing.priceAed, { kind: listing.kind === "rent" ? "rent" : listing.kind });
 
   return (
     <Link
@@ -43,7 +44,7 @@ export function HomePropertyCard({
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--ul-secondary)]">
           {listing.community}
         </p>
-        <h3 className="mt-1.5 text-lg font-semibold leading-snug text-[var(--ul-primary)] group-hover:text-[var(--ul-secondary)] transition-colors">
+        <h3 className="mt-1.5 text-lg font-semibold leading-snug text-[var(--ul-primary)] transition-colors group-hover:text-[var(--ul-secondary)]">
           {listing.title}
         </h3>
         <p className="mt-2 text-base font-semibold text-[var(--ul-primary)]">{price}</p>
@@ -56,6 +57,7 @@ export function HomePropertyCard({
             <Maximize2 className="h-3.5 w-3.5" />
             {listing.sqft.toLocaleString()} sq.ft
           </span>
+          <ArrowRight className="ml-auto h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
         </div>
       </div>
     </Link>

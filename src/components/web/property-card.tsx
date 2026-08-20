@@ -1,7 +1,10 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { formatAed, type Listing } from "@/lib/web/listings";
+import { type Listing } from "@/lib/web/listings";
+import { useCurrency } from "@/components/web/currency-provider";
 import { cn } from "@/lib/utils";
 
 export function PropertyCard({
@@ -13,6 +16,8 @@ export function PropertyCard({
   layout?: "tile" | "fill";
   className?: string;
 }) {
+  const { format } = useCurrency();
+
   return (
     <Link href={`/properties/${listing.slug}`} className={cn("group block h-full", className)}>
       <div
@@ -39,7 +44,7 @@ export function PropertyCard({
           <p className="text-[0.65rem] tracking-[0.22em] uppercase text-[#2dd4bf]">{listing.community}</p>
           <h3 className="ul-display mt-1 text-2xl leading-tight md:text-[1.85rem]">{listing.title}</h3>
           <p className="mt-3 text-sm font-light tracking-wide">
-            {formatAed(listing.priceAed, listing.kind)}
+            {format(listing.priceAed, { kind: listing.kind })}
             <span className="mx-2 text-[#f6f3ee]/40">·</span>
             {listing.beds} bed
             <span className="mx-2 text-[#f6f3ee]/40">·</span>

@@ -16,7 +16,8 @@ import {
   SlidersHorizontal,
   Wallet,
 } from "lucide-react";
-import { COMMUNITIES, formatAedPlain, monthlyFor, type Listing } from "@/lib/web/listings";
+import { COMMUNITIES, monthlyFor, type Listing } from "@/lib/web/listings";
+import { useCurrency } from "@/components/web/currency-provider";
 import { cn } from "@/lib/utils";
 
 const TYPES = [
@@ -33,6 +34,7 @@ function fmtShort(n: number) {
 }
 
 export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
+  const { format } = useCurrency();
   const [community, setCommunity] = useState("");
   const [type, setType] = useState("");
   const [beds, setBeds] = useState("");
@@ -148,7 +150,7 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
 
           <label className="mt-6 flex justify-between text-[0.65rem] tracking-[0.18em] uppercase text-[#2dd4bf]">
             I can pay monthly
-            <span className="normal-case tracking-normal text-[#f6f3ee]/70">{formatAedPlain(monthlyMax)}</span>
+            <span className="normal-case tracking-normal text-[#f6f3ee]/70">{format(monthlyMax)}</span>
           </label>
           <input
             type="range"
@@ -162,7 +164,7 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
 
           <label className="mt-6 flex justify-between text-[0.65rem] tracking-[0.18em] uppercase text-[#2dd4bf]">
             Down payment
-            <span className="normal-case tracking-normal text-[#f6f3ee]/70">{formatAedPlain(downMax)}</span>
+            <span className="normal-case tracking-normal text-[#f6f3ee]/70">{format(downMax)}</span>
           </label>
           <input
             type="range"
@@ -221,9 +223,9 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
           <div className="mt-8 flex flex-col items-start justify-between gap-4 rounded-2xl border border-[#e4d9c8] bg-white px-6 py-5 sm:flex-row sm:items-center">
             <p className="text-sm text-[#8a8178]">
               Based on your budget. Down payment:{" "}
-              <span className="text-[#14110e]">{formatAedPlain(downMax)}</span>
+              <span className="text-[#14110e]">{format(downMax)}</span>
               {" · "}
-              Monthly: <span className="text-[#14110e]">{formatAedPlain(monthlyMax)}</span>
+              Monthly: <span className="text-[#14110e]">{format(monthlyMax)}</span>
               {" — "}
               {filtered.length} project{filtered.length === 1 ? "" : "s"} match.
             </p>
@@ -255,6 +257,7 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
 }
 
 function OffPlanCard({ listing, best }: { listing: Listing; best?: boolean }) {
+  const { format } = useCurrency();
   const monthly = monthlyFor(listing);
   const plan = listing.paymentPlan ?? [
     { label: "Booking", pct: 10 },
@@ -286,9 +289,9 @@ function OffPlanCard({ listing, best }: { listing: Listing; best?: boolean }) {
         <p className="mt-2 text-xs uppercase tracking-wide text-[#8a8178]">
           {listing.type} · {listing.beds} bedroom
         </p>
-        <p className="mt-3 text-base font-medium">From {formatAedPlain(listing.priceAed)}</p>
+        <p className="mt-3 text-base font-medium">From {format(listing.priceAed)}</p>
         {monthly != null && (
-          <p className="text-sm text-[#14b8a6]">Est. monthly {formatAedPlain(monthly)}</p>
+          <p className="text-sm text-[#14b8a6]">Est. monthly {format(monthly)}</p>
         )}
         <div className="mt-4">
           <div className="flex h-1.5 overflow-hidden rounded-full bg-[#efe8dc]">
