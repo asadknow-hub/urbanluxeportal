@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cinzel, Geist, Geist_Mono, Josefin_Sans, Playfair_Display } from "next/font/google";
+import { Cinzel, Geist, Geist_Mono, Josefin_Sans, Poppins } from "next/font/google";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
@@ -20,17 +20,16 @@ const cinzel = Cinzel({
   weight: ["400", "500", "600", "700"],
 });
 
+const poppins = Poppins({
+  variable: "--font-poppins",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
 const josefin = Josefin_Sans({
   variable: "--font-josefin",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
-});
-
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -46,7 +45,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${cinzel.variable} ${josefin.variable} ${playfair.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${cinzel.variable} ${josefin.variable} ${poppins.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <TooltipProvider>

@@ -176,19 +176,20 @@
   --ul-hair: #e5e7eb;
   --ul-card-warm: #e8e4de;
   --ul-card-cool: #dce8ef;
-  font-family: var(--font-josefin), sans-serif;
+  font-family: var(--font-poppins), system-ui, sans-serif;
   background: var(--ul-paper);
   color: var(--ul-ink);
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   accent-color: var(--ul-secondary);
 }
 
 .ul-site h1,
 .ul-site h2,
 .ul-site h3,
+.ul-site h4,
 .ul-display {
-  font-family: var(--font-josefin), sans-serif;
-  letter-spacing: -0.03em;
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  letter-spacing: -0.025em;
   font-weight: 600;
 }
 
@@ -257,9 +258,9 @@
 }
 
 .ul-hero-title {
-  font-family: var(--font-playfair), Georgia, "Times New Roman", serif;
-  font-weight: 400;
-  letter-spacing: -0.02em;
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.03em;
 }
 
 .ul-site a,
