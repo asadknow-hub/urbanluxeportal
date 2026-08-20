@@ -170,24 +170,39 @@ export function HomePage() {
         </Link>
       </SplitSection>
 
-      {/* 6 · Team */}
-      <SplitSection
-        bg="bg-[var(--ul-tertiary)]"
-        reverse
-        image={<BrandImage src={IMAGES.team} alt="Urban Luxe advisors" />}
-      >
-        <p className="ul-kicker">The team</p>
-        <h2 className="ul-section-heading mt-3 text-3xl leading-tight md:text-4xl lg:text-[2.65rem]">
-          See what you&apos;re missing out.
-        </h2>
-        <p className="ul-section-lede mt-5 max-w-md text-base leading-relaxed">
-          Our agents know Dubai&apos;s neighbourhoods inside out. Get access to off-market listings
-          and priority viewings before properties go public.
-        </p>
-        <Link href="/contact" prefetch className="ul-btn-secondary mt-8">
-          Meet our team
-        </Link>
-      </SplitSection>
+      {/* 6 · Join us (careers) */}
+      <section className="bg-[var(--ul-secondary)] px-5 py-16 md:px-10 md:py-24">
+        <div className="mx-auto grid max-w-[1280px] items-center gap-10 md:grid-cols-2 md:gap-16">
+          <Reveal>
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[var(--ul-primary)]/20 md:aspect-[5/4]">
+              <Image
+                src={IMAGES.careers}
+                alt="Urban Luxe team"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover"
+              />
+            </div>
+          </Reveal>
+          <Reveal delay={80}>
+            <p className="text-sm font-medium text-white/80">Interested in joining us?</p>
+            <h2 className="mt-3 text-3xl font-semibold leading-tight text-white md:text-4xl lg:text-[2.75rem]">
+              See what you&apos;re missing out on!
+            </h2>
+            <p className="mt-5 max-w-md text-base leading-relaxed text-white/85">
+              We are always accepting online applications. Dubai awaits — are you ready to take the
+              leap?
+            </p>
+            <Link
+              href="/contact"
+              prefetch
+              className="mt-8 inline-flex h-11 items-center justify-center rounded-full bg-[var(--ul-primary)] px-8 text-sm font-semibold text-white transition-colors hover:bg-[color-mix(in_srgb,var(--ul-primary)_88%,black)]"
+            >
+              Get in touch
+            </Link>
+          </Reveal>
+        </div>
+      </section>
 
       {/* 7 · Market growth & appreciation */}
       <MarketGrowthSection />
