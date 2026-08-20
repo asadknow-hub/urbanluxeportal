@@ -8,6 +8,7 @@ import { HomeListingsShowcase } from "@/components/web/home-listings-showcase";
 import { DevelopersMarquee } from "@/components/web/developers-marquee";
 import { WhyAgentsSection } from "@/components/web/why-agents-section";
 import { MarketGrowthSection } from "@/components/web/market-growth-section";
+import { TestimonialsSection } from "@/components/web/testimonials-section";
 import { Reveal } from "@/components/web/reveal";
 import { cn } from "@/lib/utils";
 
@@ -252,7 +253,10 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* 11 · CTA */}
+      {/* 11 · Testimonials */}
+      <TestimonialsSection />
+
+      {/* 12 · CTA */}
       <section className="border-t border-[var(--ul-hair)] bg-[var(--ul-tertiary)] px-5 py-16 md:px-10 md:py-20">
         <Reveal className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           <div>
