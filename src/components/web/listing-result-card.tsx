@@ -4,31 +4,27 @@ import { Bath, BedDouble, Camera, MapPin, Maximize2, Phone } from "lucide-react"
 import { type Listing } from "@/lib/web/listings";
 import { useBrand, useWaLink } from "@/components/brand/brand-provider";
 import { useCurrency } from "@/components/web/currency-provider";
+import { usePublicAgents } from "@/components/web/public-agents-provider";
 import { cn } from "@/lib/utils";
 
-const AGENTS = [
+const FALLBACK_AGENTS = [
   {
-    name: "Michael Wilson",
+    name: "Urban Luxe Advisor",
     photo: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=200&q=80",
-  },
-  {
-    name: "Sara Al Mazrouei",
-    photo: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80",
-  },
-  {
-    name: "James Okonkwo",
-    photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=200&q=80",
-  },
-  {
-    name: "Layla Hassan",
-    photo: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80",
   },
 ] as const;
 
-function agentFor(listing: Listing) {
+function agentFor(
+  listing: Listing,
+  team: { name: string; photo: string | null }[]
+) {
+  const pool =
+    team.length > 0
+      ? team.map((a) => ({ name: a.name, photo: a.photo || FALLBACK_AGENTS[0].photo }))
+      : [...FALLBACK_AGENTS];
   let hash = 0;
-  for (let i = 0; i < listing.slug.length; i++) hash = (hash + listing.slug.charCodeAt(i)) % AGENTS.length;
-  return AGENTS[hash]!;
+  for (let i = 0; i < listing.slug.length; i++) hash = (hash + listing.slug.charCodeAt(i)) % pool.length;
+  return pool[hash]!;
 }
 
 function headlineFor(listing: Listing) {
@@ -66,8 +62,9 @@ function BrandMark({ className }: { className?: string }) {
 
 export function ListingResultCard({ listing }: { listing: Listing }) {
   const brand = useBrand();
+  const team = usePublicAgents();
   const { format } = useCurrency();
-  const agent = agentFor(listing);
+  const agent = agentFor(listing, team);
   const gallery = [listing.image, ...listing.gallery.filter((g) => g !== listing.image)].slice(0, 4);
   while (gallery.length < 4) gallery.push(gallery[gallery.length - 1] ?? listing.image);
   const [main, ...thumbs] = gallery;

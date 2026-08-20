@@ -34,6 +34,8 @@ export function CompanyProfileForm({ initial }: { initial: CompanyBrand }) {
         email: String(fd.get("email") ?? ""),
         whatsapp: String(fd.get("whatsapp") ?? "") || null,
         tagline: String(fd.get("tagline") ?? "") || null,
+        linkedin_url: String(fd.get("linkedin_url") ?? "") || null,
+        instagram_url: String(fd.get("instagram_url") ?? "") || null,
         vat_rate: Number(fd.get("vat_rate") ?? 5),
         quotation_prefix: String(fd.get("quotation_prefix") ?? "QT-"),
         invoice_prefix: String(fd.get("invoice_prefix") ?? "INV-"),
@@ -183,6 +185,30 @@ export function CompanyProfileForm({ initial }: { initial: CompanyBrand }) {
             type="email"
             required
             defaultValue={brand.email}
+            className={fieldClass}
+          />
+        </div>
+        <div className="space-y-2.5">
+          <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            LinkedIn URL
+          </Label>
+          <Input
+            name="linkedin_url"
+            type="url"
+            defaultValue={brand.linkedinUrl ?? ""}
+            placeholder="https://www.linkedin.com/company/…"
+            className={fieldClass}
+          />
+        </div>
+        <div className="space-y-2.5">
+          <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+            Instagram URL
+          </Label>
+          <Input
+            name="instagram_url"
+            type="url"
+            defaultValue={brand.instagramUrl ?? ""}
+            placeholder="https://www.instagram.com/…"
             className={fieldClass}
           />
         </div>

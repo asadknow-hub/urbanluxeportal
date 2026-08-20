@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils";
 
 const TABS = [
   { id: "residential", label: "Residential", short: "Home", path: "/buy" },
-  { id: "commercial", label: "Commercial", short: "Office", path: "/buy" },
-  { id: "global", label: "Global Projects", short: "Off-plan", path: "/off-plan" },
+  { id: "communities", label: "Communities", short: "Areas", path: "/communities" },
+  { id: "global", label: "Off-plan", short: "Off-plan", path: "/off-plan" },
 ] as const;
 
 export function HeroSearch() {
@@ -22,13 +22,12 @@ export function HeroSearch() {
     e.preventDefault();
     const path = TABS.find((t) => t.id === tab)?.path ?? "/buy";
     const params = new URLSearchParams();
-    if (tab === "commercial") params.set("type", "commercial");
     if (query) {
       const match = COMMUNITIES.find(
         (c) => c.slug === query || c.name.toLowerCase().includes(query.toLowerCase())
       );
       if (match) params.set("community", match.slug);
-      else params.set("q", query);
+      else if (tab !== "communities") params.set("q", query);
     }
     const q = params.toString();
     router.push(q ? `${path}?${q}` : path);

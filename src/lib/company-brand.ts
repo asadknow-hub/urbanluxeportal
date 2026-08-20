@@ -11,6 +11,8 @@ export type CompanyBrand = {
   rera: string;
   logoUrl: string | null;
   logoDarkUrl: string | null;
+  linkedinUrl: string | null;
+  instagramUrl: string | null;
   trn: string | null;
   vatRate: number;
   quotationPrefix: string;
@@ -28,6 +30,8 @@ export type CompanySettingsRow = {
   logo_dark_url?: string | null;
   whatsapp?: string | null;
   tagline?: string | null;
+  linkedin_url?: string | null;
+  instagram_url?: string | null;
   vat_rate?: number | null;
   quotation_prefix?: string | null;
   invoice_prefix?: string | null;
@@ -41,6 +45,13 @@ export function toPhoneTel(phone: string) {
 
 export function toWhatsappDigits(value: string) {
   return value.replace(/\D/g, "") || SITE.whatsapp;
+}
+
+function cleanHttpUrl(value: string | null | undefined) {
+  const raw = value?.trim();
+  if (!raw) return null;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  return `https://${raw}`;
 }
 
 export function brandFromSettings(row: CompanySettingsRow | null | undefined): CompanyBrand {
@@ -58,6 +69,8 @@ export function brandFromSettings(row: CompanySettingsRow | null | undefined): C
     rera: row?.rera_orn?.trim() || SITE.rera,
     logoUrl: row?.logo_url?.trim() || null,
     logoDarkUrl: row?.logo_dark_url?.trim() || row?.logo_url?.trim() || null,
+    linkedinUrl: cleanHttpUrl(row?.linkedin_url),
+    instagramUrl: cleanHttpUrl(row?.instagram_url),
     trn: row?.trn?.trim() || null,
     vatRate: row?.vat_rate ?? 5,
     quotationPrefix: row?.quotation_prefix?.trim() || "QT-",

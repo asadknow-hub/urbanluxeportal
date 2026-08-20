@@ -437,13 +437,23 @@ export function ListingsExplorer({
             <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#0B1D3D]/45" />
           </div>
 
-          <button
-            type="button"
+          <a
+            href={
+              community
+                ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                    `${COMMUNITIES.find((c) => c.slug === community)?.name ?? community}, Dubai`
+                  )}`
+                : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                    kind === "rent" ? "Properties for rent Dubai" : "Properties for sale Dubai"
+                  )}`
+            }
+            target="_blank"
+            rel="noreferrer"
             className="inline-flex h-10 items-center gap-1.5 rounded-md border border-[#d1d5db] px-3 text-sm font-semibold text-[#0B1D3D] transition-colors hover:border-[#0B1D3D]/40 hover:bg-[#F2F2F2] sm:h-9"
           >
             <Map className="h-3.5 w-3.5" strokeWidth={2} />
             Map
-          </button>
+          </a>
         </div>
       </div>
 

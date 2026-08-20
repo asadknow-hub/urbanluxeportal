@@ -26,6 +26,8 @@ const updateSchema = z.object({
   email: z.string().trim().email("Valid email required").max(120),
   whatsapp: z.string().trim().max(40).optional().nullable(),
   tagline: z.string().trim().max(200).optional().nullable(),
+  linkedin_url: z.string().trim().max(300).optional().nullable(),
+  instagram_url: z.string().trim().max(300).optional().nullable(),
   vat_rate: z.coerce.number().min(0).max(100),
   quotation_prefix: z.string().trim().min(1).max(20),
   invoice_prefix: z.string().trim().min(1).max(20),
@@ -46,6 +48,8 @@ function revalidateBrandSurfaces() {
   revalidatePath("/mortgages");
   revalidatePath("/insights");
   revalidatePath("/about");
+  revalidatePath("/privacy");
+  revalidatePath("/terms");
   revalidatePath("/dashboard");
 }
 
@@ -88,6 +92,8 @@ export async function updateCompanySettings(
       email: data.email,
       whatsapp: data.whatsapp || null,
       tagline: data.tagline || null,
+      linkedin_url: data.linkedin_url?.trim() || null,
+      instagram_url: data.instagram_url?.trim() || null,
       vat_rate: data.vat_rate,
       quotation_prefix: data.quotation_prefix,
       invoice_prefix: data.invoice_prefix,

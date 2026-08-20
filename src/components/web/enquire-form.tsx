@@ -3,25 +3,44 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useBrand } from "@/components/brand/brand-provider";
+import { submitEnquiryForm } from "@/server/public-leads";
 
 export function EnquireForm({
   propertyTitle,
   compact = false,
+  defaultInterest = "buy",
 }: {
   propertyTitle?: string;
   compact?: boolean;
+  defaultInterest?: string;
 }) {
   const brand = useBrand();
   const [pending, setPending] = useState(false);
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = e.currentTarget;
     setPending(true);
-    window.setTimeout(() => {
+    try {
+      const fd = new FormData(form);
+      if (propertyTitle) fd.set("propertyTitle", propertyTitle);
+      if (compact && !fd.get("interest")) fd.set("interest", defaultInterest);
+      const result = await submitEnquiryForm(fd);
+      if (!result.ok) {
+        toast.error(result.error ?? "Could not send enquiry");
+        return;
+      }
+      form.reset();
+      toast.success(
+        result.duplicate
+          ? "We already have your details — a specialist will follow up."
+          : "Received. A specialist will be in touch."
+      );
+    } catch {
+      toast.error("Could not send enquiry. Please try again.");
+    } finally {
       setPending(false);
-      (e.target as HTMLFormElement).reset();
-      toast.success("Received. A specialist will be in touch.");
-    }, 700);
+    }
   }
 
   const field =
@@ -29,6 +48,15 @@ export function EnquireForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-3">
+      {/* Honeypot */}
+      <input
+        type="text"
+        name="company"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden
+        className="absolute -left-[9999px] h-0 w-0 opacity-0"
+      />
       {propertyTitle && (
         <p className="text-sm font-light text-[#6b7280]">
           Enquiring about <span className="text-[#0B1D3D]">{propertyTitle}</span>
@@ -38,13 +66,14 @@ export function EnquireForm({
       <input name="email" type="email" required placeholder="Email" className={field} />
       <input name="phone" required placeholder="Mobile / WhatsApp" className={field} />
       {!compact && (
-        <select name="interest" className={field} defaultValue="buy">
+        <select name="interest" className={field} defaultValue={defaultInterest}>
           <option value="buy">I want to buy</option>
           <option value="rent">I want to rent</option>
-          <option value="offplan">Off-plan</option>
+          <option value="off_plan">Off-plan</option>
           <option value="sell">I want to sell</option>
         </select>
       )}
+      {compact ? <input type="hidden" name="interest" value={defaultInterest} /> : null}
       <textarea
         name="message"
         rows={compact ? 3 : 4}

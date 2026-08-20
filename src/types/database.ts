@@ -100,6 +100,8 @@ export interface Database {
           logo_dark_url: string | null;
           whatsapp: string | null;
           tagline: string | null;
+          linkedin_url: string | null;
+          instagram_url: string | null;
           vat_rate: number;
           quotation_prefix: string;
           invoice_prefix: string;

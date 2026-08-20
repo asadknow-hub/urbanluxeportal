@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { FOOTER_LINKS, FOOTER_PROPERTY, FOOTER_SERVICES } from "@/lib/web/site";
 import { SiteLogo } from "@/components/web/site-logo";
 import { useBrand } from "@/components/brand/brand-provider";
+import { submitNewsletterForm } from "@/server/public-leads";
 import { toast } from "sonner";
 
 export function SiteFooter() {
@@ -13,22 +14,33 @@ export function SiteFooter() {
   const [email, setEmail] = useState("");
   const [pending, setPending] = useState(false);
 
-  function onSubscribe(e: React.FormEvent) {
+  async function onSubscribe(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim()) return;
     setPending(true);
-    window.setTimeout(() => {
-      setPending(false);
+    try {
+      const fd = new FormData();
+      fd.set("email", email.trim());
+      const result = await submitNewsletterForm(fd);
+      if (!result.ok) {
+        toast.error(result.error ?? "Could not subscribe");
+        return;
+      }
       setEmail("");
-      toast.success("Subscribed. We'll keep you posted.");
-    }, 600);
+      toast.success(
+        result.duplicate ? "You're already on the list." : "Subscribed. We'll keep you posted."
+      );
+    } catch {
+      toast.error("Could not subscribe. Please try again.");
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
     <footer className="bg-[#222222] text-white">
       <div className="mx-auto max-w-[1440px] px-4 py-12 sm:px-5 sm:py-16 md:px-10 md:py-20">
         <div className="grid gap-10 sm:gap-12 lg:grid-cols-12">
-          {/* About + newsletter */}
           <div className="lg:col-span-5">
             <SiteLogo inverted />
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/65 sm:mt-6">
@@ -59,7 +71,6 @@ export function SiteFooter() {
             </form>
           </div>
 
-          {/* Link columns */}
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 sm:gap-10 lg:col-span-7 lg:grid-cols-4">
             <div>
               <p className="text-xs font-semibold tracking-[0.14em] uppercase text-white/50">
@@ -141,25 +152,39 @@ export function SiteFooter() {
           <p className="text-xs text-white/40">
             © {new Date().getFullYear()} {brand.name}. All rights reserved.
           </p>
-          <div className="flex items-center gap-4">
-            <a
-              href="https://linkedin.com"
-              target="_blank"
-              rel="noopener noreferrer"
+          <div className="flex flex-wrap items-center gap-4">
+            {brand.linkedinUrl ? (
+              <a
+                href={brand.linkedinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-semibold tracking-wide text-white/50 transition-colors hover:text-white"
+              >
+                LinkedIn
+              </a>
+            ) : null}
+            {brand.instagramUrl ? (
+              <a
+                href={brand.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-semibold tracking-wide text-white/50 transition-colors hover:text-white"
+              >
+                Instagram
+              </a>
+            ) : null}
+            <Link
+              href="/privacy"
               className="text-xs font-semibold tracking-wide text-white/50 transition-colors hover:text-white"
-              aria-label="LinkedIn"
             >
-              LinkedIn
-            </a>
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noopener noreferrer"
+              Privacy
+            </Link>
+            <Link
+              href="/terms"
               className="text-xs font-semibold tracking-wide text-white/50 transition-colors hover:text-white"
-              aria-label="Instagram"
             >
-              Instagram
-            </a>
+              Terms
+            </Link>
           </div>
         </div>
       </div>

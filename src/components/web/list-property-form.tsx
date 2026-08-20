@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useBrand } from "@/components/brand/brand-provider";
+import { submitListPropertyForm } from "@/server/public-leads";
 
 const INTENT = [
   { value: "sell", label: "I want to sell" },
@@ -23,14 +24,27 @@ export function ListPropertyForm({ defaultIntent = "sell" }: { defaultIntent?: s
   const brand = useBrand();
   const [pending, setPending] = useState(false);
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = e.currentTarget;
     setPending(true);
-    window.setTimeout(() => {
+    try {
+      const result = await submitListPropertyForm(new FormData(form));
+      if (!result.ok) {
+        toast.error(result.error ?? "Could not submit");
+        return;
+      }
+      form.reset();
+      toast.success(
+        result.duplicate
+          ? "We already have your details — an advisor will follow up."
+          : "Received. An advisor will contact you about your property."
+      );
+    } catch {
+      toast.error("Could not submit. Please try again.");
+    } finally {
       setPending(false);
-      (e.target as HTMLFormElement).reset();
-      toast.success("Received. An advisor will contact you about your property.");
-    }, 700);
+    }
   }
 
   const field =
@@ -38,6 +52,14 @@ export function ListPropertyForm({ defaultIntent = "sell" }: { defaultIntent?: s
 
   return (
     <form onSubmit={onSubmit} className="space-y-3">
+      <input
+        type="text"
+        name="company"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden
+        className="absolute -left-[9999px] h-0 w-0 opacity-0"
+      />
       <input name="name" required placeholder="Full name" className={field} autoComplete="name" />
       <input
         name="email"

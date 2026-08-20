@@ -45,6 +45,8 @@ export const FOOTER_SERVICES = [
 export const FOOTER_LINKS = [
   { href: "/about", label: "About Us" },
   { href: "/contact", label: "Contact" },
+  { href: "/careers", label: "Careers" },
+  { href: "/insights", label: "Insights" },
   { href: "/login", label: "Agent Portal" },
 ] as const;
 

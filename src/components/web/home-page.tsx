@@ -34,7 +34,7 @@ const CATEGORY_CARDS = [
     image: IMAGES.marina,
     panel: "bg-[var(--ul-secondary)] text-white",
     kicker: "Offplan",
-    title: "New projects coming soon",
+    title: "New launches & payment plans",
     link: "View projects",
   },
 ] as const;
