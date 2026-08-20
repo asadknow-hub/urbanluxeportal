@@ -88,9 +88,9 @@ export function SiteNav() {
                   href={item.href}
                   prefetch
                   className={cn(
-                    "whitespace-nowrap font-medium transition-[color,font-size] duration-300",
+                    "whitespace-nowrap font-bold transition-[color,font-size] duration-300",
                     scrolled ? "text-[0.75rem]" : "text-[0.8125rem]",
-                    active ? "text-[#0B1D3D]" : "text-[#0B1D3D]/75 hover:text-[#0B1D3D]"
+                    active ? "text-[#0B1D3D]" : "text-[#0B1D3D]/80 hover:text-[#0B1D3D]"
                   )}
                 >
                   {item.label}
@@ -186,7 +186,7 @@ export function SiteNav() {
                 key={item.href}
                 href={item.href}
                 prefetch
-                className="border-b border-[#f2f2f2] py-3.5 text-sm font-medium text-[#0B1D3D]"
+                className="border-b border-[#f2f2f2] py-3.5 text-sm font-bold text-[#0B1D3D]"
               >
                 {item.label}
               </Link>

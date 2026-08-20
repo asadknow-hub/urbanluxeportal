@@ -17,6 +17,8 @@ export const NAV = [
   { href: "/rent", label: "Rent" },
   { href: "/off-plan", label: "Offplan" },
   { href: "/contact", label: "Mortgages" },
+  { href: "/careers", label: "Careers" },
+  { href: "/insights", label: "Insights" },
 ] as const;
 
 export const CURRENCIES = [

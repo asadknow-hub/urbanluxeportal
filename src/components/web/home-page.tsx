@@ -44,19 +44,19 @@ const FEATURED_NEWS = [
     image: IMAGES.downtown,
     panel: "bg-[var(--ul-primary)] text-white",
     title: "Downtown Dubai market update",
-    href: "/about",
+    href: "/insights",
   },
   {
     image: IMAGES.penthouse,
     panel: "bg-[var(--ul-tertiary)] text-[var(--ul-primary)]",
     title: "Villa sales reach new highs",
-    href: "/buy",
+    href: "/insights",
   },
   {
     image: IMAGES.creek,
     panel: "bg-[var(--ul-secondary)] text-white",
     title: "Off-plan launches this quarter",
-    href: "/off-plan",
+    href: "/insights",
   },
 ] as const;
 
@@ -197,7 +197,7 @@ export function HomePage() {
               leap?
             </p>
             <Link
-              href="/contact"
+              href="/careers"
               prefetch
               className="mt-8 inline-flex h-11 items-center justify-center rounded-full bg-[var(--ul-primary)] px-8 text-sm font-semibold text-white transition-colors hover:bg-[color-mix(in_srgb,var(--ul-primary)_88%,black)]"
             >
