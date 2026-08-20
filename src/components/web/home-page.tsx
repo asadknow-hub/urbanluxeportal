@@ -6,6 +6,7 @@ import { IMAGES } from "@/lib/web/listings";
 import { HeroSection } from "@/components/web/hero-section";
 import { HomeListingsShowcase } from "@/components/web/home-listings-showcase";
 import { DevelopersMarquee } from "@/components/web/developers-marquee";
+import { WhyAgentsSection } from "@/components/web/why-agents-section";
 import { MarketGrowthSection } from "@/components/web/market-growth-section";
 import { Reveal } from "@/components/web/reveal";
 import { cn } from "@/lib/utils";
@@ -205,13 +206,16 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* 7 · Developers marquee */}
+      {/* 7 · Why our agents */}
+      <WhyAgentsSection />
+
+      {/* 8 · Developers marquee */}
       <DevelopersMarquee />
 
-      {/* 8 · Market growth & appreciation */}
+      {/* 9 · Market growth & appreciation */}
       <MarketGrowthSection />
 
-      {/* 9 · Insights */}
+      {/* 10 · Insights */}
       <section className="bg-white px-5 py-16 md:px-10 md:py-24">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
@@ -248,7 +252,7 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* 10 · CTA */}
+      {/* 11 · CTA */}
       <section className="border-t border-[var(--ul-hair)] bg-[var(--ul-tertiary)] px-5 py-16 md:px-10 md:py-20">
         <Reveal className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           <div>
