@@ -46,6 +46,21 @@ export default function MortgagesPage() {
               Indicative calculations, straight answers on Dubai lending, and introductions to
               advisors who move at the pace of your offer.
             </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Link
+                href="#calculator"
+                className="inline-flex h-11 items-center justify-center rounded-full bg-[#1E7A4A] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#155c38]"
+              >
+                Calculate repayments
+              </Link>
+              <Link
+                href="/contact"
+                prefetch
+                className="inline-flex h-11 items-center justify-center rounded-full border border-white/35 bg-transparent px-6 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+              >
+                Speak to an advisor
+              </Link>
+            </div>
           </Reveal>
 
           <div className="mt-8 grid gap-3 sm:grid-cols-3 md:mt-10 md:gap-4">
@@ -71,6 +86,27 @@ export default function MortgagesPage() {
       <section id="calculator" className="border-b border-[#e5e7eb] bg-[#F2F2F2] px-5 py-8 md:px-10 md:py-10">
         <div className="mx-auto max-w-[960px]">
           <MortgageCalculator />
+          <div className="mt-4 flex flex-col gap-3 rounded-xl border border-[#e5e7eb] bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between md:px-5">
+            <p className="text-sm font-semibold text-[#0B1D3D]">
+              Need help or ready to proceed?
+            </p>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <Link
+                href="/contact"
+                prefetch
+                className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D3D] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#0a172e]"
+              >
+                Start Mortgage Approval
+              </Link>
+              <Link
+                href="/contact"
+                prefetch
+                className="inline-flex h-10 items-center justify-center rounded-full border border-[#0B1D3D] px-5 text-sm font-semibold text-[#0B1D3D] transition-colors hover:bg-[#F2F2F2]"
+              >
+                Speak to our team
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -88,6 +124,21 @@ export default function MortgagesPage() {
           <div className="mt-8">
             <MortgageFaq />
           </div>
+          <Reveal className="mt-10 flex flex-col items-start justify-between gap-5 rounded-xl border border-[#e5e7eb] bg-[#F2F2F2] p-6 sm:flex-row sm:items-center md:p-8">
+            <div>
+              <p className="text-lg font-semibold text-[#0B1D3D]">Still have questions?</p>
+              <p className="mt-1 text-sm text-[#0B1D3D]/65">
+                We&apos;ll match your budget and timeline with the right lending path.
+              </p>
+            </div>
+            <Link
+              href="/contact"
+              prefetch
+              className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-[#0B1D3D] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#0a172e]"
+            >
+              Book a consultation
+            </Link>
+          </Reveal>
         </div>
       </section>
     </>
