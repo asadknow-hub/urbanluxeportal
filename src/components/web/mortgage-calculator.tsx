@@ -1,9 +1,7 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import Link from "next/link";
 import { formatAedPlain } from "@/lib/web/listings";
-import { cn } from "@/lib/utils";
 
 const PRICE_MIN = 200_000;
 const PRICE_MAX = 35_000_000;
@@ -40,7 +38,7 @@ function parseNumber(raw: string) {
   return Number.isFinite(n) ? n : 0;
 }
 
-function SliderField({
+function CompactField({
   id,
   label,
   control,
@@ -64,8 +62,8 @@ function SliderField({
   onChange: (v: number) => void;
 }) {
   return (
-    <div>
-      <label htmlFor={id} className="mb-2 block text-sm font-bold text-[#0B1D3D]">
+    <div className="min-w-0">
+      <label htmlFor={id} className="mb-1.5 block text-xs font-bold text-[#0B1D3D]">
         {label}
       </label>
       {control}
@@ -76,10 +74,10 @@ function SliderField({
         step={step}
         value={clamp(value, min, max)}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="ul-mortgage-range mt-4 w-full"
+        className="ul-mortgage-range mt-2.5 w-full"
         aria-label={`${label} slider`}
       />
-      <div className="mt-1.5 flex items-center justify-between text-xs text-[#0B1D3D]/45">
+      <div className="mt-1 flex items-center justify-between text-[0.65rem] text-[#0B1D3D]/40">
         <span>{minLabel}</span>
         <span>{maxLabel}</span>
       </div>
@@ -106,10 +104,9 @@ export function MortgageCalculator() {
   const downSliderMin = Math.round(price * (DOWN_PCT_MIN / 100));
   const downSliderMax = Math.round(price * (DOWN_PCT_MAX / 100));
 
-  const result = useMemo(() => {
+  const monthly = useMemo(() => {
     const loan = Math.max(0, price - downAmount);
-    const monthly = monthlyPayment(loan, rate, years);
-    return { loan, monthly, downAmount };
+    return monthlyPayment(loan, rate, years);
   }, [price, downAmount, rate, years]);
 
   function setPriceValue(next: number) {
@@ -138,191 +135,160 @@ export function MortgageCalculator() {
   }
 
   const inputClass =
-    "h-12 w-full rounded-md border border-[#d1d5db] bg-white px-3.5 text-base font-medium text-[#0B1D3D] outline-none transition-colors hover:border-[#0B1D3D]/35 focus:border-[#0B1D3D]";
+    "h-9 w-full rounded-md border border-[#d1d5db] bg-white px-2.5 text-sm font-medium text-[#0B1D3D] outline-none transition-colors hover:border-[#0B1D3D]/35 focus:border-[#0B1D3D]";
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-[0_8px_30px_rgba(11,29,61,0.06)]">
-      <div className="px-6 py-8 md:px-10 md:py-10">
-        <h2 className="text-2xl font-bold tracking-tight text-[#0B1D3D] md:text-[1.75rem]">
+    <div className="rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-[0_4px_20px_rgba(11,29,61,0.05)] md:p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <h2 className="text-base font-bold tracking-tight text-[#0B1D3D] md:text-lg">
           Calculate your mortgage repayments
         </h2>
+        <div className="sm:text-right">
+          <p className="text-[0.7rem] text-[#0B1D3D]/50">Monthly repayment</p>
+          <p className="text-xl font-bold tracking-tight text-[#0B1D3D] md:text-2xl">
+            {formatAedPlain(Math.round(monthly))}
+          </p>
+        </div>
+      </div>
 
-        <div className="mt-8 space-y-8">
-          <SliderField
-            id="purchase-price"
-            label="Purchase Price"
-            minLabel="AED 200,000"
-            maxLabel="AED 35,000,000"
-            min={PRICE_MIN}
-            max={PRICE_MAX}
-            step={10000}
-            value={price}
-            onChange={setPriceValue}
-            control={
+      <div className="mt-4">
+        <CompactField
+          id="purchase-price"
+          label="Purchase Price"
+          minLabel="AED 200k"
+          maxLabel="AED 35M"
+          min={PRICE_MIN}
+          max={PRICE_MAX}
+          step={10000}
+          value={price}
+          onChange={setPriceValue}
+          control={
+            <input
+              id="purchase-price"
+              type="text"
+              inputMode="numeric"
+              className={inputClass}
+              value={priceText}
+              onChange={(e) => setPriceText(e.target.value)}
+              onBlur={() => setPriceValue(parseNumber(priceText) || PRICE_MIN)}
+            />
+          }
+        />
+      </div>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+        <CompactField
+          id="down-payment"
+          label="Down Payment"
+          minLabel={`${formatNumber(downSliderMin / 1000)}k`}
+          maxLabel={`${formatNumber(downSliderMax / 1000)}k`}
+          min={downSliderMin}
+          max={Math.max(downSliderMin + 1, downSliderMax)}
+          step={1000}
+          value={downAmount}
+          onChange={setDownFromAmount}
+          control={
+            <div className="grid grid-cols-[1fr_3.25rem] overflow-hidden rounded-md border border-[#d1d5db] focus-within:border-[#0B1D3D]">
               <input
-                id="purchase-price"
+                id="down-payment"
                 type="text"
                 inputMode="numeric"
-                className={inputClass}
-                value={priceText}
-                onChange={(e) => setPriceText(e.target.value)}
-                onBlur={() => setPriceValue(parseNumber(priceText) || PRICE_MIN)}
+                aria-label="Down payment amount"
+                className="h-9 border-0 bg-transparent px-2.5 text-sm font-medium text-[#0B1D3D] outline-none"
+                value={downAmountText}
+                onChange={(e) => setDownAmountText(e.target.value)}
+                onBlur={() => setDownFromAmount(parseNumber(downAmountText) || downSliderMin)}
               />
-            }
-          />
-
-          <SliderField
-            id="down-payment"
-            label="Down Payment"
-            minLabel={`AED ${formatNumber(downSliderMin)}`}
-            maxLabel={`AED ${formatNumber(downSliderMax)}`}
-            min={downSliderMin}
-            max={Math.max(downSliderMin + 1, downSliderMax)}
-            step={1000}
-            value={downAmount}
-            onChange={setDownFromAmount}
-            control={
-              <div className="grid grid-cols-[1fr_5.5rem] overflow-hidden rounded-md border border-[#d1d5db] focus-within:border-[#0B1D3D]">
+              <div className="relative border-l border-[#d1d5db] bg-[#F8F8F8]">
                 <input
-                  id="down-payment"
                   type="text"
                   inputMode="numeric"
-                  aria-label="Down payment amount"
-                  className="h-12 border-0 bg-transparent px-3.5 text-base font-medium text-[#0B1D3D] outline-none"
-                  value={downAmountText}
-                  onChange={(e) => setDownAmountText(e.target.value)}
-                  onBlur={() => setDownFromAmount(parseNumber(downAmountText) || downSliderMin)}
+                  aria-label="Down payment percent"
+                  className="h-9 w-full bg-transparent py-0 pl-1.5 pr-5 text-sm font-medium text-[#0B1D3D] outline-none"
+                  value={downPctText}
+                  onChange={(e) => setDownPctText(e.target.value.replace(/[^\d]/g, ""))}
+                  onBlur={() => setDownFromPct(parseNumber(downPctText) || DOWN_PCT_MIN)}
                 />
-                <div className="relative border-l border-[#d1d5db] bg-[#F8F8F8]">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    aria-label="Down payment percent"
-                    className="h-12 w-full bg-transparent py-0 pl-3 pr-7 text-base font-medium text-[#0B1D3D] outline-none"
-                    value={downPctText}
-                    onChange={(e) => setDownPctText(e.target.value.replace(/[^\d]/g, ""))}
-                    onBlur={() => setDownFromPct(parseNumber(downPctText) || DOWN_PCT_MIN)}
-                  />
-                  <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#0B1D3D]/55">
-                    %
-                  </span>
-                </div>
+                <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-[0.65rem] font-semibold text-[#0B1D3D]/50">
+                  %
+                </span>
               </div>
-            }
-          />
+            </div>
+          }
+        />
 
-          <SliderField
-            id="loan-period"
-            label="Loan Period"
-            minLabel="1 year"
-            maxLabel="30 years"
-            min={YEARS_MIN}
-            max={YEARS_MAX}
-            step={1}
-            value={years}
-            onChange={(v) => {
-              setYears(v);
-              setYearsText(String(v));
-            }}
-            control={
-              <input
-                id="loan-period"
-                type="text"
-                inputMode="numeric"
-                className={inputClass}
-                value={yearsText}
-                onChange={(e) => setYearsText(e.target.value)}
-                onBlur={() => {
-                  const v = clamp(
-                    Math.round(parseNumber(yearsText) || YEARS_MIN),
-                    YEARS_MIN,
-                    YEARS_MAX
-                  );
-                  setYears(v);
-                  setYearsText(String(v));
-                }}
-              />
-            }
-          />
+        <CompactField
+          id="loan-period"
+          label="Loan Period"
+          minLabel="1 yr"
+          maxLabel="30 yrs"
+          min={YEARS_MIN}
+          max={YEARS_MAX}
+          step={1}
+          value={years}
+          onChange={(v) => {
+            setYears(v);
+            setYearsText(String(v));
+          }}
+          control={
+            <input
+              id="loan-period"
+              type="text"
+              inputMode="numeric"
+              className={inputClass}
+              value={yearsText}
+              onChange={(e) => setYearsText(e.target.value)}
+              onBlur={() => {
+                const v = clamp(
+                  Math.round(parseNumber(yearsText) || YEARS_MIN),
+                  YEARS_MIN,
+                  YEARS_MAX
+                );
+                setYears(v);
+                setYearsText(String(v));
+              }}
+            />
+          }
+        />
 
-          <SliderField
-            id="interest-rate"
-            label="Interest Rate:"
-            minLabel="1%"
-            maxLabel="20%"
-            min={RATE_MIN}
-            max={RATE_MAX}
-            step={0.01}
-            value={rate}
-            onChange={(v) => {
-              const next = Math.round(v * 100) / 100;
-              setRate(next);
-              setRateText(formatNumber(next, 2));
-            }}
-            control={
-              <input
-                id="interest-rate"
-                type="text"
-                inputMode="decimal"
-                className={inputClass}
-                value={rateText}
-                onChange={(e) => setRateText(e.target.value)}
-                onBlur={() => {
-                  const v =
-                    Math.round(
-                      clamp(parseNumber(rateText) || RATE_MIN, RATE_MIN, RATE_MAX) * 100
-                    ) / 100;
-                  setRate(v);
-                  setRateText(formatNumber(v, 2));
-                }}
-              />
-            }
-          />
-        </div>
-
-        <div className="mt-10">
-          <p className="text-sm text-[#0B1D3D]/55">Monthly repayment</p>
-          <p className="mt-1 text-3xl font-bold tracking-tight text-[#0B1D3D] md:text-4xl">
-            {formatAedPlain(Math.round(result.monthly))}
-          </p>
-          <p className="mt-3 max-w-2xl text-xs leading-relaxed text-[#0B1D3D]/45">
-            * Estimated initial monthly payments based on a {formatAedPlain(price)} purchase price
-            with a {formatNumber(rate, 2)}% fixed interest rate.
-          </p>
-        </div>
+        <CompactField
+          id="interest-rate"
+          label="Interest Rate"
+          minLabel="1%"
+          maxLabel="20%"
+          min={RATE_MIN}
+          max={RATE_MAX}
+          step={0.01}
+          value={rate}
+          onChange={(v) => {
+            const next = Math.round(v * 100) / 100;
+            setRate(next);
+            setRateText(formatNumber(next, 2));
+          }}
+          control={
+            <input
+              id="interest-rate"
+              type="text"
+              inputMode="decimal"
+              className={inputClass}
+              value={rateText}
+              onChange={(e) => setRateText(e.target.value)}
+              onBlur={() => {
+                const v =
+                  Math.round(
+                    clamp(parseNumber(rateText) || RATE_MIN, RATE_MIN, RATE_MAX) * 100
+                  ) / 100;
+                setRate(v);
+                setRateText(formatNumber(v, 2));
+              }}
+            />
+          }
+        />
       </div>
 
-      <div className="relative overflow-hidden bg-[#DCEEE5] px-6 py-8 md:px-10 md:py-9">
-        <span
-          className="pointer-events-none absolute -bottom-6 -right-2 select-none text-[9rem] font-bold leading-none text-[#0B1D3D]/[0.06] md:text-[11rem]"
-          aria-hidden
-        >
-          UL
-        </span>
-        <div className="relative">
-          <p className="text-lg font-bold text-[#0B1D3D] md:text-xl">
-            Need help or ready to proceed?
-          </p>
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link
-              href="/contact"
-              prefetch
-              className="inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D3D] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#0a172e]"
-            >
-              Start Mortgage Approval
-            </Link>
-            <Link
-              href="/contact"
-              prefetch
-              className={cn(
-                "inline-flex h-11 items-center justify-center rounded-full border border-[#0B1D3D] bg-transparent px-6 text-sm font-semibold text-[#0B1D3D] transition-colors hover:bg-white/50"
-              )}
-            >
-              Speak to our team
-            </Link>
-          </div>
-        </div>
-      </div>
+      <p className="mt-3 text-[0.65rem] leading-relaxed text-[#0B1D3D]/40">
+        * Estimate for {formatAedPlain(price)} at {formatNumber(rate, 2)}% fixed — not a bank offer.
+      </p>
     </div>
   );
 }
