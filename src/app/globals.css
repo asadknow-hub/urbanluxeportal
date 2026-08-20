@@ -164,34 +164,96 @@
 
 /* —— Public website (urbanluxe.com) —— */
 .ul-site {
-  --ul-paper: #f6f3ee;
-  --ul-ink: #14110e;
-  --ul-gold: #2dd4bf;
-  --ul-accent-deep: #14b8a6;
-  --ul-muted: #8a8178;
-  --ul-hair: #e4d9c8;
+  --ul-primary: #0b1d3d;
+  --ul-secondary: #1e7a4a;
+  --ul-surface: #f2f2f2;
+  --ul-footer: #222222;
+  --ul-paper: #ffffff;
+  --ul-ink: #0b1d3d;
+  --ul-gold: #1e7a4a;
+  --ul-accent-deep: #155c38;
+  --ul-muted: #6b7280;
+  --ul-hair: #e5e7eb;
+  --ul-card-warm: #e8e4de;
+  --ul-card-cool: #dce8ef;
   font-family: var(--font-josefin), sans-serif;
   background: var(--ul-paper);
   color: var(--ul-ink);
   letter-spacing: 0.01em;
-  accent-color: var(--ul-gold);
+  accent-color: var(--ul-secondary);
 }
 
 .ul-site h1,
 .ul-site h2,
 .ul-site h3,
 .ul-display {
-  font-family: var(--font-display), serif;
-  letter-spacing: -0.02em;
-  font-weight: 500;
+  font-family: var(--font-josefin), sans-serif;
+  letter-spacing: -0.03em;
+  font-weight: 600;
 }
 
 .ul-kicker {
   font-size: 0.6875rem;
-  font-weight: 500;
-  letter-spacing: 0.32em;
+  font-weight: 600;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--ul-gold);
+  color: var(--ul-secondary);
+}
+
+.ul-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.75rem;
+  padding-inline: 1.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: var(--ul-primary);
+  border-radius: 0.25rem;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.ul-btn-primary:hover {
+  background: #0a172e;
+}
+
+.ul-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.75rem;
+  padding-inline: 1.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--ul-primary);
+  background: transparent;
+  border: 1.5px solid var(--ul-primary);
+  border-radius: 0.25rem;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.ul-btn-outline:hover {
+  background: var(--ul-primary);
+  color: #fff;
+}
+
+.ul-link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ul-primary);
+  transition: gap 0.2s ease;
+}
+
+.ul-link-arrow:hover {
+  gap: 0.625rem;
 }
 
 .ul-site a,
@@ -200,7 +262,7 @@
 }
 
 .ul-site :focus-visible {
-  outline: 2px solid var(--ul-gold);
+  outline: 2px solid var(--ul-secondary);
   outline-offset: 3px;
 }
 

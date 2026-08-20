@@ -24,13 +24,13 @@ export function EnquireForm({
   }
 
   const field =
-    "h-12 w-full border border-[#e4d9c8] bg-[#fffcf8] px-4 text-sm text-[#14110e] outline-none placeholder:text-[#8a8178] focus:border-[#2dd4bf]";
+    "h-12 w-full rounded border border-[#e5e7eb] bg-white px-4 text-sm text-[#0B1D3D] outline-none placeholder:text-[#6b7280] focus:border-[#1E7A4A]";
 
   return (
     <form onSubmit={onSubmit} className="space-y-3">
       {propertyTitle && (
-        <p className="text-sm font-light text-[#8a8178]">
-          Enquiring about <span className="text-[#14110e]">{propertyTitle}</span>
+        <p className="text-sm font-light text-[#6b7280]">
+          Enquiring about <span className="text-[#0B1D3D]">{propertyTitle}</span>
         </p>
       )}
       <input name="name" required placeholder="Full name" className={field} />
@@ -48,19 +48,19 @@ export function EnquireForm({
         name="message"
         rows={compact ? 3 : 4}
         placeholder="Tell us what you are looking for"
-        className="w-full border border-[#e4d9c8] bg-[#fffcf8] px-4 py-3 text-sm text-[#14110e] outline-none placeholder:text-[#8a8178] focus:border-[#2dd4bf]"
+        className="w-full rounded border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#0B1D3D] outline-none placeholder:text-[#6b7280] focus:border-[#1E7A4A]"
         defaultValue={propertyTitle ? `Please share details for ${propertyTitle}.` : ""}
       />
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex h-12 w-full items-center justify-center bg-[#2dd4bf] text-[0.72rem] font-semibold tracking-[0.22em] uppercase text-[#14110e] transition-colors hover:bg-[#14b8a6] disabled:opacity-60"
+        className="inline-flex h-12 w-full items-center justify-center rounded bg-[#0B1D3D] text-sm font-semibold text-white transition-colors hover:bg-[#0a172e] disabled:opacity-60"
       >
         {pending ? "Sending…" : "Send enquiry"}
       </button>
-      <p className="text-center text-xs text-[#8a8178]">
+      <p className="text-center text-xs text-[#6b7280]">
         Or call{" "}
-        <a href={`tel:${SITE.phoneTel}`} className="text-[#14110e] underline-offset-4 hover:underline">
+        <a href={`tel:${SITE.phoneTel}`} className="text-[#0B1D3D] underline-offset-4 hover:underline">
           {SITE.phoneDisplay}
         </a>
       </p>

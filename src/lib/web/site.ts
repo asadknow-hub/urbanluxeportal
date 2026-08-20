@@ -17,8 +17,28 @@ export const NAV = [
   { href: "/rent", label: "Rent" },
   { href: "/off-plan", label: "Off-plan" },
   { href: "/communities", label: "Communities" },
-  { href: "/about", label: "The house" },
+  { href: "/about", label: "About Us" },
   { href: "/contact", label: "Contact" },
+] as const;
+
+export const FOOTER_PROPERTY = [
+  { href: "/buy", label: "Buy" },
+  { href: "/rent", label: "Rent" },
+  { href: "/off-plan", label: "Off-plan" },
+  { href: "/communities", label: "Communities" },
+] as const;
+
+export const FOOTER_SERVICES = [
+  { href: "/sell", label: "List with Us" },
+  { href: "/contact", label: "Property Management" },
+  { href: "/contact", label: "Mortgage Advisory" },
+  { href: "/contact", label: "Valuations" },
+] as const;
+
+export const FOOTER_LINKS = [
+  { href: "/about", label: "About Us" },
+  { href: "/contact", label: "Contact" },
+  { href: "/login", label: "Agent Portal" },
 ] as const;
 
 export function waLink(text?: string) {

@@ -11,23 +11,25 @@ export function SiteLogo({
   return (
     <Link
       href="/"
-      className={cn("group flex items-center gap-3", className)}
+      prefetch
+      className={cn("group flex items-center gap-2.5", className)}
       aria-label="UrbanLuxe home"
     >
       <span
         className={cn(
-          "relative flex h-9 w-9 items-center justify-center",
-          inverted ? "text-[#f6f3ee]" : "text-[#14110e]"
+          "relative flex h-8 w-8 items-center justify-center rounded-sm",
+          inverted ? "bg-white/10" : "bg-[#0B1D3D]"
         )}
         aria-hidden
       >
-        <span className="absolute inset-0 border border-current/40" />
-        <span className="absolute inset-[5px] border border-[#2dd4bf]" />
+        <span className={cn("text-xs font-bold tracking-tighter", inverted ? "text-white" : "text-white")}>
+          UL
+        </span>
       </span>
       <span
         className={cn(
-          "ul-display text-[1.15rem] leading-none tracking-[0.18em]",
-          inverted ? "text-[#f6f3ee]" : "text-[#14110e]"
+          "text-[1.05rem] font-semibold tracking-[0.08em]",
+          inverted ? "text-white" : "text-[#0B1D3D]"
         )}
       >
         URBANLUXE

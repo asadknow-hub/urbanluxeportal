@@ -2,90 +2,75 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { COMMUNITIES } from "@/lib/web/listings";
 import { Search } from "lucide-react";
+import { COMMUNITIES } from "@/lib/web/listings";
+import { cn } from "@/lib/utils";
 
 const INTENTS = [
   { id: "buy", label: "Buy", path: "/buy" },
   { id: "rent", label: "Rent", path: "/rent" },
+  { id: "commercial", label: "Commercial", path: "/buy" },
   { id: "off-plan", label: "Off-plan", path: "/off-plan" },
 ] as const;
 
 export function HeroSearch() {
   const router = useRouter();
   const [intent, setIntent] = useState<(typeof INTENTS)[number]["id"]>("buy");
-  const [community, setCommunity] = useState("");
-  const [beds, setBeds] = useState("");
+  const [query, setQuery] = useState("");
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const path = INTENTS.find((i) => i.id === intent)?.path ?? "/buy";
     const params = new URLSearchParams();
-    if (community) params.set("community", community);
-    if (beds) params.set("beds", beds);
+    if (query) {
+      const match = COMMUNITIES.find(
+        (c) => c.slug === query || c.name.toLowerCase().includes(query.toLowerCase())
+      );
+      if (match) params.set("community", match.slug);
+      else params.set("q", query);
+    }
     const q = params.toString();
     router.push(q ? `${path}?${q}` : path);
   }
 
   return (
-    <form
-      onSubmit={submit}
-      className="w-full border border-[#f6f3ee]/20 bg-[#14110e]/55 p-3 shadow-[0_30px_80px_rgba(0,0,0,0.35)] backdrop-blur-md md:p-4"
-    >
-      <div className="mb-3 flex gap-1 p-1">
+    <form onSubmit={submit} className="w-full max-w-3xl">
+      <div className="mb-3 flex flex-wrap gap-4 px-1">
         {INTENTS.map((item) => (
           <button
             key={item.id}
             type="button"
             onClick={() => setIntent(item.id)}
-            className={
+            className={cn(
+              "text-sm font-medium transition-colors",
               intent === item.id
-                ? "flex-1 bg-[#2dd4bf] px-3 py-2 text-[0.65rem] font-semibold tracking-[0.22em] uppercase text-[#14110e]"
-                : "flex-1 px-3 py-2 text-[0.65rem] font-medium tracking-[0.22em] uppercase text-[#f6f3ee]/70 hover:text-[#f6f3ee]"
-            }
+                ? "text-[#0B1D3D] underline decoration-[#1E7A4A] decoration-2 underline-offset-4"
+                : "text-[#0B1D3D]/50 hover:text-[#0B1D3D]/80"
+            )}
           >
             {item.label}
           </button>
         ))}
       </div>
-      <div className="grid gap-2 md:grid-cols-[1.4fr_1fr_auto]">
-        <label className="sr-only" htmlFor="hero-community">
-          Community
+
+      <div className="flex items-center overflow-hidden rounded-full bg-white shadow-[0_8px_40px_rgba(11,29,61,0.12)] ring-1 ring-[#0B1D3D]/8">
+        <label className="sr-only" htmlFor="hero-location">
+          Location
         </label>
-        <select
-          id="hero-community"
-          value={community}
-          onChange={(e) => setCommunity(e.target.value)}
-          className="h-12 border border-[#f6f3ee]/15 bg-[#14110e]/40 px-4 text-sm text-[#f6f3ee] outline-none"
-        >
-          <option value="">Any community</option>
-          {COMMUNITIES.map((c) => (
-            <option key={c.slug} value={c.slug}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <label className="sr-only" htmlFor="hero-beds">
-          Bedrooms
-        </label>
-        <select
-          id="hero-beds"
-          value={beds}
-          onChange={(e) => setBeds(e.target.value)}
-          className="h-12 border border-[#f6f3ee]/15 bg-[#14110e]/40 px-4 text-sm text-[#f6f3ee] outline-none"
-        >
-          <option value="">Any beds</option>
-          <option value="1">1 bed</option>
-          <option value="2">2 beds</option>
-          <option value="3">3 beds</option>
-          <option value="4">4+ beds</option>
-        </select>
+        <input
+          id="hero-location"
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Enter location, area, or community…"
+          className="h-14 min-w-0 flex-1 bg-transparent px-6 text-sm text-[#0B1D3D] outline-none placeholder:text-[#0B1D3D]/40"
+        />
         <button
           type="submit"
-          className="inline-flex h-12 items-center justify-center gap-2 bg-[#2dd4bf] px-8 text-[0.72rem] font-semibold tracking-[0.22em] uppercase text-[#14110e] transition-colors hover:bg-[#14b8a6]"
+          className="mr-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#0B1D3D] text-white transition-colors hover:bg-[#0a172e]"
+          aria-label="Search properties"
         >
           <Search className="h-4 w-4" />
-          Search
         </button>
       </div>
     </form>
