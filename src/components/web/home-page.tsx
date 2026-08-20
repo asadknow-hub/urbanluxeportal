@@ -8,29 +8,29 @@ import { cn } from "@/lib/utils";
 
 const CATEGORY_CARDS = [
   {
-    href: "/off-plan",
-    image: IMAGES.creek,
+    href: "/buy",
+    image: IMAGES.night,
     bg: "bg-[#0B1D3D]",
     text: "text-white",
-    kicker: "Top Plan",
+    kicker: "Buy",
     title: "Starting from AED 1.2M",
-    link: "View projects",
+    link: "View properties",
   },
   {
     href: "/rent",
     image: IMAGES.living,
-    bg: "bg-[#E8E4DE]",
+    bg: "bg-[#F2F2F2]",
     text: "text-[#0B1D3D]",
-    kicker: "Top Rent",
+    kicker: "Rent",
     title: "Best price for luxury flats",
     link: "View properties",
   },
   {
-    href: "/buy",
+    href: "/off-plan",
     image: IMAGES.marina,
-    bg: "bg-[#DCE8EF]",
+    bg: "bg-[#E1EBF2]",
     text: "text-[#0B1D3D]",
-    kicker: "Top Off-plan",
+    kicker: "Offplan",
     title: "New projects coming soon",
     link: "View projects",
   },
@@ -65,27 +65,33 @@ export function HomePage() {
     <>
       <HeroSection />
 
-      {/* Category cards */}
-      <section className="px-5 py-4 md:px-10">
-        <div className="mx-auto grid max-w-[1440px] gap-4 md:grid-cols-3">
+      {/* Category cards — Buy · Rent · Offplan only */}
+      <section className="isolate bg-white px-5 py-10 md:px-10 md:py-14">
+        <div className="mx-auto grid max-w-[1440px] gap-5 md:grid-cols-3">
           {CATEGORY_CARDS.map((card, i) => (
             <Reveal key={card.href} delay={i * 60}>
-              <Link href={card.href} prefetch className="group block overflow-hidden rounded-sm">
-                <div className="relative aspect-[4/3] overflow-hidden">
+              <Link
+                href={card.href}
+                prefetch
+                className="group flex h-full flex-col overflow-hidden rounded-xl shadow-[0_4px_24px_rgba(11,29,61,0.06)] transition-shadow hover:shadow-[0_8px_32px_rgba(11,29,61,0.1)]"
+              >
+                <div className="relative aspect-[16/11] overflow-hidden">
                   <Image
                     src={card.image}
-                    alt=""
+                    alt={card.kicker}
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>
-                <div className={cn(`${card.bg} ${card.text} px-6 py-5`)}>
-                  <p className="text-[0.65rem] font-semibold tracking-[0.2em] uppercase opacity-80">
+                <div className={cn("flex flex-1 flex-col px-6 py-6", card.bg, card.text)}>
+                  <p className="text-[0.6875rem] font-semibold tracking-[0.18em] uppercase opacity-75">
                     {card.kicker}
                   </p>
-                  <p className="mt-1 text-lg font-semibold">{card.title}</p>
-                  <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium opacity-90 group-hover:gap-2.5 transition-all">
+                  <p className="mt-2 text-xl font-semibold leading-snug tracking-tight md:text-[1.35rem]">
+                    {card.title}
+                  </p>
+                  <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium opacity-90 transition-all group-hover:gap-2.5">
                     {card.link} <ArrowRight className="h-3.5 w-3.5" />
                   </span>
                 </div>
