@@ -16,7 +16,7 @@ export const NAV = [
   { href: "/buy", label: "Buy" },
   { href: "/rent", label: "Rent" },
   { href: "/off-plan", label: "Offplan" },
-  { href: "/contact", label: "Mortgages" },
+  { href: "/mortgages", label: "Mortgages" },
   { href: "/careers", label: "Careers" },
   { href: "/insights", label: "Insights" },
 ] as const;
@@ -38,7 +38,7 @@ export const FOOTER_PROPERTY = [
 export const FOOTER_SERVICES = [
   { href: "/sell", label: "List with Us" },
   { href: "/contact", label: "Property Management" },
-  { href: "/contact", label: "Mortgage Advisory" },
+  { href: "/mortgages", label: "Mortgage Advisory" },
   { href: "/contact", label: "Valuations" },
 ] as const;
 
