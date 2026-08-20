@@ -13,11 +13,17 @@ export const SITE = {
 } as const;
 
 export const NAV = [
-  { href: "/buy", label: "Portfolio" },
-  { href: "/off-plan", label: "Investments" },
-  { href: "/sell", label: "Services" },
-  { href: "/about", label: "Urban Living Blog" },
-  { href: "/contact", label: "Media Hub" },
+  { href: "/buy", label: "Buy" },
+  { href: "/rent", label: "Rent" },
+  { href: "/off-plan", label: "Offplan" },
+  { href: "/contact", label: "Mortgages" },
+] as const;
+
+export const CURRENCIES = [
+  { code: "AED", label: "UAE Dirham" },
+  { code: "USD", label: "US Dollar" },
+  { code: "GBP", label: "British Pound" },
+  { code: "EUR", label: "Euro" },
 ] as const;
 
 export const FOOTER_PROPERTY = [
