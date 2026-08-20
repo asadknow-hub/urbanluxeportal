@@ -403,6 +403,51 @@
   display: none;
 }
 
+.ul-mortgage-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: #dbe3ea;
+  outline: none;
+  accent-color: #0b1d3d;
+}
+
+.ul-mortgage-range::-webkit-slider-runnable-track {
+  height: 0.35rem;
+  border-radius: 999px;
+  background: #dbe3ea;
+}
+
+.ul-mortgage-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: -0.4rem;
+  border-radius: 999px;
+  background: #0b1d3d;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(11, 29, 61, 0.25);
+  cursor: pointer;
+}
+
+.ul-mortgage-range::-moz-range-track {
+  height: 0.35rem;
+  border-radius: 999px;
+  background: #dbe3ea;
+}
+
+.ul-mortgage-range::-moz-range-thumb {
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 999px;
+  background: #0b1d3d;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(11, 29, 61, 0.25);
+  cursor: pointer;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ul-ken,
   .ul-marquee-track,

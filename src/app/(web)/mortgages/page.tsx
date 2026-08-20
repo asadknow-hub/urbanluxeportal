@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Calculator, CircleHelp, Handshake } from "lucide-react";
 import { MortgageCalculator } from "@/components/web/mortgage-calculator";
 import { MortgageFaq } from "@/components/web/mortgage-faq";
@@ -53,21 +52,9 @@ export default function MortgagesPage() {
         </div>
       </section>
 
-      <section id="calculator" className="bg-white px-5 py-16 md:px-10 md:py-24">
-        <div className="mx-auto max-w-[1280px]">
-          <Reveal>
-            <p className="ul-kicker">Calculator</p>
-            <h2 className="ul-section-heading mt-3 text-3xl md:text-4xl">
-              Estimate your monthly payment
-            </h2>
-            <p className="ul-section-lede mt-3 max-w-2xl">
-              Adjust the inputs to see an indicative repayment. Rates and eligibility are set by
-              lenders — use this as a planning guide, then speak with an advisor.
-            </p>
-          </Reveal>
-          <div className="mt-10">
-            <MortgageCalculator />
-          </div>
+      <section id="calculator" className="bg-white px-5 py-14 md:px-10 md:py-20">
+        <div className="mx-auto max-w-[720px]">
+          <MortgageCalculator />
         </div>
       </section>
 
@@ -86,29 +73,6 @@ export default function MortgagesPage() {
             <MortgageFaq />
           </div>
         </div>
-      </section>
-
-      <section className="bg-[var(--ul-primary)] px-5 py-16 md:px-10 md:py-20">
-        <Reveal className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-8 md:flex-row md:items-center">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#1E7A4A]">
-              Next step
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-white md:text-3xl">
-              Ready to structure your finance?
-            </h2>
-            <p className="mt-3 max-w-xl text-base text-white/70">
-              Tell us the property or budget — we will align mortgage introductions with your search.
-            </p>
-          </div>
-          <Link
-            href="/contact"
-            prefetch
-            className="inline-flex h-11 items-center justify-center rounded-md bg-white px-6 text-sm font-semibold text-[#0B1D3D] transition-colors hover:bg-[#F2F2F2]"
-          >
-            Speak to us
-          </Link>
-        </Reveal>
       </section>
     </>
   );
