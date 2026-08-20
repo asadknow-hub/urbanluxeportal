@@ -222,7 +222,49 @@
 }
 
 .ul-btn-primary:hover {
-  background: #0a172e;
+  background: color-mix(in srgb, var(--ul-primary) 88%, black);
+}
+
+.ul-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.75rem;
+  padding-inline: 1.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: var(--ul-secondary);
+  border-radius: 0.25rem;
+  transition: background 0.2s ease;
+}
+
+.ul-btn-secondary:hover {
+  background: var(--ul-accent-deep);
+}
+
+.ul-section-lede {
+  color: var(--ul-muted);
+}
+
+.ul-section-heading {
+  color: var(--ul-primary);
+}
+
+.ul-link-arrow-light {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #fff;
+  transition: gap 0.2s ease;
+}
+
+.ul-link-arrow-light:hover {
+  gap: 0.625rem;
 }
 
 .ul-btn-outline {

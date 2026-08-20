@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Play } from "lucide-react";
@@ -57,6 +58,50 @@ const FEATURED_NEWS = [
   },
 ] as const;
 
+function BrandImage({
+  src,
+  alt,
+  wash,
+  className,
+}: {
+  src: string;
+  alt: string;
+  wash?: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn("relative aspect-[4/3] overflow-hidden rounded-sm", className)}>
+      <Image src={src} alt={alt} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
+      {wash && (
+        <div className={cn("pointer-events-none absolute inset-0 bg-gradient-to-tr to-transparent", wash)} />
+      )}
+    </div>
+  );
+}
+
+function SplitSection({
+  children,
+  image,
+  reverse = false,
+  bg = "bg-white",
+}: {
+  children: ReactNode;
+  image: ReactNode;
+  reverse?: boolean;
+  bg?: string;
+}) {
+  return (
+    <section className={cn(bg, "px-5 py-16 md:px-10 md:py-24")}>
+      <div className="mx-auto grid max-w-[1280px] items-center gap-10 md:grid-cols-2 md:gap-16">
+        <Reveal className={reverse ? "md:order-2" : undefined}>{children}</Reveal>
+        <Reveal delay={80} className={reverse ? "md:order-1" : undefined}>
+          {image}
+        </Reveal>
+      </div>
+    </section>
+  );
+}
+
 export function HomePage() {
   return (
     <>
@@ -104,104 +149,94 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Journey section */}
-      <section className="mx-auto grid max-w-[1440px] items-center gap-10 px-5 py-16 md:grid-cols-2 md:gap-16 md:px-10 md:py-24">
-        <Reveal>
-          <h2 className="text-3xl leading-tight text-[#0B1D3D] md:text-4xl lg:text-[2.75rem]">
-            Your home-buying journey starts and ends here, free.
-          </h2>
-          <p className="mt-5 max-w-md text-base leading-relaxed text-[#6b7280]">
-            From first viewing to final handover — UrbanLuxe guides you through every step with
-            dedicated specialists and zero hidden fees.
-          </p>
-          <Link href="/buy" prefetch className="ul-btn-primary mt-8">
-            Start now
+      {/* —— Section 3+: brand-aligned content —— */}
+
+      <SplitSection
+        bg="bg-white"
+        image={
+          <BrandImage
+            src={IMAGES.interior}
+            alt="Luxury interior in Dubai"
+            wash="from-[var(--ul-primary)]/25"
+          />
+        }
+      >
+        <p className="ul-kicker">Our promise</p>
+        <h2 className="ul-section-heading mt-3 text-3xl leading-tight md:text-4xl lg:text-[2.65rem]">
+          Your home-buying journey starts and ends here, free.
+        </h2>
+        <p className="ul-section-lede mt-5 max-w-md text-base leading-relaxed">
+          From first viewing to final handover — Urban Luxe guides you through every step with
+          dedicated specialists and zero hidden fees.
+        </p>
+        <Link href="/buy" prefetch className="ul-btn-primary mt-8">
+          Start now
+        </Link>
+      </SplitSection>
+
+      <SplitSection
+        bg="bg-[var(--ul-tertiary)]"
+        reverse
+        image={
+          <BrandImage
+            src={IMAGES.about}
+            alt="Urban Luxe team"
+            wash="from-[var(--ul-secondary)]/30"
+          />
+        }
+      >
+        <p className="ul-kicker">The team</p>
+        <h2 className="ul-section-heading mt-3 text-3xl leading-tight md:text-4xl lg:text-[2.65rem]">
+          See what you&apos;re missing out.
+        </h2>
+        <p className="ul-section-lede mt-5 max-w-md text-base leading-relaxed">
+          Our agents know Dubai&apos;s neighbourhoods inside out. Get access to off-market listings
+          and priority viewings before properties go public.
+        </p>
+        <Link href="/contact" prefetch className="ul-btn-secondary mt-8">
+          Meet our team
+        </Link>
+      </SplitSection>
+
+      <SplitSection
+        bg="bg-white"
+        image={
+          <BrandImage
+            src={IMAGES.house}
+            alt="Property guides"
+            wash="from-[var(--ul-primary)]/20"
+          />
+        }
+      >
+        <p className="ul-kicker">Expertise</p>
+        <h2 className="ul-section-heading mt-3 text-3xl leading-tight md:text-4xl lg:text-[2.65rem]">
+          Trusted experts, proven success.
+        </h2>
+        <p className="ul-section-lede mt-5 max-w-md text-base leading-relaxed">
+          With years of experience across Dubai&apos;s prime communities, we deliver results —
+          whether you&apos;re buying, renting, or investing off-plan.
+        </p>
+        <div className="mt-8 flex flex-wrap items-center gap-4">
+          <Link href="/about" prefetch className="ul-btn-primary">
+            About us
           </Link>
-        </Reveal>
-        <Reveal delay={100}>
-          <div className="relative aspect-[4/3] overflow-hidden rounded-sm">
-            <Image
-              src={IMAGES.interior}
-              alt="Luxury interior in Dubai"
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-            />
-          </div>
-        </Reveal>
-      </section>
-
-      {/* Team section */}
-      <section className="mx-auto grid max-w-[1440px] items-center gap-10 px-5 py-16 md:grid-cols-2 md:gap-16 md:px-10 md:py-24">
-        <Reveal className="order-2 md:order-1">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-sm">
-            <Image
-              src={IMAGES.about}
-              alt="UrbanLuxe team"
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-            />
-          </div>
-        </Reveal>
-        <Reveal delay={80} className="order-1 md:order-2">
-          <h2 className="text-3xl leading-tight text-[#0B1D3D] md:text-4xl lg:text-[2.75rem]">
-            See what you&apos;re missing out.
-          </h2>
-          <p className="mt-5 max-w-md text-base leading-relaxed text-[#6b7280]">
-            Our agents know Dubai&apos;s neighbourhoods inside out. Get access to off-market listings
-            and priority viewings before properties go public.
-          </p>
-          <Link href="/contact" prefetch className="ul-btn-primary mt-8">
-            Meet our team
+          <Link href="/contact" prefetch className="ul-link-arrow">
+            Contact us <ArrowRight className="h-4 w-4" />
           </Link>
-        </Reveal>
-      </section>
+        </div>
+      </SplitSection>
 
-      {/* Trusted experts */}
-      <section className="mx-auto grid max-w-[1440px] items-center gap-10 px-5 py-16 md:grid-cols-2 md:gap-16 md:px-10 md:py-24">
-        <Reveal>
-          <div className="relative aspect-[4/3] overflow-hidden rounded-sm">
-            <Image
-              src={IMAGES.house}
-              alt="Property guides"
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-            />
-          </div>
-        </Reveal>
-        <Reveal delay={80}>
-          <h2 className="text-3xl leading-tight text-[#0B1D3D] md:text-4xl lg:text-[2.75rem]">
-            Trusted experts, proven success.
-          </h2>
-          <p className="mt-5 max-w-md text-base leading-relaxed text-[#6b7280]">
-            With years of experience across Dubai&apos;s prime communities, we deliver results —
-            whether you&apos;re buying, renting, or investing off-plan.
-          </p>
-          <div className="mt-8 flex flex-wrap items-center gap-4">
-            <Link href="/about" prefetch className="ul-btn-primary">
-              About us
-            </Link>
-            <Link href="/contact" prefetch className="ul-link-arrow">
-              Contact us <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </Reveal>
-      </section>
-
-      {/* Dark featured band */}
-      <section className="bg-[#0B1D3D]">
-        <div className="mx-auto grid max-w-[1440px] items-center gap-8 md:grid-cols-[1fr_auto]">
+      {/* Primary featured band */}
+      <section className="bg-[var(--ul-primary)]">
+        <div className="mx-auto grid max-w-[1280px] items-center gap-8 md:grid-cols-[1fr_auto]">
           <Reveal className="px-5 py-16 md:px-10 md:py-20">
-            <h2 className="max-w-lg text-3xl leading-tight text-white md:text-4xl">
+            <p className="text-xs font-semibold tracking-[0.18em] uppercase text-[var(--ul-secondary)]">
+              Dedicated service
+            </p>
+            <h2 className="mt-3 max-w-lg text-3xl leading-tight text-white md:text-4xl">
               Dedicated to achieving your goals — we make sure you choose your perfect home.
             </h2>
-            <Link
-              href="/contact"
-              prefetch
-              className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-white transition-all hover:gap-3"
-            >
+            <Link href="/contact" prefetch className="ul-link-arrow-light mt-8">
               Contact us <ArrowRight className="h-4 w-4" />
             </Link>
           </Reveal>
@@ -214,15 +249,16 @@ export function HomePage() {
                 sizes="352px"
                 className="object-cover"
               />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-[var(--ul-primary)]/40 to-transparent" />
             </div>
           </Reveal>
         </div>
       </section>
 
       {/* Services bar */}
-      <section className="border-y border-[#e5e7eb] bg-white px-5 py-10 md:px-10">
-        <Reveal className="mx-auto flex max-w-[1440px] flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-          <p className="max-w-xl text-lg font-medium text-[#0B1D3D] md:text-xl">
+      <section className="border-y border-[var(--ul-hair)] bg-white px-5 py-12 md:px-10">
+        <Reveal className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+          <p className="max-w-xl text-lg font-semibold text-[var(--ul-primary)] md:text-xl">
             We provide all kinds of real estate in all prime areas
           </p>
           <Link href="/communities" prefetch className="ul-link-arrow shrink-0">
@@ -231,70 +267,64 @@ export function HomePage() {
         </Reveal>
       </section>
 
-      {/* Discover banner */}
-      <section className="bg-[#0B1D3D] px-5 py-16 text-center md:px-10 md:py-20">
+      {/* Secondary discover banner */}
+      <section className="bg-[var(--ul-secondary)] px-5 py-16 text-center md:px-10 md:py-20">
         <Reveal>
-          <h2 className="text-3xl text-white md:text-4xl lg:text-5xl">
+          <h2 className="text-3xl font-semibold text-white md:text-4xl lg:text-5xl">
             Discover your home in Dubai
           </h2>
-          <Link
-            href="/buy"
-            prefetch
-            className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-white transition-all hover:gap-3"
-          >
+          <Link href="/buy" prefetch className="ul-link-arrow-light mt-6">
             View projects <ArrowRight className="h-4 w-4" />
           </Link>
         </Reveal>
       </section>
 
-      {/* Convenience section */}
-      <section className="mx-auto grid max-w-[1440px] items-center gap-10 px-5 py-16 md:grid-cols-2 md:gap-16 md:px-10 md:py-24">
-        <Reveal>
-          <h2 className="text-3xl leading-tight text-[#0B1D3D] md:text-4xl">
-            Convenience starting to find your next place
-          </h2>
-          <p className="mt-5 max-w-md text-base leading-relaxed text-[#6b7280]">
-            Browse curated listings, schedule viewings online, and get expert advice — all from one
-            platform built for Dubai real estate.
-          </p>
-          <Link href="/buy" prefetch className="ul-btn-primary mt-8">
-            Browse listings
-          </Link>
-        </Reveal>
-        <Reveal delay={80}>
-          <div className="relative aspect-[4/3] overflow-hidden rounded-sm bg-[#F2F2F2]">
-            <Image
-              src={IMAGES.pool}
-              alt="Luxury pool and terrace"
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-            />
-          </div>
-        </Reveal>
-      </section>
+      <SplitSection
+        bg="bg-[var(--ul-tertiary)]"
+        image={
+          <BrandImage
+            src={IMAGES.pool}
+            alt="Luxury pool and terrace"
+            wash="from-[var(--ul-secondary)]/25"
+          />
+        }
+      >
+        <p className="ul-kicker">Platform</p>
+        <h2 className="ul-section-heading mt-3 text-3xl leading-tight md:text-4xl">
+          Convenience starting to find your next place
+        </h2>
+        <p className="ul-section-lede mt-5 max-w-md text-base leading-relaxed">
+          Browse curated listings, schedule viewings online, and get expert advice — all from one
+          platform built for Dubai real estate.
+        </p>
+        <Link href="/buy" prefetch className="ul-btn-primary mt-8">
+          Browse listings
+        </Link>
+      </SplitSection>
 
-      {/* Video / market snapshot */}
-      <section className="relative overflow-hidden">
+      {/* Market snapshot */}
+      <section className="relative overflow-hidden bg-[var(--ul-quaternary)]">
         <div className="relative aspect-[21/9] min-h-[16rem] md:min-h-[22rem]">
           <Image
             src={IMAGES.night}
             alt="Dubai skyline at night"
             fill
             sizes="100vw"
-            className="object-cover"
+            className="object-cover opacity-80"
           />
-          <div className="absolute inset-0 bg-[#0B1D3D]/50" />
+          <div className="absolute inset-0 bg-[var(--ul-primary)]/65" />
           <div className="absolute inset-0 flex flex-col items-center justify-center px-5 text-center">
             <Reveal>
               <button
                 type="button"
-                className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-white/95 text-[#0B1D3D] shadow-lg transition-transform hover:scale-105"
+                className="mb-6 flex h-16 w-16 items-center justify-center rounded-sm bg-white text-[var(--ul-primary)] shadow-lg ring-4 ring-[var(--ul-secondary)]/40 transition-transform hover:scale-105"
                 aria-label="Play video"
               >
                 <Play className="h-6 w-6 fill-current" />
               </button>
-              <p className="text-sm font-medium tracking-wide text-white/80">Watch now</p>
+              <p className="text-sm font-semibold tracking-wide text-[var(--ul-secondary)]">
+                Watch now
+              </p>
               <h2 className="mt-2 max-w-lg text-2xl text-white md:text-3xl">
                 Dubai Property Market Snapshot 2026
               </h2>
@@ -303,17 +333,22 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Featured news */}
-      <section className="px-5 py-16 md:px-10 md:py-24">
-        <div className="mx-auto max-w-[1440px]">
+      {/* Featured */}
+      <section className="bg-white px-5 py-16 md:px-10 md:py-24">
+        <div className="mx-auto max-w-[1280px]">
           <Reveal>
-            <h2 className="mb-10 text-3xl text-[#0B1D3D] md:text-4xl">Featured</h2>
+            <p className="ul-kicker">Insights</p>
+            <h2 className="ul-section-heading mb-10 mt-3 text-3xl md:text-4xl">Featured</h2>
           </Reveal>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-3">
             {FEATURED_NEWS.map((item, i) => (
               <Reveal key={item.title} delay={i * 60}>
-                <Link href={item.href} prefetch className="group block overflow-hidden rounded-sm">
-                  <div className="relative aspect-square overflow-hidden">
+                <Link
+                  href={item.href}
+                  prefetch
+                  className="group block overflow-hidden rounded-sm shadow-[0_4px_24px_rgba(11,29,61,0.06)] transition-shadow hover:shadow-[0_8px_32px_rgba(11,29,61,0.1)]"
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden">
                     <Image
                       src={item.image}
                       alt=""
@@ -322,10 +357,10 @@ export function HomePage() {
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   </div>
-                  <div className={cn("px-5 py-4", item.panel)}>
-                    <p className="font-semibold leading-snug">{item.title}</p>
-                    <span className="mt-2 inline-flex items-center gap-1.5 text-sm opacity-90 group-hover:gap-2.5 transition-all">
-                      Read more <ArrowRight className="h-3.5 w-3.5" />
+                  <div className={cn("px-6 py-5", item.panel)}>
+                    <p className="text-lg font-semibold leading-snug md:text-xl">{item.title}</p>
+                    <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium opacity-90 transition-all group-hover:gap-2.5">
+                      Read more <ArrowRight className="h-4 w-4" />
                     </span>
                   </div>
                 </Link>
@@ -335,17 +370,20 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Newsletter CTA */}
-      <section className="border-t border-[#e5e7eb] bg-[#F2F2F2] px-5 py-16 md:px-10 md:py-20">
-        <Reveal className="mx-auto flex max-w-[1440px] flex-col items-start justify-between gap-8 md:flex-row md:items-center">
+      {/* CTA */}
+      <section className="border-t border-[var(--ul-hair)] bg-[var(--ul-tertiary)] px-5 py-16 md:px-10 md:py-20">
+        <Reveal className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           <div>
-            <h2 className="text-2xl text-[#0B1D3D] md:text-3xl">Keep up with what&apos;s happening</h2>
-            <p className="mt-3 max-w-md text-[#6b7280]">
+            <p className="ul-kicker">Stay informed</p>
+            <h2 className="ul-section-heading mt-3 text-2xl md:text-3xl">
+              Keep up with what&apos;s happening
+            </h2>
+            <p className="ul-section-lede mt-3 max-w-md">
               Market updates, new launches, and expert insights — straight to your inbox.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link href="/contact" prefetch className="ul-btn-primary">
+            <Link href="/contact" prefetch className="ul-btn-secondary">
               Get in touch
             </Link>
             <Link href="/buy" prefetch className="ul-btn-outline">
