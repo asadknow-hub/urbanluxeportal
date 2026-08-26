@@ -881,6 +881,18 @@ export interface Database {
           ordinal_position: number;
         }[];
       };
+      crm_my_profile: {
+        Args: Record<string, never>;
+        Returns: Database["public"]["Tables"]["profiles"]["Row"];
+      };
+      crm_staff_roster: {
+        Args: Record<string, never>;
+        Returns: Database["public"]["Tables"]["profiles"]["Row"][];
+      };
+      crm_staff_profile: {
+        Args: { p_id: string };
+        Returns: Database["public"]["Tables"]["profiles"]["Row"];
+      };
     };
     Enums: {
       user_role: UserRole;

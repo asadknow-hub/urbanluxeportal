@@ -6,6 +6,7 @@ import { DesksManager } from "@/components/team/desks-manager";
 import { isDealClosed } from "@/lib/deal-stages";
 import { canManageCrm } from "@/lib/permissions";
 import { redirect } from "next/navigation";
+import { loadStaffRoster } from "@/server/roster";
 
 export const dynamic = "force-dynamic";
 
@@ -21,38 +22,32 @@ export default async function TeamPage({
   const supabase = await createSupabaseServerClient();
   const params = await searchParams;
 
-  let query = supabase
-    .from("profiles")
-    .select("*")
-    .order("created_at", { ascending: true });
-
-  if (params.role && params.role !== "all") {
-    query = query.eq("role", params.role);
-  }
-
-  if (params.q) {
-    query = query.or(`full_name.ilike.%${params.q}%,email.ilike.%${params.q}%`);
-  }
-
-  const [{ data: staff, error }, { data: allStaff }, { data: deskRows }] = await Promise.all([
-    query,
-    supabase.from("profiles").select("id, role, is_active, team_id"),
+  const [{ data: roster, error }, { data: deskRows }] = await Promise.all([
+    loadStaffRoster(supabase),
     supabase.from("teams").select("id, name, is_active").is("deleted_at", null).order("name"),
   ]);
 
   if (error) console.error("[team] query error:", error.message);
 
+  const q = params.q?.trim().toLowerCase();
+  const staff = (roster ?? []).filter((row) => {
+    if (params.role && params.role !== "all" && row.role !== params.role) return false;
+    if (!q) return true;
+    return (
+      (row.full_name ?? "").toLowerCase().includes(q) || (row.email ?? "").toLowerCase().includes(q)
+    );
+  });
+
   const desks = deskRows ?? [];
   const deskNames = new Map(desks.map((d) => [d.id, d.name]));
   const memberCounts: Record<string, number> = {};
-  for (const row of allStaff ?? []) {
+  for (const row of roster ?? []) {
     if (row.team_id) memberCounts[row.team_id] = (memberCounts[row.team_id] ?? 0) + 1;
   }
 
-  const roster = allStaff ?? [];
-  const total = roster.length;
-  const active = roster.filter((s) => s.is_active).length;
-  const agents = roster.filter((s) => s.role === "agent" && s.is_active).length;
+  const total = roster?.length ?? 0;
+  const active = (roster ?? []).filter((s) => s.is_active).length;
+  const agents = (roster ?? []).filter((s) => s.role === "agent" && s.is_active).length;
 
   const { data: leadCounts } = await supabase
     .from("leads")
@@ -92,15 +87,17 @@ export default async function TeamPage({
         total={total}
         active={active}
         agents={agents}
-        showing={staff?.length ?? 0}
+        showing={staff.length}
         showingHint={params.role || params.q ? "Filtered view" : "All roles"}
       />
 
       <DesksManager desks={desks} memberCounts={memberCounts} canEdit={canManageCrm(user.role)} />
 
       <TeamList
-        staff={(staff ?? []).map((s) => ({
+        staff={staff.map((s) => ({
           ...s,
+          email: s.email ?? "",
+          full_name: s.full_name ?? "",
           deskName: s.team_id ? deskNames.get(s.team_id) ?? null : null,
         }))}
         desks={desks}

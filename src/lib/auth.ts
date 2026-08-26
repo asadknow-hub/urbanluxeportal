@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { loadMyProfile } from "@/server/roster";
 import type { UserRole } from "@/lib/permissions";
 
 export type SessionUser = {
@@ -26,11 +27,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     }
     if (!user) return null;
 
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
+    const { data: profile, error: profileError } = await loadMyProfile(supabase);
 
     if (profileError) {
       console.error("[auth] profile query error:", profileError.message);

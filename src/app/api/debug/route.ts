@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { loadMyProfile } from "@/server/roster";
 
 export const dynamic = "force-dynamic";
 
@@ -24,11 +25,7 @@ export async function GET() {
     };
 
     if (user) {
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
+      const { data: profile, error: profileError } = await loadMyProfile(supabase);
 
       results.profile = {
         hasProfile: !!profile,

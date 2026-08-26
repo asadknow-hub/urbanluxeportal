@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getStaffActivityStats } from "@/server/staff-sessions";
 import { docCategoryChoices, type LeadFieldOption } from "@/lib/lead-field-options";
 import { canManageCrm, isManagerLike } from "@/lib/permissions";
+import { loadStaffProfile } from "@/server/roster";
 
 export const dynamic = "force-dynamic";
 
@@ -21,11 +22,7 @@ export default async function StaffDetailPage({
   const supabase = await createSupabaseServerClient();
 
   // Fetch profile
-  const { data: staff, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const { data: staff, error } = await loadStaffProfile(supabase, id);
 
   if (error || !staff) {
     return (
@@ -110,7 +107,11 @@ export default async function StaffDetailPage({
   return (
     <div className="space-y-6">
       <StaffDetail
-        staff={staff}
+        staff={{
+          ...staff,
+          email: staff.email ?? "",
+          full_name: staff.full_name ?? "",
+        }}
         leads={leads ?? []}
         deals={deals ?? []}
         documents={documents ?? []}

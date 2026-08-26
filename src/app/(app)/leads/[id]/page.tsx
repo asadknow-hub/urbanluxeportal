@@ -25,7 +25,7 @@ export default async function LeadDetailPage({
     .from("leads")
     .select(
       `*,
-      assigned_to_profile:profiles!leads_assigned_to_fkey(id, full_name, avatar_url, role, email, phone),
+      assigned_to_profile:profiles!leads_assigned_to_fkey(id, full_name, avatar_url, role),
       created_by_profile:profiles!leads_created_by_fkey(id, full_name)
       `
     )
