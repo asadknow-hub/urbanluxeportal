@@ -57,6 +57,7 @@ type Staff = {
   brn: string | null;
   is_active: boolean;
   created_at: string;
+  team_id?: string | null;
 };
 
 type Lead = { id: string; name: string; source: string; status: string; created_at: string };
@@ -136,6 +137,7 @@ export function StaffDetail({
   sessionStats,
   metrics,
   docCategories = [],
+  desks = [],
 }: {
   staff: Staff;
   leads: Lead[];
@@ -146,6 +148,7 @@ export function StaffDetail({
   sessionStats?: SessionStats;
   metrics?: { leads: number; deals: number; documents: number };
   docCategories?: DocCategoryChoice[];
+  desks?: { id: string; name: string }[];
 }) {
   const [activeTab, setActiveTab] = useState("profile");
   const RoleIcon = ROLE_ICONS[staff.role] ?? User;
@@ -271,7 +274,7 @@ export function StaffDetail({
           </div>
           <div className="p-6">
             {activeTab === "profile" && (
-              <ProfileTab staff={staff} currentUserRole={currentUserRole} />
+              <ProfileTab staff={staff} currentUserRole={currentUserRole} desks={desks} />
             )}
             {activeTab === "documents" && (
               <DocumentsTab staff={staff} documents={documents} categories={docCategories} />
@@ -453,7 +456,15 @@ function PortalActivityTab({ stats }: { stats: SessionStats }) {
 // ============================================================
 // PROFILE TAB
 // ============================================================
-function ProfileTab({ staff, currentUserRole }: { staff: Staff; currentUserRole: string }) {
+function ProfileTab({
+  staff,
+  currentUserRole,
+  desks,
+}: {
+  staff: Staff;
+  currentUserRole: string;
+  desks: { id: string; name: string }[];
+}) {
   const [pending, startTransition] = useTransition();
   const [form, setForm] = useState({
     full_name: staff.full_name,
@@ -463,6 +474,7 @@ function ProfileTab({ staff, currentUserRole }: { staff: Staff; currentUserRole:
     brn: staff.brn ?? "",
     commission_rate: staff.commission_rate?.toString() ?? "",
     is_active: staff.is_active,
+    team_id: staff.team_id ?? "none",
   });
 
   function set<K extends keyof typeof form>(key: K, value: string | boolean) {
@@ -482,6 +494,7 @@ function ProfileTab({ staff, currentUserRole }: { staff: Staff; currentUserRole:
         commission_rate: form.commission_rate ? parseFloat(form.commission_rate) : null,
         is_active: form.is_active,
         avatar_url: staff.avatar_url,
+        team_id: form.team_id === "none" || !form.team_id ? null : form.team_id,
       });
       if (result.ok) {
         toast.success("Profile updated");
@@ -536,6 +549,22 @@ function ProfileTab({ staff, currentUserRole }: { staff: Staff; currentUserRole:
           {!canEditRole && (
             <p className="text-xs text-muted-foreground">Only admins can change roles.</p>
           )}
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label className="text-xs font-semibold text-foreground">Desk</Label>
+          <Select value={form.team_id} onValueChange={(v) => set("team_id", v ?? "none")}>
+            <SelectTrigger className={fieldClass}>
+              <SelectValue placeholder="No desk" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">No desk — house pool</SelectItem>
+              {desks.map((desk) => (
+                <SelectItem key={desk.id} value={desk.id}>
+                  {desk.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="p_commission" className="text-xs font-semibold text-foreground">Commission Rate (%)</Label>

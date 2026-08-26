@@ -25,7 +25,19 @@ const updateProfileSchema = z.object({
   commission_rate: z.number().min(0).max(100).optional().nullable(),
   is_active: z.boolean(),
   avatar_url: z.string().optional().nullable(),
+  team_id: z.string().uuid().nullable().optional(),
 });
+
+async function syncTeamMembership(
+  supabase: ReturnType<typeof createSupabaseServiceClient>,
+  userId: string,
+  teamId: string | null
+) {
+  await supabase.from("team_members").delete().eq("user_id", userId);
+  if (teamId) {
+    await supabase.from("team_members").insert({ team_id: teamId, user_id: userId });
+  }
+}
 
 function canAssignRole(actorRole: string, targetRole: string) {
   if (actorRole === "admin") return true;
@@ -87,6 +99,7 @@ export async function updateStaffProfile(
       }
     }
 
+    const teamId = updates.team_id ?? null;
     const { error } = await supabase
       .from("profiles")
       .update({
@@ -98,11 +111,13 @@ export async function updateStaffProfile(
         commission_rate: updates.commission_rate ?? null,
         is_active: updates.is_active,
         avatar_url: updates.avatar_url || null,
+        team_id: teamId,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id);
 
     if (error) return { ok: false, error: error.message };
+    await syncTeamMembership(supabase, id, teamId);
 
     await logActivity({
       actorId: user.id,
@@ -204,6 +219,7 @@ export async function createStaff(input: {
   role: string;
   phone?: string;
   password: string;
+  teamId?: string | null;
 }): Promise<ActionResult<{ id: string }>> {
   try {
     const user = await getCurrentUser();
@@ -250,6 +266,7 @@ export async function createStaff(input: {
       if (updated.error) return { ok: false, error: updated.error.message };
     }
 
+    const teamId = input.teamId || null;
     const { error: profileError } = await supabase.from("profiles").upsert(
       {
         id: userId,
@@ -257,6 +274,7 @@ export async function createStaff(input: {
         full_name: fullName,
         role,
         phone: input.phone?.trim() || null,
+        team_id: teamId,
         is_active: true,
         updated_at: new Date().toISOString(),
       },
@@ -264,6 +282,7 @@ export async function createStaff(input: {
     );
 
     if (profileError) return { ok: false, error: profileError.message };
+    await syncTeamMembership(supabase, userId, teamId);
 
     await logActivity({
       actorId: user.id,
@@ -331,6 +350,62 @@ export async function toggleStaffActive(
       entityId: userId,
       action: !currentActive ? "activated" : "deactivated",
     });
+
+    revalidatePath("/team");
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function saveDesk(input: { id?: string; name: string }): Promise<ActionResult<{ id: string }>> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    if (!canManageCrm(user.role)) return { ok: false, error: "Not authorized" };
+
+    const name = input.name.trim();
+    if (!name) return { ok: false, error: "Desk name required" };
+
+    const supabase = createSupabaseServiceClient();
+    if (input.id) {
+      const { data, error } = await supabase
+        .from("teams")
+        .update({ name, updated_at: new Date().toISOString() })
+        .eq("id", input.id)
+        .is("deleted_at", null)
+        .select("id")
+        .single();
+      if (error || !data) return { ok: false, error: error?.message ?? "Could not rename desk" };
+      revalidatePath("/team");
+      return { ok: true, data: { id: data.id } };
+    }
+
+    const { data, error } = await supabase.from("teams").insert({ name }).select("id").single();
+    if (error || !data) return { ok: false, error: error?.message ?? "Could not create desk" };
+    revalidatePath("/team");
+    return { ok: true, data: { id: data.id } };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function archiveDesk(id: string): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    if (!canManageCrm(user.role)) return { ok: false, error: "Not authorized" };
+
+    const supabase = createSupabaseServiceClient();
+    const now = new Date().toISOString();
+    const { error } = await supabase
+      .from("teams")
+      .update({ deleted_at: now, is_active: false, updated_at: now })
+      .eq("id", id);
+    if (error) return { ok: false, error: error.message };
+
+    await supabase.from("profiles").update({ team_id: null, updated_at: now }).eq("team_id", id);
+    await supabase.from("team_members").delete().eq("team_id", id);
 
     revalidatePath("/team");
     return { ok: true };

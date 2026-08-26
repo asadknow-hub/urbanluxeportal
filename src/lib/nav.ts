@@ -25,6 +25,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Lead Settings", href: "/settings/leads", icon: "Settings2", roles: ["admin", "manager", "reception"], group: "CRM" },
   { label: "Leads", href: "/leads", icon: "Users", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
   { label: "Follow-ups", href: "/leads/followups", icon: "CalendarClock", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
+  { label: "Viewings", href: "/viewings", icon: "Calendar", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
   { label: "Deals", href: "/deals", icon: "KanbanSquare", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
   { label: "People", href: "/customers", icon: "Contact", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
   { label: "Inventory", href: "/inventory", icon: "Building2", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "Inventory" },

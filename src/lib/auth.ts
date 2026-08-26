@@ -9,6 +9,7 @@ export type SessionUser = {
   avatar_url: string | null;
   commission_rate: number | null;
   is_active: boolean;
+  team_id: string | null;
 };
 
 export async function getCurrentUser(): Promise<SessionUser | null> {
@@ -46,6 +47,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       avatar_url: profile.avatar_url,
       commission_rate: profile.commission_rate,
       is_active: profile.is_active,
+      team_id: profile.team_id ?? null,
     };
   } catch (err) {
     console.error("[auth] unexpected error:", err);

@@ -71,6 +71,7 @@ export interface Database {
           commission_rate: number | null;
           brn: string | null;
           is_active: boolean;
+          team_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -84,6 +85,7 @@ export interface Database {
           commission_rate?: number | null;
           brn?: string | null;
           is_active?: boolean;
+          team_id?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
       };
@@ -402,9 +404,26 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["saved_filters"]["Insert"]>;
       };
       teams: {
-        Row: { id: string; name: string; rr_cursor: number; created_at: string };
-        Insert: { name: string; rr_cursor?: number };
-        Update: Partial<Database["public"]["Tables"]["teams"]["Insert"]>;
+        Row: {
+          id: string;
+          name: string;
+          rr_cursor: number;
+          created_at: string;
+          lead_id: string | null;
+          is_active: boolean;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          name: string;
+          rr_cursor?: number;
+          lead_id?: string | null;
+          is_active?: boolean;
+        };
+        Update: Partial<Database["public"]["Tables"]["teams"]["Insert"]> & {
+          deleted_at?: string | null;
+          updated_at?: string;
+        };
       };
       team_members: {
         Row: { team_id: string; user_id: string; daily_cap: number };

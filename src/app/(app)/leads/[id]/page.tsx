@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LeadDetail } from "@/components/leads/lead-detail";
 import { groupLeadFieldOptions, type LeadFieldOption } from "@/lib/lead-field-options";
+import { matchesForRequirement, INVENTORY_MATCH_SELECT } from "@/lib/match-inventory";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -134,14 +135,25 @@ export default async function LeadDetailPage({
       .order("scheduled_at", { ascending: false }),
     supabase
       .from("properties")
-      .select("id, property_code, community, building_name, unit_number, property_type, bedrooms")
+      .select(INVENTORY_MATCH_SELECT)
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
-      .limit(40),
+      .limit(200),
   ]);
 
   const customer = customerResult?.data ?? null;
   const deal = dealResult?.data ?? null;
+  const matches = matchesForRequirement(
+    {
+      preferred_areas: lead.preferred_areas,
+      bedrooms: lead.bedrooms,
+      category: lead.category,
+      interest: lead.interest,
+      budget_min: lead.budget_min,
+      budget_max: lead.budget_max,
+    },
+    inventoryRows ?? []
+  );
 
   return (
     <LeadDetail
@@ -158,6 +170,7 @@ export default async function LeadDetailPage({
       documents={documents ?? []}
       viewings={viewingRows ?? []}
       inventory={inventoryRows ?? []}
+      matches={matches}
       duplicateMatches={duplicateMatches.data ?? []}
       userRole={user.role}
       userId={user.id}

@@ -53,6 +53,7 @@ export default async function StaffDetailPage({
     { count: activeDealCount },
     sessionResult,
     { data: docCategoryRows },
+    { data: deskRows },
   ] = await Promise.all([
     supabase
       .from("leads")
@@ -101,6 +102,7 @@ export default async function StaffDetailPage({
       .eq("field_key", "doc_category")
       .order("sort")
       .order("label"),
+    supabase.from("teams").select("id, name").is("deleted_at", null).order("name"),
   ]);
 
   const sessionStats = sessionResult.ok ? sessionResult.data : null;
@@ -116,6 +118,7 @@ export default async function StaffDetailPage({
         currentUserRole={user.role}
         sessionStats={sessionStats ?? undefined}
         docCategories={docCategoryChoices((docCategoryRows ?? []) as LeadFieldOption[])}
+        desks={deskRows ?? []}
         metrics={{
           leads: leadCount ?? 0,
           deals: activeDealCount ?? 0,

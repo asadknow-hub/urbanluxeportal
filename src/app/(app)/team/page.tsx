@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { TeamList } from "@/components/team/team-list";
 import { StaffStats } from "@/components/team/staff-stats";
+import { DesksManager } from "@/components/team/desks-manager";
 import { isDealClosed } from "@/lib/deal-stages";
 import { canManageCrm } from "@/lib/permissions";
 import { redirect } from "next/navigation";
@@ -33,12 +34,20 @@ export default async function TeamPage({
     query = query.or(`full_name.ilike.%${params.q}%,email.ilike.%${params.q}%`);
   }
 
-  const [{ data: staff, error }, { data: allStaff }] = await Promise.all([
+  const [{ data: staff, error }, { data: allStaff }, { data: deskRows }] = await Promise.all([
     query,
-    supabase.from("profiles").select("id, role, is_active"),
+    supabase.from("profiles").select("id, role, is_active, team_id"),
+    supabase.from("teams").select("id, name, is_active").is("deleted_at", null).order("name"),
   ]);
 
   if (error) console.error("[team] query error:", error.message);
+
+  const desks = deskRows ?? [];
+  const deskNames = new Map(desks.map((d) => [d.id, d.name]));
+  const memberCounts: Record<string, number> = {};
+  for (const row of allStaff ?? []) {
+    if (row.team_id) memberCounts[row.team_id] = (memberCounts[row.team_id] ?? 0) + 1;
+  }
 
   const roster = allStaff ?? [];
   const total = roster.length;
@@ -87,8 +96,14 @@ export default async function TeamPage({
         showingHint={params.role || params.q ? "Filtered view" : "All roles"}
       />
 
+      <DesksManager desks={desks} memberCounts={memberCounts} canEdit={canManageCrm(user.role)} />
+
       <TeamList
-        staff={staff ?? []}
+        staff={(staff ?? []).map((s) => ({
+          ...s,
+          deskName: s.team_id ? deskNames.get(s.team_id) ?? null : null,
+        }))}
+        desks={desks}
         leadMap={leadMap}
         dealMap={dealMap}
         currentFilters={params}

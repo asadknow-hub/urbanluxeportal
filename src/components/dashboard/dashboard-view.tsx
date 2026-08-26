@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { formatAED } from "@/lib/money";
-import { formatDate, timeAgo } from "@/lib/dates";
+import { formatDate, formatDateTime, timeAgo } from "@/lib/dates";
 import { PageHeader } from "@/components/primitives/page-header";
 import { StatCard } from "@/components/primitives/stat-card";
 import { SectionCard } from "@/components/primitives/section-card";
@@ -23,6 +23,14 @@ type FollowUp = {
   next_follow_up_at: string | null;
 };
 
+type TodayViewing = {
+  id: string;
+  scheduled_at: string;
+  title: string;
+  href: string;
+  unit: string;
+};
+
 export function DashboardView({
   fullName,
   pipelineValue,
@@ -33,6 +41,7 @@ export function DashboardView({
   overdueFollowUpsCount,
   activities,
   followUps,
+  todayViewings = [],
 }: {
   fullName: string;
   pipelineValue: number;
@@ -43,6 +52,7 @@ export function DashboardView({
   overdueFollowUpsCount: number;
   activities: Activity[];
   followUps: FollowUp[];
+  todayViewings?: TodayViewing[];
 }) {
   return (
     <div className="space-y-6">
@@ -56,6 +66,9 @@ export function DashboardView({
             </Link>
             <Link href="/leads/followups" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
               Follow-ups
+            </Link>
+            <Link href="/viewings" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
+              Viewings
             </Link>
             <Link href="/deals" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
               Deals
@@ -110,6 +123,39 @@ export function DashboardView({
           )}
         </SectionCard>
 
+        <div className="space-y-4">
+          <SectionCard
+            title="Today's viewings"
+            action={
+              <Link href="/viewings" className="text-xs font-medium text-muted-foreground hover:text-foreground">
+                Calendar
+              </Link>
+            }
+          >
+            {todayViewings.length === 0 ? (
+              <EmptyState title="No viewings today" className="border-0" />
+            ) : (
+              <ul className="space-y-2 p-3">
+                {todayViewings.map((row) => (
+                  <li key={row.id}>
+                    <Link
+                      href={row.href}
+                      className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-muted/60"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{row.title}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {formatDateTime(row.scheduled_at)} · {row.unit}
+                        </p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </SectionCard>
+
         <SectionCard
           title="Upcoming follow-ups"
           action={
@@ -139,6 +185,7 @@ export function DashboardView({
             </ul>
           )}
         </SectionCard>
+        </div>
       </div>
     </div>
   );

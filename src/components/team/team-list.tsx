@@ -58,6 +58,8 @@ export type StaffRow = {
   brn: string | null;
   is_active: boolean;
   created_at: string;
+  team_id?: string | null;
+  deskName?: string | null;
 };
 
 const ROLE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -97,12 +99,14 @@ function conversionPct(won: number, total: number) {
 
 export function TeamList({
   staff,
+  desks = [],
   leadMap,
   dealMap,
   currentFilters,
   currentUserRole,
 }: {
   staff: StaffRow[];
+  desks?: { id: string; name: string }[];
   leadMap: Record<string, number>;
   dealMap: Record<string, { total: number; won: number }>;
   currentFilters: { q?: string; role?: string };
@@ -118,6 +122,7 @@ export function TeamList({
   const [invitePhone, setInvitePhone] = useState("");
   const [invitePassword, setInvitePassword] = useState("");
   const [invitePasswordConfirm, setInvitePasswordConfirm] = useState("");
+  const [inviteTeam, setInviteTeam] = useState("none");
   const [pending, startTransition] = useTransition();
   const canManageUsers = currentUserRole === "admin";
   const creatableRoles =
@@ -153,6 +158,7 @@ export function TeamList({
         role: inviteRole,
         phone: invitePhone,
         password: invitePassword,
+        teamId: inviteTeam === "none" ? null : inviteTeam,
       });
       if (result.ok) {
         toast.success(`${inviteName} can log in now with that email and password`);
@@ -163,6 +169,7 @@ export function TeamList({
         setInvitePhone("");
         setInvitePassword("");
         setInvitePasswordConfirm("");
+        setInviteTeam("none");
         router.refresh();
       } else {
         toast.error(result.error ?? "Failed to create staff");
@@ -295,6 +302,22 @@ export function TeamList({
                         {creatableRoles.map((row) => (
                           <SelectItem key={row.value} value={row.value}>
                             {row.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label className="text-xs text-muted-foreground">Desk</Label>
+                    <Select value={inviteTeam} onValueChange={(v) => setInviteTeam(v ?? "none")}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="No desk" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No desk — house pool</SelectItem>
+                        {desks.map((desk) => (
+                          <SelectItem key={desk.id} value={desk.id}>
+                            {desk.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -451,6 +474,9 @@ export function TeamList({
                         />
                         {s.is_active ? "Active" : "Inactive"}
                       </span>
+                      {s.deskName ? (
+                        <span className="text-xs text-[#8d8982]">{s.deskName}</span>
+                      ) : null}
                     </div>
 
                     <div className="flex items-center gap-5 sm:gap-7">

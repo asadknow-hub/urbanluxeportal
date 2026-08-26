@@ -131,7 +131,7 @@ export async function createLead(
 
     if (error) return { ok: false, error: error.message };
 
-    await applyLeadRouting(supabase, data.id, parsed.data.assigned_to, "created");
+    await applyLeadRouting(supabase, data.id, parsed.data.assigned_to, "created", user.team_id);
     await ensurePersonForLead(data.id, user.id, supabase);
 
     await logActivity({

@@ -1,6 +1,8 @@
 import { getCurrentUser } from "@/lib/auth";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase/server";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
+import { addDays, startOfDay } from "date-fns";
+import { propertyLabel } from "@/lib/inventory";
 
 export const dynamic = "force-dynamic";
 
@@ -81,6 +83,62 @@ export default async function DashboardPage() {
     overdueFollowupsQuery,
   ]);
 
+  const svc = createSupabaseServiceClient();
+  const dayStart = startOfDay(new Date());
+  const dayEnd = addDays(dayStart, 1);
+  let todayViewingsQuery = svc
+    .from("lead_viewings")
+    .select(
+      `id, scheduled_at, lead_id, deal_id,
+      lead:leads(name),
+      deal:deals(title),
+      property:properties(property_code, community, building_name, unit_number, property_type, bedrooms)`
+    )
+    .eq("status", "scheduled")
+    .gte("scheduled_at", dayStart.toISOString())
+    .lt("scheduled_at", dayEnd.toISOString())
+    .order("scheduled_at", { ascending: true })
+    .limit(8);
+  if (isAgent) todayViewingsQuery = todayViewingsQuery.eq("agent_id", user.id);
+  const todayViewingsResult = await todayViewingsQuery;
+
+  function firstRel<T>(value: T | T[] | null | undefined): T | null {
+    if (!value) return null;
+    return Array.isArray(value) ? value[0] ?? null : value;
+  }
+
+  const todayViewings = (todayViewingsResult.data ?? []).map((row) => {
+    const lead = firstRel(row.lead as { name: string } | { name: string }[] | null);
+    const deal = firstRel(row.deal as { title: string } | { title: string }[] | null);
+    const unit = firstRel(
+      row.property as
+        | {
+            property_code: string;
+            community: string | null;
+            building_name: string | null;
+            unit_number: string | null;
+            property_type: string;
+            bedrooms: number | null;
+          }
+        | {
+            property_code: string;
+            community: string | null;
+            building_name: string | null;
+            unit_number: string | null;
+            property_type: string;
+            bedrooms: number | null;
+          }[]
+        | null
+    );
+    return {
+      id: row.id,
+      scheduled_at: row.scheduled_at,
+      title: lead?.name ?? deal?.title ?? "Viewing",
+      href: row.lead_id ? `/leads/${row.lead_id}` : row.deal_id ? `/pipeline/${row.deal_id}` : "/viewings",
+      unit: unit ? propertyLabel(unit) : "No unit",
+    };
+  });
+
   const activeDeals = dealsResult.data ?? [];
   const pipelineValue = activeDeals.reduce((sum, d) => sum + (d.value ?? 0), 0);
 
@@ -95,6 +153,7 @@ export default async function DashboardPage() {
       overdueFollowUpsCount={overdueFollowupsResult.count ?? 0}
       activities={(activityResult.data ?? []) as never}
       followUps={followupsResult.data ?? []}
+      todayViewings={todayViewings}
     />
   );
 }

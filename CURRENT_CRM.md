@@ -1,6 +1,6 @@
 # UrbanLuxe CRM — Current System & Workflows
 
-**Status:** this is the **live** CRM as implemented in the UrbanLuxe Portal codebase (August 2026), now evolving toward one person record, internal inventory, and first-class viewings.
+**Status:** this is the **live** CRM as implemented in the UrbanLuxe Portal codebase (August 2026): one person from first contact, internal inventory, bookable viewings, a week calendar, requirement matching, and desks for round-robin.
 
 Older planning files (`MASTER_CRM_ERP_SPEC.md`, `LEADS_MODULE_SPEC.md`, `URBANLUXE_CRM_BUILD_SPEC.md`) are not implemented as a rebuild. Treat this document as source of truth for how staff work the CRM now.
 
@@ -46,7 +46,7 @@ UrbanLuxe Portal is a **Dubai real-estate brokerage CRM** with a public marketin
 
 **Stack:** Next.js App Router (TypeScript) · Supabase (Postgres, Auth, Storage) · Vercel · Tailwind + shadcn/ui. Server logic is Next.js route handlers and server actions talking to Supabase. Schema lives in `supabase/migrations/`. Money is stored as **integer fils** (1 AED = 100 fils).
 
-There is **no separate backend**. There is **no live property inventory table** in the CRM — public listings are hardcoded brochure data (`src/lib/web/listings.ts`). That is intentional for now.
+There is **no separate backend**. Staff inventory lives in `developers` / `projects` / `properties` / `listings` (`/inventory`). **Public** buy/rent/off-plan cards stay hardcoded brochure data (`src/lib/web/listings.ts`).
 
 ---
 
@@ -67,6 +67,7 @@ Sidebar groups Marketing / Inventory / Finance / Governance are **placeholders**
 | Leads (board / list) | `/leads?view=board` or `?view=list` | All staff (agents scoped to own + unassigned) |
 | Lead detail | `/leads/[id]` | All staff (agents scoped) |
 | Follow-ups | `/leads/followups` | All staff |
+| Viewings | `/viewings` | All staff (agents see their own diary) |
 | Inflow (legacy URL) | `/leads/inflow` | Redirects to `/settings/leads?tab=fields` |
 | Deals (pipeline) | `/deals` and `/pipeline` | All staff (agents scoped) |
 | Deal detail | `/pipeline/[id]` | All staff (agents scoped) |
@@ -192,7 +193,7 @@ Stages live in `lead_stages`. Each has:
 | 1 | New | open | 1 day | — |
 | 2 | Contacted | open | 2 days | — |
 | 3 | Qualified | open | 5 days | `budget_min`, `interest`, `preferred_areas` |
-| 4 | Viewing Scheduled | open | 3 days | `viewing_scheduled` (**not enforced yet** — skipped in `updateLeadStage`) |
+| 4 | Viewing Scheduled | open | 3 days | `viewing_scheduled` (enforced: a scheduled or completed viewing on the lead) |
 | 5 | Viewing Done / Offer | open | 2 days | — |
 | 6 | Converted | **won** | — | Set by Convert — do not drag here as the happy path |
 | 7 | Lost | **lost** | — | `lost_reason` |
@@ -251,8 +252,9 @@ Lead Settings → Imports (admin / manager / reception). Up to 500 rows per run.
 
 1. If the lead already has `assigned_to`, keep it.
 2. Else pick the **least-loaded active agent** (`profiles.role = agent`, `is_active`). Load = count of non-deleted leads currently assigned to them.
-3. Write `assigned_to`, insert `lead_assignments` (`reason` like `round_robin:created` / `import` / `webhook`).
-4. In-app notification: `lead_assigned` for that agent.
+3. If the **creating staff user** has `profiles.team_id` (a desk), prefer agents on that desk. If the desk has no active agents, fall back to the house pool. Website / webhook / CSV import have no desk, so they always use the house pool.
+4. Write `assigned_to`, insert `lead_assignments` (`reason` like `round_robin:created` / `import` / `webhook`).
+5. In-app notification: `lead_assigned` for that agent.
 
 **Manual assign** (`assignLead`, `bulkAssignLeads`) from board/list/detail.
 
@@ -273,7 +275,7 @@ Kanban columns = active stages. Cards drag between columns. Filters: search, sou
 Table of up to 100 recent leads with the same filters plus stage. Bulk assign is available to CRM managers.
 
 ### Lead detail (`/leads/[id]`)
-Single record: contact + requirement fields, stage, assignee, score, tags, notes, **viewings**, documents, activity timeline, follow-up scheduler, convert dialog. Links to the person record from capture.
+Single record: contact + requirement fields, stage, assignee, score, tags, notes, **suggested units** (ranked from areas / beds / type / budget), **viewings**, documents, activity timeline, follow-up scheduler, convert dialog. Links to the person record from capture. House diary is `/viewings`.
 
 ### Activities
 `lead_activities` types include notes, stage changes, follow-up scheduled/done, converted, assignment. `lead_events` is a more structured audit (`created`, `stage_changed`, …). `activity_log` is the cross-entity audit (dashboard “recent activity”).
@@ -299,6 +301,8 @@ Follow-ups are first-class, not just a date on the lead.
 **Snooze:** push the datetime; keep the lead on the follow-ups list.
 
 **Follow-ups page** (`/leads/followups`): triage by overdue / today / upcoming. Dashboard also lists upcoming follow-ups and an overdue count.
+
+**Viewings calendar** (`/viewings`): Monday-start week of booked `lead_viewings` (lead or deal). Default filter is scheduled. Agents only see their own diary; managers can filter by agent. Booking and outcomes still happen on the lead/deal record. Dashboard shows today’s scheduled viewings.
 
 ---
 
@@ -411,10 +415,11 @@ Standalone `/documents` UI is currently a removed route; documents are managed *
 
 `/team` (admin, manager, reception):
 
-- Create staff (Auth user + `profiles` row): name, email, role, BRN, commission rate, avatar
+- Create staff (Auth user + `profiles` row): name, email, role, BRN, commission rate, avatar, **desk**
 - Invite / set password / send reset link
 - Activate / deactivate (deactivated users cannot log in)
 - Per-person lead and deal counts on the roster
+- **Desks** (`public.teams` + `profiles.team_id`): create / rename / archive. Membership is also mirrored to `team_members`. This is org structure for round-robin, not a Postgres RLS rewrite. Roles stay admin / manager / reception / agent / accountant.
 
 **Sessions:** `staff_sessions` heartbeat from the portal (`SessionHeartbeat`) so activity can be reported (`getStaffActivityStats`).
 
@@ -461,6 +466,7 @@ This is the operational control plane. Changing a picklist or stage does **not**
 - Open leads, new leads this month, customers
 - Overdue follow-ups
 - Upcoming follow-ups
+- Today’s scheduled viewings (link to `/viewings`)
 - Recent `activity_log`
 
 Agents see **their** numbers; admin/manager/reception/accountant see agency-wide (accountant has `dashboard_full`).
@@ -551,9 +557,11 @@ Move deal to **Lost** with a reason. Customer is **not** created. Lead remains c
 | Deal mutations | `src/server/deals.ts` |
 | Customers | `src/server/customers.ts` |
 | Routing | `src/server/routing.ts` |
+| Matching | `src/lib/match-inventory.ts` |
 | Person-from-capture | `src/server/people.ts` |
 | Inventory | `src/server/inventory.ts` |
 | Viewings | `src/server/viewings.ts` |
+| Staff / desks | `src/server/team.ts` |
 | Public capture | `src/server/public-leads.ts` |
 | Webhook | `src/app/api/leads/webhook/route.ts` |
 | Daily jobs | `src/app/api/cron/daily/route.ts` |
@@ -569,11 +577,10 @@ These appear in older specs or empty nav groups:
 - Public website inventory (still hardcoded brochure listings)
 - Quotations, invoices, cheques, payments, expenses
 - Marketing campaigns and automation rules UI
-- Calendar view of all viewings
-- Teams / team_lead / Postgres RLS rebuild
+- `team_lead` / `viewer` roles and a Postgres RLS rebuild around desks
 - Bitrix-style saved filters, first-response 15-minute SLA rings
 - Hard real-time board sync (board is request/revalidate, not a live channel)
 
-**Now live that used to be missing:** person-from-capture, internal inventory (`/inventory`), deal shortlist, scheduled viewings with outcomes (enforces the Viewing Scheduled stage when a viewing exists).
+**Now live that used to be missing:** person-from-capture, internal inventory (`/inventory`), deal shortlist, scheduled viewings with outcomes (enforces the Viewing Scheduled stage when a viewing exists), week viewing calendar, requirement matching, desks for round-robin.
 
 When those remaining items ship, update **this** file — do not revive the old specs as if they were implemented.

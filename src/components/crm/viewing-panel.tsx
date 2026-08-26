@@ -124,12 +124,17 @@ export function ViewingPanel({
             {upcoming.length} upcoming · {viewings.length} total
           </p>
         </div>
-        {canEdit ? (
-          <Button size="sm" variant="outline" onClick={() => setOpen((v) => !v)}>
-            <CalendarClock className="mr-1.5 h-3.5 w-3.5" />
-            Book
-          </Button>
-        ) : null}
+        <div className="flex items-center gap-2">
+          <Link href="/viewings" className="text-xs text-muted-foreground hover:text-foreground">
+            Calendar
+          </Link>
+          {canEdit ? (
+            <Button size="sm" variant="outline" onClick={() => setOpen((v) => !v)}>
+              <CalendarClock className="mr-1.5 h-3.5 w-3.5" />
+              Book
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {open && canEdit ? (

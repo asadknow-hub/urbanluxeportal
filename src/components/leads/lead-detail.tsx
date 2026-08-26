@@ -15,6 +15,7 @@ import { DocumentUploadDialog } from "@/components/documents/document-upload-dia
 import { ConvertLeadDialog } from "@/components/leads/convert-lead-dialog";
 import { ConversionPath } from "@/components/crm/conversion-path";
 import { ViewingPanel, type ViewingRow, type InventoryChoice } from "@/components/crm/viewing-panel";
+import { MatchPanel } from "@/components/crm/match-panel";
 import { LeadDocumentsList, type LeadDocument } from "@/components/leads/lead-documents";
 import {
   Dialog,
@@ -41,6 +42,7 @@ import { formatAEDRange } from "@/lib/money";
 import { daysUntil, formatDate, formatDateTime, isOverdue, shortTimeAgo, timeAgo } from "@/lib/dates";
 import { stageSlaClock } from "@/lib/lead-sla";
 import { canManageCrm } from "@/lib/permissions";
+import type { InventoryMatch } from "@/lib/match-inventory";
 import {
   choiceItems,
   docCategoryChoices,
@@ -374,6 +376,7 @@ export function LeadDetail({
   documents,
   viewings,
   inventory,
+  matches = [],
   userRole,
   userId,
 }: {
@@ -390,6 +393,7 @@ export function LeadDetail({
   documents: DocumentRow[];
   viewings: ViewingRow[];
   inventory: InventoryChoice[];
+  matches?: InventoryMatch[];
   duplicateMatches: unknown[];
   userRole: string;
   userId: string;
@@ -1326,6 +1330,12 @@ export function LeadDetail({
               <div className="flex justify-between py-2.5 text-[0.84rem]"><span className="text-muted-foreground">Total activities</span><b className="font-mono text-[0.8rem]">{optimisticActivities.length}</b></div>
             </div>
           </section>
+
+          <MatchPanel
+            matches={matches}
+            dealId={optimisticLead.converted_deal_id}
+            canEdit={canEdit}
+          />
 
           <ViewingPanel
             leadId={optimisticLead.id}

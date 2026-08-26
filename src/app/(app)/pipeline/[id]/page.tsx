@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { DealDetail } from "@/components/pipeline/deal-detail";
 import { docCategoryChoices, type LeadFieldOption } from "@/lib/lead-field-options";
+import { matchesForRequirement, INVENTORY_MATCH_SELECT } from "@/lib/match-inventory";
 
 export const dynamic = "force-dynamic";
 
@@ -86,10 +87,10 @@ export default async function DealDetailPage({
       .order("scheduled_at", { ascending: false }),
     supabase
       .from("properties")
-      .select("id, property_code, community, building_name, unit_number, property_type, bedrooms")
+      .select(INVENTORY_MATCH_SELECT)
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
-      .limit(40),
+      .limit(200),
     supabase
       .from("deal_properties")
       .select(
@@ -108,6 +109,17 @@ export default async function DealDetailPage({
       docCategories={docCategoryChoices((docCategoryRows ?? []) as LeadFieldOption[])}
       viewings={viewingRows ?? []}
       inventory={inventoryRows ?? []}
+      matches={matchesForRequirement(
+        {
+          preferred_areas: deal.lead_context?.preferred_areas,
+          bedrooms: deal.lead_context?.bedrooms,
+          category: deal.lead_context?.category,
+          interest: deal.lead_context?.interest,
+          budget_min: deal.lead_context?.budget_min,
+          budget_max: deal.lead_context?.budget_max,
+        },
+        inventoryRows ?? []
+      )}
       shortlist={(shortlistRows ?? []).map((row) => ({
         ...row,
         property: Array.isArray(row.property) ? row.property[0] : row.property,

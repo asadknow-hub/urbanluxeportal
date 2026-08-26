@@ -28,6 +28,8 @@ import { LeadContextPanel } from "@/components/crm/lead-context-panel";
 import { DealTransactionForm } from "@/components/pipeline/deal-transaction-form";
 import { DealShortlist, type DealPropertyRow } from "@/components/pipeline/deal-shortlist";
 import { ViewingPanel, type ViewingRow, type InventoryChoice } from "@/components/crm/viewing-panel";
+import { MatchPanel } from "@/components/crm/match-panel";
+import type { InventoryMatch } from "@/lib/match-inventory";
 import type { LeadContext } from "@/lib/lead-flow";
 import { dealReadyToFinalize, formatPropertyLine } from "@/lib/deal-transaction";
 import {
@@ -157,6 +159,7 @@ export function DealDetail({
   viewings,
   inventory,
   shortlist,
+  matches = [],
   userRole,
   userId,
 }: {
@@ -175,6 +178,7 @@ export function DealDetail({
   viewings: ViewingRow[];
   inventory: InventoryChoice[];
   shortlist: DealPropertyRow[];
+  matches?: InventoryMatch[];
   userRole: string;
   userId: string;
 }) {
@@ -380,6 +384,8 @@ export function DealDetail({
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_360px]">
         <div className="space-y-4">
           <DealTransactionForm deal={deal} canEdit={canEdit} canManage={canManage} agents={agentOptions} />
+
+          <MatchPanel matches={matches} dealId={deal.id} canEdit={canEdit} />
 
           <DealShortlist dealId={deal.id} items={shortlist} properties={inventory} canEdit={canEdit} />
 

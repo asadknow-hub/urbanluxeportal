@@ -3,17 +3,21 @@ import { notify } from "@/lib/notify";
 
 type ServiceClient = ReturnType<typeof createSupabaseServiceClient>;
 
-/** Least-loaded active agent. Returns null if nobody is available. */
+/** Least-loaded active agent. Prefer a desk when one is given; fall back to the house pool. */
 export async function pickRoundRobinAgent(
-  supabase: ServiceClient = createSupabaseServiceClient()
+  supabase: ServiceClient = createSupabaseServiceClient(),
+  teamId?: string | null
 ): Promise<string | null> {
-  const { data: agents } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("role", "agent")
-    .eq("is_active", true);
+  async function loadAgents(deskId?: string | null) {
+    let query = supabase.from("profiles").select("id").eq("role", "agent").eq("is_active", true);
+    if (deskId) query = query.eq("team_id", deskId);
+    const { data } = await query;
+    return data ?? [];
+  }
 
-  if (!agents?.length) return null;
+  let agents = teamId ? await loadAgents(teamId) : [];
+  if (!agents.length) agents = await loadAgents();
+  if (!agents.length) return null;
 
   const { data: loads } = await supabase
     .from("leads")
@@ -45,11 +49,12 @@ export async function applyLeadRouting(
   supabase: ServiceClient,
   leadId: string,
   assignedTo: string | null | undefined,
-  reason: "created" | "import" | "webhook" = "created"
+  reason: "created" | "import" | "webhook" = "created",
+  teamId?: string | null
 ): Promise<string | null> {
   if (assignedTo) return assignedTo;
 
-  const agentId = await pickRoundRobinAgent(supabase);
+  const agentId = await pickRoundRobinAgent(supabase, teamId);
   if (!agentId) return null;
 
   await supabase
