@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { revalidatePath } from "next/cache";
@@ -39,7 +39,7 @@ export async function createCustomer(
       return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
     }
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     const { data, error } = await supabase
       .from("customers")
@@ -86,7 +86,7 @@ export async function updateCustomer(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     const { error } = await supabase
       .from("customers")

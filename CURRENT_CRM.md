@@ -1,6 +1,6 @@
 # UrbanLuxe CRM — Current System & Workflows
 
-**Status:** this is the **live** CRM as implemented in the UrbanLuxe Portal codebase (August 2026): one person from first contact, internal inventory, bookable viewings, a week calendar, requirement matching, desks, and **mandatory Postgres RLS** (R0–R4 shipped).
+**Status:** this is the **live** CRM as implemented in the UrbanLuxe Portal codebase (August 2026): one person from first contact, internal inventory, bookable viewings, a week calendar, requirement matching, desks, and **mandatory Postgres RLS** (R0–R5 shipped).
 
 Older planning files (`MASTER_CRM_ERP_SPEC.md`, `LEADS_MODULE_SPEC.md`, `URBANLUXE_CRM_BUILD_SPEC.md`) are not implemented as a rebuild. Treat this document as source of truth for how staff work the CRM now.
 
@@ -93,7 +93,7 @@ Sidebar groups Marketing / Inventory / Finance / Governance are **placeholders**
 | **Manager** | All CRM | Lead settings + staff | No company Settings |
 | **Reception** | Same as manager | Same as manager | Front-desk alias of manager |
 | **Agent** | **Own** leads (plus unassigned in their desk, or the house unassigned pool if they have no desk) and **own** deals | — | Enforced in Postgres (`crm_can_read_lead` / `crm_can_read_deal`), not only the UI. Dashboard is personal; cannot move others’ deals |
-| **Accountant** | House **read** of CRM | — | Included in `crm_is_house()`. Writes still go through service role until R5. |
+| **Accountant** | House **read** of CRM | — | Included in `crm_is_house()`. Write policies exclude accountant (`crm_is_operating_staff()` / `crm_can_write_*`). |
 
 Assignable owners for leads/deals: admin, manager, reception, agent (not accountant).
 
@@ -225,7 +225,7 @@ Won stages are normally reached by **Convert**, which also creates the deal.
 
 ### 7.2 Public website (no login)
 
-Server actions in `src/server/public-leads.ts` insert leads with service role (same as staff, no API key in the browser).
+Server actions in `src/server/public-leads.ts` insert leads with the **service role** (no staff JWT, no API key in the browser). Staff lead create uses the user JWT.
 
 | Form | Source stamp | Interest mapping | Extra |
 |---|---|---|---|
@@ -248,14 +248,14 @@ Lead Settings → Imports (admin / manager / reception). Up to 500 rows per run.
 
 ## 8. Assignment and routing
 
-`applyLeadRouting` (`src/server/routing.ts`):
+`applyLeadRouting` (`src/server/routing.ts`) calls Postgres `crm_apply_lead_routing()` so round-robin can stamp another agent without a JWT `UPDATE` that would fail `crm_can_write_lead`:
 
-1. If the lead already has `assigned_to`, keep it.
-2. Else pick the **least-loaded active agent** (`profiles.role = agent`, `is_active`). Load = count of non-deleted leads currently assigned to them.
+1. If the lead already has `assigned_to`, keep it (and stamp desk).
+2. Else pick the **least-loaded active agent** (`crm_least_loaded_agent`). Load = count of non-deleted leads currently assigned to them.
 3. If the **creating staff user** has `profiles.team_id` (a desk), prefer agents on that desk. If the desk has no active agents, fall back to the house pool. Website / webhook / CSV import have no desk, so they always use the house pool.
 4. Stamp `leads.team_id` from the assignee’s desk (else the creator’s desk). Agents with a desk only **read** unassigned leads in that desk or with `team_id` null (inbound house pool). Agents with no desk still see all unassigned leads.
 5. Write `assigned_to`, insert `lead_assignments` (`reason` like `round_robin:created` / `import` / `webhook`).
-6. In-app notification: `lead_assigned` for that agent.
+6. In-app notification: `lead_assigned` for that agent (service role insert — other users’ inbox rows).
 
 **Manual assign** (`assignLead`, `bulkAssignLeads`) from board/list/detail.
 
@@ -422,7 +422,7 @@ Standalone `/documents` UI is currently a removed route; documents are managed *
 - Invite / set password / send reset link
 - Activate / deactivate (deactivated users cannot log in)
 - Per-person lead and deal counts on the roster
-- **Desks** (`public.teams` + `profiles.team_id` + `leads.team_id`): create / rename / archive. Membership is mirrored to `team_members`. Round-robin prefers the creator’s desk. **Read RLS (R1):** agents only see own leads plus unassigned in their desk (or the house unassigned pool if they have no desk). Admin / manager / reception / accountant still see the agency. **Roster (R4):** JWT `SELECT` on `profiles` is directory columns only (name, role, avatar, desk, active). Email, phone, BRN, and commission rate load via `crm_staff_roster()` / `crm_my_profile()` for house staff and the signed-in user. Staff **writes** still use the service role until R5.
+- **Desks** (`public.teams` + `profiles.team_id` + `leads.team_id`): create / rename / archive. Membership is mirrored to `team_members`. Round-robin prefers the creator’s desk via `crm_apply_lead_routing()`. **Read RLS (R1):** agents only see own leads plus unassigned in their desk (or the house unassigned pool if they have no desk). Admin / manager / reception / accountant still see the agency. **Roster (R4):** JWT `SELECT` on `profiles` is directory columns only (name, role, avatar, desk, active). Email, phone, BRN, and commission rate load via `crm_staff_roster()` / `crm_my_profile()` for house staff and the signed-in user. **Writes (R5):** staff CRM mutations use the user JWT; round-robin assign-to-someone-else is a SECURITY DEFINER RPC so agents cannot UPDATE another agent’s row directly.
 
 **Sessions:** `staff_sessions` heartbeat from the portal (`SessionHeartbeat`) so activity can be reported (`getStaffActivityStats`).
 
@@ -540,7 +540,7 @@ Move deal to **Lost** with a reason. Customer is **not** created. Lead remains c
 
 - **Soft delete** (`deleted_at`) — lists filter it out; webhook/public duplicate checks do too.
 - **Money** — integer fils in the database; UI shows AED.
-- **RLS is mandatory** — ownable reads go through Postgres (`current_staff()`, `crm_can_read_lead()`, `crm_can_read_document()`, …). Pages, calendars, and document lists use the user JWT. Service role is for public capture, webhook, cron, Auth admin, and mutations until R5. See `.cursor/rules/rls-mandatory.mdc`.
+- **RLS is mandatory** — ownable reads and staff writes go through Postgres (`current_staff()`, `crm_can_read_lead()`, `crm_can_write_lead()`, `crm_can_read_document()`, `crm_apply_lead_routing()`, …). Pages, calendars, document lists, and staff mutations use the user JWT. Service role is for public capture, webhook, cron, Auth admin, notify-to-other-users, and public agent phone. See `.cursor/rules/rls-mandatory.mdc`.
 - **Revalidation** — after mutations, paths like `/leads`, `/pipeline`, `/customers` are revalidated.
 - **Agent vs house** — never assume an agent sees the full board. Unassigned leads are the shared pool, now desk-aware when `leads.team_id` is set. Customers list is also agent-scoped (`assigned_to = me`).
 
@@ -560,7 +560,7 @@ Move deal to **Lost** with a reason. Customer is **not** created. Lead remains c
 | Deal mutations | `src/server/deals.ts` |
 | Customers | `src/server/customers.ts` |
 | Routing | `src/server/routing.ts` |
-| RLS (mandatory) | `supabase/migrations/0034_rls_ownable_reads.sql` … `0037_rls_roster_columns.sql`, `.cursor/rules/rls-mandatory.mdc` |
+| RLS (mandatory) | `supabase/migrations/0034_rls_ownable_reads.sql` … `0038_rls_staff_mutations.sql`, `.cursor/rules/rls-mandatory.mdc` |
 | Matching | `src/lib/match-inventory.ts` |
 | Person-from-capture | `src/server/people.ts` |
 | Inventory | `src/server/inventory.ts` |
@@ -582,10 +582,9 @@ These appear in older specs or empty nav groups:
 - Quotations, invoices, cheques, payments, expenses
 - Marketing campaigns and automation rules UI
 - `team_lead` / `viewer` roles
-- Staff mutations on user JWT (R5)
 - Bitrix-style saved filters, first-response 15-minute SLA rings
 - Hard real-time board sync (board is request/revalidate, not a live channel)
 
-**Now live that used to be missing:** person-from-capture, internal inventory (`/inventory`), deal shortlist, scheduled viewings with outcomes (enforces the Viewing Scheduled stage when a viewing exists), week viewing calendar, requirement matching, desks for round-robin, **R0–R3 RLS**, **R4 roster columns** (`crm_my_profile()`, `crm_staff_roster()`).
+**Now live that used to be missing:** person-from-capture, internal inventory (`/inventory`), deal shortlist, scheduled viewings with outcomes (enforces the Viewing Scheduled stage when a viewing exists), week viewing calendar, requirement matching, desks for round-robin, **R0–R5 RLS** (ownable reads, documents/storage, inventory writes, roster columns, staff mutations on the user JWT).
 
 When those remaining items ship, update **this** file — do not revive the old specs as if they were implemented.

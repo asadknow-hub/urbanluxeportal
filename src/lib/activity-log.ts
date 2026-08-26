@@ -1,4 +1,4 @@
-import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function logActivity(params: {
   actorId: string;
@@ -7,7 +7,7 @@ export async function logActivity(params: {
   action: string;
   diff?: Record<string, unknown>;
 }) {
-  const supabase = createSupabaseServiceClient();
+  const supabase = await createSupabaseServerClient();
   await supabase.from("activity_log").insert({
     actor_id: params.actorId,
     entity_type: params.entityType,

@@ -1,7 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { CrmDb } from "@/server/routing";
 import { getCurrentUser, type SessionUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { aedToFils } from "@/lib/money";
@@ -43,7 +44,7 @@ const propertySchema = z.object({
 });
 
 async function resolveDeveloper(
-  supabase: ReturnType<typeof createSupabaseServiceClient>,
+  supabase: CrmDb,
   name: string | null | undefined,
   createdBy: string
 ) {
@@ -66,7 +67,7 @@ async function resolveDeveloper(
 }
 
 async function resolveProject(
-  supabase: ReturnType<typeof createSupabaseServiceClient>,
+  supabase: CrmDb,
   name: string | null | undefined,
   developerId: string | null,
   projectType: "off_plan" | "ready" | null | undefined,
@@ -130,7 +131,7 @@ export async function createProperty(
       return { ok: false, error: "Add a community, building, or unit" };
     }
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const developerId = await resolveDeveloper(supabase, data.developer_name, user.id);
     const projectId = await resolveProject(
       supabase,
@@ -211,7 +212,7 @@ export async function updateProperty(
       return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
     }
     const data = parsed.data;
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const developerId = await resolveDeveloper(supabase, data.developer_name, user.id);
     const projectId = await resolveProject(
       supabase,
@@ -269,8 +270,7 @@ export async function addDealProperty(input: {
     const denied = await assertCanMutateDeal(input.dealId, user);
     if (denied) return { ok: false, error: denied };
 
-    const userClient = await createSupabaseServerClient();
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const { error } = await supabase.from("deal_properties").upsert(
       {
         deal_id: input.dealId,
@@ -284,7 +284,7 @@ export async function addDealProperty(input: {
     );
     if (error) return { ok: false, error: error.message };
 
-    const { data: property } = await userClient
+    const { data: property } = await supabase
       .from("properties")
       .select("property_code, community, building_name, unit_number")
       .eq("id", input.propertyId)
@@ -313,7 +313,7 @@ export async function removeDealProperty(dealId: string, propertyId: string): Pr
     if (!user) return { ok: false, error: "Unauthorized" };
     const denied = await assertCanMutateDeal(dealId, user);
     if (denied) return { ok: false, error: denied };
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const { error } = await supabase
       .from("deal_properties")
       .delete()

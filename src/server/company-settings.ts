@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { can } from "@/lib/permissions";
 import {
@@ -54,7 +54,7 @@ function revalidateBrandSurfaces() {
 }
 
 export async function getCompanySettingsRow(): Promise<CompanySettingsRow | null> {
-  const supabase = createSupabaseServiceClient();
+  const supabase = await createSupabaseServerClient();
   const { data } = await supabase.from("company_settings").select("*").eq("id", 1).maybeSingle();
   return (data as CompanySettingsRow | null) ?? null;
 }
@@ -82,7 +82,7 @@ export async function updateCompanySettings(
     }
 
     const data = parsed.data;
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const payload = {
       company_name: data.company_name,
       trn: data.trn || null,
@@ -142,7 +142,7 @@ export async function uploadCompanyLogo(
     const ext = file.name.split(".").pop()?.toLowerCase() || "png";
     const path = `${variant}-${Date.now()}.${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     const { error: uploadError } = await supabase.storage
       .from("branding")
@@ -176,7 +176,7 @@ export async function clearCompanyLogo(
     if (!user) return { ok: false, error: "Unauthorized" };
     if (!can(user.role, "settings")) return { ok: false, error: "Admin only" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const column = variant === "dark" ? "logo_dark_url" : "logo_url";
     const { error } = await supabase
       .from("company_settings")

@@ -1,6 +1,6 @@
 "use server";
 
-import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { canManageCrm } from "@/lib/permissions";
 
@@ -15,7 +15,7 @@ export async function startSession(): Promise<ActionResult<{ sessionId: string }
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase.rpc("upsert_staff_session", {
       p_user_id: user.id,
     });
@@ -33,7 +33,7 @@ export async function heartbeatSession(sessionId: string): Promise<ActionResult>
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const { error } = await supabase.rpc("heartbeat_staff_session", {
       p_session_id: sessionId,
     });
@@ -48,7 +48,7 @@ export async function heartbeatSession(sessionId: string): Promise<ActionResult>
 
 export async function closeSession(sessionId: string): Promise<ActionResult> {
   try {
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const { error } = await supabase.rpc("close_staff_session", {
       p_session_id: sessionId,
     });
@@ -92,7 +92,7 @@ export async function getStaffActivityStats(
       return { ok: false, error: "Not authorized" };
     }
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth() - (monthsBack - 1), 1);

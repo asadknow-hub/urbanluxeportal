@@ -10,10 +10,10 @@ UrbanLuxe is doing **full-system Postgres RLS**. App filters are defense in dept
 ## Do
 
 - Put tenancy in RLS policies. Ownable rows: house roles (`admin` / `manager` / `reception`) see the agency; `accountant` is house **read**; `agent` sees own + unassigned in their desk (`leads.team_id`), or the house unassigned pool if they have no desk.
-- Staff **reads** (pages, loaders, calendars, document lists, signed-URL authorization, inventory search) use `createSupabaseServerClient()` (user JWT) so RLS runs.
-- Service role is allowed only for: public capture, webhook, cron, Auth admin, and mutations **until R5**. Do not add new service-role **reads** of CRM rows.
+- Staff **reads and CRM mutations** use `createSupabaseServerClient()` (user JWT) so RLS runs.
+- Service role is allowed only for: public capture, webhook, cron, Auth admin, notify-to-other-users, and `getPublicAgents` (phone is not in the directory GRANT). Do not add service-role **reads or writes** of CRM rows for staff actions.
 - New tables: `enable row level security` in the same migration. No policy = deny.
-- Helpers live in Postgres: `current_staff()`, `crm_is_house()`, `crm_can_read_lead()`, `crm_can_read_deal()`, `crm_can_read_document()`, `crm_can_write_inventory()`, `crm_my_profile()`, `crm_staff_roster()`. Policies call these; do not copy `has_role(...)` inline on new tables.
+- Helpers live in Postgres: `current_staff()`, `crm_is_house()`, `crm_can_read_lead()`, `crm_can_write_lead()`, `crm_can_read_deal()`, `crm_can_write_deal()`, `crm_can_read_document()`, `crm_can_write_document()`, `crm_can_write_inventory()`, `crm_apply_lead_routing()`, `crm_my_profile()`, `crm_staff_roster()`. Policies call these; do not copy `has_role(...)` inline on new tables.
 - After SQL changes, apply with `node scripts/db.mjs --file supabase/migrations/00xx.sql`.
 
 ## Do not
@@ -22,4 +22,4 @@ UrbanLuxe is doing **full-system Postgres RLS**. App filters are defense in dept
 - Do not rebuild `app_user` / `opportunity` / numeric AED / `team_lead` to “match the spec”. Harden **this** schema.
 - Do not ship a table without RLS because “the UI already filters”.
 
-Program: R0 helpers + R1 ownable reads (`0034`) → R2 documents/storage (`0035`) → R3 inventory writes (`0036`) → R4 roster columns (`0037`, shipped) → R5 staff mutations on user JWT.
+Program: R0 helpers + R1 ownable reads (`0034`) → R2 documents/storage (`0035`) → R3 inventory writes (`0036`) → R4 roster columns (`0037`) → R5 staff mutations on user JWT (`0038`, shipped).

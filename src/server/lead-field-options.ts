@@ -1,6 +1,6 @@
 "use server";
 
-import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { parseAreaNames } from "@/lib/parse-area-list";
@@ -40,7 +40,7 @@ export async function mergeLeadFieldOptions(
     const names = parseAreaNames(rawNames.join("\n"));
     if (names.length === 0) return { ok: false, error: "No values found" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const { data: existing, error: existingError } = await supabase
       .from("lead_field_options")
       .select("value")
@@ -97,7 +97,7 @@ export async function addLeadFieldOption(
     if (!canManage(user.role)) return { ok: false, error: "Not authorized" };
     if (!isLeadOptionField(fieldKey)) return { ok: false, error: "Unknown field" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const { data: maxSort } = await supabase
       .from("lead_field_options")
       .select("sort")
@@ -169,7 +169,7 @@ export async function deleteLeadFieldOption(id: string): Promise<ActionResult> {
     if (!user) return { ok: false, error: "Unauthorized" };
     if (!canManage(user.role)) return { ok: false, error: "Not authorized" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const { error } = await supabase.from("lead_field_options").delete().eq("id", id);
     if (error) return { ok: false, error: error.message };
 
@@ -189,7 +189,7 @@ export async function updateLeadFieldOptionExtra(
     if (!user) return { ok: false, error: "Unauthorized" };
     if (!canManage(user.role)) return { ok: false, error: "Not authorized" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     if (patch.capture != null && patch.capture !== "expiry" && patch.capture !== "note") {
       return { ok: false, error: "Capture must be expiry or note" };
     }

@@ -1,10 +1,15 @@
-import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { notify } from "@/lib/notify";
+import type {
+  createSupabaseServerClient,
+  createSupabaseServiceClient,
+} from "@/lib/supabase/server";
 
-type ServiceClient = ReturnType<typeof createSupabaseServiceClient>;
+export type CrmDb =
+  | Awaited<ReturnType<typeof createSupabaseServerClient>>
+  | ReturnType<typeof createSupabaseServiceClient>;
 
 export async function teamIdForUser(
-  supabase: ServiceClient,
+  supabase: CrmDb,
   userId: string | null | undefined
 ): Promise<string | null> {
   if (!userId) return null;
@@ -12,95 +17,47 @@ export async function teamIdForUser(
   return data?.team_id ?? null;
 }
 
-/** Least-loaded active agent. Prefer a desk when one is given; fall back to the house pool. */
 export async function pickRoundRobinAgent(
-  supabase: ServiceClient = createSupabaseServiceClient(),
+  supabase: CrmDb,
   teamId?: string | null
 ): Promise<string | null> {
-  async function loadAgents(deskId?: string | null) {
-    let query = supabase.from("profiles").select("id").eq("role", "agent").eq("is_active", true);
-    if (deskId) query = query.eq("team_id", deskId);
-    const { data } = await query;
-    return data ?? [];
+  const { data, error } = await supabase.rpc("crm_least_loaded_agent", { p_team_id: teamId ?? null });
+  if (error) {
+    console.error("[routing] least-loaded agent:", error.message);
+    return null;
   }
-
-  let agents = teamId ? await loadAgents(teamId) : [];
-  if (!agents.length) agents = await loadAgents();
-  if (!agents.length) return null;
-
-  const { data: loads } = await supabase
-    .from("leads")
-    .select("assigned_to")
-    .is("deleted_at", null)
-    .not("assigned_to", "is", null);
-
-  const counts = new Map<string, number>();
-  for (const agent of agents) counts.set(agent.id, 0);
-  for (const row of loads ?? []) {
-    if (row.assigned_to && counts.has(row.assigned_to)) {
-      counts.set(row.assigned_to, (counts.get(row.assigned_to) ?? 0) + 1);
-    }
-  }
-
-  let winner = agents[0].id;
-  let lowest = Number.POSITIVE_INFINITY;
-  for (const agent of agents) {
-    const n = counts.get(agent.id) ?? 0;
-    if (n < lowest) {
-      lowest = n;
-      winner = agent.id;
-    }
-  }
-  return winner;
+  return data ?? null;
 }
 
 export async function applyLeadRouting(
-  supabase: ServiceClient,
+  supabase: CrmDb,
   leadId: string,
   assignedTo: string | null | undefined,
   reason: "created" | "import" | "webhook" = "created",
   teamId?: string | null
 ): Promise<string | null> {
-  const now = new Date().toISOString();
+  const { data: agentId, error } = await supabase.rpc("crm_apply_lead_routing", {
+    p_lead_id: leadId,
+    p_assigned_to: assignedTo ?? null,
+    p_reason: reason,
+    p_team_id: teamId ?? null,
+  });
 
-  if (assignedTo) {
-    const deskId = (await teamIdForUser(supabase, assignedTo)) ?? teamId ?? null;
-    await supabase
-      .from("leads")
-      .update({ team_id: deskId, updated_at: now })
-      .eq("id", leadId);
-    return assignedTo;
-  }
-
-  const agentId = await pickRoundRobinAgent(supabase, teamId);
-  const deskId = (await teamIdForUser(supabase, agentId)) ?? teamId ?? null;
-
-  if (!agentId) {
-    if (deskId) {
-      await supabase.from("leads").update({ team_id: deskId, updated_at: now }).eq("id", leadId);
-    }
+  if (error) {
+    console.error("[routing] apply:", error.message);
     return null;
   }
 
-  await supabase
-    .from("leads")
-    .update({ assigned_to: agentId, team_id: deskId, updated_at: now })
-    .eq("id", leadId);
+  if (agentId && !assignedTo) {
+    await notify({
+      userIds: [agentId],
+      kind: "lead_assigned",
+      title: "New lead assigned",
+      body: "A lead was routed to you. Open Leads to make first contact.",
+      entityType: "lead",
+      entityId: leadId,
+    });
+  }
 
-  await supabase.from("lead_assignments").insert({
-    lead_id: leadId,
-    to_user: agentId,
-    reason: `round_robin:${reason}`,
-  });
-
-  await notify({
-    userIds: [agentId],
-    kind: "lead_assigned",
-    title: "New lead assigned",
-    body: "A lead was routed to you. Open Leads to make first contact.",
-    entityType: "lead",
-    entityId: leadId,
-  });
-
-  return agentId;
+  return (agentId as string | null) ?? null;
 }

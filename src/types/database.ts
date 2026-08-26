@@ -893,6 +893,35 @@ export interface Database {
         Args: { p_id: string };
         Returns: Database["public"]["Tables"]["profiles"]["Row"];
       };
+      crm_least_loaded_agent: {
+        Args: { p_team_id: string | null };
+        Returns: string | null;
+      };
+      crm_apply_lead_routing: {
+        Args: {
+          p_lead_id: string;
+          p_assigned_to: string | null;
+          p_reason: string;
+          p_team_id: string | null;
+        };
+        Returns: string | null;
+      };
+      finalize_deal_to_customer: {
+        Args: { p_deal_id: string; p_actor_id?: string | null };
+        Returns: string | null;
+      };
+      upsert_staff_session: {
+        Args: { p_user_id: string };
+        Returns: string;
+      };
+      heartbeat_staff_session: {
+        Args: { p_session_id: string };
+        Returns: undefined;
+      };
+      close_staff_session: {
+        Args: { p_session_id: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       user_role: UserRole;

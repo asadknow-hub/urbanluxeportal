@@ -1,9 +1,8 @@
 "use server";
 
-import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isWorkingCustomerStatus } from "@/lib/customer-status";
-
-type ServiceClient = ReturnType<typeof createSupabaseServiceClient>;
+import type { CrmDb } from "@/server/routing";
 
 type LeadRow = {
   id: string;
@@ -20,7 +19,7 @@ type LeadRow = {
   status: string;
 };
 
-async function loadLead(supabase: ServiceClient, leadId: string) {
+async function loadLead(supabase: CrmDb, leadId: string) {
   const { data } = await supabase
     .from("leads")
     .select(
@@ -38,9 +37,9 @@ async function loadLead(supabase: ServiceClient, leadId: string) {
 export async function ensurePersonForLead(
   leadId: string,
   actorId?: string | null,
-  client?: ServiceClient
+  client?: CrmDb
 ): Promise<string | null> {
-  const supabase = client ?? createSupabaseServiceClient();
+  const supabase = client ?? (await createSupabaseServerClient());
   const lead = await loadLead(supabase, leadId);
   if (!lead) return null;
 
@@ -131,7 +130,7 @@ export async function ensurePersonForLead(
   return personId;
 }
 
-async function syncWorkingPerson(supabase: ServiceClient, lead: LeadRow) {
+async function syncWorkingPerson(supabase: CrmDb, lead: LeadRow) {
   if (!lead.customer_id) return;
   const { data: person } = await supabase
     .from("customers")
@@ -156,9 +155,9 @@ async function syncWorkingPerson(supabase: ServiceClient, lead: LeadRow) {
     .eq("id", lead.customer_id);
 }
 
-export async function markPersonQualified(customerId: string | null, client?: ServiceClient) {
+export async function markPersonQualified(customerId: string | null, client?: CrmDb) {
   if (!customerId) return;
-  const supabase = client ?? createSupabaseServiceClient();
+  const supabase = client ?? (await createSupabaseServerClient());
   const { data } = await supabase.from("customers").select("status").eq("id", customerId).maybeSingle();
   if (!data || data.status === "active" || data.status === "inactive") return;
   await supabase
@@ -167,9 +166,9 @@ export async function markPersonQualified(customerId: string | null, client?: Se
     .eq("id", customerId);
 }
 
-export async function markPersonLost(customerId: string | null, client?: ServiceClient) {
+export async function markPersonLost(customerId: string | null, client?: CrmDb) {
   if (!customerId) return;
-  const supabase = client ?? createSupabaseServiceClient();
+  const supabase = client ?? (await createSupabaseServerClient());
   const { data } = await supabase.from("customers").select("status").eq("id", customerId).maybeSingle();
   if (!data || !isWorkingCustomerStatus(data.status)) return;
   await supabase
@@ -181,9 +180,9 @@ export async function markPersonLost(customerId: string | null, client?: Service
 export async function syncPersonAssignment(
   leadId: string,
   assignedTo: string | null,
-  client?: ServiceClient
+  client?: CrmDb
 ) {
-  const supabase = client ?? createSupabaseServiceClient();
+  const supabase = client ?? (await createSupabaseServerClient());
   const { data: lead } = await supabase
     .from("leads")
     .select("customer_id")

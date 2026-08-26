@@ -23,10 +23,6 @@ function revalidateDocumentPaths(entityType?: string | null, entityId?: string |
   if (entityType === "customer") revalidatePath(`/customers/${entityId}`);
 }
 
-function isHouseStaff(user: SessionUser) {
-  return canManageCrm(user.role) || user.role === "accountant";
-}
-
 async function assertCanWriteDocument(input: {
   user: SessionUser;
   entityType?: string | null;
@@ -41,7 +37,7 @@ async function assertCanWriteDocument(input: {
   }
 
   if (!type || !id) {
-    if (!isHouseStaff(input.user)) return "Link this file to a record you can access";
+    if (!canManageCrm(input.user.role)) return "Link this file to a record you can access";
     return null;
   }
 
@@ -61,10 +57,10 @@ async function assertCanWriteDocument(input: {
     return data ? null : "You cannot attach files to this person";
   }
   if (kind === "staff" || kind === "profile") {
-    if (id === input.user.id || isHouseStaff(input.user)) return null;
+    if (id === input.user.id || canManageCrm(input.user.role)) return null;
     return "You cannot attach files to this staff record";
   }
-  if (isHouseStaff(input.user)) return null;
+  if (canManageCrm(input.user.role)) return null;
   return "You cannot attach files to this record";
 }
 
@@ -111,7 +107,7 @@ export async function createDocument(
     });
     if (denied) return { ok: false, error: denied };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     const { data, error } = await supabase
       .from("documents")
@@ -163,7 +159,7 @@ export async function deleteDocument(id: string): Promise<ActionResult> {
     const existing = await loadVisibleDocument(id);
     if (!existing) return { ok: false, error: "Not found" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     const { error } = await supabase
       .from("documents")
@@ -203,7 +199,7 @@ export async function updateDocument(
     const hasNotes = "notes" in input;
     if (!name && !category && !hasExpiry && !hasNotes) return { ok: false, error: "Nothing to update" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const patch: Record<string, unknown> = {};
     if (name) patch.name = name;
     if (category) patch.category = category;

@@ -1,6 +1,6 @@
 "use server";
 
-import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { parseAreaNames } from "@/lib/parse-area-list";
@@ -20,7 +20,7 @@ export async function mergeLeadNationalities(rawNames: string[]): Promise<Action
     const names = parseAreaNames(rawNames.join("\n"));
     if (names.length === 0) return { ok: false, error: "No nationality names found" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const { data: existing, error: existingError } = await supabase.from("lead_nationalities").select("name_norm");
     if (existingError) return { ok: false, error: existingError.message };
 
@@ -51,7 +51,7 @@ export async function deleteLeadNationality(id: string): Promise<ActionResult> {
     if (!user) return { ok: false, error: "Unauthorized" };
     if (!canManage(user.role)) return { ok: false, error: "Not authorized" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const { error } = await supabase.from("lead_nationalities").delete().eq("id", id);
     if (error) return { ok: false, error: error.message };
 

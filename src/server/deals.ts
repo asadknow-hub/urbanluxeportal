@@ -1,7 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { CrmDb } from "@/server/routing";
 import { getCurrentUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { revalidatePath } from "next/cache";
@@ -15,11 +16,11 @@ export type ActionResult<T = unknown> = {
 };
 
 async function copyEntityDocumentsToCustomer(
+  supabase: CrmDb,
   customerId: string,
   sources: { entity_type: string; entity_id: string }[],
   uploadedBy: string
 ) {
-  const supabase = createSupabaseServiceClient();
 
   const { data: existing } = await supabase
     .from("documents")
@@ -82,7 +83,7 @@ export async function updateDealStage(
       return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
     }
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     const { data: deal, error: fetchError } = await supabase
       .from("deals")
@@ -138,7 +139,7 @@ export async function updateDealStage(
       if (customerId) {
         const sources = [{ entity_type: "deal", entity_id: parsed.data.id }];
         if (deal.lead_id) sources.push({ entity_type: "lead", entity_id: deal.lead_id });
-        await copyEntityDocumentsToCustomer(customerId, sources, user.id);
+        await copyEntityDocumentsToCustomer(supabase, customerId, sources, user.id);
       }
     }
 
@@ -209,7 +210,7 @@ export async function createDeal(input: {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     const { data: customer } = await supabase
       .from("customers")
@@ -266,7 +267,7 @@ export async function addDealActivity(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     const { error } = await supabase.from("deal_activities").insert({
       deal_id: dealId,
@@ -296,7 +297,7 @@ export async function assignDeal(
       return { ok: false, error: "Not authorized" };
     }
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     const { error } = await supabase
       .from("deals")
@@ -337,7 +338,7 @@ export async function updateDeal(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     const updateData: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
@@ -370,7 +371,7 @@ export async function updateDealTransaction(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     const { data: deal } = await supabase
       .from("deals")

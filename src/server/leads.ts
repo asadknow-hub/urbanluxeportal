@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { applyLeadRouting, teamIdForUser } from "@/server/routing";
@@ -69,7 +69,7 @@ export async function createLead(
       return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
     }
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     // Duplicate guard
     if (parsed.data.phone || parsed.data.email) {
@@ -168,7 +168,7 @@ export async function updateLeadStage(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     // Fetch stage + current lead in parallel (reduces 2 round-trips to 1)
     const [
@@ -279,7 +279,7 @@ export async function claimLead(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     // Conditional update: only claim if still unassigned
     const { data, error } = await supabase
@@ -384,7 +384,7 @@ export async function updateLead(
     if (Object.keys(patch).length === 0) return { ok: true };
 
     const now = new Date().toISOString();
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     const { error } = await supabase
       .from("leads")
@@ -431,7 +431,7 @@ export async function convertLead(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     const { data: lead, error: leadError } = await supabase
       .from("leads")
@@ -633,7 +633,7 @@ export async function importLeads(
     }
 
     const incoming = rows.slice(0, 500);
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const [{ data: optionRows }, { data: areaRows }, { data: nationalityRows }, defaultStageId] = await Promise.all([
       supabase.from("lead_field_options").select("id, field_key, value, label, sort, extra"),
       supabase.from("lead_areas").select("name"),
@@ -759,7 +759,7 @@ export async function addLeadActivity(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     const now = new Date().toISOString();
     const { error: leadError } = await supabase
@@ -800,7 +800,7 @@ export async function assignLead(
       return { ok: false, error: "Not authorized" };
     }
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const patch: { assigned_to: string | null; updated_at: string; team_id?: string | null } = {
       assigned_to: agentId,
       updated_at: new Date().toISOString(),
@@ -857,7 +857,7 @@ export async function bulkAssignLeads(
       return { ok: false, error: "Not authorized" };
     }
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const patch: { assigned_to: string | null; updated_at: string; team_id?: string | null } = {
       assigned_to: agentId,
       updated_at: new Date().toISOString(),
@@ -914,7 +914,7 @@ export async function scheduleFollowUp(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const now = new Date().toISOString();
 
     await supabase
@@ -966,7 +966,7 @@ export async function completeFollowUp(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const now = new Date().toISOString();
 
     const doneUpdate: Record<string, unknown> = {
@@ -1027,7 +1027,7 @@ export async function snoozeFollowUp(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const now = new Date().toISOString();
 
     await supabase
@@ -1092,7 +1092,7 @@ export async function updateLeadStatus(
       return { ok: false, error: "Invalid status" };
     }
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     const { error } = await supabase
       .from("leads")
@@ -1135,7 +1135,7 @@ export async function deleteLead(leadId: string): Promise<ActionResult> {
       return { ok: false, error: "Only admins and managers can delete leads" };
     }
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     const { error } = await supabase
       .from("leads")
@@ -1175,7 +1175,7 @@ export async function createLeadStage(
       return { ok: false, error: "Not authorized" };
     }
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
 
     // Get max sort for open stages to append
     const { data: maxSortData } = await supabase
@@ -1219,7 +1219,7 @@ export async function updateLeadStageName(
       return { ok: false, error: "Not authorized" };
     }
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     
     const { data: stage } = await supabase.from("lead_stages").select("kind").eq("id", id).single();
     const isSystem = !!stage && ["won", "lost", "junk"].includes(stage.kind);
@@ -1257,7 +1257,7 @@ export async function updateLeadStageSla(
       return { ok: false, error: "Not authorized" };
     }
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const { error } = await supabase
       .from("lead_stages")
       .update({ stale_after_days: staleAfterDays, updated_at: new Date().toISOString() })
@@ -1281,7 +1281,7 @@ export async function deleteLeadStage(id: string): Promise<ActionResult> {
       return { ok: false, error: "Not authorized" };
     }
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     
     // Check if it's a system stage
     const { data: stage } = await supabase.from("lead_stages").select("kind").eq("id", id).single();

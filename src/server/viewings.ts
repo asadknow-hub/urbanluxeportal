@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { addDealProperty } from "@/server/inventory";
@@ -47,7 +47,7 @@ export async function scheduleViewing(
       return { ok: false, error: "Viewing must belong to a lead or a deal" };
     }
 
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const { data: row, error } = await supabase
       .from("lead_viewings")
       .insert({
@@ -118,7 +118,7 @@ export async function updateViewingOutcome(input: {
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const { data: viewing, error: fetchError } = await supabase
       .from("lead_viewings")
       .select("id, lead_id, deal_id")
