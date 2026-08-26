@@ -1,6 +1,6 @@
 # UrbanLuxe CRM — Current System & Workflows
 
-**Status:** this is the **live** CRM as implemented in the UrbanLuxe Portal codebase (August 2026): one person from first contact, internal inventory, bookable viewings, a week calendar, requirement matching, desks, and **mandatory Postgres RLS** (R0/R1 ownable reads shipped).
+**Status:** this is the **live** CRM as implemented in the UrbanLuxe Portal codebase (August 2026): one person from first contact, internal inventory, bookable viewings, a week calendar, requirement matching, desks, and **mandatory Postgres RLS** (R0–R3 shipped).
 
 Older planning files (`MASTER_CRM_ERP_SPEC.md`, `LEADS_MODULE_SPEC.md`, `URBANLUXE_CRM_BUILD_SPEC.md`) are not implemented as a rebuild. Treat this document as source of truth for how staff work the CRM now.
 
@@ -72,7 +72,7 @@ Sidebar groups Marketing / Inventory / Finance / Governance are **placeholders**
 | Deals (pipeline) | `/deals` and `/pipeline` | All staff (agents scoped) |
 | Deal detail | `/pipeline/[id]` | All staff (agents scoped) |
 | People | `/customers`, `/customers/[id]` | All staff |
-| Inventory | `/inventory`, `/inventory/[id]` | All staff |
+| Inventory | `/inventory`, `/inventory/[id]` | All staff (read). Create/edit units: admin, manager, reception |
 
 ### System
 | Page | Route | Roles |
@@ -560,7 +560,7 @@ Move deal to **Lost** with a reason. Customer is **not** created. Lead remains c
 | Deal mutations | `src/server/deals.ts` |
 | Customers | `src/server/customers.ts` |
 | Routing | `src/server/routing.ts` |
-| RLS (mandatory) | `supabase/migrations/0034_rls_ownable_reads.sql`, `0035_rls_documents_storage.sql`, `.cursor/rules/rls-mandatory.mdc` |
+| RLS (mandatory) | `supabase/migrations/0034_rls_ownable_reads.sql`, `0035_rls_documents_storage.sql`, `0036_rls_inventory_writes.sql`, `.cursor/rules/rls-mandatory.mdc` |
 | Matching | `src/lib/match-inventory.ts` |
 | Person-from-capture | `src/server/people.ts` |
 | Inventory | `src/server/inventory.ts` |
@@ -582,10 +582,10 @@ These appear in older specs or empty nav groups:
 - Quotations, invoices, cheques, payments, expenses
 - Marketing campaigns and automation rules UI
 - `team_lead` / `viewer` roles
-- Inventory write RLS (R3), roster column-minimisation (R4), staff mutations on user JWT (R5)
+- Roster column-minimisation (R4), staff mutations on user JWT (R5)
 - Bitrix-style saved filters, first-response 15-minute SLA rings
 - Hard real-time board sync (board is request/revalidate, not a live channel)
 
-**Now live that used to be missing:** person-from-capture, internal inventory (`/inventory`), deal shortlist, scheduled viewings with outcomes (enforces the Viewing Scheduled stage when a viewing exists), week viewing calendar, requirement matching, desks for round-robin, **R0/R1 ownable reads**, **R2 documents/storage inherit parent** (`crm_can_read_document()`, documents bucket).
+**Now live that used to be missing:** person-from-capture, internal inventory (`/inventory`), deal shortlist, scheduled viewings with outcomes (enforces the Viewing Scheduled stage when a viewing exists), week viewing calendar, requirement matching, desks for round-robin, **R0/R1 ownable reads**, **R2 documents/storage inherit parent**, **R3 inventory writes** (`crm_can_write_inventory()` — admin / manager / reception; agents still read the catalog and shortlist on their deals).
 
 When those remaining items ship, update **this** file — do not revive the old specs as if they were implemented.

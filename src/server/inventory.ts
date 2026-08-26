@@ -1,11 +1,12 @@
 "use server";
 
 import { z } from "zod";
-import { createSupabaseServiceClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth";
+import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase/server";
+import { getCurrentUser, type SessionUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { aedToFils } from "@/lib/money";
 import { revalidatePath } from "next/cache";
+import { canManageCrm } from "@/lib/permissions";
 
 export type ActionResult<T = unknown> = {
   ok: boolean;
@@ -97,12 +98,27 @@ function revalidateInventory(id?: string) {
   revalidatePath("/leads");
 }
 
+function assertCanWriteCatalog(user: SessionUser): string | null {
+  if (!canManageCrm(user.role)) return "Not authorized";
+  return null;
+}
+
+async function assertCanMutateDeal(dealId: string, user: SessionUser): Promise<string | null> {
+  if (user.role === "accountant") return "Not authorized";
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase.from("deals").select("id").eq("id", dealId).is("deleted_at", null).maybeSingle();
+  if (!data) return "Deal not found";
+  return null;
+}
+
 export async function createProperty(
   input: z.infer<typeof propertySchema>
 ): Promise<ActionResult<{ id: string; property_code: string }>> {
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
+    const denied = assertCanWriteCatalog(user);
+    if (denied) return { ok: false, error: denied };
 
     const parsed = propertySchema.safeParse(input);
     if (!parsed.success) {
@@ -188,6 +204,8 @@ export async function updateProperty(
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
+    const denied = assertCanWriteCatalog(user);
+    if (denied) return { ok: false, error: denied };
     const parsed = propertySchema.safeParse(input);
     if (!parsed.success) {
       return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
@@ -248,6 +266,10 @@ export async function addDealProperty(input: {
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
+    const denied = await assertCanMutateDeal(input.dealId, user);
+    if (denied) return { ok: false, error: denied };
+
+    const userClient = await createSupabaseServerClient();
     const supabase = createSupabaseServiceClient();
     const { error } = await supabase.from("deal_properties").upsert(
       {
@@ -262,7 +284,7 @@ export async function addDealProperty(input: {
     );
     if (error) return { ok: false, error: error.message };
 
-    const { data: property } = await supabase
+    const { data: property } = await userClient
       .from("properties")
       .select("property_code, community, building_name, unit_number")
       .eq("id", input.propertyId)
@@ -289,6 +311,8 @@ export async function removeDealProperty(dealId: string, propertyId: string): Pr
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
+    const denied = await assertCanMutateDeal(dealId, user);
+    if (denied) return { ok: false, error: denied };
     const supabase = createSupabaseServiceClient();
     const { error } = await supabase
       .from("deal_properties")
@@ -320,7 +344,7 @@ export async function searchInventory(query: string): Promise<
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
-    const supabase = createSupabaseServiceClient();
+    const supabase = await createSupabaseServerClient();
     const q = query.trim();
     let request = supabase
       .from("properties")

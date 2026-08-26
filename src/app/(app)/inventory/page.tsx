@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { canManageCrm } from "@/lib/permissions";
 import { PageHeader } from "@/components/primitives/page-header";
 import { InventoryCreateDialog } from "@/components/inventory/inventory-create-dialog";
 import { formatPropertyType, propertyLabel } from "@/lib/inventory";
@@ -56,7 +57,11 @@ export default async function InventoryPage({
       <PageHeader
         title="Inventory"
         description="Internal stock for matching and viewings. Public brochure listings stay on the website."
-        actions={<InventoryCreateDialog agents={agents ?? []} defaultAgentId={user.id} />}
+        actions={
+          canManageCrm(user.role) ? (
+            <InventoryCreateDialog agents={agents ?? []} defaultAgentId={user.id} />
+          ) : null
+        }
       />
 
       <div className="overflow-hidden rounded-[14px] border border-border bg-card">
@@ -81,7 +86,9 @@ export default async function InventoryPage({
                       No units yet
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Add a unit so agents can shortlist it on a deal and book a viewing.
+                      {canManageCrm(user.role)
+                        ? "Add a unit so agents can shortlist it on a deal and book a viewing."
+                        : "Ask a manager to add a unit so you can shortlist it on a deal."}
                     </p>
                   </td>
                 </tr>
