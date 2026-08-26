@@ -52,6 +52,16 @@ function folderSegment(value: string | null | undefined, fallback: string) {
   return cleaned || fallback;
 }
 
+/** True when an object key is under this entity’s folder. */
+export function documentPathBelongsTo(
+  storagePath: string,
+  entityType?: string | null,
+  entityId?: string | null
+) {
+  const [typeSeg, idSeg] = storagePath.split("/");
+  return typeSeg === folderSegment(entityType, "unfiled") && idSeg === folderSegment(entityId, "unassigned");
+}
+
 /** Canonical object key in the private `documents` bucket. */
 export function canonicalDocumentPath(input: {
   entityType?: string | null;

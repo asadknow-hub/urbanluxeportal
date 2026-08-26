@@ -56,7 +56,7 @@ export function DocumentUpload({
     const results: UploadedFile[] = [];
 
     for (const file of Array.from(files)) {
-      // Canonical path: {entity_type}/{entity_id}/{uuid}-{filename}
+      // Canonical path: {entity_type}/{entity_id}/{yyyy}/{mm}/{category}/{uuid}.ext
       const path = canonicalDocumentPath({
         entityType,
         entityId,

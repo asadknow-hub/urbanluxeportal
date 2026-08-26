@@ -1,11 +1,12 @@
 "use server";
 
 import { z } from "zod";
-import { createSupabaseServiceClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth";
+import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase/server";
+import { getCurrentUser, type SessionUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { revalidatePath } from "next/cache";
-import { normalizeDocCategory } from "@/lib/document-storage";
+import { documentPathBelongsTo, normalizeDocCategory } from "@/lib/document-storage";
+import { canManageCrm } from "@/lib/permissions";
 
 export type ActionResult<T = unknown> = {
   ok: boolean;
@@ -20,6 +21,62 @@ function revalidateDocumentPaths(entityType?: string | null, entityId?: string |
   if (entityType === "deal") revalidatePath(`/pipeline/${entityId}`);
   if (entityType === "staff") revalidatePath(`/team/${entityId}`);
   if (entityType === "customer") revalidatePath(`/customers/${entityId}`);
+}
+
+function isHouseStaff(user: SessionUser) {
+  return canManageCrm(user.role) || user.role === "accountant";
+}
+
+async function assertCanWriteDocument(input: {
+  user: SessionUser;
+  entityType?: string | null;
+  entityId?: string | null;
+  storagePath?: string | null;
+}): Promise<string | null> {
+  const type = input.entityType || null;
+  const id = input.entityId || null;
+
+  if (input.storagePath && !documentPathBelongsTo(input.storagePath, type, id)) {
+    return "Storage path does not match this record";
+  }
+
+  if (!type || !id) {
+    if (!isHouseStaff(input.user)) return "Link this file to a record you can access";
+    return null;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const kind = type.toLowerCase();
+
+  if (kind === "lead") {
+    const { data } = await supabase.from("leads").select("id").eq("id", id).is("deleted_at", null).maybeSingle();
+    return data ? null : "You cannot attach files to this lead";
+  }
+  if (kind === "deal") {
+    const { data } = await supabase.from("deals").select("id").eq("id", id).is("deleted_at", null).maybeSingle();
+    return data ? null : "You cannot attach files to this deal";
+  }
+  if (kind === "customer") {
+    const { data } = await supabase.from("customers").select("id").eq("id", id).is("deleted_at", null).maybeSingle();
+    return data ? null : "You cannot attach files to this person";
+  }
+  if (kind === "staff" || kind === "profile") {
+    if (id === input.user.id || isHouseStaff(input.user)) return null;
+    return "You cannot attach files to this staff record";
+  }
+  if (isHouseStaff(input.user)) return null;
+  return "You cannot attach files to this record";
+}
+
+async function loadVisibleDocument(id: string) {
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase
+    .from("documents")
+    .select("id, entity_type, entity_id, storage_path")
+    .eq("id", id)
+    .is("deleted_at", null)
+    .maybeSingle();
+  return data;
 }
 
 const documentSchema = z.object({
@@ -45,6 +102,14 @@ export async function createDocument(
     if (!parsed.success) {
       return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
     }
+
+    const denied = await assertCanWriteDocument({
+      user,
+      entityType: parsed.data.entity_type,
+      entityId: parsed.data.entity_id,
+      storagePath: parsed.data.storage_path,
+    });
+    if (denied) return { ok: false, error: denied };
 
     const supabase = createSupabaseServiceClient();
 
@@ -95,14 +160,15 @@ export async function deleteDocument(id: string): Promise<ActionResult> {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
+    const existing = await loadVisibleDocument(id);
+    if (!existing) return { ok: false, error: "Not found" };
+
     const supabase = createSupabaseServiceClient();
 
-    const { data: row, error } = await supabase
+    const { error } = await supabase
       .from("documents")
       .update({ deleted_at: new Date().toISOString() })
-      .eq("id", id)
-      .select("entity_type, entity_id")
-      .single();
+      .eq("id", id);
 
     if (error) return { ok: false, error: error.message };
 
@@ -113,7 +179,7 @@ export async function deleteDocument(id: string): Promise<ActionResult> {
       action: "deleted",
     });
 
-    revalidateDocumentPaths(row?.entity_type, row?.entity_id);
+    revalidateDocumentPaths(existing.entity_type, existing.entity_id);
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
@@ -128,6 +194,9 @@ export async function updateDocument(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
+    const existing = await loadVisibleDocument(id);
+    if (!existing) return { ok: false, error: "Not found" };
+
     const name = input.name?.trim();
     const category = input.category ? normalizeDocCategory(input.category) : undefined;
     const hasExpiry = "expiry_date" in input;
@@ -141,16 +210,11 @@ export async function updateDocument(
     if (hasExpiry) patch.expiry_date = input.expiry_date || null;
     if (hasNotes) patch.notes = input.notes?.trim() || null;
 
-    const { data, error } = await supabase
-      .from("documents")
-      .update(patch)
-      .eq("id", id)
-      .select("entity_type, entity_id")
-      .single();
+    const { error } = await supabase.from("documents").update(patch).eq("id", id);
 
     if (error) return { ok: false, error: error.message };
 
-    revalidateDocumentPaths(data?.entity_type, data?.entity_id);
+    revalidateDocumentPaths(existing.entity_type, existing.entity_id);
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
@@ -164,15 +228,26 @@ export async function getSignedUrl(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    const supabase = createSupabaseServiceClient();
-
-    const { data, error } = await supabase.storage
+    const supabase = await createSupabaseServerClient();
+    const { data: doc } = await supabase
       .from("documents")
-      .createSignedUrl(storagePath, 300);
+      .select("storage_path")
+      .eq("storage_path", storagePath)
+      .is("deleted_at", null)
+      .maybeSingle();
 
-    if (error) return { ok: false, error: error.message };
+    if (!doc) return { ok: false, error: "Not found" };
 
-    return { ok: true, data: { url: data.signedUrl } };
+    const { data, error } = await supabase.storage.from("documents").createSignedUrl(storagePath, 300);
+    if (!error && data?.signedUrl) {
+      return { ok: true, data: { url: data.signedUrl } };
+    }
+
+    // Storage sign may require the service key; only after the user JWT could see the row.
+    const service = createSupabaseServiceClient();
+    const signed = await service.storage.from("documents").createSignedUrl(storagePath, 300);
+    if (signed.error) return { ok: false, error: signed.error.message };
+    return { ok: true, data: { url: signed.data.signedUrl } };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
   }
