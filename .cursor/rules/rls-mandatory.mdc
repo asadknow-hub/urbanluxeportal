@@ -1,0 +1,25 @@
+---
+description: Postgres RLS is mandatory for UrbanLuxe CRM. Never bypass it for staff data access.
+alwaysApply: true
+---
+
+# RLS is mandatory
+
+UrbanLuxe is doing **full-system Postgres RLS**. App filters are defense in depth, not the security boundary.
+
+## Do
+
+- Put tenancy in RLS policies. Ownable rows: house roles (`admin` / `manager` / `reception`) see the agency; `accountant` is house **read**; `agent` sees own + unassigned in their desk (`leads.team_id`), or the house unassigned pool if they have no desk.
+- Staff **reads** (pages, loaders, calendars) use `createSupabaseServerClient()` (user JWT) so RLS runs.
+- Service role is allowed only for: public capture, webhook, cron, Auth admin, and mutations **until R5**. Do not add new service-role **reads** of CRM rows.
+- New tables: `enable row level security` in the same migration. No policy = deny.
+- Helpers live in Postgres: `current_staff()`, `crm_is_house()`, `crm_can_read_lead()`, `crm_can_read_deal()`. Policies call these; do not copy `has_role(...)` inline on new tables.
+- After SQL changes, apply with `node scripts/db.mjs --file supabase/migrations/00xx.sql`.
+
+## Do not
+
+- Do not query `leads` / `deals` / `customers` / `lead_viewings` / follow-ups / documents with the service role just to skip RLS.
+- Do not rebuild `app_user` / `opportunity` / numeric AED / `team_lead` to “match the spec”. Harden **this** schema.
+- Do not ship a table without RLS because “the UI already filters”.
+
+Program: R0 helpers + R1 ownable reads (shipped, migration `0034`) → R2 documents/storage → R3 inventory writes → R4 roster → R5 staff mutations on user JWT.

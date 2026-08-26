@@ -3,6 +3,15 @@ import { notify } from "@/lib/notify";
 
 type ServiceClient = ReturnType<typeof createSupabaseServiceClient>;
 
+export async function teamIdForUser(
+  supabase: ServiceClient,
+  userId: string | null | undefined
+): Promise<string | null> {
+  if (!userId) return null;
+  const { data } = await supabase.from("profiles").select("team_id").eq("id", userId).maybeSingle();
+  return data?.team_id ?? null;
+}
+
 /** Least-loaded active agent. Prefer a desk when one is given; fall back to the house pool. */
 export async function pickRoundRobinAgent(
   supabase: ServiceClient = createSupabaseServiceClient(),
@@ -52,14 +61,30 @@ export async function applyLeadRouting(
   reason: "created" | "import" | "webhook" = "created",
   teamId?: string | null
 ): Promise<string | null> {
-  if (assignedTo) return assignedTo;
+  const now = new Date().toISOString();
+
+  if (assignedTo) {
+    const deskId = (await teamIdForUser(supabase, assignedTo)) ?? teamId ?? null;
+    await supabase
+      .from("leads")
+      .update({ team_id: deskId, updated_at: now })
+      .eq("id", leadId);
+    return assignedTo;
+  }
 
   const agentId = await pickRoundRobinAgent(supabase, teamId);
-  if (!agentId) return null;
+  const deskId = (await teamIdForUser(supabase, agentId)) ?? teamId ?? null;
+
+  if (!agentId) {
+    if (deskId) {
+      await supabase.from("leads").update({ team_id: deskId, updated_at: now }).eq("id", leadId);
+    }
+    return null;
+  }
 
   await supabase
     .from("leads")
-    .update({ assigned_to: agentId, updated_at: new Date().toISOString() })
+    .update({ assigned_to: agentId, team_id: deskId, updated_at: now })
     .eq("id", leadId);
 
   await supabase.from("lead_assignments").insert({

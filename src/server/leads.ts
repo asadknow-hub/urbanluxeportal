@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
-import { applyLeadRouting } from "@/server/routing";
+import { applyLeadRouting, teamIdForUser } from "@/server/routing";
 import { revalidatePath } from "next/cache";
 import {
   LEAD_IMPORT_FIELDS,
@@ -113,6 +113,7 @@ export async function createLead(
         assigned_to: parsed.data.assigned_to || null,
         next_follow_up_at: parsed.data.next_follow_up_at || null,
         created_by: user.id,
+        team_id: user.team_id,
         stage_id: stageId,
         status: "new",
         nationality: parsed.data.nationality || null,
@@ -285,6 +286,7 @@ export async function claimLead(
       .from("leads")
       .update({
         assigned_to: user.id,
+        team_id: user.team_id,
         updated_at: new Date().toISOString(),
         last_activity_at: new Date().toISOString(),
       })
@@ -712,6 +714,7 @@ export async function importLeads(
           lost_reason: row.lost_reason ? matchOptionValue(fieldOptions.lost_reason, row.lost_reason) : null,
           junk_reason: row.junk_reason ? matchOptionValue(fieldOptions.junk_reason, row.junk_reason) : null,
           created_by: user.id,
+          team_id: user.team_id,
           stage_id: defaultStageId,
           status: "new",
           last_activity_at: new Date().toISOString(),
@@ -798,13 +801,15 @@ export async function assignLead(
     }
 
     const supabase = createSupabaseServiceClient();
+    const patch: { assigned_to: string | null; updated_at: string; team_id?: string | null } = {
+      assigned_to: agentId,
+      updated_at: new Date().toISOString(),
+    };
+    if (agentId) patch.team_id = await teamIdForUser(supabase, agentId);
 
     const { error } = await supabase
       .from("leads")
-      .update({
-        assigned_to: agentId,
-        updated_at: new Date().toISOString(),
-      })
+      .update(patch)
       .eq("id", leadId);
 
     if (error) return { ok: false, error: error.message };
@@ -853,13 +858,15 @@ export async function bulkAssignLeads(
     }
 
     const supabase = createSupabaseServiceClient();
+    const patch: { assigned_to: string | null; updated_at: string; team_id?: string | null } = {
+      assigned_to: agentId,
+      updated_at: new Date().toISOString(),
+    };
+    if (agentId) patch.team_id = await teamIdForUser(supabase, agentId);
 
     const { data, error } = await supabase
       .from("leads")
-      .update({
-        assigned_to: agentId,
-        updated_at: new Date().toISOString(),
-      })
+      .update(patch)
       .in("id", leadIds)
       .is("deleted_at", null)
       .select("id");

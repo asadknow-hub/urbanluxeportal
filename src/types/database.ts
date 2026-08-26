@@ -152,6 +152,7 @@ export interface Database {
           converted_customer_id: string | null;
           converted_deal_id: string | null;
           created_by: string | null;
+          team_id: string | null;
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
@@ -189,6 +190,7 @@ export interface Database {
           converted_customer_id?: string | null;
           converted_deal_id?: string | null;
           created_by?: string | null;
+          team_id?: string | null;
           stage_id?: string | null;
           nationality?: string | null;
           financing?: string | null;

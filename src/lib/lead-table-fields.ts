@@ -62,6 +62,7 @@ const LEAD_ROW_UDT = {
   converted_deal_id: "uuid",
   customer_id: "uuid",
   created_by: "uuid",
+  team_id: "uuid",
   created_at: "timestamptz",
   updated_at: "timestamptz",
   deleted_at: "timestamptz",

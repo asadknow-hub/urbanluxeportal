@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/lib/auth";
-import { createSupabaseServerClient, createSupabaseServiceClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import { addDays, startOfDay } from "date-fns";
 import { propertyLabel } from "@/lib/inventory";
@@ -54,11 +54,12 @@ export default async function DashboardPage() {
 
   if (isAgent) {
     dealsQuery = dealsQuery.eq("assigned_to", user.id);
-    openLeadsQuery = openLeadsQuery.eq("assigned_to", user.id);
-    newLeadsQuery = newLeadsQuery.eq("assigned_to", user.id);
-    followupsQuery = followupsQuery.eq("assigned_to", user.id);
-    overdueFollowupsQuery = overdueFollowupsQuery.eq("assigned_to", user.id);
-    customersQuery = customersQuery.eq("assigned_to", user.id);
+    const mineOrPool = `assigned_to.eq.${user.id},assigned_to.is.null`;
+    openLeadsQuery = openLeadsQuery.or(mineOrPool);
+    newLeadsQuery = newLeadsQuery.or(mineOrPool);
+    followupsQuery = followupsQuery.or(mineOrPool);
+    overdueFollowupsQuery = overdueFollowupsQuery.or(mineOrPool);
+    customersQuery = customersQuery.or(mineOrPool);
   }
 
   const [
@@ -83,10 +84,9 @@ export default async function DashboardPage() {
     overdueFollowupsQuery,
   ]);
 
-  const svc = createSupabaseServiceClient();
   const dayStart = startOfDay(new Date());
   const dayEnd = addDays(dayStart, 1);
-  let todayViewingsQuery = svc
+  let todayViewingsQuery = supabase
     .from("lead_viewings")
     .select(
       `id, scheduled_at, lead_id, deal_id,

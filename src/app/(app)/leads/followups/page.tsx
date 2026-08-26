@@ -26,7 +26,7 @@ export default async function FollowUpsPage() {
         .limit(500);
 
       if (user.role === "agent") {
-        query = query.eq("assigned_to", user.id);
+        query = query.or(`assigned_to.eq.${user.id},assigned_to.is.null`);
       }
 
       return await query;

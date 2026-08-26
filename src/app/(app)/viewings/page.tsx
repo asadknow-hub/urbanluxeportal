@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/lib/auth";
-import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { ViewingsCalendar, type CalendarViewing } from "@/components/crm/viewings-calendar";
 import { Calendar } from "lucide-react";
 import { addDays, parseISO, startOfWeek } from "date-fns";
@@ -26,7 +26,7 @@ export default async function ViewingsPage({
   const agentFilter = agentLocked ? user.id : params.agent && params.agent !== "all" ? params.agent : null;
   const statusFilter = params.status && params.status !== "scheduled" ? params.status : "scheduled";
 
-  const supabase = createSupabaseServiceClient();
+  const supabase = await createSupabaseServerClient();
 
   let query = supabase
     .from("lead_viewings")
