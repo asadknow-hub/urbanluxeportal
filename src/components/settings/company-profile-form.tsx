@@ -68,7 +68,7 @@ export function CompanyProfileForm({ initial }: { initial: CompanyBrand }) {
       logoUrl: variant === "primary" ? result.data!.url : prev.logoUrl,
       logoDarkUrl: variant === "dark" ? result.data!.url : prev.logoDarkUrl,
     }));
-    toast.success(variant === "primary" ? "Primary logo updated" : "Dark logo updated");
+    toast.success(variant === "primary" ? "Primary logo updated" : "White logo updated");
   }
 
   async function onClear(variant: "primary" | "dark") {
@@ -87,15 +87,12 @@ export function CompanyProfileForm({ initial }: { initial: CompanyBrand }) {
     toast.success("Logo cleared");
   }
 
-  const fieldClass =
-    "h-11 rounded-xl bg-slate-50/50 border-slate-200 focus-visible:ring-emerald-500/20";
-
   return (
     <form onSubmit={onSave} className="space-y-6">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <LogoSlot
           title="Primary logo"
-          hint="Public header + admin sidebar. PNG/SVG/WebP, max 5MB."
+          hint="Public header and light backgrounds. PNG/SVG/WebP, max 5MB."
           url={brand.logoUrl}
           darkPreview={false}
           uploading={uploading === "primary"}
@@ -105,8 +102,8 @@ export function CompanyProfileForm({ initial }: { initial: CompanyBrand }) {
           onClear={() => onClear("primary")}
         />
         <LogoSlot
-          title="Dark logo"
-          hint="Footer and dark backgrounds. Falls back to primary if empty."
+          title="White logo"
+          hint="Admin sidebar, login panel, and footer. Falls back to primary if empty."
           url={brand.logoDarkUrl}
           darkPreview
           uploading={uploading === "dark"}
@@ -118,165 +115,99 @@ export function CompanyProfileForm({ initial }: { initial: CompanyBrand }) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2.5">
-          <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            Company Name
-          </Label>
+        <Field label="Company name">
           <Input
             name="company_name"
             required
             defaultValue={brand.name}
             placeholder="UrbanLuxe Real Estate"
-            className={fieldClass}
           />
-        </div>
-        <div className="space-y-2.5">
-          <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            Tagline
-          </Label>
+        </Field>
+        <Field label="Tagline">
           <Input
             name="tagline"
             defaultValue={brand.tagline}
             placeholder="A private house for Dubai."
-            className={fieldClass}
           />
-        </div>
-        <div className="space-y-2.5">
-          <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            TRN
-          </Label>
-          <Input name="trn" defaultValue={brand.trn ?? ""} className={fieldClass} />
-        </div>
-        <div className="space-y-2.5">
-          <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            RERA ORN
-          </Label>
-          <Input name="rera_orn" defaultValue={brand.rera} className={fieldClass} />
-        </div>
-        <div className="space-y-2.5">
-          <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            Business phone
-          </Label>
+        </Field>
+        <Field label="TRN">
+          <Input name="trn" defaultValue={brand.trn ?? ""} />
+        </Field>
+        <Field label="RERA ORN">
+          <Input name="rera_orn" defaultValue={brand.rera} />
+        </Field>
+        <Field label="Business phone">
           <Input
             name="phone"
             required
             defaultValue={brand.phoneDisplay}
             placeholder="+971 4 123 4567"
-            className={fieldClass}
           />
-        </div>
-        <div className="space-y-2.5">
-          <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            WhatsApp (digits)
-          </Label>
-          <Input
-            name="whatsapp"
-            defaultValue={brand.whatsapp}
-            placeholder="971501234567"
-            className={fieldClass}
-          />
-        </div>
-        <div className="space-y-2.5">
-          <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            Email
-          </Label>
-          <Input
-            name="email"
-            type="email"
-            required
-            defaultValue={brand.email}
-            className={fieldClass}
-          />
-        </div>
-        <div className="space-y-2.5">
-          <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            LinkedIn URL
-          </Label>
+        </Field>
+        <Field label="WhatsApp (digits)">
+          <Input name="whatsapp" defaultValue={brand.whatsapp} placeholder="971501234567" />
+        </Field>
+        <Field label="Email">
+          <Input name="email" type="email" required defaultValue={brand.email} />
+        </Field>
+        <Field label="LinkedIn URL">
           <Input
             name="linkedin_url"
             type="url"
             defaultValue={brand.linkedinUrl ?? ""}
             placeholder="https://www.linkedin.com/company/…"
-            className={fieldClass}
           />
-        </div>
-        <div className="space-y-2.5">
-          <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            Instagram URL
-          </Label>
+        </Field>
+        <Field label="Instagram URL">
           <Input
             name="instagram_url"
             type="url"
             defaultValue={brand.instagramUrl ?? ""}
             placeholder="https://www.instagram.com/…"
-            className={fieldClass}
           />
-        </div>
-        <div className="space-y-2.5">
-          <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            VAT Rate (%)
-          </Label>
-          <Input
-            name="vat_rate"
-            type="number"
-            step="0.1"
-            defaultValue={brand.vatRate}
-            className={fieldClass}
-          />
-        </div>
-        <div className="space-y-2.5">
-          <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            Quotation Prefix
-          </Label>
-          <Input
-            name="quotation_prefix"
-            defaultValue={brand.quotationPrefix}
-            className={`${fieldClass} font-mono text-emerald-700`}
-          />
-        </div>
-        <div className="space-y-2.5">
-          <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            Invoice Prefix
-          </Label>
-          <Input
-            name="invoice_prefix"
-            defaultValue={brand.invoicePrefix}
-            className={`${fieldClass} font-mono text-emerald-700`}
-          />
-        </div>
+        </Field>
+        <Field label="VAT rate (%)">
+          <Input name="vat_rate" type="number" step="0.1" defaultValue={brand.vatRate} />
+        </Field>
+        <Field label="Quotation prefix">
+          <Input name="quotation_prefix" defaultValue={brand.quotationPrefix} className="font-mono" />
+        </Field>
+        <Field label="Invoice prefix">
+          <Input name="invoice_prefix" defaultValue={brand.invoicePrefix} className="font-mono" />
+        </Field>
       </div>
 
-      <div className="space-y-2.5">
-        <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-          Address
-        </Label>
+      <Field label="Address">
         <Input
           name="address"
           required
           defaultValue={brand.address}
           placeholder="Gate Avenue, DIFC, Dubai, United Arab Emirates"
-          className={fieldClass}
         />
-      </div>
+      </Field>
 
-      <div className="flex justify-end border-t border-slate-100 pt-6">
-        <Button
-          type="submit"
-          size="lg"
-          disabled={pending || uploading !== null}
-          className="rounded-full bg-emerald-500 px-5 font-bold shadow-sm hover:bg-emerald-600"
-        >
+      <div className="flex justify-end border-t border-border pt-5">
+        <Button type="submit" disabled={pending || uploading !== null}>
           {pending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Saving…
             </>
           ) : (
-            "Save Profile Changes"
+            "Save profile"
           )}
         </Button>
       </div>
     </form>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <Label className="text-xs font-medium text-muted-foreground">{label}</Label>
+      {children}
+    </div>
   );
 }
 
@@ -302,12 +233,12 @@ function LogoSlot({
   onClear: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-      <p className="text-sm font-bold text-slate-900">{title}</p>
-      <p className="mt-1 text-xs text-slate-500">{hint}</p>
+    <div className="rounded-xl bg-muted/40 p-4 ring-1 ring-border">
+      <p className="text-sm font-semibold text-foreground">{title}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
       <div
-        className={`mt-4 flex h-24 items-center justify-center rounded-lg border border-dashed border-slate-300 ${
-          darkPreview ? "bg-[#222222]" : "bg-white"
+        className={`mt-4 flex h-24 items-center justify-center rounded-lg ring-1 ring-border ${
+          darkPreview ? "bg-[#222222]" : "bg-background"
         }`}
       >
         {url ? (
@@ -320,7 +251,7 @@ function LogoSlot({
             unoptimized
           />
         ) : (
-          <span className={`text-xs ${darkPreview ? "text-white/50" : "text-slate-400"}`}>
+          <span className={`text-xs ${darkPreview ? "text-white/50" : "text-muted-foreground"}`}>
             No logo yet
           </span>
         )}
@@ -336,14 +267,7 @@ function LogoSlot({
         }}
       />
       <div className="mt-3 flex gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={uploading}
-          onClick={onPick}
-          className="rounded-full"
-        >
+        <Button type="button" variant="outline" size="sm" disabled={uploading} onClick={onPick}>
           {uploading ? (
             <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
           ) : (
@@ -358,7 +282,7 @@ function LogoSlot({
             size="sm"
             disabled={uploading}
             onClick={onClear}
-            className="rounded-full text-red-600 hover:text-red-700"
+            className="text-destructive hover:text-destructive"
           >
             <Trash2 className="mr-1.5 h-3.5 w-3.5" />
             Remove

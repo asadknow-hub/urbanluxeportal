@@ -68,7 +68,7 @@ export function brandFromSettings(row: CompanySettingsRow | null | undefined): C
     address: row?.address?.trim() || SITE.address,
     rera: row?.rera_orn?.trim() || SITE.rera,
     logoUrl: row?.logo_url?.trim() || null,
-    logoDarkUrl: row?.logo_dark_url?.trim() || row?.logo_url?.trim() || null,
+    logoDarkUrl: row?.logo_dark_url?.trim() || null,
     linkedinUrl: cleanHttpUrl(row?.linkedin_url),
     instagramUrl: cleanHttpUrl(row?.instagram_url),
     trn: row?.trn?.trim() || null,

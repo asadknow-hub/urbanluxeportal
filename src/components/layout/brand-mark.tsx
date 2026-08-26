@@ -13,7 +13,9 @@ export function BrandMark({
   compact?: boolean;
 }) {
   const brand = useBrand();
-  const logoSrc = brand.logoUrl;
+  // Dark chrome (sidebar, login left) uses the white/dark-bg logo.
+  // Light chrome uses the primary logo.
+  const logoSrc = inverted ? brand.logoUrl : brand.logoDarkUrl || brand.logoUrl;
 
   if (logoSrc) {
     return (

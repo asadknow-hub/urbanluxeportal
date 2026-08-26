@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { EmailTemplatesList } from "@/components/settings/email-templates-list";
+import { PageHeader } from "@/components/primitives/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ export default async function EmailTemplatesPage() {
   if (user.role !== "admin") {
     return (
       <div className="p-4">
-        <p className="text-sm text-slate-500">Admin access required.</p>
+        <p className="text-sm text-muted-foreground">Admin access required.</p>
       </div>
     );
   }
@@ -25,12 +26,11 @@ export default async function EmailTemplatesPage() {
   if (error) console.error("[email-templates] query error:", error.message);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Email Templates</h1>
-        <p className="text-sm text-slate-500">Edit subject and body for transactional emails</p>
-      </div>
-
+    <div className="mx-auto max-w-[1600px] space-y-6">
+      <PageHeader
+        title="Email templates"
+        description="Subject and body copy for transactional emails."
+      />
       <EmailTemplatesList templates={templates ?? []} />
     </div>
   );

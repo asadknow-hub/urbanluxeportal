@@ -2,9 +2,31 @@ import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { can } from "@/lib/permissions";
 import Link from "next/link";
-import { Users, Mail, ChevronRight, Route } from "lucide-react";
+import { ArrowRight, Mail, Route, Users } from "lucide-react";
 import { CompanyProfileForm } from "@/components/settings/company-profile-form";
 import { getPublicBrand } from "@/server/company-settings";
+import { PageHeader } from "@/components/primitives/page-header";
+
+const SHORTCUTS = [
+  {
+    href: "/settings/leads",
+    label: "Leads",
+    hint: "CRM activation flow, fields, and stages",
+    icon: Route,
+  },
+  {
+    href: "/settings/users",
+    label: "Users & roles",
+    hint: "Team access and permissions",
+    icon: Users,
+  },
+  {
+    href: "/settings/email-templates",
+    label: "Email templates",
+    hint: "Transactional subjects and bodies",
+    icon: Mail,
+  },
+] as const;
 
 export default async function SettingsPage() {
   const user = await getCurrentUser();
@@ -15,98 +37,45 @@ export default async function SettingsPage() {
   const brand = await getPublicBrand();
 
   return (
-    <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-5 sm:p-10 shadow-2xl">
-        <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
-        <div className="absolute -bottom-32 -left-32 h-80 w-80 rounded-full bg-blue-500/10 blur-3xl mix-blend-overlay pointer-events-none"></div>
+    <div className="mx-auto max-w-[1600px] space-y-6">
+      <PageHeader
+        title="Settings"
+        description="Company branding, contact details, team access, and CRM rules. Logos and contact details sync to the public site and this portal."
+      />
 
-        <div className="relative z-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-          <div className="max-w-2xl">
-            <div className="mb-2 inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-300 backdrop-blur-md">
-              System Configuration
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white sm:text-4xl">
-              Settings & Preferences
-            </h1>
-            <p className="mt-4 text-base text-slate-300 leading-relaxed max-w-xl">
-              Manage company branding, contact details, team access, and CRM rules. Logo, phone, and
-              address update the public site and admin portal together.
-            </p>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {SHORTCUTS.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="group overflow-hidden rounded-xl bg-card p-5 ring-1 ring-border transition-colors hover:bg-muted/40"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                  <Icon className="h-4 w-4" />
+                </span>
+                <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform duration-200 motion-safe:group-hover:translate-x-0.5" />
+              </div>
+              <p className="mt-4 text-sm font-semibold text-foreground">{item.label}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{item.hint}</p>
+            </Link>
+          );
+        })}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Link
-          href="/settings/leads"
-          className="group flex flex-col rounded-[1.5rem] border border-slate-200/60 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl"
-        >
-          <div className="mb-4 flex items-center justify-between">
-            <div className="rounded-[1.5rem] border border-emerald-100 bg-emerald-50/50 p-3 transition-transform group-hover:scale-110">
-              <Route className="h-6 w-6 text-emerald-600" />
-            </div>
-            <ChevronRight className="h-5 w-5 text-slate-300 transition-all group-hover:translate-x-1 group-hover:text-emerald-500" />
-          </div>
-          <div className="mt-auto">
-            <p className="text-lg font-bold text-slate-900 transition-colors group-hover:text-emerald-600">
-              Leads
-            </p>
-            <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-              CRM activation flow
-            </p>
-          </div>
-        </Link>
-
-        <Link
-          href="/settings/users"
-          className="group flex flex-col rounded-[1.5rem] border border-slate-200/60 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-xl"
-        >
-          <div className="mb-4 flex items-center justify-between">
-            <div className="rounded-[1.5rem] border border-blue-100 bg-blue-50/50 p-3 transition-transform group-hover:scale-110">
-              <Users className="h-6 w-6 text-blue-600" />
-            </div>
-            <ChevronRight className="h-5 w-5 text-slate-300 transition-all group-hover:translate-x-1 group-hover:text-blue-500" />
-          </div>
-          <div className="mt-auto">
-            <p className="text-lg font-bold text-slate-900 transition-colors group-hover:text-blue-600">
-              Users & Roles
-            </p>
-            <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-              Manage team access
-            </p>
-          </div>
-        </Link>
-
-        <Link
-          href="/settings/email-templates"
-          className="group flex flex-col rounded-[1.5rem] border border-slate-200/60 bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-purple-200 hover:shadow-xl"
-        >
-          <div className="mb-4 flex items-center justify-between">
-            <div className="rounded-[1.5rem] border border-purple-100 bg-purple-50/50 p-3 transition-transform group-hover:scale-110">
-              <Mail className="h-6 w-6 text-purple-600" />
-            </div>
-            <ChevronRight className="h-5 w-5 text-slate-300 transition-all group-hover:translate-x-1 group-hover:text-purple-500" />
-          </div>
-          <div className="mt-auto">
-            <p className="text-lg font-bold text-slate-900 transition-colors group-hover:text-purple-600">
-              Email Templates
-            </p>
-            <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-              Transactional emails
-            </p>
-          </div>
-        </Link>
-      </div>
-
-      <div className="mt-8 rounded-[1.5rem] border border-slate-200/60 bg-white p-5 shadow-sm">
-        <div className="mb-8">
-          <h2 className="text-xl font-extrabold tracking-tight text-slate-900">Company Profile</h2>
-          <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-            Logos, phone, address — synced to public site &amp; admin
+      <section className="overflow-hidden rounded-xl bg-card ring-1 ring-border">
+        <div className="border-b border-border px-5 py-3">
+          <h2 className="text-sm font-semibold text-foreground">Company profile</h2>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Primary logo is for light backgrounds. White logo is used on the admin sidebar, login, and footer.
           </p>
         </div>
-        <CompanyProfileForm initial={brand} />
-      </div>
+        <div className="p-5">
+          <CompanyProfileForm initial={brand} />
+        </div>
+      </section>
     </div>
   );
 }
