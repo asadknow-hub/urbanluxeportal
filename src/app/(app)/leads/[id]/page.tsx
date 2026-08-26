@@ -78,6 +78,8 @@ export default async function LeadDetailPage({
     { data: followUpRows },
     customerResult,
     dealResult,
+    { data: viewingRows },
+    { data: inventoryRows },
   ] = await Promise.all([
     supabase
       .from("lead_stages")
@@ -111,12 +113,31 @@ export default async function LeadDetailPage({
       .select("id, scheduled_at, completed_at, status, notes, created_at")
       .eq("lead_id", id)
       .order("scheduled_at", { ascending: false }),
-    lead.converted_customer_id
-      ? supabase.from("customers").select("id, name, phone, email, status").eq("id", lead.converted_customer_id).single()
+    (lead as { customer_id?: string | null }).customer_id || lead.converted_customer_id
+      ? supabase
+          .from("customers")
+          .select("id, name, phone, email, status")
+          .eq("id", ((lead as { customer_id?: string | null }).customer_id || lead.converted_customer_id) as string)
+          .single()
       : Promise.resolve({ data: null, error: null }),
     lead.converted_deal_id
       ? supabase.from("deals").select("id, title, stage, value, deal_type").eq("id", lead.converted_deal_id).single()
       : Promise.resolve({ data: null, error: null }),
+    supabase
+      .from("lead_viewings")
+      .select(
+        `id, scheduled_at, status, outcome, note, outcome_note, agent_id, property_id,
+        property:properties(id, property_code, community, building_name, unit_number, property_type, bedrooms),
+        agent:profiles!lead_viewings_agent_id_fkey(id, full_name)`
+      )
+      .eq("lead_id", id)
+      .order("scheduled_at", { ascending: false }),
+    supabase
+      .from("properties")
+      .select("id, property_code, community, building_name, unit_number, property_type, bedrooms")
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(40),
   ]);
 
   const customer = customerResult?.data ?? null;
@@ -135,6 +156,8 @@ export default async function LeadDetailPage({
       customer={customer}
       deal={deal}
       documents={documents ?? []}
+      viewings={viewingRows ?? []}
+      inventory={inventoryRows ?? []}
       duplicateMatches={duplicateMatches.data ?? []}
       userRole={user.role}
       userId={user.id}

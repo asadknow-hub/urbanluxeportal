@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { applyLeadRouting } from "@/server/routing";
 import { resolveDefaultLeadStageId } from "@/lib/lead-stages";
+import { ensurePersonForLead } from "@/server/people";
 
 export type PublicLeadResult = {
   ok: boolean;
@@ -104,6 +105,7 @@ export async function createPublicLead(
     }
 
     await applyLeadRouting(supabase, lead.id, null, "webhook");
+    await ensurePersonForLead(lead.id, null, supabase);
     await supabase.from("lead_activities").insert({
       lead_id: lead.id,
       type: "note",

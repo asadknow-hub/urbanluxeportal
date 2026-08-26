@@ -65,16 +65,17 @@ export default async function CustomersPage({
     <div className="mx-auto flex max-w-[1600px] flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
-          <span className="font-medium tabular-nums text-foreground">{count ?? 0}</span> customers
+          <span className="font-medium tabular-nums text-foreground">{count ?? 0}</span> people
         </p>
         <CustomerCreateDialog agents={agents ?? []} />
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { key: "active", label: "Active", hint: "Won or engaged clients" },
-          { key: "prospect", label: "Prospect", hint: "From lead conversion" },
-          { key: "inactive", label: "Inactive", hint: "Archived relationships" },
+          { key: "lead", label: "Lead", hint: "Captured — still qualifying" },
+          { key: "qualified", label: "Qualified", hint: "Open deal in pipeline" },
+          { key: "active", label: "Active", hint: "Won at least one deal" },
+          { key: "lost", label: "Lost", hint: "Did not proceed" },
         ].map((s) => (
           <Link
             key={s.key}

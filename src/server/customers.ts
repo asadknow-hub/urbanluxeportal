@@ -57,6 +57,7 @@ export async function createCustomer(
         notes: parsed.data.notes || null,
         assigned_to: parsed.data.assigned_to || null,
         created_by: user.id,
+        status: "active",
       })
       .select("id")
       .single();

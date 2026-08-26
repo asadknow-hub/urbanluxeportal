@@ -22,6 +22,7 @@ import {
 import type { DealTransactionInput } from "@/lib/deal-transaction";
 import { canManageCrm } from "@/lib/permissions";
 import { leadStatusForStageKind, resolveDefaultLeadStageId } from "@/lib/lead-stages";
+import { ensurePersonForLead, markPersonLost, markPersonQualified, syncPersonAssignment } from "@/server/people";
 
 export type ConvertLeadInput = DealTransactionInput & {
   dealTitle?: string;
@@ -131,6 +132,7 @@ export async function createLead(
     if (error) return { ok: false, error: error.message };
 
     await applyLeadRouting(supabase, data.id, parsed.data.assigned_to, "created");
+    await ensurePersonForLead(data.id, user.id, supabase);
 
     await logActivity({
       actorId: user.id,
@@ -182,9 +184,18 @@ export async function updateLeadStage(
     const requiredFields = (stage.required_fields as string[]) ?? [];
     if (requiredFields.length > 0) {
       const missing: string[] = [];
+      let viewingCount = 0;
+      if (requiredFields.includes("viewing_scheduled")) {
+        const { count } = await supabase
+          .from("lead_viewings")
+          .select("id", { count: "exact", head: true })
+          .eq("lead_id", leadId)
+          .in("status", ["scheduled", "completed"]);
+        viewingCount = count ?? 0;
+      }
       for (const field of requiredFields) {
         if (field === "viewing_scheduled") {
- // skip for now — L2
+          if (viewingCount < 1) missing.push("Viewing scheduled");
         } else if (field === "activity_logged") {
           // skip for now — L2
         } else if (field === "lost_reason") {
@@ -230,6 +241,11 @@ export async function updateLeadStage(
       .eq("id", leadId);
 
     if (error) return { ok: false, error: error.message };
+
+    if (stage.kind === "lost" || stage.kind === "junk") {
+      const personId = lead.customer_id ?? (await ensurePersonForLead(leadId, user.id, supabase));
+      await markPersonLost(personId, supabase);
+    }
 
     // Log events in parallel (fire-and-forget, don't block the response)
     Promise.all([
@@ -280,6 +296,9 @@ export async function claimLead(
     if (error || !data) {
       return { ok: false, error: "Lead already claimed by someone else" };
     }
+
+    await ensurePersonForLead(leadId, user.id, supabase);
+    await syncPersonAssignment(leadId, user.id, supabase);
 
     // Log assignment + event + activity in parallel (fire-and-forget)
     Promise.all([
@@ -376,6 +395,8 @@ export async function updateLead(
 
     if (error) return { ok: false, error: error.message };
 
+    await ensurePersonForLead(id, user.id, supabase);
+
     const changed = Object.keys(patch).join(", ");
     await supabase.from("lead_activities").insert({
       lead_id: id,
@@ -417,6 +438,8 @@ export async function convertLead(
       .single();
     if (leadError || !lead) return { ok: false, error: "Lead not found" };
 
+    const personId = await ensurePersonForLead(leadId, user.id, supabase);
+
     if (lead.converted_deal_id) {
       const { data: existingDeal } = await supabase
         .from("deals")
@@ -456,7 +479,7 @@ export async function convertLead(
       .from("deals")
       .insert({
         title,
-        customer_id: null,
+        customer_id: personId,
         deal_type: dealTypeFromInterest(lead.interest),
         stage: "new",
         value: valueFils,
@@ -496,7 +519,6 @@ export async function convertLead(
       .from("leads")
       .update({
         status: "converted",
-        converted_customer_id: null,
         converted_deal_id: deal.id,
         stage_id: convertedStage?.id ?? lead.stage_id,
         stage_entered_at: convertedStage?.id ? now : lead.stage_entered_at,
@@ -505,6 +527,8 @@ export async function convertLead(
       })
       .eq("id", leadId);
     if (updateError) return { ok: false, error: updateError.message };
+
+    await markPersonQualified(personId, supabase);
 
     const { data: leadDocs } = await supabase
       .from("documents")
@@ -527,7 +551,7 @@ export async function convertLead(
     await supabase.from("lead_activities").insert({
       lead_id: leadId,
       type: "converted",
-      summary: `Lead converted to pipeline deal: ${title}. Customer is created when the deal is closed.`,
+      summary: `Lead converted to pipeline deal: ${title}. Person record already exists and is now qualified.`,
       created_by: user.id,
     });
 
@@ -552,7 +576,7 @@ export async function convertLead(
     revalidatePath("/pipeline");
     revalidatePath("/deals");
     revalidatePath(`/pipeline/${deal.id}`);
-    return { ok: true, data: { customerId: null, dealId: deal.id } };
+    return { ok: true, data: { customerId: personId, dealId: deal.id } };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
   }
@@ -703,6 +727,7 @@ export async function importLeads(
       }
 
       await applyLeadRouting(supabase, data.id, null, "import");
+      await ensurePersonForLead(data.id, user.id, supabase);
       created += 1;
     }
 
@@ -784,6 +809,9 @@ export async function assignLead(
 
     if (error) return { ok: false, error: error.message };
 
+    await ensurePersonForLead(leadId, user.id, supabase);
+    await syncPersonAssignment(leadId, agentId, supabase);
+
     // Log activity + audit in parallel (fire-and-forget, don't block response)
     const logPromises: Promise<unknown>[] = [];
     if (agentId) {
@@ -837,6 +865,11 @@ export async function bulkAssignLeads(
       .select("id");
 
     if (error) return { ok: false, error: error.message };
+
+    for (const row of data ?? []) {
+      await ensurePersonForLead(row.id, user.id, supabase);
+      await syncPersonAssignment(row.id, agentId, supabase);
+    }
 
     const assignedCount = data?.length ?? 0;
 

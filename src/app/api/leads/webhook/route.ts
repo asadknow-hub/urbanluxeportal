@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { applyLeadRouting } from "@/server/routing";
 import { resolveDefaultLeadStageId } from "@/lib/lead-stages";
+import { ensurePersonForLead } from "@/server/people";
 
 // POST /api/leads/webhook
 // Accepts lead data from external sources (website forms, portals, etc.)
@@ -80,6 +81,7 @@ export async function POST(req: NextRequest) {
       body.assigned_to || null,
       "webhook"
     );
+    await ensurePersonForLead(data.id, null, supabase);
 
     await supabase.from("lead_activities").insert({
       lead_id: data.id,

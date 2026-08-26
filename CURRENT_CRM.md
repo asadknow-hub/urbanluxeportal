@@ -1,8 +1,8 @@
 # UrbanLuxe CRM — Current System & Workflows
 
-**Status:** this is the **live** CRM as implemented in the UrbanLuxe Portal codebase (August 2026). It describes what actually ships today, not the original product spec.
+**Status:** this is the **live** CRM as implemented in the UrbanLuxe Portal codebase (August 2026), now evolving toward one person record, internal inventory, and first-class viewings.
 
-Older planning files (`MASTER_CRM_ERP_SPEC.md`, `LEADS_MODULE_SPEC.md`) describe a fuller ERP (inventory, quotations, invoices, campaigns, automations). Those modules are **not in the live nav**. Treat this document as source of truth for how staff work the CRM now.
+Older planning files (`MASTER_CRM_ERP_SPEC.md`, `LEADS_MODULE_SPEC.md`, `URBANLUXE_CRM_BUILD_SPEC.md`) are not implemented as a rebuild. Treat this document as source of truth for how staff work the CRM now.
 
 ## Contents
 
@@ -70,7 +70,8 @@ Sidebar groups Marketing / Inventory / Finance / Governance are **placeholders**
 | Inflow (legacy URL) | `/leads/inflow` | Redirects to `/settings/leads?tab=fields` |
 | Deals (pipeline) | `/deals` and `/pipeline` | All staff (agents scoped) |
 | Deal detail | `/pipeline/[id]` | All staff (agents scoped) |
-| Customers | `/customers`, `/customers/[id]` | All staff |
+| People | `/customers`, `/customers/[id]` | All staff |
+| Inventory | `/inventory`, `/inventory/[id]` | All staff |
 
 ### System
 | Page | Route | Roles |
@@ -106,14 +107,14 @@ Inactive profiles cannot log in. Staff are created from **Staff** (`/team`) agai
 Everything in the CRM is built around one path:
 
 ```
-Capture  →  Qualify on the leads board  →  Convert to a Deal  →  Work the pipeline  →  Close  →  Customer
+Capture  →  Person row created (status Lead)  →  Qualify on the leads board  →  Convert to a Deal (person becomes Qualified)  →  Shortlist units / book viewings  →  Close  →  Person becomes Active (client_since stamped)
                 │                              │
                 ├─ Follow-ups / SLA            ├─ Property + KYC + payment on the deal
-                ├─ Lost / Junk                 └─ Lost (reason required)
+                ├─ Lost / Junk → person Lost   └─ Lost (reason required)
                 └─ Documents stay on the lead, then copy to deal, then to customer
 ```
 
-**Important rule:** converting a lead does **not** create a customer. A customer is created when the **deal is closed** (finalized). Until then the buyer lives on the deal (`buyer_name`, phone, email, KYC).
+**Important rule:** converting a lead does **not** create a new person. The person exists from first contact (`leads.customer_id`). Closing the deal **activates** that person (`status = active`, `client_since`). Walk-in clients created from People stay `active` immediately.
 
 ```mermaid
 flowchart TD
@@ -123,13 +124,14 @@ flowchart TD
   C -->|Spam / wrong number| J[Junk]
   C -->|Did not proceed| L[Lost]
   D --> E[Convert]
-  E --> F[Deal · New]
+  E --> F[Deal · New · person Qualified]
   F --> G[Negotiations]
   G --> H[Contract]
   H --> I{Ready to close?}
-  I -->|Property + buyer + KYC| K[Closed · Customer created]
+  I -->|Property + buyer + KYC| K[Closed · person Active]
   I -->|Walked away| M[Deal Lost]
-  K --> N[Customer record + copied documents]
+  K --> N[Same person record + copied documents]
+  F --> V[Shortlist units / book viewings]
 ```
 
 ---
@@ -271,7 +273,7 @@ Kanban columns = active stages. Cards drag between columns. Filters: search, sou
 Table of up to 100 recent leads with the same filters plus stage. Bulk assign is available to CRM managers.
 
 ### Lead detail (`/leads/[id]`)
-Single record: contact + requirement fields, stage, assignee, score, tags, notes, documents, activity timeline, follow-up scheduler, convert dialog.
+Single record: contact + requirement fields, stage, assignee, score, tags, notes, **viewings**, documents, activity timeline, follow-up scheduler, convert dialog. Links to the person record from capture.
 
 ### Activities
 `lead_activities` types include notes, stage changes, follow-up scheduled/done, converted, assignment. `lead_events` is a more structured audit (`created`, `stage_changed`, …). `activity_log` is the cross-entity audit (dashboard “recent activity”).
@@ -329,12 +331,13 @@ Otherwise it:
    - `assigned_to` copied from the lead
    - buyer + KYC copied from the lead (overridable in the dialog)
    - property fields (title, community, building, unit, ref) + `property_snapshot`
+   - `customer_id` from the person created at capture
    - `lead_id` + `lead_context`
-3. Moves the lead to the **won** stage, sets `status = converted`, stores `converted_deal_id`. **`converted_customer_id` stays null.**
+3. Moves the lead to the **won** stage, sets `status = converted`, stores `converted_deal_id`, and attaches `customer_id` on the deal. Person status becomes **qualified**.
 4. Copies lead documents onto the deal.
 5. Writes activities on both lead and deal.
 
-Staff then work the deal on `/pipeline/[id]` / `/deals`.
+Staff then work the deal on `/pipeline/[id]` / `/deals` — shortlist inventory units and book viewings.
 
 ---
 
@@ -349,7 +352,7 @@ Deals are the **transaction**, not the person.
 | `new` | Just converted or created |
 | `negotiations` | Offer / terms |
 | `contract` | Paperwork |
-| `closed` | Won — **creates/links customer** |
+| `closed` | Won — **activates the person** (`active` + `client_since`) |
 | `lost` | Lost — `lost_reason` required |
 
 Legacy names (`inquiry`, `viewing`, `offer`, `won`, …) still **normalize** to the table above.
@@ -379,13 +382,13 @@ Manual **create deal** exists for edge cases (existing relationship without a le
 
 ---
 
-## 14. Customers
+## 14. People (customers)
 
-Created primarily on **deal close**. Can also be created/edited from `/customers` (individual or company).
+Created at **lead capture** (`status = lead`). Convert sets `qualified`. Deal close sets `active` and stamps `client_since`. Lost/junk leads set `lost` if the person was still in a working status. Manual **Add** from People creates an `active` walk-in.
 
-Typical fields: name, phone, email, nationality, Emirates ID, passport, TRN, address, tags, notes, `assigned_to`, status (`prospect` / `active` / `inactive`).
+Typical fields: name, phone, email, nationality, Emirates ID, passport, TRN, address, tags, notes, `assigned_to`, status (`lead` / `qualified` / `active` / `inactive` / `lost`).
 
-Customer detail shows linked deals and documents. This is the long-term file for a buyer/seller after the transaction.
+Person detail shows linked deals, acquired properties, and documents. Nav label is **People**; the URL is still `/customers`.
 
 ---
 
@@ -548,6 +551,9 @@ Move deal to **Lost** with a reason. Customer is **not** created. Lead remains c
 | Deal mutations | `src/server/deals.ts` |
 | Customers | `src/server/customers.ts` |
 | Routing | `src/server/routing.ts` |
+| Person-from-capture | `src/server/people.ts` |
+| Inventory | `src/server/inventory.ts` |
+| Viewings | `src/server/viewings.ts` |
 | Public capture | `src/server/public-leads.ts` |
 | Webhook | `src/app/api/leads/webhook/route.ts` |
 | Daily jobs | `src/app/api/cron/daily/route.ts` |
@@ -560,11 +566,14 @@ Move deal to **Lost** with a reason. Customer is **not** created. Lead remains c
 
 These appear in older specs or empty nav groups:
 
-- Property inventory / matching engine inside the portal
+- Public website inventory (still hardcoded brochure listings)
 - Quotations, invoices, cheques, payments, expenses
 - Marketing campaigns and automation rules UI
-- Calendar view of viewings
-- Bitrix-style saved filters, first-response 15-minute SLA rings, viewing outcome / no-show engine
+- Calendar view of all viewings
+- Teams / team_lead / Postgres RLS rebuild
+- Bitrix-style saved filters, first-response 15-minute SLA rings
 - Hard real-time board sync (board is request/revalidate, not a live channel)
 
-When those ship, update **this** file — do not revive the old specs as if they were implemented.
+**Now live that used to be missing:** person-from-capture, internal inventory (`/inventory`), deal shortlist, scheduled viewings with outcomes (enforces the Viewing Scheduled stage when a viewing exists).
+
+When those remaining items ship, update **this** file — do not revive the old specs as if they were implemented.

@@ -9,6 +9,9 @@ export const STATUS_COLORS: Record<string, StatusColor> = {
   new: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
   contacted: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
   qualified: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
+  lead: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
+  active: { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
+  inactive: { bg: "bg-slate-100", text: "text-slate-700", border: "border-slate-200" },
   unqualified: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200" },
   converted: { bg: "bg-teal-50", text: "text-teal-700", border: "border-teal-200" },
 

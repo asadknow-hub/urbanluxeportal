@@ -93,8 +93,10 @@ export function CustomersTable({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="prospect">Prospect</SelectItem>
+            <SelectItem value="lead">Lead</SelectItem>
+            <SelectItem value="qualified">Qualified</SelectItem>
             <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="lost">Lost</SelectItem>
             <SelectItem value="inactive">Inactive</SelectItem>
           </SelectContent>
         </Select>
@@ -162,15 +164,19 @@ export function CustomersTable({
                         <span className={`inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest border ${
                           customer.status === "active"
                             ? "border-primary/30 bg-primary/10 text-primary"
-                            : customer.status === "prospect"
-                              ? "border-amber-200/60 bg-amber-50 text-amber-800"
-                              : "border-border bg-muted text-muted-foreground"
+                            : customer.status === "qualified"
+                              ? "border-emerald-200/60 bg-emerald-50 text-emerald-800"
+                              : customer.status === "lead"
+                                ? "border-amber-200/60 bg-amber-50 text-amber-800"
+                                : customer.status === "lost"
+                                  ? "border-red-200/60 bg-red-50 text-red-700"
+                                  : "border-border bg-muted text-muted-foreground"
                         }`}>
                           {customer.status}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-xs font-medium text-muted-foreground">
-                        {customer.lead_id ? "Converted lead" : "Direct"}
+                        {customer.lead_id ? "From lead" : "Direct"}
                       </td>
                       <td className="px-4 py-3 font-medium text-muted-foreground">
                         {customer.assigned_to_profile?.full_name ?? (

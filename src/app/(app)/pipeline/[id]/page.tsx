@@ -61,7 +61,7 @@ export default async function DealDetailPage({
     .order("full_name");
 
   // Fetch deal documents and document category capture settings
-  const [{ data: documents }, { data: docCategoryRows }] = await Promise.all([
+  const [{ data: documents }, { data: docCategoryRows }, { data: viewingRows }, { data: inventoryRows }, { data: shortlistRows }] = await Promise.all([
     supabase
       .from("documents")
       .select("*")
@@ -75,6 +75,28 @@ export default async function DealDetailPage({
       .eq("field_key", "doc_category")
       .order("sort")
       .order("label"),
+    supabase
+      .from("lead_viewings")
+      .select(
+        `id, scheduled_at, status, outcome, note, outcome_note, agent_id, property_id,
+        property:properties(id, property_code, community, building_name, unit_number, property_type, bedrooms),
+        agent:profiles!lead_viewings_agent_id_fkey(id, full_name)`
+      )
+      .or(`deal_id.eq.${id}${deal.lead_id ? `,lead_id.eq.${deal.lead_id}` : ""}`)
+      .order("scheduled_at", { ascending: false }),
+    supabase
+      .from("properties")
+      .select("id, property_code, community, building_name, unit_number, property_type, bedrooms")
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
+      .limit(40),
+    supabase
+      .from("deal_properties")
+      .select(
+        `id, role, notes, property_id,
+        property:properties(id, property_code, community, building_name, unit_number, property_type, bedrooms, status)`
+      )
+      .eq("deal_id", id),
   ]);
 
   return (
@@ -84,6 +106,12 @@ export default async function DealDetailPage({
       agents={agents ?? []}
       documents={documents ?? []}
       docCategories={docCategoryChoices((docCategoryRows ?? []) as LeadFieldOption[])}
+      viewings={viewingRows ?? []}
+      inventory={inventoryRows ?? []}
+      shortlist={(shortlistRows ?? []).map((row) => ({
+        ...row,
+        property: Array.isArray(row.property) ? row.property[0] : row.property,
+      }))}
       userRole={user.role}
       userId={user.id}
     />

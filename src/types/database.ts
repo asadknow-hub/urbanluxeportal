@@ -146,6 +146,7 @@ export interface Database {
           score: number | null;
           assigned_to: string | null;
           next_follow_up_at: string | null;
+          customer_id: string | null;
           converted_customer_id: string | null;
           converted_deal_id: string | null;
           created_by: string | null;
@@ -182,6 +183,7 @@ export interface Database {
           score?: number | null;
           assigned_to?: string | null;
           next_follow_up_at?: string | null;
+          customer_id?: string | null;
           converted_customer_id?: string | null;
           converted_deal_id?: string | null;
           created_by?: string | null;
@@ -269,20 +271,28 @@ export interface Database {
       lead_viewings: {
         Row: {
           id: string;
-          lead_id: string;
+          lead_id: string | null;
+          deal_id: string | null;
+          property_id: string | null;
+          listing_id: string | null;
           scheduled_at: string;
           agent_id: string | null;
           note: string | null;
+          status: string;
           outcome: string | null;
           outcome_note: string | null;
           reminded_at: string | null;
           created_at: string;
         };
         Insert: {
-          lead_id: string;
+          lead_id?: string | null;
+          deal_id?: string | null;
+          property_id?: string | null;
+          listing_id?: string | null;
           scheduled_at: string;
           agent_id?: string | null;
           note?: string | null;
+          status?: string;
           outcome?: string | null;
           outcome_note?: string | null;
           reminded_at?: string | null;
@@ -438,6 +448,7 @@ export interface Database {
           created_by: string | null;
           lead_id: string | null;
           status: string;
+          client_since: string | null;
           lead_context: LeadContextJson | null;
           created_at: string;
           updated_at: string;
@@ -460,6 +471,7 @@ export interface Database {
           created_by?: string | null;
           lead_id?: string | null;
           status?: string;
+          client_since?: string | null;
           lead_context?: LeadContextJson | null;
         };
         Update: Partial<Database["public"]["Tables"]["customers"]["Insert"]>;
@@ -675,6 +687,163 @@ export interface Database {
           seq?: number;
         };
         Update: Partial<Database["public"]["Tables"]["counters"]["Insert"]>;
+      };
+      developers: {
+        Row: {
+          id: string;
+          name: string;
+          contact_person: string | null;
+          phone: string | null;
+          email: string | null;
+          is_active: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          name: string;
+          contact_person?: string | null;
+          phone?: string | null;
+          email?: string | null;
+          is_active?: boolean;
+          created_by?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["developers"]["Insert"]>;
+      };
+      projects: {
+        Row: {
+          id: string;
+          developer_id: string | null;
+          name: string;
+          community: string | null;
+          location: string | null;
+          project_type: string;
+          handover_date: string | null;
+          description: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          developer_id?: string | null;
+          name: string;
+          community?: string | null;
+          location?: string | null;
+          project_type?: string;
+          handover_date?: string | null;
+          description?: string | null;
+          created_by?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["projects"]["Insert"]>;
+      };
+      properties: {
+        Row: {
+          id: string;
+          property_code: string;
+          project_id: string | null;
+          developer_id: string | null;
+          community: string | null;
+          building_name: string | null;
+          unit_number: string | null;
+          property_type: string;
+          bedrooms: number | null;
+          bathrooms: number | null;
+          maid_room: boolean;
+          floor: string | null;
+          view: string | null;
+          bua_sqft: number | null;
+          plot_sqft: number | null;
+          parking: number | null;
+          status: string;
+          title_deed_number: string | null;
+          oqood_number: string | null;
+          dld_property_number: string | null;
+          assigned_to: string | null;
+          notes: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          property_code?: string;
+          project_id?: string | null;
+          developer_id?: string | null;
+          community?: string | null;
+          building_name?: string | null;
+          unit_number?: string | null;
+          property_type?: string;
+          bedrooms?: number | null;
+          bathrooms?: number | null;
+          maid_room?: boolean;
+          floor?: string | null;
+          view?: string | null;
+          bua_sqft?: number | null;
+          plot_sqft?: number | null;
+          parking?: number | null;
+          status?: string;
+          title_deed_number?: string | null;
+          oqood_number?: string | null;
+          dld_property_number?: string | null;
+          assigned_to?: string | null;
+          notes?: string | null;
+          created_by?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["properties"]["Insert"]>;
+      };
+      listings: {
+        Row: {
+          id: string;
+          property_id: string;
+          listing_type: string;
+          asking_price: number;
+          listing_status: string;
+          assigned_agent_id: string | null;
+          trakheesi_permit_no: string | null;
+          available_from: string | null;
+          furnishing: string | null;
+          notes: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          property_id: string;
+          listing_type?: string;
+          asking_price?: number;
+          listing_status?: string;
+          assigned_agent_id?: string | null;
+          trakheesi_permit_no?: string | null;
+          available_from?: string | null;
+          furnishing?: string | null;
+          notes?: string | null;
+          created_by?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["listings"]["Insert"]>;
+      };
+      deal_properties: {
+        Row: {
+          id: string;
+          deal_id: string;
+          property_id: string;
+          listing_id: string | null;
+          role: string;
+          notes: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          deal_id: string;
+          property_id: string;
+          listing_id?: string | null;
+          role?: string;
+          notes?: string | null;
+          created_by?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["deal_properties"]["Insert"]>;
       };
     };
     Functions: {

@@ -26,6 +26,8 @@ import { formatAED } from "@/lib/money";
 import { formatDate, timeAgo } from "@/lib/dates";
 import { LeadContextPanel } from "@/components/crm/lead-context-panel";
 import { DealTransactionForm } from "@/components/pipeline/deal-transaction-form";
+import { DealShortlist, type DealPropertyRow } from "@/components/pipeline/deal-shortlist";
+import { ViewingPanel, type ViewingRow, type InventoryChoice } from "@/components/crm/viewing-panel";
 import type { LeadContext } from "@/lib/lead-flow";
 import { dealReadyToFinalize, formatPropertyLine } from "@/lib/deal-transaction";
 import {
@@ -152,6 +154,9 @@ export function DealDetail({
   agents,
   documents,
   docCategories = [],
+  viewings,
+  inventory,
+  shortlist,
   userRole,
   userId,
 }: {
@@ -167,6 +172,9 @@ export function DealDetail({
     created_at: string;
   }[];
   docCategories?: DocCategoryChoice[];
+  viewings: ViewingRow[];
+  inventory: InventoryChoice[];
+  shortlist: DealPropertyRow[];
   userRole: string;
   userId: string;
 }) {
@@ -372,6 +380,18 @@ export function DealDetail({
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_360px]">
         <div className="space-y-4">
           <DealTransactionForm deal={deal} canEdit={canEdit} canManage={canManage} agents={agentOptions} />
+
+          <DealShortlist dealId={deal.id} items={shortlist} properties={inventory} canEdit={canEdit} />
+
+          <ViewingPanel
+            leadId={deal.lead_id}
+            dealId={deal.id}
+            viewings={viewings}
+            properties={inventory}
+            agents={agents}
+            defaultAgentId={deal.assigned_to}
+            canEdit={canEdit}
+          />
 
           <div className="overflow-hidden rounded-[14px] border border-border bg-card p-5">
             <div className="-mx-5 -mt-5 mb-4 h-0.5 bg-primary" />

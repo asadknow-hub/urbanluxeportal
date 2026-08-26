@@ -22,23 +22,25 @@ export type LeadContext = {
   notes: string | null;
 };
 
+export { CUSTOMER_STATUSES } from "@/lib/customer-status";
+
 export const FLOW_STAGES = [
   {
     key: "lead" as const,
     label: "Lead",
-    hint: "Qualify on the leads board",
+    hint: "Qualify on the leads board — a person record is created at capture",
     href: "/leads?view=board",
   },
   {
     key: "deal" as const,
     label: "Deal",
-    hint: "Pipeline from new → closed / lost",
+    hint: "Pipeline from new → closed / lost, attached to that person",
     href: "/pipeline",
   },
   {
     key: "customer" as const,
-    label: "Customer",
-    hint: "Created when deal is closed — property & docs saved",
+    label: "Person",
+    hint: "Same record from first contact; Active when a deal closes",
     href: "/customers",
   },
 ] as const;
@@ -49,12 +51,6 @@ export { DEAL_PIPELINE_STAGES };
 
 export const DEAL_PIPELINE_STAGES_WITH_LOST = [...DEAL_PIPELINE_STAGES, DEAL_LOST_STAGE];
 
-export const CUSTOMER_STATUSES = [
-  { key: "prospect", label: "Prospect", hint: "Legacy — deals from existing customers" },
-  { key: "active", label: "Active", hint: "Created when a deal is finalized (closed)" },
-  { key: "inactive", label: "Inactive", hint: "Manual archive" },
-] as const;
-
 export type FieldMapping = {
   leadField: string;
   label: string;
@@ -64,7 +60,7 @@ export type FieldMapping = {
 };
 
 export const FIELD_MAPPINGS: FieldMapping[] = [
-  { leadField: "name", label: "Name", customer: "copy", deal: "copy", notes: "Buyer contact on deal until closed" },
+  { leadField: "name", label: "Name", customer: "copy", deal: "copy", notes: "Person record from first contact" },
   { leadField: "phone", label: "Phone", customer: "copy", deal: "copy", notes: "Buyer phone on deal" },
   { leadField: "email", label: "Email", customer: "copy", deal: "copy", notes: "Buyer email on deal" },
   { leadField: "nationality", label: "Nationality", customer: "copy", deal: "copy", notes: "Deal KYC → customer on close" },

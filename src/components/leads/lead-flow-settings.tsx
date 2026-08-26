@@ -48,7 +48,7 @@ export function LeadFlowSettings() {
             <div>
               <h2 className="text-base font-semibold text-foreground">Lead flow</h2>
               <p className="text-sm text-muted-foreground">
-                Qualify a lead, convert to a deal, then close the deal to create the customer.
+                Qualify a lead, convert to a deal. The person record exists from first contact and becomes Active when the deal closes.
               </p>
             </div>
           </div>

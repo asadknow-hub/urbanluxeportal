@@ -166,7 +166,7 @@ export async function updateDealStage(
       await supabase.from("deal_activities").insert({
         deal_id: parsed.data.id,
         type: "won",
-        summary: `Deal closed — customer created with property${parsed.data.value ? ` (${parsed.data.value} AED)` : ""}`,
+        summary: `Deal closed — person activated as client${parsed.data.value ? ` (${parsed.data.value} AED)` : ""}`,
         created_by: user.id,
       });
 

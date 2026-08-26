@@ -14,6 +14,7 @@ import { BlurSaveInput } from "@/components/leads/hover-edit-row";
 import { DocumentUploadDialog } from "@/components/documents/document-upload-dialog";
 import { ConvertLeadDialog } from "@/components/leads/convert-lead-dialog";
 import { ConversionPath } from "@/components/crm/conversion-path";
+import { ViewingPanel, type ViewingRow, type InventoryChoice } from "@/components/crm/viewing-panel";
 import { LeadDocumentsList, type LeadDocument } from "@/components/leads/lead-documents";
 import {
   Dialog,
@@ -88,6 +89,7 @@ type Lead = {
   next_follow_up_at: string | null;
   converted_customer_id: string | null;
   converted_deal_id: string | null;
+  customer_id: string | null;
   created_at: string;
   updated_at: string;
   last_activity_at: string | null;
@@ -370,6 +372,8 @@ export function LeadDetail({
   customer,
   deal,
   documents,
+  viewings,
+  inventory,
   userRole,
   userId,
 }: {
@@ -384,6 +388,8 @@ export function LeadDetail({
   customer: { id: string; name: string; phone: string | null; email: string | null; status?: string } | null;
   deal: { id: string; title: string; stage: string; value: number; deal_type: string } | null;
   documents: DocumentRow[];
+  viewings: ViewingRow[];
+  inventory: InventoryChoice[];
   duplicateMatches: unknown[];
   userRole: string;
   userId: string;
@@ -631,12 +637,12 @@ export function LeadDetail({
 
   return (
     <div className="mx-auto flex w-full max-w-[1460px] flex-col gap-[18px]">
-      {(customer?.status === "active" || deal) && (
+      {(customer || deal) && (
         <ConversionPath
           current="lead"
           lead={{ id: optimisticLead.id, name: optimisticLead.name }}
           customer={
-            customer?.status === "active"
+            customer
               ? { id: customer.id, name: customer.name, status: customer.status }
               : null
           }
@@ -1320,6 +1326,16 @@ export function LeadDetail({
               <div className="flex justify-between py-2.5 text-[0.84rem]"><span className="text-muted-foreground">Total activities</span><b className="font-mono text-[0.8rem]">{optimisticActivities.length}</b></div>
             </div>
           </section>
+
+          <ViewingPanel
+            leadId={optimisticLead.id}
+            dealId={optimisticLead.converted_deal_id}
+            viewings={viewings}
+            properties={inventory}
+            agents={agents}
+            defaultAgentId={optimisticLead.assigned_to}
+            canEdit={canEdit}
+          />
 
           <section className="rounded-[14px] border border-border bg-card px-[26px] py-6">
             <div className="mb-1 flex items-baseline justify-between">

@@ -8,7 +8,7 @@ export type NavItem = {
   group: string;
 };
 
-/** Section headlines always render; only Workspace, CRM, and System have links while CRM is finalized. */
+/** Section headlines always render. Inventory is live; Marketing / Finance / Governance stay empty for now. */
 export const NAV_GROUPS = [
   "Workspace",
   "CRM",
@@ -26,7 +26,8 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Leads", href: "/leads", icon: "Users", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
   { label: "Follow-ups", href: "/leads/followups", icon: "CalendarClock", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
   { label: "Deals", href: "/deals", icon: "KanbanSquare", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
-  { label: "Customers", href: "/customers", icon: "Contact", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
+  { label: "People", href: "/customers", icon: "Contact", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
+  { label: "Inventory", href: "/inventory", icon: "Building2", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "Inventory" },
   { label: "Settings", href: "/settings", icon: "Settings", roles: ["admin"], group: "System" },
 ];
 
@@ -40,6 +41,9 @@ export function isNavActive(pathname: string, href: string): boolean {
   }
   if (href === "/deals" || href === "/pipeline") {
     return pathname === "/deals" || pathname === "/pipeline" || pathname.startsWith("/pipeline/");
+  }
+  if (href === "/inventory") {
+    return pathname === "/inventory" || pathname.startsWith("/inventory/");
   }
   if (href === "/settings") {
     return pathname === "/settings" || (pathname.startsWith("/settings/") && !pathname.startsWith("/settings/leads"));
