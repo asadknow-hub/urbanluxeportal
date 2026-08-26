@@ -8,6 +8,7 @@ import Link from "next/link";
 import { KanbanSquare, List } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { groupLeadFieldOptions, type LeadFieldOption } from "@/lib/lead-field-options";
+import { sweepFirstResponseSla } from "@/server/first-response";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -28,6 +29,7 @@ export default async function LeadsBoardPage({
   const supabase = await createSupabaseServerClient();
   const params = await searchParams;
   const view = params.view === "list" ? "list" : "board";
+  await sweepFirstResponseSla();
 
   const buildViewHref = (nextView: "board" | "list") => {
     const query = new URLSearchParams();
@@ -47,6 +49,7 @@ export default async function LeadsBoardPage({
       .select(
         `id, name, phone, email, interest, budget_min, budget_max, preferred_areas,
          stage_id, assigned_to, next_follow_up_at, created_at, updated_at, last_activity_at, stage_entered_at, tags,
+         first_response_due_at, first_responded_at, first_response_minutes,
          assigned_to_profile:profiles!leads_assigned_to_fkey(id, full_name, avatar_url)`,
         { count: "exact" }
       )

@@ -170,6 +170,10 @@ export interface Database {
           tags: string[];
           lost_reason: string | null;
           junk_reason: string | null;
+          first_response_due_at: string | null;
+          first_responded_at: string | null;
+          first_response_minutes: number | null;
+          first_response_breached_at: string | null;
         };
         Insert: {
           id?: string;
@@ -203,6 +207,10 @@ export interface Database {
           tags?: string[];
           lost_reason?: string | null;
           junk_reason?: string | null;
+          first_response_due_at?: string | null;
+          first_responded_at?: string | null;
+          first_response_minutes?: number | null;
+          first_response_breached_at?: string | null;
         };
         Update: Partial<Database["public"]["Tables"]["leads"]["Insert"]>;
       };
@@ -921,6 +929,15 @@ export interface Database {
       close_staff_session: {
         Args: { p_session_id: string };
         Returns: undefined;
+      };
+      crm_sweep_first_response: {
+        Args: Record<string, never>;
+        Returns: {
+          lead_id: string;
+          lead_name: string;
+          user_id: string | null;
+          action: string;
+        }[];
       };
     };
     Enums: {

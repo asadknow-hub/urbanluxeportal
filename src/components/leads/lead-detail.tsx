@@ -40,7 +40,7 @@ import {
 import { telLink, whatsappLink } from "@/lib/phone";
 import { formatAEDRange } from "@/lib/money";
 import { daysUntil, formatDate, formatDateTime, isOverdue, shortTimeAgo, timeAgo } from "@/lib/dates";
-import { stageSlaClock } from "@/lib/lead-sla";
+import { stageSlaClock, firstResponseClock } from "@/lib/lead-sla";
 import { canManageCrm } from "@/lib/permissions";
 import type { InventoryMatch } from "@/lib/match-inventory";
 import {
@@ -97,6 +97,9 @@ type Lead = {
   last_activity_at: string | null;
   stage_entered_at: string | null;
   stage_id: string | null;
+  first_response_due_at?: string | null;
+  first_responded_at?: string | null;
+  first_response_minutes?: number | null;
   nationality: string | null;
   financing: string | null;
   timeframe: string | null;
@@ -446,6 +449,7 @@ export function LeadDetail({
     optimisticLead.stage_entered_at ?? optimisticLead.created_at,
     currentStage?.kind === "open" ? currentStage.stale_after_days : null
   );
+  const firstResponse = firstResponseClock(optimisticLead);
   const scheduledFollowUp = optimisticFollowUps.find((row) => row.status === "scheduled") ?? null;
 
   const visibleActivities = useMemo(() => {
@@ -1217,6 +1221,8 @@ export function LeadDetail({
                     <span className="mt-2 block text-[0.88rem] text-[#EDEBE0]">{scheduledFollowUp.notes}</span>
                   ) : null}
                 </>
+              ) : firstResponse?.tone === "overdue" ? (
+                <>First contact is overdue ({firstResponse.label}). Call or WhatsApp now or this lead returns to the pool.</>
               ) : slaClock?.overdue ? (
                 <>This lead is past the {currentStage?.name} SLA ({slaClock.dayNum} of {slaClock.sla} days). Set a follow-up now.</>
               ) : (
@@ -1309,6 +1315,17 @@ export function LeadDetail({
               </div>
             ) : null}
             <div className="mt-4 border-t border-border/70">
+              {firstResponse ? (
+                <div className="border-b border-border/70 py-2.5 text-[0.84rem]">
+                  <div className="flex justify-between gap-3">
+                    <span className="text-muted-foreground">First response</span>
+                    <b className={firstResponse.tone === "overdue" ? "text-red-700" : "text-amber-700"}>
+                      {firstResponse.label}
+                    </b>
+                  </div>
+                  <p className="mt-1 text-[0.72rem] leading-snug text-muted-foreground">{firstResponse.title}</p>
+                </div>
+              ) : null}
               <div className="border-b border-border/70 py-2.5 text-[0.84rem]">
                 <div className="flex justify-between gap-3">
                   <span className="text-muted-foreground">Time in this stage</span>

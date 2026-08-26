@@ -19,6 +19,7 @@ import { AlertCircle, MoreHorizontal, Plus, Edit3, Trash2, User as UserIcon } fr
 import { updateLeadStage, createLeadStage, updateLeadStageName, deleteLeadStage } from "@/server/leads";
 import { cn } from "@/lib/utils";
 import { formatAEDRange } from "@/lib/money";
+import { firstResponseClock } from "@/lib/lead-sla";
 import { optionLabel, type LeadFieldOption } from "@/lib/lead-field-options";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -55,6 +56,9 @@ export type BoardLead = {
   stage_entered_at: string | null;
   tags: string[];
   assigned_to_profile: { id: string; full_name: string; avatar_url: string | null } | null;
+  first_response_due_at?: string | null;
+  first_responded_at?: string | null;
+  first_response_minutes?: number | null;
   duplicate?: boolean;
 };
 
@@ -107,6 +111,7 @@ function LeadCard({
   fieldOptions?: Record<string, LeadFieldOption[]>;
 }) {
   const stale = isStale(lead, stage);
+  const firstResponse = firstResponseClock(lead);
   const budget = formatAEDRange(lead.budget_min, lead.budget_max);
   const area = lead.preferred_areas?.[0];
   const extraAreas = (lead.preferred_areas?.length ?? 0) - 1;
@@ -118,7 +123,8 @@ function LeadCard({
       className={cn(
         "cursor-grab rounded-lg border border-border bg-card px-2.5 py-2 active:cursor-grabbing",
         isDragging && "opacity-50 ring-1 ring-primary/40",
-        stale && "border-amber-300/80"
+        stale && "border-amber-300/80",
+        firstResponse?.tone === "overdue" && "border-red-300/80"
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -133,6 +139,15 @@ function LeadCard({
         <div className="flex shrink-0 items-center gap-1">
           {lead.duplicate && (
             <span className="rounded bg-red-50 px-1 py-px text-[10px] font-medium text-red-700">Dup</span>
+          )}
+          {firstResponse && (
+            <span
+              title={firstResponse.title}
+              className={cn(
+                "h-2 w-2 rounded-full",
+                firstResponse.tone === "overdue" ? "bg-red-600" : "bg-amber-500"
+              )}
+            />
           )}
           {stale && <AlertCircle className="h-3.5 w-3.5 text-amber-500" />}
         </div>

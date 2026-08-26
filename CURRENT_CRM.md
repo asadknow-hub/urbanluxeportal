@@ -203,7 +203,7 @@ Stages live in `lead_stages`. Each has:
 
 Moving a lead (`updateLeadStage`):
 1. Load stage + lead.
-2. If `required_fields` are missing, reject with a list (lost/junk reasons collected in the move dialog). `viewing_scheduled` and `activity_logged` are **skipped** until a later pass.
+2. If `required_fields` are missing, reject with a list (lost/junk reasons collected in the move dialog). `viewing_scheduled` needs a scheduled or completed viewing. `activity_logged` needs a note/call/WhatsApp/email/follow-up, or a viewing.
 3. Update `stage_id`, reset `stage_entered_at` when the column actually changes.
 4. Mirror `status` from `kind` (won → converted, lost/junk → unqualified, open → new/qualified by sort).
 5. Write `lead_events` (`stage_changed`) and a `lead_activities` note.
@@ -308,16 +308,18 @@ Follow-ups are first-class, not just a date on the lead.
 
 ---
 
-## 11. SLA (stale leads)
+## 11. SLA
 
-Each open stage can have `stale_after_days`. Clock starts at `stage_entered_at` (reset when the lead changes column).
+**Stage SLA:** each open stage can have `stale_after_days`. Clock starts at `stage_entered_at` (reset when the lead changes column). Daily cron notifies the assignee plus a digest to admin/manager.
+
+**First-response SLA:** clock starts when the lead is assigned. Website / portal / social sources get **15 minutes**; manual create, CSV import, and other sources get **24 hours**. A note, call, WhatsApp, email, follow-up, or booked viewing stamps `first_responded_at`. Board cards show an amber dot at 50% of the window and red when overdue. At 1× the agent and house are notified; at 2× the lead is **reclaimed** to the unassigned pool (`lead_assignments.reason = sla_reclaim`). Sweep runs on `/leads` load and every 5 minutes at `/api/cron/lead-sla`.
 
 **Daily cron** `GET /api/cron/daily` (Vercel, `0 6 * * *`, `Authorization: Bearer CRON_SECRET`):
 
 1. Documents expiring in 30 days → notify **admins**.
 2. Leads past stage SLA → notify the **assignee**, plus a digest to **admin + manager**.
 
-Won / lost / junk stages are excluded from SLA.
+Won / lost / junk stages are excluded from both SLAs.
 
 ---
 
@@ -569,6 +571,7 @@ Move deal to **Lost** with a reason. Customer is **not** created. Lead remains c
 | Public capture | `src/server/public-leads.ts` |
 | Webhook | `src/app/api/leads/webhook/route.ts` |
 | Daily jobs | `src/app/api/cron/daily/route.ts` |
+| First-response SLA | `src/lib/lead-sla.ts`, `src/server/first-response.ts`, `/api/cron/lead-sla` |
 | Brand | `src/lib/company-brand.ts`, `src/server/company-settings.ts` |
 | Schema | `supabase/migrations/` (leads module from `0010_leads_module.sql` onward) |
 
@@ -582,9 +585,9 @@ These appear in older specs or empty nav groups:
 - Quotations, invoices, cheques, payments, expenses
 - Marketing campaigns and automation rules UI
 - `team_lead` / `viewer` roles
-- Bitrix-style saved filters, first-response 15-minute SLA rings
+- Bitrix-style saved filters
 - Hard real-time board sync (board is request/revalidate, not a live channel)
 
-**Now live that used to be missing:** person-from-capture, internal inventory (`/inventory`), deal shortlist, scheduled viewings with outcomes (enforces the Viewing Scheduled stage when a viewing exists), week viewing calendar, requirement matching, desks for round-robin, **R0–R5 RLS** (ownable reads, documents/storage, inventory writes, roster columns, staff mutations on the user JWT).
+**Now live that used to be missing:** person-from-capture, internal inventory (`/inventory`), deal shortlist, scheduled viewings with outcomes (enforces the Viewing Scheduled stage when a viewing exists), week viewing calendar, requirement matching, desks for round-robin, **R0–R5 RLS**, first-response SLA (15 min web / 24 h manual, reclaim at 2×).
 
 When those remaining items ship, update **this** file — do not revive the old specs as if they were implemented.

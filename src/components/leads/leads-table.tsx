@@ -15,6 +15,7 @@ import { whatsappLink } from "@/lib/phone";
 import { formatAEDRange } from "@/lib/money";
 import { canManageCrm } from "@/lib/permissions";
 import { formatDate } from "@/lib/dates";
+import { firstResponseClock } from "@/lib/lead-sla";
 import { bulkAssignLeads } from "@/server/leads";
 import { optionLabel, scoreBandForValue, type LeadFieldOption } from "@/lib/lead-field-options";
 import { toast } from "sonner";
@@ -37,6 +38,9 @@ export type LeadRow = {
   assigned_to_profile: { id: string; full_name: string; avatar_url: string | null } | null;
   created_at: string;
   stage_id: string | null;
+  first_response_due_at?: string | null;
+  first_responded_at?: string | null;
+  first_response_minutes?: number | null;
 };
 
 export function LeadsTable({
@@ -238,6 +242,7 @@ export function LeadsTable({
                   const isSelected = selectedIds.has(lead.id);
                   const stage = stages?.find((row) => row.id === lead.stage_id);
                   const band = scoreBandForValue(fieldOptions.score, lead.score);
+                  const clock = firstResponseClock(lead);
                   return (
                     <tr
                       key={lead.id}
@@ -257,6 +262,14 @@ export function LeadsTable({
                         <Link href={`/leads/${lead.id}`} className="hover:text-primary group-hover:underline underline-offset-4">
                           {lead.name}
                         </Link>
+                        {clock ? (
+                          <span
+                            title={clock.title}
+                            className={`ml-2 inline-block h-2 w-2 rounded-full align-middle ${
+                              clock.tone === "overdue" ? "bg-red-600" : "bg-amber-500"
+                            }`}
+                          />
+                        ) : null}
                       </td>
                       <td className="px-5 py-2">
                         {lead.phone ? (

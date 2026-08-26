@@ -22,6 +22,7 @@ import {
 import type { DealTransactionInput } from "@/lib/deal-transaction";
 import { canManageCrm } from "@/lib/permissions";
 import { leadStatusForStageKind, resolveDefaultLeadStageId } from "@/lib/lead-stages";
+import { HUMAN_LEAD_ACTIVITY_TYPES } from "@/lib/lead-sla";
 import { ensurePersonForLead, markPersonLost, markPersonQualified, syncPersonAssignment } from "@/server/people";
 
 export type ConvertLeadInput = DealTransactionInput & {
@@ -186,7 +187,8 @@ export async function updateLeadStage(
     if (requiredFields.length > 0) {
       const missing: string[] = [];
       let viewingCount = 0;
-      if (requiredFields.includes("viewing_scheduled")) {
+      const needsViewing = requiredFields.includes("viewing_scheduled") || requiredFields.includes("activity_logged");
+      if (needsViewing) {
         const { count } = await supabase
           .from("lead_viewings")
           .select("id", { count: "exact", head: true })
@@ -194,11 +196,20 @@ export async function updateLeadStage(
           .in("status", ["scheduled", "completed"]);
         viewingCount = count ?? 0;
       }
+      let activityCount = 0;
+      if (requiredFields.includes("activity_logged")) {
+        const { count } = await supabase
+          .from("lead_activities")
+          .select("id", { count: "exact", head: true })
+          .eq("lead_id", leadId)
+          .in("type", [...HUMAN_LEAD_ACTIVITY_TYPES]);
+        activityCount = count ?? 0;
+      }
       for (const field of requiredFields) {
         if (field === "viewing_scheduled") {
           if (viewingCount < 1) missing.push("Viewing scheduled");
         } else if (field === "activity_logged") {
-          // skip for now — L2
+          if (activityCount < 1 && viewingCount < 1) missing.push("Activity logged");
         } else if (field === "lost_reason") {
           if (!extra?.lost_reason) missing.push("Lost reason");
         } else if (field === "junk_reason") {
