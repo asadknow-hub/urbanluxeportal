@@ -17,6 +17,8 @@ import { ConversionPath } from "@/components/crm/conversion-path";
 import { ViewingPanel, type ViewingRow, type InventoryChoice } from "@/components/crm/viewing-panel";
 import { MatchPanel } from "@/components/crm/match-panel";
 import { LeadDocumentsList, type LeadDocument } from "@/components/leads/lead-documents";
+import { LeadAuditPanel } from "@/components/leads/lead-audit-panel";
+import type { LeadAssignmentRow, LeadEventRow } from "@/lib/lead-audit";
 import {
   Dialog,
   DialogContent,
@@ -380,6 +382,9 @@ export function LeadDetail({
   viewings,
   inventory,
   matches = [],
+  duplicateMatches,
+  assignments = [],
+  events = [],
   userRole,
   userId,
 }: {
@@ -398,6 +403,8 @@ export function LeadDetail({
   inventory: InventoryChoice[];
   matches?: InventoryMatch[];
   duplicateMatches: unknown[];
+  assignments?: LeadAssignmentRow[];
+  events?: LeadEventRow[];
   userRole: string;
   userId: string;
 }) {
@@ -1347,6 +1354,8 @@ export function LeadDetail({
               <div className="flex justify-between py-2.5 text-[0.84rem]"><span className="text-muted-foreground">Total activities</span><b className="font-mono text-[0.8rem]">{optimisticActivities.length}</b></div>
             </div>
           </section>
+
+          <LeadAuditPanel assignments={assignments} events={events} />
 
           <MatchPanel
             matches={matches}

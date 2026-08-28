@@ -50,13 +50,19 @@ export function LeadsTable({
   currentFilters,
   userRole,
   fieldOptions,
+  totalCount = 0,
+  page = 1,
+  pageSize = 50,
 }: {
   leads: LeadRow[];
   agents: { id: string; full_name: string; role: string }[];
   stages?: { id: string; name: string; color: string }[];
-  currentFilters: { source?: string; assigned?: string; q?: string; stage?: string };
+  currentFilters: { source?: string; assigned?: string; q?: string; stage?: string; page?: string };
   userRole: string;
   fieldOptions: Record<string, LeadFieldOption[]>;
+  totalCount?: number;
+  page?: number;
+  pageSize?: number;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -65,6 +71,18 @@ export function LeadsTable({
   const [pending, startTransition] = useTransition();
 
   const canBulkAssign = canManageCrm(userRole);
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
+  function pageHref(nextPage: number) {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(currentFilters)) {
+      if (!value || key === "page") continue;
+      params.set(key, value);
+    }
+    params.set("view", "list");
+    if (nextPage > 1) params.set("page", String(nextPage));
+    return `/leads?${params.toString()}`;
+  }
 
   function updateFilter(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -73,6 +91,7 @@ export function LeadsTable({
     } else {
       params.set(key, value);
     }
+    params.delete("page");
     params.set("view", "list");
     router.push(`/leads?${params.toString()}`);
   }
@@ -332,6 +351,42 @@ export function LeadsTable({
           </table>
         </div>
       </div>
+
+      {totalCount > pageSize && (
+        <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+          <p className="text-sm text-muted-foreground">
+            Page <span className="font-medium text-foreground">{page}</span> of{" "}
+            <span className="font-medium text-foreground">{totalPages}</span>
+            <span className="text-muted-foreground"> · {totalCount} leads</span>
+          </p>
+          <div className="flex items-center gap-2">
+            {page > 1 ? (
+              <Link
+                href={pageHref(page - 1)}
+                className="inline-flex h-8 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-muted"
+              >
+                Previous
+              </Link>
+            ) : (
+              <Button variant="outline" size="sm" disabled>
+                Previous
+              </Button>
+            )}
+            {page < totalPages ? (
+              <Link
+                href={pageHref(page + 1)}
+                className="inline-flex h-8 items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium hover:bg-muted"
+              >
+                Next
+              </Link>
+            ) : (
+              <Button variant="outline" size="sm" disabled>
+                Next
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -7,6 +7,11 @@ import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
+function firstRel<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null;
+  return Array.isArray(value) ? value[0] ?? null : value;
+}
+
 export default async function LeadDetailPage({
   params,
 }: {
@@ -81,6 +86,8 @@ export default async function LeadDetailPage({
     dealResult,
     { data: viewingRows },
     { data: inventoryRows },
+    { data: assignmentRows },
+    { data: eventRows },
   ] = await Promise.all([
     supabase
       .from("lead_stages")
@@ -139,6 +146,22 @@ export default async function LeadDetailPage({
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(200),
+    supabase
+      .from("lead_assignments")
+      .select(
+        `id, from_user, to_user, reason, created_at,
+        from_profile:profiles!lead_assignments_from_user_fkey(full_name),
+        to_profile:profiles!lead_assignments_to_user_fkey(full_name)`
+      )
+      .eq("lead_id", id)
+      .order("created_at", { ascending: false })
+      .limit(30),
+    supabase
+      .from("lead_events")
+      .select(`id, kind, actor_id, payload, created_at, actor:profiles!lead_events_actor_id_fkey(full_name)`)
+      .eq("lead_id", id)
+      .order("id", { ascending: false })
+      .limit(40),
   ]);
 
   const customer = customerResult?.data ?? null;
@@ -172,6 +195,16 @@ export default async function LeadDetailPage({
       inventory={inventoryRows ?? []}
       matches={matches}
       duplicateMatches={duplicateMatches.data ?? []}
+      assignments={(assignmentRows ?? []).map((row) => ({
+        ...row,
+        from_profile: firstRel(row.from_profile as { full_name: string } | { full_name: string }[] | null),
+        to_profile: firstRel(row.to_profile as { full_name: string } | { full_name: string }[] | null),
+      }))}
+      events={(eventRows ?? []).map((row) => ({
+        ...row,
+        payload: (row.payload ?? {}) as Record<string, unknown>,
+        actor: firstRel(row.actor as { full_name: string } | { full_name: string }[] | null),
+      }))}
       userRole={user.role}
       userId={user.id}
     />

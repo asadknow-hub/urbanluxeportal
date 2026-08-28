@@ -13,6 +13,8 @@ import { sweepFirstResponseSla } from "@/server/first-response";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+const LIST_PAGE_SIZE = 50;
+
 export default async function LeadsBoardPage({
   searchParams,
 }: {
@@ -22,6 +24,7 @@ export default async function LeadsBoardPage({
     assigned?: string;
     q?: string;
     stage?: string;
+    page?: string;
   }>;
 }) {
   const user = await getCurrentUser();
@@ -87,6 +90,10 @@ export default async function LeadsBoardPage({
   };
 
   const fetchListData = async () => {
+    const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
+    const from = (page - 1) * LIST_PAGE_SIZE;
+    const to = from + LIST_PAGE_SIZE - 1;
+
     let query = supabase
       .from("leads")
       .select(commonSelect, { count: "exact" })
@@ -115,7 +122,7 @@ export default async function LeadsBoardPage({
     }
 
     const [{ data: leads, error, count }, { data: agents }, { data: stages }] = await Promise.all([
-      query.limit(100),
+      query.range(from, to),
       supabase
         .from("profiles")
         .select("id, full_name, role")
@@ -134,6 +141,8 @@ export default async function LeadsBoardPage({
     return {
       leads: (leads ?? []) as unknown as LeadRow[],
       count: count ?? 0,
+      page,
+      pageSize: LIST_PAGE_SIZE,
       agents: agents ?? [],
       stages: stages ?? [],
     };
@@ -183,6 +192,9 @@ export default async function LeadsBoardPage({
             {view === "board" ? boardData?.count ?? 0 : listData?.count ?? 0}
           </span>{" "}
           in pipeline
+          {view === "board" && (boardData?.count ?? 0) > 200 ? (
+            <span className="text-amber-700"> · showing latest 200</span>
+          ) : null}
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <div className="inline-flex h-8 rounded-md border border-border bg-card p-0.5">
@@ -235,6 +247,9 @@ export default async function LeadsBoardPage({
           currentFilters={params}
           userRole={user.role}
           fieldOptions={groupedOptions}
+          totalCount={listData?.count ?? 0}
+          page={listData?.page ?? 1}
+          pageSize={listData?.pageSize ?? LIST_PAGE_SIZE}
         />
       )}
     </div>

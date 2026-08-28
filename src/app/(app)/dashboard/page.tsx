@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
+import { sweepFirstResponseSla } from "@/server/first-response";
 import { addDays, startOfDay } from "date-fns";
 import { propertyLabel } from "@/lib/inventory";
 
@@ -11,6 +12,7 @@ export default async function DashboardPage() {
   if (!user) throw new Error("User not found");
   const supabase = await createSupabaseServerClient();
   const isAgent = user.role === "agent";
+  await sweepFirstResponseSla(supabase);
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
