@@ -1,8 +1,8 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { Suspense, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { signInStaff } from "@/server/auth-login";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,6 @@ import { toast } from "sonner";
 import { BrandMark } from "@/components/layout/brand-mark";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,54 +18,24 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const errorMsg = searchParams.get("error");
 
-  useEffect(() => {
-    const supabase = createSupabaseBrowserClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) router.replace("/dashboard");
-    });
-  }, [router]);
-
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      toast.error(error.message);
-      setLoading(false);
-      return;
-    }
 
-    const { data: auth } = await supabase.auth.getUser();
-    const userId = auth.user?.id;
-    if (!userId) {
-      toast.error("Sign-in did not return a user");
+    try {
+      const formData = new FormData(e.currentTarget);
+      const result = await signInStaff(formData);
+      if (!result.ok) {
+        toast.error(result.error);
+        setLoading(false);
+        return;
+      }
+      toast.success("Welcome back");
+      window.location.assign("/dashboard");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Sign-in failed. Try again.");
       setLoading(false);
-      return;
     }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("is_active")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (!profile) {
-      await supabase.auth.signOut();
-      toast.error("This login has no staff profile. Ask an admin to create your account from Staff.");
-      setLoading(false);
-      return;
-    }
-    if (!profile.is_active) {
-      await supabase.auth.signOut();
-      toast.error("Your account has been deactivated. Contact an admin.");
-      setLoading(false);
-      return;
-    }
-
-    toast.success("Welcome back");
-    router.push("/dashboard");
-    router.refresh();
   }
 
   return (
@@ -112,12 +81,15 @@ function LoginForm() {
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="you@urbanluxe.ae"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoFocus
+                  autoComplete="email"
+                  disabled={loading}
                   className="h-11 pl-10"
                 />
               </div>
@@ -128,11 +100,14 @@ function LoginForm() {
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  autoComplete="current-password"
+                  disabled={loading}
                   className="h-11 pl-10 pr-10"
                 />
                 <button
