@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Check, ChevronDown, Menu, Search, User, X } from "lucide-react";
+import { Check, ChevronDown, LayoutDashboard, Menu, Search, X } from "lucide-react";
 import { CURRENCIES, NAV } from "@/lib/web/site";
 import { SiteLogo } from "@/components/web/site-logo";
 import { useCurrency } from "@/components/web/currency-provider";
@@ -40,7 +40,7 @@ export function SiteNav() {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-50 pt-[var(--ul-safe-top,0px)]">
+    <header className="sticky top-0 z-[100] pt-[var(--ul-safe-top,0px)]">
       <div
         className={cn(
           "border-b border-[#e5e7eb]/80 bg-white transition-[box-shadow,height] duration-300 ease-out",
@@ -86,7 +86,7 @@ export function SiteNav() {
             })}
           </nav>
 
-          <div className={cn("flex shrink-0 items-center", scrolled ? "gap-1 sm:gap-2" : "gap-1.5 sm:gap-3")}>
+          <div className={cn("relative z-[1] flex shrink-0 items-center", scrolled ? "gap-1 sm:gap-2" : "gap-1.5 sm:gap-3")}>
             <Link
               href="/sell"
               prefetch
@@ -141,15 +141,16 @@ export function SiteNav() {
             </Link>
 
             <Link
-              href="/login"
-              prefetch
+              href="/dashboard"
+              prefetch={false}
               className={cn(
-                "hidden items-center justify-center rounded-md text-[#0B1D3D] transition-colors hover:bg-[#F2F2F2] lg:inline-flex",
-                scrolled ? "h-8 w-8" : "h-9 w-9"
+                "hidden items-center gap-1.5 rounded-md border border-[#0B1D3D]/12 bg-white/80 font-medium text-[#0B1D3D] transition-colors hover:bg-[#F2F2F2] md:inline-flex",
+                scrolled ? "h-9 px-3 text-[0.75rem]" : "h-10 px-3.5 text-[0.8125rem]"
               )}
-              aria-label="Sign in"
+              aria-label="Agent portal"
             >
-              <User className={scrolled ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} strokeWidth={2} />
+              <LayoutDashboard className={scrolled ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} strokeWidth={2} />
+              <span>Portal</span>
             </Link>
 
             <button
@@ -221,12 +222,12 @@ export function SiteNav() {
                 Search properties
               </Link>
               <Link
-                href="/login"
-                prefetch
+                href="/dashboard"
+                prefetch={false}
                 className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-[#e5e7eb] text-sm font-semibold text-[#0B1D3D]"
               >
-                <User className="h-4 w-4" />
-                Sign in
+                <LayoutDashboard className="h-4 w-4" />
+                Agent portal
               </Link>
               <Link href="/sell" prefetch className="ul-btn-primary h-12 w-full">
                 List Your Property
