@@ -395,6 +395,12 @@ export default async function CustomerDetailPage({
                   <dd className="font-medium text-foreground">{customer.trn}</dd>
                 </div>
               )}
+              {!customer.nationality &&
+                !customer.emirates_id &&
+                !customer.passport_no &&
+                !customer.trn && (
+                  <p className="text-sm text-muted-foreground">No KYC captured yet.</p>
+                )}
               {!customer.emirates_id && !customer.passport_no && customer.type === "individual" && (
                 <div className="rounded-md bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
                   ID document missing

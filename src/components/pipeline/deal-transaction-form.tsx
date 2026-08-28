@@ -96,6 +96,7 @@ export function DealTransactionForm({
     startTransition(async () => {
       const result = await updateDealTransaction(deal.id, patch);
       if (result.ok) {
+        if (patch.payment_schedule !== undefined) toast.success("Payment schedule saved");
         router.refresh();
       } else {
         toast.error(result.error ?? "Could not save");
@@ -511,8 +512,14 @@ function PaymentScheduleEditor({
   }
 
   function removeRow(index: number) {
-    setRows((prev) => prev.filter((_, i) => i !== index));
-    setDirty(true);
+    const next = rows.filter((_, i) => i !== index);
+    setRows(next);
+    if (!disabled) {
+      onSave(toEntries(next));
+      setDirty(false);
+    } else {
+      setDirty(true);
+    }
   }
 
   function handleSave() {

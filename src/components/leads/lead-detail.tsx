@@ -17,8 +17,9 @@ import { ConversionPath } from "@/components/crm/conversion-path";
 import { ViewingPanel, type ViewingRow, type InventoryChoice } from "@/components/crm/viewing-panel";
 import { MatchPanel } from "@/components/crm/match-panel";
 import { LeadDocumentsList, type LeadDocument } from "@/components/leads/lead-documents";
-import { LeadAuditPanel } from "@/components/leads/lead-audit-panel";
+import { LeadAssignmentHistory } from "@/components/leads/lead-assignment-history";
 import type { LeadAssignmentRow, LeadEventRow } from "@/lib/lead-audit";
+import { filterTimelineItems, mergeLeadTimeline } from "@/lib/lead-timeline";
 import {
   Dialog,
   DialogContent,
@@ -169,6 +170,7 @@ function activityKind(type: string) {
   if (type.includes("stage")) return "Stage";
   if (type.includes("viewing") || type.includes("calendar")) return "Calendar";
   if (type === "note") return "Note";
+  if (type === "created" || type === "claimed" || type === "sla_reclaim") return "System";
   return formatLabel(type);
 }
 
@@ -433,7 +435,8 @@ export function LeadDetail({
   const [selectedReason, setSelectedReason] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [activityFilter, setActivityFilter] = useState("all");
-  const [showAllActivity, setShowAllActivity] = useState(false);
+  const [timelineVisibleCount, setTimelineVisibleCount] = useState(20);
+  const TIMELINE_PAGE = 20;
   const [noteDraft, setNoteDraft] = useState("");
 
   const currentStage = stages.find((s) => s.id === optimisticLead.stage_id) ?? null;
@@ -449,7 +452,11 @@ export function LeadDetail({
   const scoreLegend = (fieldOptions.score ?? []).map((row) => row.label).join(" · ");
   const engagement = optimisticActivities.length >= 15 ? "High" : optimisticActivities.length >= 5 ? "Medium" : "Low";
   const budgetLine = formatAEDRange(optimisticLead.budget_min, optimisticLead.budget_max);
-  const lastTouch = optimisticActivities[0]?.occurred_at ?? optimisticLead.last_activity_at ?? optimisticLead.updated_at;
+  const timelineItems = useMemo(
+    () => mergeLeadTimeline(optimisticActivities, events),
+    [optimisticActivities, events]
+  );
+  const lastTouch = timelineItems[0]?.occurred_at ?? optimisticLead.last_activity_at ?? optimisticLead.updated_at;
   const currentIdx = pipelineStages.findIndex((s) => s.id === optimisticLead.stage_id);
   const fillPct = pipelineStages.length <= 1 || currentIdx < 0 ? 0 : (currentIdx / (pipelineStages.length - 1)) * 100;
   const slaClock = stageSlaClock(
@@ -460,12 +467,18 @@ export function LeadDetail({
   const scheduledFollowUp = optimisticFollowUps.find((row) => row.status === "scheduled") ?? null;
 
   const visibleActivities = useMemo(() => {
-    const filtered =
-      activityFilter === "all"
-        ? optimisticActivities
-        : optimisticActivities.filter((a) => a.type.toLowerCase().includes(activityFilter));
-    return showAllActivity ? filtered : filtered.slice(0, 4);
-  }, [optimisticActivities, activityFilter, showAllActivity]);
+    const filtered = filterTimelineItems(timelineItems, activityFilter);
+    return filtered.slice(0, timelineVisibleCount);
+  }, [timelineItems, activityFilter, timelineVisibleCount]);
+
+  const filteredTimelineCount = useMemo(
+    () => filterTimelineItems(timelineItems, activityFilter).length,
+    [timelineItems, activityFilter]
+  );
+
+  useEffect(() => {
+    setTimelineVisibleCount(20);
+  }, [activityFilter]);
 
   function saveField(payload: Record<string, unknown>, nextState: Partial<Lead>, close = true) {
     setOptimisticLead((prev) => ({ ...prev, ...nextState }));
@@ -1139,7 +1152,9 @@ export function LeadDetail({
             <div className="mb-1 flex items-baseline justify-between gap-3">
               <div>
                 <h2 className="font-heading text-[1.12rem]" style={{ fontFamily: "var(--font-display), serif" }}>Activity</h2>
-                <p className="mt-0.5 text-[0.8rem] text-muted-foreground">{optimisticActivities.length} interactions since first contact</p>
+                <p className="mt-0.5 text-[0.8rem] text-muted-foreground">
+                  {timelineItems.length} entries · human + system
+                </p>
               </div>
               <select
                 className="h-8 rounded-lg border border-border bg-muted px-2 text-[0.8rem] text-muted-foreground"
@@ -1151,6 +1166,7 @@ export function LeadDetail({
                 <option value="whatsapp">Messages</option>
                 <option value="note">Notes</option>
                 <option value="follow_up">Follow-ups</option>
+                <option value="system">System</option>
               </select>
             </div>
             {canEdit && (
@@ -1186,7 +1202,14 @@ export function LeadDetail({
                 <p className="text-sm text-muted-foreground">No activity yet.</p>
               ) : (
                 visibleActivities.map((a) => {
-                  const key = a.type.includes("follow_up") || a.type.includes("stage") || a.type.includes("viewing") || a.type === "converted";
+                  const key =
+                    a.isSystem ||
+                    a.type.includes("follow_up") ||
+                    a.type.includes("stage") ||
+                    a.type.includes("viewing") ||
+                    a.type === "converted" ||
+                    a.type === "created" ||
+                    a.type === "claimed";
                   return (
                     <div key={a.id} className="relative pb-[22px] last:pb-1">
                       <div className={`absolute top-1 -left-[26px] grid h-[15px] w-[15px] place-items-center rounded-full border-[1.5px] bg-card ${key ? "border-primary bg-[#F5EEDC]" : "border-muted-foreground"}`}>
@@ -1201,15 +1224,24 @@ export function LeadDetail({
                           {shortTimeAgo(a.occurred_at)}
                         </span>
                       </div>
-                      {a.summary && <p className="mt-1 max-w-[60ch] text-[0.85rem] leading-relaxed text-muted-foreground">{a.summary}</p>}
+                      {a.summary && a.summary.length > 48 ? (
+                        <p className="mt-1 max-w-[60ch] text-[0.85rem] leading-relaxed text-muted-foreground">{a.summary}</p>
+                      ) : null}
+                      {a.authorName && a.isSystem ? (
+                        <p className="mt-0.5 text-[0.72rem] text-muted-foreground">{a.authorName}</p>
+                      ) : null}
                     </div>
                   );
                 })
               )}
             </div>
-            {optimisticActivities.length > 4 && (
-              <button type="button" className="mt-4 h-10 w-full rounded-[10px] border border-dashed border-border text-[0.83rem] font-semibold text-muted-foreground hover:border-muted-foreground hover:text-foreground" onClick={() => setShowAllActivity((v) => !v)}>
-                {showAllActivity ? "Show less" : "View all activity"}
+            {filteredTimelineCount > timelineVisibleCount && (
+              <button
+                type="button"
+                className="mt-4 h-10 w-full rounded-[10px] border border-dashed border-border text-[0.83rem] font-semibold text-muted-foreground hover:border-muted-foreground hover:text-foreground"
+                onClick={() => setTimelineVisibleCount((n) => n + TIMELINE_PAGE)}
+              >
+                Load more ({filteredTimelineCount - timelineVisibleCount} remaining)
               </button>
             )}
           </section>
@@ -1351,11 +1383,11 @@ export function LeadDetail({
               <div className="flex justify-between border-b border-border/70 py-2.5 text-[0.84rem]"><span className="text-muted-foreground">Engagement</span><b>{engagement}</b></div>
               <div className="flex justify-between border-b border-border/70 py-2.5 text-[0.84rem]"><span className="text-muted-foreground">Last activity</span><b className="font-mono text-[0.8rem]">{timeAgo(lastTouch)}</b></div>
               <div className="flex justify-between border-b border-border/70 py-2.5 text-[0.84rem]"><span className="text-muted-foreground">First contact</span><b className="font-mono text-[0.8rem]">{formatDate(optimisticLead.created_at)}</b></div>
-              <div className="flex justify-between py-2.5 text-[0.84rem]"><span className="text-muted-foreground">Total activities</span><b className="font-mono text-[0.8rem]">{optimisticActivities.length}</b></div>
+              <div className="flex justify-between py-2.5 text-[0.84rem]"><span className="text-muted-foreground">Timeline entries</span><b className="font-mono text-[0.8rem]">{timelineItems.length}</b></div>
             </div>
           </section>
 
-          <LeadAuditPanel assignments={assignments} events={events} />
+          <LeadAssignmentHistory assignments={assignments} />
 
           <MatchPanel
             matches={matches}

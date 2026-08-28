@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -64,6 +64,23 @@ export function CustomerEditDialog({
     notes: customer.notes ?? "",
     assigned_to: customer.assigned_to ?? "",
   });
+
+  useEffect(() => {
+    if (!open) return;
+    setForm({
+      type: customer.type,
+      name: customer.name,
+      phone: customer.phone ?? "",
+      email: customer.email ?? "",
+      nationality: customer.nationality ?? "",
+      emirates_id: customer.emirates_id ?? "",
+      passport_no: customer.passport_no ?? "",
+      trn: customer.trn ?? "",
+      address: customer.address ?? "",
+      notes: customer.notes ?? "",
+      assigned_to: customer.assigned_to ?? "",
+    });
+  }, [open, customer]);
 
   if (!canEdit) return null;
 

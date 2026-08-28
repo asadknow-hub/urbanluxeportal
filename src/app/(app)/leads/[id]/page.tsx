@@ -99,7 +99,7 @@ export default async function LeadDetailPage({
       .select(`*, author:profiles!lead_activities_created_by_fkey(id, full_name)`)
       .eq("lead_id", id)
       .order("occurred_at", { ascending: false })
-      .limit(50),
+      .limit(80),
     supabase
       .from("profiles")
       .select("id, full_name, role")

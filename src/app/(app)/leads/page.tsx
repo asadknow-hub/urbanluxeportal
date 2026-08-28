@@ -14,6 +14,9 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 const LIST_PAGE_SIZE = 50;
+const BOARD_LIMIT_DEFAULT = 200;
+const BOARD_LIMIT_STEP = 200;
+const BOARD_LIMIT_MAX = 1000;
 
 export default async function LeadsBoardPage({
   searchParams,
@@ -25,6 +28,7 @@ export default async function LeadsBoardPage({
     q?: string;
     stage?: string;
     page?: string;
+    board_limit?: string;
   }>;
 }) {
   const user = await getCurrentUser();
@@ -47,6 +51,11 @@ export default async function LeadsBoardPage({
   const commonSelect = `*, assigned_to_profile:profiles!leads_assigned_to_fkey(id, full_name, avatar_url)`;
 
   const fetchBoardData = async () => {
+    const boardLimit = Math.min(
+      BOARD_LIMIT_MAX,
+      Math.max(BOARD_LIMIT_DEFAULT, Number.parseInt(params.board_limit ?? String(BOARD_LIMIT_DEFAULT), 10) || BOARD_LIMIT_DEFAULT)
+    );
+
     let query = supabase
       .from("leads")
       .select(
@@ -58,7 +67,7 @@ export default async function LeadsBoardPage({
       )
       .is("deleted_at", null)
       .order("updated_at", { ascending: false })
-      .limit(200);
+      .limit(boardLimit);
 
     if (user.role === "agent") {
       query = query.or(`assigned_to.eq.${user.id},assigned_to.is.null`);
@@ -86,6 +95,7 @@ export default async function LeadsBoardPage({
       stages: (stages ?? []) as unknown as LeadStage[],
       leads: (leads ?? []) as unknown as BoardLead[],
       count: count ?? 0,
+      boardLimit,
     };
   };
 
@@ -184,6 +194,19 @@ export default async function LeadsBoardPage({
     })
     .map((lead) => lead.id);
 
+  const buildBoardLimitHref = () => {
+    const current = boardData?.boardLimit ?? BOARD_LIMIT_DEFAULT;
+    const next = Math.min(BOARD_LIMIT_MAX, current + BOARD_LIMIT_STEP);
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (!value || key === "board_limit") continue;
+      query.set(key, value);
+    }
+    query.set("view", "board");
+    query.set("board_limit", String(next));
+    return `/leads?${query.toString()}`;
+  };
+
   return (
     <div className="flex min-h-0 flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -192,11 +215,21 @@ export default async function LeadsBoardPage({
             {view === "board" ? boardData?.count ?? 0 : listData?.count ?? 0}
           </span>{" "}
           in pipeline
-          {view === "board" && (boardData?.count ?? 0) > 200 ? (
-            <span className="text-amber-700"> · showing latest 200</span>
+          {view === "board" && (boardData?.count ?? 0) > (boardData?.boardLimit ?? BOARD_LIMIT_DEFAULT) ? (
+            <span className="text-amber-700"> · showing latest {boardData?.boardLimit ?? BOARD_LIMIT_DEFAULT}</span>
           ) : null}
         </p>
-        <div className="flex flex-wrap items-center gap-2">
+        {view === "board" &&
+        (boardData?.count ?? 0) > (boardData?.boardLimit ?? BOARD_LIMIT_DEFAULT) &&
+        (boardData?.boardLimit ?? BOARD_LIMIT_DEFAULT) < BOARD_LIMIT_MAX ? (
+          <Link
+            href={buildBoardLimitHref()}
+            className="mr-auto text-sm font-medium text-primary hover:underline"
+          >
+            Load {BOARD_LIMIT_STEP} more on board
+          </Link>
+        ) : null}
+        <div className="ml-auto flex flex-wrap items-center gap-2">
           <div className="inline-flex h-8 rounded-md border border-border bg-card p-0.5">
             <Link
               href={buildViewHref("board")}

@@ -355,9 +355,12 @@ export function LeadsTable({
       {totalCount > pageSize && (
         <div className="flex flex-wrap items-center justify-between gap-3 px-1">
           <p className="text-sm text-muted-foreground">
-            Page <span className="font-medium text-foreground">{page}</span> of{" "}
-            <span className="font-medium text-foreground">{totalPages}</span>
-            <span className="text-muted-foreground"> · {totalCount} leads</span>
+            Showing{" "}
+            <span className="font-medium text-foreground">
+              {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, totalCount)}
+            </span>{" "}
+            of <span className="font-medium text-foreground">{totalCount}</span>
+            <span className="text-muted-foreground"> · page {page} of {totalPages}</span>
           </p>
           <div className="flex items-center gap-2">
             {page > 1 ? (
