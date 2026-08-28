@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LeadDetail } from "@/components/leads/lead-detail";
 import { groupLeadFieldOptions, type LeadFieldOption } from "@/lib/lead-field-options";
 import { matchesForRequirement, INVENTORY_MATCH_SELECT } from "@/lib/match-inventory";
+import { getLeadTimelinePage } from "@/server/lead-timeline";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -75,7 +76,6 @@ export default async function LeadDetailPage({
   // This cuts page load time from 6× round-trip to 1× round-trip.
   const [
     { data: stages },
-    { data: activities },
     { data: agents },
     { data: documents },
     { data: areaRows },
@@ -87,19 +87,13 @@ export default async function LeadDetailPage({
     { data: viewingRows },
     { data: inventoryRows },
     { data: assignmentRows },
-    { data: eventRows },
+    timelineResult,
   ] = await Promise.all([
     supabase
       .from("lead_stages")
       .select("*")
       .eq("is_active", true)
       .order("sort"),
-    supabase
-      .from("lead_activities")
-      .select(`*, author:profiles!lead_activities_created_by_fkey(id, full_name)`)
-      .eq("lead_id", id)
-      .order("occurred_at", { ascending: false })
-      .limit(80),
     supabase
       .from("profiles")
       .select("id, full_name, role")
@@ -156,13 +150,16 @@ export default async function LeadDetailPage({
       .eq("lead_id", id)
       .order("created_at", { ascending: false })
       .limit(30),
-    supabase
-      .from("lead_events")
-      .select(`id, kind, actor_id, payload, created_at, actor:profiles!lead_events_actor_id_fkey(full_name)`)
-      .eq("lead_id", id)
-      .order("id", { ascending: false })
-      .limit(40),
+    getLeadTimelinePage(id, null, "all"),
   ]);
+
+  if (!timelineResult.ok) {
+    return (
+      <div className="p-4">
+        <p className="text-sm text-slate-500">Could not load timeline.</p>
+      </div>
+    );
+  }
 
   const customer = customerResult?.data ?? null;
   const deal = dealResult?.data ?? null;
@@ -181,7 +178,9 @@ export default async function LeadDetailPage({
   return (
     <LeadDetail
       lead={lead}
-      activities={activities ?? []}
+      initialTimeline={timelineResult.items}
+      initialTimelineCursor={timelineResult.nextCursor}
+      activityCount={timelineResult.activityCount}
       agents={agents ?? []}
       stages={stages ?? []}
       areas={(areaRows ?? []).map((row) => row.name)}
@@ -199,11 +198,6 @@ export default async function LeadDetailPage({
         ...row,
         from_profile: firstRel(row.from_profile as { full_name: string } | { full_name: string }[] | null),
         to_profile: firstRel(row.to_profile as { full_name: string } | { full_name: string }[] | null),
-      }))}
-      events={(eventRows ?? []).map((row) => ({
-        ...row,
-        payload: (row.payload ?? {}) as Record<string, unknown>,
-        actor: firstRel(row.actor as { full_name: string } | { full_name: string }[] | null),
       }))}
       userRole={user.role}
       userId={user.id}

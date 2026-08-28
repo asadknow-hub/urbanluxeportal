@@ -39,6 +39,7 @@ export function DashboardView({
   openLeadsCount,
   customersCount,
   overdueFollowUpsCount,
+  firstResponseOverdueCount = 0,
   activities,
   followUps,
   todayViewings = [],
@@ -50,6 +51,7 @@ export function DashboardView({
   openLeadsCount: number;
   customersCount: number;
   overdueFollowUpsCount: number;
+  firstResponseOverdueCount?: number;
   activities: Activity[];
   followUps: FollowUp[];
   todayViewings?: TodayViewing[];
@@ -93,6 +95,12 @@ export function DashboardView({
           value={String(overdueFollowUpsCount)}
           tone={overdueFollowUpsCount > 0 ? "danger" : undefined}
           href="/leads/followups"
+        />
+        <StatCard
+          label="First response overdue"
+          value={String(firstResponseOverdueCount)}
+          tone={firstResponseOverdueCount > 0 ? "danger" : undefined}
+          href="/leads"
         />
         <StatCard label="New leads (MTD)" value={String(newLeadsCount)} href="/leads" />
         <StatCard label="Customers" value={String(customersCount)} href="/customers" />

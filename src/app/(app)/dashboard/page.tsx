@@ -49,6 +49,14 @@ export default async function DashboardPage() {
     .lt("next_follow_up_at", now.toISOString())
     .is("deleted_at", null);
 
+  let firstResponseOverdueQuery = supabase
+    .from("leads")
+    .select("id", { count: "exact", head: true })
+    .is("deleted_at", null)
+    .is("first_responded_at", null)
+    .not("first_response_due_at", "is", null)
+    .lt("first_response_due_at", now.toISOString());
+
   let customersQuery = supabase
     .from("customers")
     .select("id", { count: "exact", head: true })
@@ -61,6 +69,7 @@ export default async function DashboardPage() {
     newLeadsQuery = newLeadsQuery.or(mineOrPool);
     followupsQuery = followupsQuery.or(mineOrPool);
     overdueFollowupsQuery = overdueFollowupsQuery.or(mineOrPool);
+    firstResponseOverdueQuery = firstResponseOverdueQuery.or(mineOrPool);
     customersQuery = customersQuery.or(mineOrPool);
   }
 
@@ -72,6 +81,7 @@ export default async function DashboardPage() {
     openLeadsResult,
     customersResult,
     overdueFollowupsResult,
+    firstResponseOverdueResult,
   ] = await Promise.all([
     dealsQuery,
     supabase
@@ -84,6 +94,7 @@ export default async function DashboardPage() {
     openLeadsQuery,
     customersQuery,
     overdueFollowupsQuery,
+    firstResponseOverdueQuery,
   ]);
 
   const dayStart = startOfDay(new Date());
@@ -153,6 +164,7 @@ export default async function DashboardPage() {
       openLeadsCount={openLeadsResult.count ?? 0}
       customersCount={customersResult.count ?? 0}
       overdueFollowUpsCount={overdueFollowupsResult.count ?? 0}
+      firstResponseOverdueCount={firstResponseOverdueResult.count ?? 0}
       activities={(activityResult.data ?? []) as never}
       followUps={followupsResult.data ?? []}
       todayViewings={todayViewings}
