@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { notify, notifyByRole } from "@/lib/notify";
 import { formatDate } from "@/lib/dates";
+import { sweepFirstResponseSla } from "@/server/first-response";
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -36,6 +37,8 @@ export async function GET(request: NextRequest) {
   }
 
   await Promise.allSettled(tasks);
+
+  const firstResponse = await sweepFirstResponseSla(supabase);
 
   // Stage SLA: leads sitting in a stage past stale_after_days
   const { data: openLeads } = await supabase
@@ -89,5 +92,6 @@ export async function GET(request: NextRequest) {
     ok: true,
     expiringDocs: expiringDocs?.length ?? 0,
     staleLeads: staleLeads.length,
+    firstResponse,
   });
 }
