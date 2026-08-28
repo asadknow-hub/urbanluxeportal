@@ -15,6 +15,7 @@ export type DealPropertySnapshot = {
 };
 
 export type DealTransactionInput = {
+  ejari_no?: string | null;
   property_title?: string | null;
   property_community?: string | null;
   property_building?: string | null;

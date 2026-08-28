@@ -393,6 +393,7 @@ export async function updateDealTransaction(
     };
 
     const fields: (keyof DealTransactionInput)[] = [
+      "ejari_no",
       "property_title",
       "property_community",
       "property_building",

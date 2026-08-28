@@ -1,14 +1,19 @@
 "use client";
 
-import { useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import type { ComponentType, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { assignDeal, updateDeal, updateDealTransaction } from "@/server/deals";
-import { PAYMENT_METHODS, dealReadyToFinalize } from "@/lib/deal-transaction";
+import {
+  PAYMENT_METHODS,
+  dealReadyToFinalize,
+  type DealPaymentScheduleEntry,
+} from "@/lib/deal-transaction";
 import { isDealClosed, isDealLost } from "@/lib/deal-stages";
 import { formatAED } from "@/lib/money";
 import { toast } from "sonner";
-import { Building2, CreditCard, UserRound } from "lucide-react";
+import { Building2, CreditCard, Plus, Trash2, UserRound } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export type DealTransactionDeal = {
   id: string;
@@ -18,6 +23,9 @@ export type DealTransactionDeal = {
   commission_amount: number | null;
   commission_rate: number | null;
   finalized_at?: string | null;
+  expected_close_date?: string | null;
+  ejari_no?: string | null;
+  payment_schedule?: unknown;
   property_title: string | null;
   property_community: string | null;
   property_building: string | null;
@@ -43,6 +51,28 @@ function emptyPlaceholder(text = "Not captured") {
 function filsToAed(fils: number | null) {
   return fils != null && fils > 0 ? String(fils / 100) : "";
 }
+
+function parsePaymentSchedule(raw: unknown): DealPaymentScheduleEntry[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((row): row is Record<string, unknown> => row != null && typeof row === "object")
+    .map((row) => ({
+      label: typeof row.label === "string" ? row.label : "",
+      amount_fils: typeof row.amount_fils === "number" ? row.amount_fils : 0,
+      due_date: typeof row.due_date === "string" ? row.due_date : null,
+      status:
+        row.status === "pending" || row.status === "received" || row.status === "overdue"
+          ? row.status
+          : "pending",
+    }));
+}
+
+type ScheduleDraftRow = {
+  label: string;
+  amount: string;
+  due_date: string;
+  status: "pending" | "received" | "overdue";
+};
 
 export function DealTransactionForm({
   deal,
@@ -86,6 +116,7 @@ export function DealTransactionForm({
 
   function saveText(
     key:
+      | "ejari_no"
       | "property_title"
       | "property_community"
       | "property_building"
@@ -155,6 +186,14 @@ export function DealTransactionForm({
             onSave={(v) => saveText("property_ref", v)}
           />
         </LedgerRow>
+        <LedgerRow label="Ejari no.">
+          <QuietSaveInput
+            value={deal.ejari_no ?? ""}
+            disabled={!editable}
+            placeholder={emptyPlaceholder("Rental Ejari")}
+            onSave={(v) => saveText("ejari_no", v)}
+          />
+        </LedgerRow>
       </Section>
 
       <Section icon={UserRound} title="Customer details">
@@ -217,6 +256,20 @@ export function DealTransactionForm({
       </Section>
 
       <Section icon={CreditCard} title="Payment & agent">
+        <LedgerRow label="Expected close">
+          <QuietSaveInput
+            type="date"
+            value={deal.expected_close_date?.slice(0, 10) ?? ""}
+            disabled={!editable}
+            placeholder={emptyPlaceholder()}
+            onSave={(v) => {
+              const next = v.trim() || null;
+              const current = deal.expected_close_date?.slice(0, 10) ?? null;
+              if (next === current) return;
+              saveDeal({ expected_close_date: next });
+            }}
+          />
+        </LedgerRow>
         <LedgerRow label="Method">
           <QuietSelect
             value={deal.payment_method ?? ""}
@@ -275,6 +328,12 @@ export function DealTransactionForm({
             onSave={(v) => saveText("payment_notes", v)}
           />
         </LedgerRow>
+        <PaymentScheduleEditor
+          key={JSON.stringify(deal.payment_schedule ?? null)}
+          schedule={deal.payment_schedule}
+          disabled={!editable}
+          onSave={(entries) => saveTx({ payment_schedule: entries.length ? entries : null })}
+        />
         <LedgerRow label="Agent">
           <QuietSelect
             value={deal.assigned_to ?? ""}
@@ -405,6 +464,137 @@ function QuietSaveInput({
         }
       }}
     />
+  );
+}
+
+function PaymentScheduleEditor({
+  schedule,
+  disabled,
+  onSave,
+}: {
+  schedule: unknown;
+  disabled?: boolean;
+  onSave: (entries: DealPaymentScheduleEntry[]) => void;
+}) {
+  const parsed = useMemo(() => parsePaymentSchedule(schedule), [schedule]);
+  const [rows, setRows] = useState<ScheduleDraftRow[]>(() =>
+    parsed.length
+      ? parsed.map((row) => ({
+          label: row.label,
+          amount: row.amount_fils > 0 ? String(row.amount_fils / 100) : "",
+          due_date: row.due_date?.slice(0, 10) ?? "",
+          status: row.status ?? "pending",
+        }))
+      : []
+  );
+  const [dirty, setDirty] = useState(false);
+
+  function toEntries(draft: ScheduleDraftRow[]): DealPaymentScheduleEntry[] {
+    return draft
+      .filter((row) => row.label.trim() || row.amount.trim())
+      .map((row) => ({
+        label: row.label.trim() || "Milestone",
+        amount_fils: row.amount.trim() ? Math.round(Number(row.amount) * 100) : 0,
+        due_date: row.due_date.trim() || null,
+        status: row.status,
+      }));
+  }
+
+  function updateRow(index: number, patch: Partial<ScheduleDraftRow>) {
+    setRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
+    setDirty(true);
+  }
+
+  function addRow() {
+    setRows((prev) => [...prev, { label: "", amount: "", due_date: "", status: "pending" }]);
+    setDirty(true);
+  }
+
+  function removeRow(index: number) {
+    setRows((prev) => prev.filter((_, i) => i !== index));
+    setDirty(true);
+  }
+
+  function handleSave() {
+    onSave(toEntries(rows));
+    setDirty(false);
+  }
+
+  return (
+    <div className="border-b border-border py-3 last:border-b-0">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <span className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+          Payment schedule
+        </span>
+        {!disabled && (
+          <Button type="button" variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs" onClick={addRow}>
+            <Plus className="h-3 w-3" />
+            Add
+          </Button>
+        )}
+      </div>
+      {rows.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No milestones yet.</p>
+      ) : (
+        <div className="space-y-2">
+          {rows.map((row, index) => (
+            <div key={index} className="grid grid-cols-1 gap-2 rounded-md border border-border/70 p-2 sm:grid-cols-[1fr_88px_120px_96px_28px]">
+              <input
+                value={row.label}
+                disabled={disabled}
+                placeholder="Label"
+                className="h-7 rounded-md bg-transparent px-2 text-xs outline-none placeholder:text-muted-foreground disabled:opacity-60"
+                onChange={(e) => updateRow(index, { label: e.target.value })}
+              />
+              <input
+                type="number"
+                value={row.amount}
+                disabled={disabled}
+                placeholder="AED"
+                className="h-7 rounded-md bg-transparent px-2 text-xs outline-none placeholder:text-muted-foreground disabled:opacity-60"
+                onChange={(e) => updateRow(index, { amount: e.target.value })}
+              />
+              <input
+                type="date"
+                value={row.due_date}
+                disabled={disabled}
+                className="h-7 rounded-md bg-transparent px-2 text-xs outline-none disabled:opacity-60"
+                onChange={(e) => updateRow(index, { due_date: e.target.value })}
+              />
+              <select
+                value={row.status}
+                disabled={disabled}
+                onChange={(e) =>
+                  updateRow(index, {
+                    status: e.target.value as ScheduleDraftRow["status"],
+                  })
+                }
+                className="h-7 rounded-md bg-transparent px-1 text-xs outline-none disabled:opacity-60"
+              >
+                <option value="pending">Pending</option>
+                <option value="received">Received</option>
+                <option value="overdue">Overdue</option>
+              </select>
+              {!disabled && (
+                <button
+                  type="button"
+                  onClick={() => removeRow(index)}
+                  className="grid h-7 w-7 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive"
+                  aria-label="Remove milestone"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      {!disabled && dirty && (
+        <Button type="button" size="sm" variant="outline" className="mt-2 h-7 text-xs" onClick={handleSave}>
+          Save schedule
+        </Button>
+      )}
+    </div>
   );
 }
 

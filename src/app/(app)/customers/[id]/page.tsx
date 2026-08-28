@@ -11,6 +11,10 @@ import type { LeadContext } from "@/lib/lead-flow";
 import { formatPropertyLine } from "@/lib/deal-transaction";
 import { dealStageLabel, normalizeDealStage } from "@/lib/deal-stages";
 import { CustomerNewDealDialog } from "@/components/customers/customer-new-deal-dialog";
+import { CustomerEditDialog } from "@/components/customers/customer-edit-dialog";
+import { CustomerDocumentsSection } from "@/components/customers/customer-documents-section";
+import { docCategoryChoices, type LeadFieldOption } from "@/lib/lead-field-options";
+import { canManageCrm } from "@/lib/permissions";
 import Link from "next/link";
 import {
   Phone,
@@ -55,22 +59,53 @@ export default async function CustomerDetailPage({
 
   if (error || !customer) notFound();
 
-  const { data: deals } = await supabase
-    .from("deals")
-    .select("*, lead:leads(id, name, source, interest, score)")
-    .eq("customer_id", id)
-    .is("deleted_at", null)
-    .order("created_at", { ascending: false });
-
-  const { data: properties } = await supabase
-    .from("customer_properties")
-    .select(
-      `*,
+  const [{ data: deals }, { data: properties }, { data: activities }, { data: documents }, { data: agents }, { data: docCategoryRows }] =
+    await Promise.all([
+    supabase
+      .from("deals")
+      .select("*, lead:leads(id, name, source, interest, score)")
+      .eq("customer_id", id)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("customer_properties")
+      .select(
+        `*,
       agent:profiles!customer_properties_assigned_to_fkey(id, full_name)
       `
-    )
-    .eq("customer_id", id)
-    .order("acquired_at", { ascending: false });
+      )
+      .eq("customer_id", id)
+      .order("acquired_at", { ascending: false }),
+    supabase
+      .from("activity_log")
+      .select("*, actor:profiles!activity_log_actor_id_fkey(full_name)")
+      .eq("entity_type", "customer")
+      .eq("entity_id", id)
+      .order("created_at", { ascending: false })
+      .limit(15),
+    supabase
+      .from("documents")
+      .select("*")
+      .eq("entity_type", "customer")
+      .eq("entity_id", id)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("profiles")
+      .select("id, full_name, role")
+      .in("role", ["admin", "manager", "reception", "agent"])
+      .eq("is_active", true)
+      .order("full_name"),
+    supabase
+      .from("lead_field_options")
+      .select("id, field_key, value, label, sort, extra")
+      .eq("field_key", "doc_category")
+      .order("sort")
+      .order("label"),
+  ]);
+
+  const canEdit = canManageCrm(user.role) || customer.assigned_to === user.id;
+  const docCategories = docCategoryChoices((docCategoryRows ?? []) as LeadFieldOption[]);
 
   let originatingLead = null;
   if (customer.lead_id) {
@@ -81,14 +116,6 @@ export default async function CustomerDetailPage({
       .single();
     originatingLead = ld;
   }
-
-  const { data: activities } = await supabase
-    .from("activity_log")
-    .select("*, actor:profiles!activity_log_actor_id_fkey(full_name)")
-    .eq("entity_type", "customer")
-    .eq("entity_id", id)
-    .order("created_at", { ascending: false })
-    .limit(15);
 
   const waLink = whatsappLink(customer.phone);
   const leadContext = customer.lead_context as LeadContext | null;
@@ -236,6 +263,22 @@ export default async function CustomerDetailPage({
             </div>
           </div>
 
+          <CustomerDocumentsSection
+            customerId={customer.id}
+            initialDocuments={(documents ?? []).map((doc) => ({
+              id: doc.id,
+              name: doc.name,
+              storage_path: doc.storage_path,
+              mime_type: doc.mime_type,
+              category: doc.category,
+              expiry_date: doc.expiry_date,
+              notes: doc.notes,
+              created_at: doc.created_at,
+            }))}
+            categories={docCategories}
+            canEdit={canEdit}
+          />
+
           <div className="overflow-hidden rounded-[14px] border border-border bg-card p-5">
             <h2 className="mb-4 text-sm font-semibold text-foreground">Recent activity</h2>
             <div className="space-y-3">
@@ -261,7 +304,27 @@ export default async function CustomerDetailPage({
         <div className="space-y-4">
           <div className="overflow-hidden rounded-[14px] border border-border bg-card p-4">
             <div className="-mx-4 -mt-4 mb-4 h-0.5 bg-primary" />
-            <h2 className="mb-4 text-sm font-semibold text-foreground">Contact</h2>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-foreground">Contact</h2>
+              <CustomerEditDialog
+                customer={{
+                  id: customer.id,
+                  type: customer.type as "individual" | "company",
+                  name: customer.name,
+                  phone: customer.phone,
+                  email: customer.email,
+                  nationality: customer.nationality,
+                  emirates_id: customer.emirates_id,
+                  passport_no: customer.passport_no,
+                  trn: customer.trn,
+                  address: customer.address,
+                  notes: customer.notes,
+                  assigned_to: customer.assigned_to,
+                }}
+                agents={agents ?? []}
+                canEdit={canEdit}
+              />
+            </div>
             <div className="space-y-3 text-sm">
               {customer.phone && (
                 <div className="flex items-center gap-2">
@@ -335,6 +398,12 @@ export default async function CustomerDetailPage({
               {!customer.emirates_id && !customer.passport_no && customer.type === "individual" && (
                 <div className="rounded-md bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
                   ID document missing
+                </div>
+              )}
+              {customer.notes && (
+                <div>
+                  <dt className="text-xs text-muted-foreground">Notes</dt>
+                  <dd className="whitespace-pre-wrap font-medium text-foreground">{customer.notes}</dd>
                 </div>
               )}
             </dl>
