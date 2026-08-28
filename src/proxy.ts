@@ -1,7 +1,4 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-
-const PUBLIC_PATHS = ["/login"];
 
 const PORTAL_PREFIXES = [
   "/dashboard",
@@ -25,9 +22,10 @@ function hasSupabaseSessionCookie(request: NextRequest) {
   );
 }
 
-/** Marketing site routes — no session work in proxy (avoids Supabase latency/timeouts on `/`). */
+/** Marketing + auth pages — never call Supabase here (Vercel proxy timeout). */
 function isPublicWebPath(pathname: string) {
-  return !isPortalPath(pathname) && !PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  if (pathname === "/login") return true;
+  return !isPortalPath(pathname);
 }
 
 export async function proxy(request: NextRequest) {
@@ -41,81 +39,19 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Public brochure pages: skip auth entirely. Portal layout still enforces login.
   if (isPublicWebPath(pathname)) {
     return NextResponse.next();
   }
 
-  const hasSession = hasSupabaseSessionCookie(request);
-
-  // Logged-out portal visits: redirect immediately — no Supabase round trip.
-  if (!hasSession && isPortalPath(pathname)) {
+  // CRM routes without a session cookie → login immediately (no Supabase round trip).
+  if (!hasSupabaseSessionCookie(request)) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
     return NextResponse.redirect(redirectUrl);
   }
 
-  // Logged-out login page: serve immediately.
-  if (!hasSession && pathname === "/login") {
-    return NextResponse.next();
-  }
-
-  let response = NextResponse.next({ request });
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          );
-        },
-      },
-    }
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user && isPortalPath(pathname) && !PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/login";
-    return NextResponse.redirect(redirectUrl);
-  }
-
-  if (user && pathname === "/login") {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/dashboard";
-    return NextResponse.redirect(redirectUrl);
-  }
-
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("is_active")
-      .eq("id", user.id)
-      .single();
-
-    if (profile && !profile.is_active) {
-      await supabase.auth.signOut();
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/login";
-      redirectUrl.searchParams.set("error", "account_deactivated");
-      return NextResponse.redirect(redirectUrl);
-    }
-  }
-
-  return response;
+  // Session cookie present: let (app)/layout enforce auth via user JWT + RLS.
+  return NextResponse.next();
 }
 
 export const config = {
