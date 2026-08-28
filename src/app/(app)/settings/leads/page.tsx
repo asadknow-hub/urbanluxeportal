@@ -61,7 +61,7 @@ export default async function LeadsSettingsPage({
 
   const supabase = await createSupabaseServerClient();
   const params = await searchParams;
-  const tab: HubTab = isHubTab(params.tab) ? params.tab : "fields";
+  const tab: HubTab = isHubTab(params.tab) ? params.tab : "overview";
 
   const [stagesResult, leadStatsResult, areasResult, nationalitiesResult, fieldOptionsResult, leadColumns] = await Promise.all([
     supabase.from("lead_stages").select("*").eq("is_active", true).order("sort", { ascending: true }),
@@ -96,7 +96,7 @@ export default async function LeadsSettingsPage({
         {HUB_TABS.map((item) => (
           <Link
             key={item.key}
-            href={item.key === "fields" ? "/settings/leads?tab=fields" : `/settings/leads?tab=${item.key}`}
+            href={item.key === "overview" ? "/settings/leads" : `/settings/leads?tab=${item.key}`}
             className={cn(
               "inline-flex h-8 cursor-pointer items-center rounded-lg px-3 text-xs font-medium transition-colors duration-200",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
