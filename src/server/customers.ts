@@ -98,6 +98,24 @@ export async function updateCustomer(
 
     if (error) return { ok: false, error: error.message };
 
+    const dealKyc: Record<string, unknown> = {};
+    if (input.nationality !== undefined) dealKyc.kyc_nationality = input.nationality;
+    if (input.emirates_id !== undefined) dealKyc.kyc_emirates_id = input.emirates_id;
+    if (input.passport_no !== undefined) dealKyc.kyc_passport_no = input.passport_no;
+    if (input.trn !== undefined) dealKyc.kyc_trn = input.trn;
+    if (input.name !== undefined) dealKyc.buyer_name = input.name;
+    if (input.phone !== undefined) dealKyc.buyer_phone = input.phone;
+    if (input.email !== undefined) dealKyc.buyer_email = input.email || null;
+    if (Object.keys(dealKyc).length > 0) {
+      dealKyc.updated_at = new Date().toISOString();
+      await supabase
+        .from("deals")
+        .update(dealKyc)
+        .eq("customer_id", id)
+        .is("finalized_at", null)
+        .is("deleted_at", null);
+    }
+
     await logActivity({
       actorId: user.id,
       entityType: "customer",

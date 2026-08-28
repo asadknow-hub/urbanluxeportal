@@ -60,17 +60,31 @@ export function formatPropertyLine(input: {
   return parts.join(" · ") || "No property set";
 }
 
-export function dealReadyToFinalize(deal: {
-  property_title?: string | null;
-  buyer_name?: string | null;
-  kyc_emirates_id?: string | null;
-  kyc_passport_no?: string | null;
-}): { ok: boolean; missing: string[] } {
+import { normalizeDocCategory } from "@/lib/document-storage";
+
+/** Document categories that satisfy KYC file requirement at close. */
+export const KYC_DOC_CATEGORIES = new Set(["emirates_id", "passport"]);
+
+export function dealReadyToFinalize(
+  deal: {
+    property_title?: string | null;
+    buyer_name?: string | null;
+    kyc_emirates_id?: string | null;
+    kyc_passport_no?: string | null;
+  },
+  documents?: { category: string }[]
+): { ok: boolean; missing: string[] } {
   const missing: string[] = [];
   if (!deal.property_title?.trim()) missing.push("Property");
   if (!deal.buyer_name?.trim()) missing.push("Buyer name");
-  if (!deal.kyc_emirates_id?.trim() && !deal.kyc_passport_no?.trim()) {
-    missing.push("KYC (Emirates ID or passport)");
+
+  const hasKycText = !!(deal.kyc_emirates_id?.trim() || deal.kyc_passport_no?.trim());
+  const hasKycFile =
+    documents?.some((doc) => KYC_DOC_CATEGORIES.has(normalizeDocCategory(doc.category))) ?? false;
+
+  if (!hasKycText && !hasKycFile) {
+    missing.push("KYC (Emirates ID or passport — file or number)");
   }
+
   return { ok: missing.length === 0, missing };
 }

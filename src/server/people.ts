@@ -177,6 +177,41 @@ export async function markPersonLost(customerId: string | null, client?: CrmDb) 
     .eq("id", customerId);
 }
 
+export async function syncPersonKycFromDeal(
+  customerId: string | null,
+  patch: {
+    kyc_nationality?: string | null;
+    kyc_emirates_id?: string | null;
+    kyc_passport_no?: string | null;
+    kyc_trn?: string | null;
+    buyer_name?: string | null;
+    buyer_phone?: string | null;
+    buyer_email?: string | null;
+  },
+  client?: CrmDb
+) {
+  if (!customerId) return;
+  const supabase = client ?? (await createSupabaseServerClient());
+  const { data: person } = await supabase
+    .from("customers")
+    .select("id, status")
+    .eq("id", customerId)
+    .maybeSingle();
+  if (!person || !isWorkingCustomerStatus(person.status)) return;
+
+  const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (patch.kyc_nationality !== undefined) update.nationality = patch.kyc_nationality;
+  if (patch.kyc_emirates_id !== undefined) update.emirates_id = patch.kyc_emirates_id;
+  if (patch.kyc_passport_no !== undefined) update.passport_no = patch.kyc_passport_no;
+  if (patch.kyc_trn !== undefined) update.trn = patch.kyc_trn;
+  if (patch.buyer_name !== undefined && patch.buyer_name?.trim()) update.name = patch.buyer_name.trim();
+  if (patch.buyer_phone !== undefined) update.phone = patch.buyer_phone;
+  if (patch.buyer_email !== undefined) update.email = patch.buyer_email;
+
+  if (Object.keys(update).length <= 1) return;
+  await supabase.from("customers").update(update).eq("id", customerId);
+}
+
 export async function syncPersonAssignment(
   leadId: string,
   assignedTo: string | null,

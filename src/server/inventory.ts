@@ -8,6 +8,8 @@ import { logActivity } from "@/lib/activity-log";
 import { aedToFils } from "@/lib/money";
 import { revalidatePath } from "next/cache";
 import { canManageCrm } from "@/lib/permissions";
+import { updateDealTransaction } from "@/server/deals";
+import type { DealPropertySnapshot } from "@/lib/deal-transaction";
 
 export type ActionResult<T = unknown> = {
   ok: boolean;
@@ -301,6 +303,65 @@ export async function addDealProperty(input: {
 
     revalidatePath(`/pipeline/${input.dealId}`);
     revalidatePath("/pipeline");
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function applyInventoryPropertyToDeal(
+  dealId: string,
+  propertyId: string
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    const denied = await assertCanMutateDeal(dealId, user);
+    if (denied) return { ok: false, error: denied };
+
+    const supabase = await createSupabaseServerClient();
+    const { data: property, error } = await supabase
+      .from("properties")
+      .select(
+        "property_code, community, building_name, unit_number, bedrooms, bua_sqft, title_deed_number, oqood_number, dld_property_number, notes"
+      )
+      .eq("id", propertyId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (error || !property) return { ok: false, error: "Property not found" };
+
+    const title =
+      [property.building_name, property.unit_number].filter(Boolean).join(" ") ||
+      property.property_code ||
+      "Property";
+
+    const snapshot: DealPropertySnapshot = {
+      bedrooms: property.bedrooms != null ? String(property.bedrooms) : null,
+      size_sqft: property.bua_sqft,
+      notes: property.notes,
+    };
+
+    const result = await updateDealTransaction(dealId, {
+      property_title: title,
+      property_community: property.community,
+      property_building: property.building_name,
+      property_unit: property.unit_number,
+      property_ref:
+        property.title_deed_number || property.oqood_number || property.dld_property_number || property.property_code,
+      property_snapshot: snapshot,
+    });
+
+    if (!result.ok) return result;
+
+    await supabase.from("deal_activities").insert({
+      deal_id: dealId,
+      type: "note",
+      summary: `Property set from inventory ${property.property_code ?? propertyId}`,
+      created_by: user.id,
+    });
+
+    revalidatePath(`/pipeline/${dealId}`);
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };

@@ -812,6 +812,13 @@ export async function assignLead(
     }
 
     const supabase = await createSupabaseServerClient();
+
+    const { data: before } = await supabase
+      .from("leads")
+      .select("assigned_to")
+      .eq("id", leadId)
+      .maybeSingle();
+
     const patch: { assigned_to: string | null; updated_at: string; team_id?: string | null } = {
       assigned_to: agentId,
       updated_at: new Date().toISOString(),
@@ -827,6 +834,13 @@ export async function assignLead(
 
     await ensurePersonForLead(leadId, user.id, supabase);
     await syncPersonAssignment(leadId, agentId, supabase);
+
+    await supabase.from("lead_assignments").insert({
+      lead_id: leadId,
+      from_user: before?.assigned_to ?? null,
+      to_user: agentId,
+      reason: "manual",
+    });
 
     // Log activity + audit in parallel (fire-and-forget, don't block response)
     const logPromises: Promise<unknown>[] = [];

@@ -79,18 +79,20 @@ export function DealTransactionForm({
   canEdit,
   canManage,
   agents,
+  documents = [],
 }: {
   deal: DealTransactionDeal;
   canEdit: boolean;
   canManage: boolean;
   agents: { id: string; full_name: string; role: string }[];
+  documents?: { category: string }[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const locked = !!deal.finalized_at || isDealClosed(deal.stage);
   const editable = canEdit && !locked;
   const assigned = agents.find((a) => a.id === deal.assigned_to);
-  const readiness = dealReadyToFinalize(deal);
+  const readiness = dealReadyToFinalize(deal, documents);
 
   function saveTx(patch: Parameters<typeof updateDealTransaction>[1]) {
     startTransition(async () => {

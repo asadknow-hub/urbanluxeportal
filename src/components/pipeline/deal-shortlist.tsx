@@ -12,9 +12,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MATCH_ROLES, propertyLabel } from "@/lib/inventory";
-import { addDealProperty, removeDealProperty } from "@/server/inventory";
+import { addDealProperty, removeDealProperty, applyInventoryPropertyToDeal } from "@/server/inventory";
 import { toast } from "sonner";
-import { Loader2, Plus, X } from "lucide-react";
+import { Loader2, Plus, X, Building2 } from "lucide-react";
 import type { InventoryChoice } from "@/components/crm/viewing-panel";
 
 export type DealPropertyRow = {
@@ -72,6 +72,18 @@ export function DealShortlist({
       const result = await removeDealProperty(dealId, id);
       if (result.ok) router.refresh();
       else toast.error(result.error ?? "Could not remove");
+    });
+  }
+
+  function handleUseForDeal(propertyId: string) {
+    startTransition(async () => {
+      const result = await applyInventoryPropertyToDeal(dealId, propertyId);
+      if (result.ok) {
+        toast.success("Property applied to deal");
+        router.refresh();
+      } else {
+        toast.error(result.error ?? "Could not apply property");
+      }
     });
   }
 
@@ -136,14 +148,27 @@ export function DealShortlist({
                 </p>
               </div>
               {canEdit ? (
-                <button
-                  type="button"
-                  className="text-muted-foreground hover:text-foreground"
-                  onClick={() => handleRemove(item.property_id)}
-                  aria-label="Remove from shortlist"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 px-2 text-xs"
+                    disabled={pending}
+                    onClick={() => handleUseForDeal(item.property_id)}
+                  >
+                    <Building2 className="h-3 w-3" />
+                    Use for deal
+                  </Button>
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-foreground"
+                    onClick={() => handleRemove(item.property_id)}
+                    aria-label="Remove from shortlist"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               ) : null}
             </div>
           ))}

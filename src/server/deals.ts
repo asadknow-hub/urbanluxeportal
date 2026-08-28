@@ -8,6 +8,7 @@ import { logActivity } from "@/lib/activity-log";
 import { revalidatePath } from "next/cache";
 import { dealReadyToFinalize, type DealTransactionInput } from "@/lib/deal-transaction";
 import { canManageCrm } from "@/lib/permissions";
+import { syncPersonKycFromDeal } from "@/server/people";
 
 export type ActionResult<T = unknown> = {
   ok: boolean;
@@ -375,7 +376,7 @@ export async function updateDealTransaction(
 
     const { data: deal } = await supabase
       .from("deals")
-      .select("assigned_to, stage, finalized_at")
+      .select("assigned_to, stage, finalized_at, customer_id")
       .eq("id", dealId)
       .is("deleted_at", null)
       .single();
@@ -427,8 +428,14 @@ export async function updateDealTransaction(
     const { error } = await supabase.from("deals").update(updateData).eq("id", dealId);
     if (error) return { ok: false, error: error.message };
 
+    if (deal.customer_id) {
+      await syncPersonKycFromDeal(deal.customer_id, input, supabase);
+    }
+
     revalidatePath("/pipeline");
     revalidatePath(`/pipeline/${dealId}`);
+    revalidatePath("/customers");
+    if (deal.customer_id) revalidatePath(`/customers/${deal.customer_id}`);
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };

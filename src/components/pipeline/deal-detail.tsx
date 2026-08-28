@@ -25,6 +25,7 @@ import { getStatusColor } from "@/lib/status-colors";
 import { formatAED } from "@/lib/money";
 import { formatDate, timeAgo } from "@/lib/dates";
 import { LeadContextPanel } from "@/components/crm/lead-context-panel";
+import { DealDocumentsSection } from "@/components/pipeline/deal-documents-section";
 import { DealTransactionForm } from "@/components/pipeline/deal-transaction-form";
 import { DealShortlist, type DealPropertyRow } from "@/components/pipeline/deal-shortlist";
 import { ViewingPanel, type ViewingRow, type InventoryChoice } from "@/components/crm/viewing-panel";
@@ -40,8 +41,7 @@ import {
   normalizeDealStage,
 } from "@/lib/deal-stages";
 import { canManageCrm } from "@/lib/permissions";
-import { formatDocCategory } from "@/lib/document-storage";
-import { defaultDocCapture, type DocCategoryChoice } from "@/lib/lead-field-options";
+import type { DocCategoryChoice } from "@/lib/lead-field-options";
 import { updateDealStage, addDealActivity } from "@/server/deals";
 import { toast } from "sonner";
 import {
@@ -56,7 +56,6 @@ import {
   Briefcase,
   Home,
   Tag,
-  FileText,
   CheckCircle2,
   XCircle,
 } from "lucide-react";
@@ -169,6 +168,8 @@ export function DealDetail({
   documents: {
     id: string;
     name: string;
+    storage_path: string;
+    mime_type: string;
     category: string;
     expiry_date: string | null;
     notes: string | null;
@@ -215,7 +216,7 @@ export function DealDetail({
     return list;
   }, [agents, deal.assigned_to, deal.assigned_to_profile]);
 
-  const finalizeReadiness = dealReadyToFinalize(deal);
+  const finalizeReadiness = dealReadyToFinalize(deal, documents);
 
   function handleStageChange(newStage: string) {
     if (newStage === currentStageKey) return;
@@ -383,7 +384,13 @@ export function DealDetail({
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_360px]">
         <div className="space-y-4">
-          <DealTransactionForm deal={deal} canEdit={canEdit} canManage={canManage} agents={agentOptions} />
+          <DealTransactionForm
+            deal={deal}
+            canEdit={canEdit}
+            canManage={canManage}
+            agents={agentOptions}
+            documents={documents}
+          />
 
           <MatchPanel matches={matches} dealId={deal.id} canEdit={canEdit} />
 
@@ -476,41 +483,21 @@ export function DealDetail({
             variant="compact"
           />
 
-          <div className="overflow-hidden rounded-[14px] border border-border bg-card p-4">
-            <h2 className="mb-3 text-sm font-semibold text-foreground">Documents ({documents.length})</h2>
-            {documents.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No documents yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {documents.map((doc) => {
-                  const mode =
-                    docCategories.find((c) => c.value === doc.category)?.capture ?? defaultDocCapture(doc.category);
-                  const extra =
-                    mode === "expiry"
-                      ? doc.expiry_date
-                        ? `Expires ${formatDate(doc.expiry_date)}`
-                        : null
-                      : doc.notes?.trim() || null;
-                  return (
-                    <div
-                      key={doc.id}
-                      className="flex items-center gap-2 rounded-lg border border-border px-3 py-2"
-                    >
-                      <FileText className="h-4 w-4 text-muted-foreground" />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-foreground">{doc.name}</p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {formatDocCategory(doc.category)}
-                          {extra ? ` · ${extra}` : ""}
-                          {` · ${formatDate(doc.created_at)}`}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          <DealDocumentsSection
+            dealId={deal.id}
+            initialDocuments={documents.map((doc) => ({
+              id: doc.id,
+              name: doc.name,
+              storage_path: doc.storage_path,
+              mime_type: doc.mime_type,
+              category: doc.category,
+              expiry_date: doc.expiry_date,
+              notes: doc.notes,
+              created_at: doc.created_at,
+            }))}
+            categories={docCategories}
+            canEdit={canEdit && !deal.finalized_at}
+          />
         </div>
       </div>
 
@@ -520,7 +507,7 @@ export function DealDetail({
             <DialogTitle>Close deal?</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            This marks the deal as <strong>closed</strong> and creates a <strong>customer</strong> record with the
+            This marks the deal as <strong>closed</strong> and activates the linked person record with the
             property, documents, and agent commission.
           </p>
           {!finalizeReadiness.ok && (
