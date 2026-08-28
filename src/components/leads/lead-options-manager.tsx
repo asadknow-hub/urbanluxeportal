@@ -35,12 +35,14 @@ export function LeadOptionsManager({
   description,
   options,
   kind = "list",
+  agents = [],
 }: {
   fieldKey: string;
   title: string;
   description: string;
   options: LeadFieldOption[];
   kind?: "list" | "budget" | "score";
+  agents?: { id: string; full_name: string }[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -192,6 +194,13 @@ export function LeadOptionsManager({
           <p className="text-sm text-muted-foreground">No options yet.</p>
         ) : (
           <ul className="max-h-[28rem] space-y-1 overflow-y-auto">
+            {kind === "list" && fieldKey === "source" && (
+              <li className="grid grid-cols-[minmax(0,1fr)_11rem_1.75rem] items-center gap-2 px-1 pb-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                <span>Source</span>
+                <span>Default assignee</span>
+                <span />
+              </li>
+            )}
             {kind === "list" && fieldKey === "doc_category" && (
               <li className="grid grid-cols-[minmax(0,1fr)_10.5rem_1.75rem] items-center gap-2 px-1 pb-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
                 <span>Category</span>
@@ -203,8 +212,8 @@ export function LeadOptionsManager({
               <li
                 key={row.id}
                 className={
-                  fieldKey === "doc_category"
-                    ? "grid grid-cols-[minmax(0,1fr)_10.5rem_1.75rem] items-center gap-2 rounded-md px-1 py-1.5"
+                  fieldKey === "doc_category" || fieldKey === "source"
+                    ? "grid grid-cols-[minmax(0,1fr)_11rem_1.75rem] items-center gap-2 rounded-md px-1 py-1.5"
                     : "flex items-center justify-between gap-2 rounded-md px-1 py-1.5"
                 }
               >
@@ -213,6 +222,31 @@ export function LeadOptionsManager({
                     ? `${row.label} (${Number(row.extra?.min_score)}–${Number(row.extra?.max_score)})`
                     : row.label}
                 </span>
+                {fieldKey === "source" && (
+                  <Select
+                    value={(row.extra?.default_assignee_id as string | undefined) ?? "round_robin"}
+                    onValueChange={(v) => {
+                      const next = v === "round_robin" ? null : v;
+                      run(
+                        () => updateLeadFieldOptionExtra(row.id, { default_assignee_id: next }),
+                        next ? "Default assignee saved" : "Round-robin routing"
+                      );
+                    }}
+                    disabled={pending}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="round_robin">Round-robin</SelectItem>
+                      {agents.map((agent) => (
+                        <SelectItem key={agent.id} value={agent.id}>
+                          {agent.full_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 {fieldKey === "doc_category" && (
                   <Select
                     value={docCaptureMode(row)}

@@ -63,13 +63,19 @@ export default async function LeadsSettingsPage({
   const params = await searchParams;
   const tab: HubTab = isHubTab(params.tab) ? params.tab : "overview";
 
-  const [stagesResult, leadStatsResult, areasResult, nationalitiesResult, fieldOptionsResult, leadColumns] = await Promise.all([
+  const [stagesResult, leadStatsResult, areasResult, nationalitiesResult, fieldOptionsResult, leadColumns, agentsResult] = await Promise.all([
     supabase.from("lead_stages").select("*").eq("is_active", true).order("sort", { ascending: true }),
     supabase.from("leads").select("stage_id").not("stage_id", "is", null),
     supabase.from("lead_areas").select("id, name").order("name"),
     supabase.from("lead_nationalities").select("id, name").order("name"),
     supabase.from("lead_field_options").select("id, field_key, value, label, sort, extra").order("sort").order("label"),
     fetchLeadTableColumns(),
+    supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("role", ["admin", "manager", "reception", "agent"])
+      .eq("is_active", true)
+      .order("full_name"),
   ]);
 
   if (stagesResult.error) console.error("[settings/leads] stages query error:", stagesResult.error.message);
@@ -211,6 +217,7 @@ export default async function LeadsSettingsPage({
           nationalities={nationalitiesResult.data ?? []}
           fieldOptions={fieldOptions}
           initialField={params.field}
+          agents={agentsResult.data ?? []}
         />
       )}
 

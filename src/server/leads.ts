@@ -133,7 +133,7 @@ export async function createLead(
 
     if (error) return { ok: false, error: error.message };
 
-    await applyLeadRouting(supabase, data.id, parsed.data.assigned_to, "created", user.team_id);
+    await applyLeadRouting(supabase, data.id, parsed.data.assigned_to, "created", user.team_id, parsed.data.source);
     await ensurePersonForLead(data.id, user.id, supabase);
 
     await logActivity({
@@ -702,6 +702,8 @@ export async function importLeads(
         ? splitImportList(row.preferred_areas).map((area) => matchNamedValue(areaNames, area))
         : [];
 
+      const source = row.source ? matchOptionValue(fieldOptions.source, row.source) : "import";
+
       const { data, error } = await supabase
         .from("leads")
         .insert({
@@ -709,7 +711,7 @@ export async function importLeads(
           phone,
           email,
           nationality: row.nationality ? matchNamedValue(nationalityNames, row.nationality) : null,
-          source: row.source ? matchOptionValue(fieldOptions.source, row.source) : "import",
+          source,
           interest: row.interest ? matchOptionValue(fieldOptions.interest, row.interest) : "buy",
           category: row.category ? matchOptionValue(fieldOptions.category, row.category) : null,
           bedrooms: row.bedrooms ? matchOptionValue(fieldOptions.bedrooms, row.bedrooms) : null,
@@ -740,7 +742,7 @@ export async function importLeads(
         continue;
       }
 
-      await applyLeadRouting(supabase, data.id, null, "import");
+      await applyLeadRouting(supabase, data.id, null, "import", user.team_id, source);
       await ensurePersonForLead(data.id, user.id, supabase);
       created += 1;
     }

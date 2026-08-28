@@ -79,7 +79,9 @@ export async function POST(req: NextRequest) {
       supabase,
       data.id,
       body.assigned_to || null,
-      "webhook"
+      "webhook",
+      null,
+      source
     );
     await ensurePersonForLead(data.id, null, supabase);
 

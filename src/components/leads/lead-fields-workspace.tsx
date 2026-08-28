@@ -22,7 +22,7 @@ function toTableField(field: LeadSnapshotField): LeadTableField {
 }
 
 const OPTION_COPY: Record<string, string> = {
-  source: "This list powers Source on add lead and lead detail.",
+  source: "This list powers Source on add lead and lead detail. Set a default assignee to route new leads from that source.",
   interest: "This list powers Interest on add lead and lead detail.",
   category: "This list powers Category on add lead and lead detail.",
   bedrooms: "This list powers Bedrooms on add lead and lead detail.",
@@ -42,11 +42,13 @@ export function LeadFieldsWorkspace({
   nationalities,
   fieldOptions,
   initialField,
+  agents = [],
 }: {
   areas: { id: string; name: string }[];
   nationalities: { id: string; name: string }[];
   fieldOptions: Record<string, LeadFieldOption[]>;
   initialField?: string;
+  agents?: { id: string; full_name: string }[];
 }) {
   const router = useRouter();
   const groups = snapshotFieldGroups();
@@ -116,6 +118,7 @@ export function LeadFieldsWorkspace({
             description={OPTION_COPY[selectedKey] ?? "This list powers the matching dropdown on leads."}
             options={fieldOptions[selectedKey] ?? []}
             kind={selectedKey === "budget" ? "budget" : selectedKey === "score" ? "score" : "list"}
+            agents={agents}
           />
         ) : selected ? (
           <LeadFieldDetailPlaceholder field={toTableField(selected)} />

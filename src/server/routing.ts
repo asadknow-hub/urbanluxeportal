@@ -1,4 +1,6 @@
 import { notify } from "@/lib/notify";
+import { resolveSourceDefaultAssignee } from "@/lib/source-routing";
+import { syncPersonAssignment } from "@/server/people";
 import type {
   createSupabaseServerClient,
   createSupabaseServiceClient,
@@ -34,8 +36,54 @@ export async function applyLeadRouting(
   leadId: string,
   assignedTo: string | null | undefined,
   reason: "created" | "import" | "webhook" = "created",
-  teamId?: string | null
+  teamId?: string | null,
+  source?: string | null
 ): Promise<string | null> {
+  let target = assignedTo ?? null;
+  if (!target) {
+    target = await resolveSourceDefaultAssignee(supabase, source);
+  }
+
+  if (target) {
+    const desk = await teamIdForUser(supabase, target);
+    const now = new Date().toISOString();
+    const { error } = await supabase
+      .from("leads")
+      .update({
+        assigned_to: target,
+        team_id: desk ?? teamId ?? null,
+        updated_at: now,
+      })
+      .eq("id", leadId);
+
+    if (error) {
+      console.error("[routing] fixed assign:", error.message);
+      return null;
+    }
+
+    await syncPersonAssignment(leadId, target, supabase);
+    await supabase.from("lead_assignments").insert({
+      lead_id: leadId,
+      to_user: target,
+      reason: source ? `source:${source}` : reason,
+    });
+
+    if (!assignedTo) {
+      await notify({
+        userIds: [target],
+        kind: "lead_assigned",
+        title: "New lead assigned",
+        body: source
+          ? `A ${source.replace(/_/g, " ")} lead was routed to you. Open Leads to make first contact.`
+          : "A lead was routed to you. Open Leads to make first contact.",
+        entityType: "lead",
+        entityId: leadId,
+      });
+    }
+
+    return target;
+  }
+
   const { data: agentId, error } = await supabase.rpc("crm_apply_lead_routing", {
     p_lead_id: leadId,
     p_assigned_to: assignedTo ?? null,

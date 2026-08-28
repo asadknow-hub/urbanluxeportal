@@ -106,7 +106,14 @@ export async function updateDealStage(
     let customerId: string | undefined = deal.customer_id ?? undefined;
 
     if (parsed.data.stage === "closed") {
-      const readiness = dealReadyToFinalize(deal);
+      const { data: dealDocuments } = await supabase
+        .from("documents")
+        .select("category")
+        .eq("entity_type", "deal")
+        .eq("entity_id", parsed.data.id)
+        .is("deleted_at", null);
+
+      const readiness = dealReadyToFinalize(deal, dealDocuments ?? []);
       if (!readiness.ok) {
         return {
           ok: false,

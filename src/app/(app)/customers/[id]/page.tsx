@@ -14,6 +14,7 @@ import type { LeadContext } from "@/lib/lead-flow";
 import { formatPropertyLine } from "@/lib/deal-transaction";
 import { dealStageLabel, normalizeDealStage } from "@/lib/deal-stages";
 import { CustomerNewDealDialog } from "@/components/customers/customer-new-deal-dialog";
+import { CustomerConvertBanner } from "@/components/customers/customer-convert-banner";
 import { CustomerEditDialog } from "@/components/customers/customer-edit-dialog";
 import { CustomerDocumentsSection } from "@/components/customers/customer-documents-section";
 import { docCategoryChoices, type LeadFieldOption } from "@/lib/lead-field-options";
@@ -122,7 +123,9 @@ export default async function CustomerDetailPage({
     const [{ data: ld }, { data: followUpRows }] = await Promise.all([
       supabase
         .from("leads")
-        .select("id, name, source, interest, score, status, next_follow_up_at")
+        .select(
+          "id, name, phone, email, nationality, interest, budget_min, budget_max, preferred_areas, bedrooms, category, financing, source, score, status, converted_deal_id, next_follow_up_at"
+        )
         .eq("id", customer.lead_id)
         .single(),
       supabase
@@ -148,6 +151,12 @@ export default async function CustomerDetailPage({
   const leadContext = customer.lead_context as LeadContext | null;
   const statusColors = getStatusColor(customer.status);
   const customerTags = (customer.tags ?? []).filter(Boolean);
+  const hasOpenDeal = (deals ?? []).some((deal) => deal.stage !== "closed" && deal.stage !== "lost");
+  const showConvertBanner =
+    !!originatingLead &&
+    originatingLead.status !== "converted" &&
+    !originatingLead.converted_deal_id &&
+    !hasOpenDeal;
 
   return (
     <div className="mx-auto flex w-full max-w-[1460px] flex-col gap-[18px]">
@@ -162,6 +171,26 @@ export default async function CustomerDetailPage({
         customer={{ id: customer.id, name: customer.name, status: customer.status }}
         deal={deals?.[0] ? { id: deals[0].id, title: deals[0].title, stage: deals[0].stage } : null}
       />
+
+      {showConvertBanner && originatingLead ? (
+        <CustomerConvertBanner
+          canEdit={canEdit}
+          lead={{
+            id: originatingLead.id,
+            name: originatingLead.name,
+            phone: originatingLead.phone,
+            email: originatingLead.email,
+            nationality: originatingLead.nationality,
+            interest: originatingLead.interest,
+            budget_min: originatingLead.budget_min,
+            budget_max: originatingLead.budget_max,
+            preferred_areas: originatingLead.preferred_areas,
+            bedrooms: originatingLead.bedrooms,
+            category: originatingLead.category,
+            financing: originatingLead.financing,
+          }}
+        />
+      ) : null}
 
       <section className="overflow-hidden rounded-[14px] border border-border bg-card">
         <div className="h-0.5 bg-primary" />

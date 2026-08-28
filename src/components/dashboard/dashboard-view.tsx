@@ -75,6 +75,9 @@ export function DashboardView({
             <Link href="/deals" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
               Deals
             </Link>
+            <Link href="/reports" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
+              Reports
+            </Link>
           </>
         }
       />

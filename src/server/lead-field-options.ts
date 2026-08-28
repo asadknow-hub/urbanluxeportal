@@ -203,8 +203,21 @@ export async function updateLeadFieldOptionExtra(
     if (patch.capture != null && row?.field_key !== "doc_category") {
       return { ok: false, error: "Capture only applies to document categories" };
     }
+    if ("default_assignee_id" in patch && row?.field_key !== "source") {
+      return { ok: false, error: "Default assignee only applies to lead sources" };
+    }
+    if (
+      patch.default_assignee_id !== undefined &&
+      patch.default_assignee_id !== null &&
+      typeof patch.default_assignee_id !== "string"
+    ) {
+      return { ok: false, error: "Invalid assignee" };
+    }
 
     const extra = { ...((row?.extra as Record<string, unknown> | null) ?? {}), ...patch };
+    if (patch.default_assignee_id === null || patch.default_assignee_id === "") {
+      delete extra.default_assignee_id;
+    }
     const { error } = await supabase.from("lead_field_options").update({ extra }).eq("id", id);
     if (error) return { ok: false, error: error.message };
 

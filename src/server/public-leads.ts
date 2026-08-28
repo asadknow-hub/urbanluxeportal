@@ -104,7 +104,7 @@ export async function createPublicLead(
       return { ok: false, error: "Could not submit right now. Please try again or call us." };
     }
 
-    await applyLeadRouting(supabase, lead.id, null, "webhook");
+    await applyLeadRouting(supabase, lead.id, null, "webhook", null, source);
     await ensurePersonForLead(lead.id, null, supabase);
     await supabase.from("lead_activities").insert({
       lead_id: lead.id,
