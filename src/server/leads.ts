@@ -883,6 +883,13 @@ export async function bulkAssignLeads(
     }
 
     const supabase = await createSupabaseServerClient();
+
+    const { data: beforeRows } = await supabase
+      .from("leads")
+      .select("id, assigned_to")
+      .in("id", leadIds)
+      .is("deleted_at", null);
+
     const patch: { assigned_to: string | null; updated_at: string; team_id?: string | null } = {
       assigned_to: agentId,
       updated_at: new Date().toISOString(),
@@ -901,6 +908,17 @@ export async function bulkAssignLeads(
     for (const row of data ?? []) {
       await ensurePersonForLead(row.id, user.id, supabase);
       await syncPersonAssignment(row.id, agentId, supabase);
+    }
+
+    if (beforeRows?.length) {
+      await supabase.from("lead_assignments").insert(
+        beforeRows.map((row) => ({
+          lead_id: row.id,
+          from_user: row.assigned_to,
+          to_user: agentId,
+          reason: "bulk",
+        }))
+      );
     }
 
     const assignedCount = data?.length ?? 0;

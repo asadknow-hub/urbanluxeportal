@@ -29,6 +29,7 @@ export default async function LeadsBoardPage({
     stage?: string;
     page?: string;
     board_limit?: string;
+    sla?: string;
   }>;
 }) {
   const user = await getCurrentUser();
@@ -37,6 +38,14 @@ export default async function LeadsBoardPage({
   const params = await searchParams;
   const view = params.view === "list" ? "list" : "board";
   await sweepFirstResponseSla();
+
+  const applySlaFilter = <T extends { is: (col: string, val: null) => T; not: (col: string, op: string, val: null) => T; lt: (col: string, val: string) => T }>(
+    query: T
+  ) => {
+    if (params.sla !== "first_response_overdue") return query;
+    const nowIso = new Date().toISOString();
+    return query.is("first_responded_at", null).not("first_response_due_at", "is", null).lt("first_response_due_at", nowIso);
+  };
 
   const buildViewHref = (nextView: "board" | "list") => {
     const query = new URLSearchParams();
@@ -84,6 +93,8 @@ export default async function LeadsBoardPage({
       query = query.or(`name.ilike.%${params.q}%,phone.ilike.%${params.q}%,email.ilike.%${params.q}%`);
     }
 
+    query = applySlaFilter(query);
+
     const [{ data: stages }, { data: leads, error, count }] = await Promise.all([
       supabase.from("lead_stages").select("*").eq("is_active", true).order("sort"),
       query,
@@ -130,6 +141,8 @@ export default async function LeadsBoardPage({
     if (params.q) {
       query = query.or(`name.ilike.%${params.q}%,phone.ilike.%${params.q}%,email.ilike.%${params.q}%`);
     }
+
+    query = applySlaFilter(query);
 
     const [{ data: leads, error, count }, { data: agents }, { data: stages }] = await Promise.all([
       query.range(from, to),
@@ -263,6 +276,15 @@ export default async function LeadsBoardPage({
           />
         </div>
       </div>
+
+      {params.sla === "first_response_overdue" ? (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-[10px] border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-800">
+          <span>Showing leads that missed first-response SLA (assigned, not yet contacted).</span>
+          <Link href="/leads?view=list" className="font-medium text-red-900 hover:underline">
+            Clear filter
+          </Link>
+        </div>
+      ) : null}
 
       {view === "board" ? (
         <LeadsBoard

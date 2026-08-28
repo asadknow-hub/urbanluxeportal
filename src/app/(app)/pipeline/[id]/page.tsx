@@ -61,7 +61,6 @@ export default async function DealDetailPage({
     .eq("is_active", true)
     .order("full_name");
 
-  // Fetch deal documents and document category capture settings
   const [{ data: documents }, { data: docCategoryRows }, { data: viewingRows }, { data: inventoryRows }, { data: shortlistRows }] = await Promise.all([
     supabase
       .from("documents")
@@ -100,6 +99,34 @@ export default async function DealDetailPage({
       .eq("deal_id", id),
   ]);
 
+  let leadFollowUp: {
+    leadId: string;
+    leadName: string;
+    nextFollowUpAt: string | null;
+    scheduledNotes: string | null;
+  } | null = null;
+
+  if (deal.lead_id) {
+    const [{ data: leadRow }, { data: followUpRows }] = await Promise.all([
+      supabase.from("leads").select("id, name, next_follow_up_at").eq("id", deal.lead_id).maybeSingle(),
+      supabase
+        .from("lead_follow_ups")
+        .select("notes")
+        .eq("lead_id", deal.lead_id)
+        .eq("status", "scheduled")
+        .order("scheduled_at", { ascending: false })
+        .limit(1),
+    ]);
+    if (leadRow) {
+      leadFollowUp = {
+        leadId: leadRow.id,
+        leadName: leadRow.name,
+        nextFollowUpAt: leadRow.next_follow_up_at,
+        scheduledNotes: followUpRows?.[0]?.notes ?? null,
+      };
+    }
+  }
+
   return (
     <DealDetail
       deal={deal}
@@ -126,6 +153,7 @@ export default async function DealDetailPage({
       }))}
       userRole={user.role}
       userId={user.id}
+      leadFollowUp={leadFollowUp}
     />
   );
 }

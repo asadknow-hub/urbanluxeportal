@@ -100,7 +100,7 @@ export function DashboardView({
           label="First response overdue"
           value={String(firstResponseOverdueCount)}
           tone={firstResponseOverdueCount > 0 ? "danger" : undefined}
-          href="/leads"
+          href="/leads?view=list&sla=first_response_overdue"
         />
         <StatCard label="New leads (MTD)" value={String(newLeadsCount)} href="/leads" />
         <StatCard label="Customers" value={String(customersCount)} href="/customers" />

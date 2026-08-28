@@ -6,6 +6,9 @@ import { formatDate } from "@/lib/dates";
 import { getStatusColor } from "@/lib/status-colors";
 import { whatsappLink } from "@/lib/phone";
 import { ConversionPath } from "@/components/crm/conversion-path";
+import { FollowUpPanel } from "@/components/crm/follow-up-panel";
+import { customerStatusLabel } from "@/lib/customer-status";
+import { parsePaymentSnapshot, paymentSnapshotLines } from "@/lib/payment-snapshot";
 import { LeadContextPanel } from "@/components/crm/lead-context-panel";
 import type { LeadContext } from "@/lib/lead-flow";
 import { formatPropertyLine } from "@/lib/deal-transaction";
@@ -108,17 +111,43 @@ export default async function CustomerDetailPage({
   const docCategories = docCategoryChoices((docCategoryRows ?? []) as LeadFieldOption[]);
 
   let originatingLead = null;
+  let leadFollowUp: {
+    leadId: string;
+    leadName: string;
+    nextFollowUpAt: string | null;
+    scheduledNotes: string | null;
+  } | null = null;
+
   if (customer.lead_id) {
-    const { data: ld } = await supabase
-      .from("leads")
-      .select("id, name, source, interest, score, status")
-      .eq("id", customer.lead_id)
-      .single();
+    const [{ data: ld }, { data: followUpRows }] = await Promise.all([
+      supabase
+        .from("leads")
+        .select("id, name, source, interest, score, status, next_follow_up_at")
+        .eq("id", customer.lead_id)
+        .single(),
+      supabase
+        .from("lead_follow_ups")
+        .select("notes")
+        .eq("lead_id", customer.lead_id)
+        .eq("status", "scheduled")
+        .order("scheduled_at", { ascending: false })
+        .limit(1),
+    ]);
     originatingLead = ld;
+    if (ld) {
+      leadFollowUp = {
+        leadId: ld.id,
+        leadName: ld.name,
+        nextFollowUpAt: ld.next_follow_up_at,
+        scheduledNotes: followUpRows?.[0]?.notes ?? null,
+      };
+    }
   }
 
   const waLink = whatsappLink(customer.phone);
   const leadContext = customer.lead_context as LeadContext | null;
+  const statusColors = getStatusColor(customer.status);
+  const customerTags = (customer.tags ?? []).filter(Boolean);
 
   return (
     <div className="mx-auto flex w-full max-w-[1460px] flex-col gap-[18px]">
@@ -153,17 +182,29 @@ export default async function CustomerDetailPage({
                 {customer.type}
               </span>
               <span
-                className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
-                  customer.status === "active"
-                    ? "bg-primary/15 text-primary"
-                    : customer.status === "prospect"
-                      ? "bg-amber-100 text-amber-800"
-                      : "bg-muted text-muted-foreground"
-                }`}
+                className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors.bg} ${statusColors.text}`}
+                title={customerStatusLabel(customer.status)}
               >
-                {customer.status}
+                {customerStatusLabel(customer.status)}
               </span>
+              {customer.client_since ? (
+                <span className="text-xs text-muted-foreground">
+                  Client since {formatDate(customer.client_since, "MMM yyyy")}
+                </span>
+              ) : null}
             </div>
+            {customerTags.length > 0 ? (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {customerTags.map((tag: string) => (
+                  <span
+                    key={tag}
+                    className="inline-flex rounded-full border border-border bg-muted/60 px-2 py-0.5 text-[11px] font-medium capitalize text-foreground"
+                  >
+                    {tag.replace(/_/g, " ")}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
       </section>
@@ -177,6 +218,7 @@ export default async function CustomerDetailPage({
               <div className="space-y-3">
                 {(properties ?? []).map((prop) => {
                   const agentLabel = prop.agent?.full_name ?? prop.agent_name;
+                  const paymentLines = paymentSnapshotLines(parsePaymentSnapshot(prop.payment_snapshot));
                   return (
                     <div key={prop.id} className="rounded-[10px] border border-border px-4 py-3">
                       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -212,6 +254,12 @@ export default async function CustomerDetailPage({
                           </p>
                         </div>
                       </div>
+
+                      {paymentLines.length > 0 ? (
+                        <div className="mt-3 rounded-[8px] bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+                          {paymentLines.join(" · ")}
+                        </div>
+                      ) : null}
 
                       {prop.deal_id && (
                         <Link
@@ -420,6 +468,16 @@ export default async function CustomerDetailPage({
             leadHref={customer.lead_id ? `/leads/${customer.lead_id}` : undefined}
             variant="compact"
           />
+
+          {leadFollowUp ? (
+            <FollowUpPanel
+              leadId={leadFollowUp.leadId}
+              leadName={leadFollowUp.leadName}
+              nextFollowUpAt={leadFollowUp.nextFollowUpAt}
+              scheduledNotes={leadFollowUp.scheduledNotes}
+              canEdit={canEdit}
+            />
+          ) : null}
 
           {originatingLead && (
             <div className="overflow-hidden rounded-[14px] border border-border bg-[#1B2430] p-4 text-[#E8E4DC]">

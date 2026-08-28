@@ -25,6 +25,8 @@ import { getStatusColor } from "@/lib/status-colors";
 import { formatAED } from "@/lib/money";
 import { formatDate, timeAgo } from "@/lib/dates";
 import { LeadContextPanel } from "@/components/crm/lead-context-panel";
+import { ConversionPath } from "@/components/crm/conversion-path";
+import { FollowUpPanel } from "@/components/crm/follow-up-panel";
 import { DealDocumentsSection } from "@/components/pipeline/deal-documents-section";
 import { DealTransactionForm } from "@/components/pipeline/deal-transaction-form";
 import { DealShortlist, type DealPropertyRow } from "@/components/pipeline/deal-shortlist";
@@ -161,6 +163,7 @@ export function DealDetail({
   matches = [],
   userRole,
   userId,
+  leadFollowUp,
 }: {
   deal: Deal;
   activities: DealActivity[];
@@ -182,6 +185,12 @@ export function DealDetail({
   matches?: InventoryMatch[];
   userRole: string;
   userId: string;
+  leadFollowUp?: {
+    leadId: string;
+    leadName: string;
+    nextFollowUpAt: string | null;
+    scheduledNotes: string | null;
+  } | null;
 }) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
@@ -251,7 +260,7 @@ export function DealDetail({
         commission_amount: closedCommission ? Number(closedCommission) : undefined,
       });
       if (result.ok) {
-        toast.success("Deal closed — customer created");
+        toast.success("Deal closed — client record updated");
         setClosedOpen(false);
         if (result.data?.customerId) {
           router.push(`/customers/${result.data.customerId}`);
@@ -303,6 +312,13 @@ export function DealDetail({
         <ArrowLeft className="h-4 w-4" />
         Back to pipeline
       </Link>
+
+      <ConversionPath
+        current="deal"
+        lead={deal.lead ? { id: deal.lead.id, name: deal.lead.name } : deal.lead_id ? { id: deal.lead_id, name: deal.title } : null}
+        customer={deal.customer ? { id: deal.customer.id, name: deal.customer.name, status: deal.customer.status } : null}
+        deal={{ id: deal.id, title: deal.title, stage: deal.stage }}
+      />
 
       <section className="overflow-hidden rounded-[14px] border border-border bg-card">
         <div className="h-0.5 bg-primary" />
@@ -483,6 +499,16 @@ export function DealDetail({
             variant="compact"
           />
 
+          {leadFollowUp ? (
+            <FollowUpPanel
+              leadId={leadFollowUp.leadId}
+              leadName={leadFollowUp.leadName}
+              nextFollowUpAt={leadFollowUp.nextFollowUpAt}
+              scheduledNotes={leadFollowUp.scheduledNotes}
+              canEdit={canEdit}
+            />
+          ) : null}
+
           <DealDocumentsSection
             dealId={deal.id}
             initialDocuments={documents.map((doc) => ({
@@ -546,7 +572,7 @@ export function DealDetail({
             </Button>
             <Button size="sm" disabled={pending || !finalizeReadiness.ok} onClick={confirmClosed}>
               {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Yes, create customer
+              Yes, close deal
             </Button>
           </DialogFooter>
         </DialogContent>

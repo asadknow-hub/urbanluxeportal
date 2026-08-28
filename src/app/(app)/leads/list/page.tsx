@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 export default async function LeadsListPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; source?: string; assigned?: string; q?: string; stage?: string }>;
+  searchParams: Promise<{ status?: string; source?: string; assigned?: string; q?: string; stage?: string; sla?: string }>;
 }) {
   const params = await searchParams;
   const query = new URLSearchParams();
