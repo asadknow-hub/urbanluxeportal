@@ -11,10 +11,17 @@ const PORTAL_PREFIXES = [
   "/team",
   "/settings",
   "/deals",
+  "/viewings",
+  "/inventory",
 ];
 
 function isPortalPath(pathname: string) {
   return PORTAL_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
+/** Marketing site routes — no session work in proxy (avoids Supabase latency/timeouts on `/`). */
+function isPublicWebPath(pathname: string) {
+  return !isPortalPath(pathname) && !PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
 export async function proxy(request: NextRequest) {
@@ -25,6 +32,11 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/_next/") ||
     pathname === "/favicon.ico"
   ) {
+    return NextResponse.next();
+  }
+
+  // Public brochure pages: skip auth entirely. Portal layout still enforces login.
+  if (isPublicWebPath(pathname)) {
     return NextResponse.next();
   }
 
