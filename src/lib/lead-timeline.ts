@@ -18,6 +18,8 @@ export type LeadTimelineItem = {
   isSystem: boolean;
 };
 
+export const TIMELINE_PAGE_SIZE = 20;
+
 /** Events that duplicate a human `lead_activities` row on the same action. */
 const REDUNDANT_EVENT_KINDS = new Set(["stage_changed"]);
 

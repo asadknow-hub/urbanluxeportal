@@ -12,11 +12,11 @@ import {
 import {
   filterTimelineItems,
   mergeLeadTimeline,
+  TIMELINE_PAGE_SIZE,
   type LeadTimelineActivity,
   type LeadTimelineItem,
 } from "@/lib/lead-timeline";
 
-export const TIMELINE_PAGE_SIZE = 20;
 const FETCH_BUFFER = 45;
 
 function firstRel<T>(value: T | T[] | null | undefined): T | null {
