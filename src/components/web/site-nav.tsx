@@ -43,7 +43,7 @@ export function SiteNav() {
     <header className="sticky top-0 z-[100] pt-[var(--ul-safe-top,0px)]">
       <div
         className={cn(
-          "border-b border-[#e5e7eb]/80 bg-white transition-[box-shadow,height] duration-300 ease-out",
+          "relative z-[1] border-b border-[#e5e7eb]/80 bg-white transition-[box-shadow,height] duration-300 ease-out",
           scrolled && "shadow-[0_1px_0_rgba(11,29,61,0.06)]"
         )}
       >
@@ -140,18 +140,17 @@ export function SiteNav() {
               <Search className={scrolled ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} strokeWidth={2} />
             </Link>
 
-            <Link
-              href="/dashboard"
-              prefetch={false}
+            <a
+              href="/login"
               className={cn(
-                "hidden items-center gap-1.5 rounded-md border border-[#0B1D3D]/12 bg-white/80 font-medium text-[#0B1D3D] transition-colors hover:bg-[#F2F2F2] md:inline-flex",
+                "relative z-10 hidden items-center gap-1.5 rounded-md border border-[#0B1D3D]/12 bg-white font-medium text-[#0B1D3D] no-underline transition-colors hover:bg-[#F2F2F2] md:inline-flex",
                 scrolled ? "h-9 px-3 text-[0.75rem]" : "h-10 px-3.5 text-[0.8125rem]"
               )}
               aria-label="Agent portal"
             >
               <LayoutDashboard className={scrolled ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} strokeWidth={2} />
               <span>Portal</span>
-            </Link>
+            </a>
 
             <button
               type="button"
@@ -221,14 +220,13 @@ export function SiteNav() {
                 <Search className="h-4 w-4" />
                 Search properties
               </Link>
-              <Link
-                href="/dashboard"
-                prefetch={false}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-[#e5e7eb] text-sm font-semibold text-[#0B1D3D]"
+              <a
+                href="/login"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-[#e5e7eb] text-sm font-semibold text-[#0B1D3D] no-underline"
               >
                 <LayoutDashboard className="h-4 w-4" />
                 Agent portal
-              </Link>
+              </a>
               <Link href="/sell" prefetch className="ul-btn-primary h-12 w-full">
                 List Your Property
               </Link>

@@ -19,6 +19,12 @@ function isPortalPath(pathname: string) {
   return PORTAL_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
+function hasSupabaseSessionCookie(request: NextRequest) {
+  return request.cookies.getAll().some(
+    ({ name }) => name.startsWith("sb-") && name.includes("auth-token")
+  );
+}
+
 /** Marketing site routes — no session work in proxy (avoids Supabase latency/timeouts on `/`). */
 function isPublicWebPath(pathname: string) {
   return !isPortalPath(pathname) && !PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -37,6 +43,20 @@ export async function proxy(request: NextRequest) {
 
   // Public brochure pages: skip auth entirely. Portal layout still enforces login.
   if (isPublicWebPath(pathname)) {
+    return NextResponse.next();
+  }
+
+  const hasSession = hasSupabaseSessionCookie(request);
+
+  // Logged-out portal visits: redirect immediately — no Supabase round trip.
+  if (!hasSession && isPortalPath(pathname)) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/login";
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  // Logged-out login page: serve immediately.
+  if (!hasSession && pathname === "/login") {
     return NextResponse.next();
   }
 
