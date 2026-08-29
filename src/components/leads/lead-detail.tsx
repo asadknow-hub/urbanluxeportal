@@ -17,6 +17,9 @@ import { ConversionPath } from "@/components/crm/conversion-path";
 import { ViewingPanel, type ViewingRow, type InventoryChoice } from "@/components/crm/viewing-panel";
 import { MatchPanel } from "@/components/crm/match-panel";
 import { LeadDocumentsList, type LeadDocument } from "@/components/leads/lead-documents";
+import { KycSection } from "@/components/crm/kyc-section";
+import type { DocCategoryChoice } from "@/lib/lead-field-options";
+import type { PersonKycFields } from "@/lib/kyc";
 import { LeadAssignmentHistory } from "@/components/leads/lead-assignment-history";
 import type { LeadAssignmentRow } from "@/lib/lead-audit";
 import type { LeadTimelineItem } from "@/lib/lead-timeline";
@@ -373,6 +376,9 @@ export function LeadDetail({
   fieldOptions,
   followUps,
   customer,
+  personKyc,
+  kycDocuments = [],
+  kycDocCategories = [],
   deal,
   documents,
   viewings,
@@ -393,7 +399,20 @@ export function LeadDetail({
   nationalities: string[];
   fieldOptions: Record<string, LeadFieldOption[]>;
   followUps: LeadFollowUp[];
-  customer: { id: string; name: string; phone: string | null; email: string | null; status?: string } | null;
+  customer: {
+    id: string;
+    name: string;
+    phone: string | null;
+    email: string | null;
+    status?: string;
+    nationality?: string | null;
+    emirates_id?: string | null;
+    passport_no?: string | null;
+    trn?: string | null;
+  } | null;
+  personKyc?: PersonKycFields | null;
+  kycDocuments?: LeadDocument[];
+  kycDocCategories?: DocCategoryChoice[];
   deal: { id: string; title: string; stage: string; value: number; deal_type: string } | null;
   documents: DocumentRow[];
   viewings: ViewingRow[];
@@ -1431,6 +1450,19 @@ export function LeadDetail({
             canEdit={canEdit}
           />
 
+          {customer && personKyc ? (
+            <KycSection
+              customerId={customer.id}
+              leadId={optimisticLead.id}
+              personHref={`/customers/${customer.id}`}
+              fields={personKyc}
+              documents={kycDocuments}
+              docCategories={kycDocCategories}
+              canEdit={canEdit}
+              variant="card"
+            />
+          ) : null}
+
           <section className="rounded-[14px] border border-border bg-card px-[26px] py-6">
             <div className="mb-1 flex items-baseline justify-between">
               <h2 className="font-heading text-[1.12rem]" style={{ fontFamily: "var(--font-display), serif" }}>Documents</h2>
@@ -1460,7 +1492,11 @@ export function LeadDetail({
 
           {customer && (
             <p className="px-1 text-xs text-muted-foreground">
-              Linked customer <Link href={`/customers/${customer.id}`} className="text-foreground hover:underline">{customer.name}</Link>
+              Person record{" "}
+              <Link href={`/customers/${customer.id}`} className="text-foreground hover:underline">
+                {customer.name}
+              </Link>{" "}
+              — KYC above is stored on their profile.
             </p>
           )}
         </div>
@@ -1474,7 +1510,7 @@ export function LeadDetail({
           name: optimisticLead.name,
           phone: optimisticLead.phone,
           email: optimisticLead.email,
-          nationality: optimisticLead.nationality,
+          nationality: personKyc?.nationality ?? optimisticLead.nationality,
           interest: optimisticLead.interest,
           budget_min: optimisticLead.budget_min,
           budget_max: optimisticLead.budget_max,
@@ -1482,6 +1518,9 @@ export function LeadDetail({
           bedrooms: optimisticLead.bedrooms,
           category: optimisticLead.category,
           financing: optimisticLead.financing,
+          emirates_id: personKyc?.emirates_id ?? customer?.emirates_id ?? null,
+          passport_no: personKyc?.passport_no ?? customer?.passport_no ?? null,
+          trn: personKyc?.trn ?? customer?.trn ?? null,
         }}
       />
 

@@ -61,9 +61,9 @@ export function formatPropertyLine(input: {
 }
 
 import { normalizeDocCategory } from "@/lib/document-storage";
+import { KYC_DOC_CATEGORIES } from "@/lib/kyc";
 
-/** Document categories that satisfy KYC file requirement at close. */
-export const KYC_DOC_CATEGORIES = new Set(["emirates_id", "passport"]);
+export { KYC_DOC_CATEGORIES };
 
 export function dealReadyToFinalize(
   deal: {

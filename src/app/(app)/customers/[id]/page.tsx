@@ -15,6 +15,9 @@ import { formatPropertyLine } from "@/lib/deal-transaction";
 import { dealStageLabel, normalizeDealStage } from "@/lib/deal-stages";
 import { CustomerNewDealDialog } from "@/components/customers/customer-new-deal-dialog";
 import { CustomerConvertBanner } from "@/components/customers/customer-convert-banner";
+import { KycSection } from "@/components/crm/kyc-section";
+import { KYC_DOC_CATEGORIES } from "@/lib/kyc";
+import { normalizeDocCategory } from "@/lib/document-storage";
 import { CustomerEditDialog } from "@/components/customers/customer-edit-dialog";
 import { CustomerDocumentsSection } from "@/components/customers/customer-documents-section";
 import { docCategoryChoices, type LeadFieldOption } from "@/lib/lead-field-options";
@@ -151,6 +154,12 @@ export default async function CustomerDetailPage({
   const leadContext = customer.lead_context as LeadContext | null;
   const statusColors = getStatusColor(customer.status);
   const customerTags = (customer.tags ?? []).filter(Boolean);
+  const kycDocuments = (documents ?? []).filter((doc) =>
+    KYC_DOC_CATEGORIES.has(normalizeDocCategory(doc.category))
+  );
+  const otherDocuments = (documents ?? []).filter(
+    (doc) => !KYC_DOC_CATEGORIES.has(normalizeDocCategory(doc.category))
+  );
   const hasOpenDeal = (deals ?? []).some((deal) => deal.stage !== "closed" && deal.stage !== "lost");
   const showConvertBanner =
     !!originatingLead &&
@@ -180,7 +189,7 @@ export default async function CustomerDetailPage({
             name: originatingLead.name,
             phone: originatingLead.phone,
             email: originatingLead.email,
-            nationality: originatingLead.nationality,
+            nationality: customer.nationality ?? originatingLead.nationality,
             interest: originatingLead.interest,
             budget_min: originatingLead.budget_min,
             budget_max: originatingLead.budget_max,
@@ -188,6 +197,9 @@ export default async function CustomerDetailPage({
             bedrooms: originatingLead.bedrooms,
             category: originatingLead.category,
             financing: originatingLead.financing,
+            emirates_id: customer.emirates_id,
+            passport_no: customer.passport_no,
+            trn: customer.trn,
           }}
         />
       ) : null}
@@ -342,7 +354,7 @@ export default async function CustomerDetailPage({
 
           <CustomerDocumentsSection
             customerId={customer.id}
-            initialDocuments={(documents ?? []).map((doc) => ({
+            initialDocuments={otherDocuments.map((doc) => ({
               id: doc.id,
               name: doc.name,
               storage_path: doc.storage_path,
@@ -445,52 +457,29 @@ export default async function CustomerDetailPage({
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[14px] border border-border bg-card p-4">
-            <h2 className="mb-4 text-sm font-semibold text-foreground">KYC</h2>
-            <dl className="space-y-3 text-sm">
-              {customer.nationality && (
-                <div>
-                  <dt className="text-xs text-muted-foreground">Nationality</dt>
-                  <dd className="font-medium text-foreground">{customer.nationality}</dd>
-                </div>
-              )}
-              {customer.emirates_id && (
-                <div>
-                  <dt className="text-xs text-muted-foreground">Emirates ID</dt>
-                  <dd className="font-medium text-foreground">{customer.emirates_id}</dd>
-                </div>
-              )}
-              {customer.passport_no && (
-                <div>
-                  <dt className="text-xs text-muted-foreground">Passport</dt>
-                  <dd className="font-medium text-foreground">{customer.passport_no}</dd>
-                </div>
-              )}
-              {customer.trn && (
-                <div>
-                  <dt className="text-xs text-muted-foreground">TRN</dt>
-                  <dd className="font-medium text-foreground">{customer.trn}</dd>
-                </div>
-              )}
-              {!customer.nationality &&
-                !customer.emirates_id &&
-                !customer.passport_no &&
-                !customer.trn && (
-                  <p className="text-sm text-muted-foreground">No KYC captured yet.</p>
-                )}
-              {!customer.emirates_id && !customer.passport_no && customer.type === "individual" && (
-                <div className="rounded-md bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
-                  ID document missing
-                </div>
-              )}
-              {customer.notes && (
-                <div>
-                  <dt className="text-xs text-muted-foreground">Notes</dt>
-                  <dd className="whitespace-pre-wrap font-medium text-foreground">{customer.notes}</dd>
-                </div>
-              )}
-            </dl>
-          </div>
+          <KycSection
+            customerId={customer.id}
+            leadId={customer.lead_id}
+            fields={{
+              nationality: customer.nationality,
+              emirates_id: customer.emirates_id,
+              passport_no: customer.passport_no,
+              trn: customer.trn,
+            }}
+            documents={kycDocuments.map((doc) => ({
+              id: doc.id,
+              name: doc.name,
+              storage_path: doc.storage_path,
+              mime_type: doc.mime_type,
+              category: doc.category,
+              expiry_date: doc.expiry_date,
+              notes: doc.notes,
+              created_at: doc.created_at,
+            }))}
+            docCategories={docCategories}
+            canEdit={canEdit}
+            variant="sidebar"
+          />
 
           <LeadContextPanel
             context={leadContext}

@@ -32,6 +32,9 @@ export type ConvertLeadPayload = {
   bedrooms: string | null;
   category: string | null;
   financing: string | null;
+  emirates_id?: string | null;
+  passport_no?: string | null;
+  trn?: string | null;
 };
 
 export function ConvertLeadDialog({
@@ -55,8 +58,9 @@ export function ConvertLeadDialog({
       property_unit: "",
       property_ref: "",
       kyc_nationality: lead.nationality ?? "",
-      kyc_emirates_id: "",
-      kyc_passport_no: "",
+      kyc_emirates_id: lead.emirates_id ?? "",
+      kyc_passport_no: lead.passport_no ?? "",
+      kyc_trn: lead.trn ?? "",
       buyer_name: lead.name,
       buyer_phone: lead.phone ?? "",
       buyer_email: lead.email ?? "",

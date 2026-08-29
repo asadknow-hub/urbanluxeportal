@@ -4,6 +4,10 @@ import { LeadDetail } from "@/components/leads/lead-detail";
 import { groupLeadFieldOptions, type LeadFieldOption } from "@/lib/lead-field-options";
 import { matchesForRequirement, INVENTORY_MATCH_SELECT } from "@/lib/match-inventory";
 import { getLeadTimelinePage } from "@/server/lead-timeline";
+import { ensurePersonForLead } from "@/server/people";
+import { KYC_DOC_CATEGORIES } from "@/lib/kyc";
+import { normalizeDocCategory } from "@/lib/document-storage";
+import { docCategoryChoices } from "@/lib/lead-field-options";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -61,7 +65,6 @@ export default async function LeadDetailPage({
         .limit(6)
     : { data: [], error: null };
 
-  // Agents can only see their own + unassigned
   if (user.role === "agent" && lead.assigned_to !== user.id && lead.assigned_to !== null) {
     return (
       <div className="p-4">
@@ -69,6 +72,11 @@ export default async function LeadDetailPage({
       </div>
     );
   }
+
+  const personId =
+    lead.customer_id ||
+    lead.converted_customer_id ||
+    (await ensurePersonForLead(id, user.id, supabase));
 
   // ─── Parallel data fetching ───────────────────────────────
   // All these queries are independent, so we run them in parallel
@@ -82,7 +90,8 @@ export default async function LeadDetailPage({
     { data: nationalityRows },
     { data: fieldOptionRows },
     { data: followUpRows },
-    customerResult,
+    personResult,
+    customerDocsResult,
     dealResult,
     { data: viewingRows },
     { data: inventoryRows },
@@ -115,13 +124,22 @@ export default async function LeadDetailPage({
       .select("id, scheduled_at, completed_at, status, notes, created_at")
       .eq("lead_id", id)
       .order("scheduled_at", { ascending: false }),
-    (lead as { customer_id?: string | null }).customer_id || lead.converted_customer_id
+    personId
       ? supabase
           .from("customers")
-          .select("id, name, phone, email, status")
-          .eq("id", ((lead as { customer_id?: string | null }).customer_id || lead.converted_customer_id) as string)
+          .select("id, name, phone, email, status, nationality, emirates_id, passport_no, trn")
+          .eq("id", personId)
           .single()
       : Promise.resolve({ data: null, error: null }),
+    personId
+      ? supabase
+          .from("documents")
+          .select("*")
+          .eq("entity_type", "customer")
+          .eq("entity_id", personId)
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
     lead.converted_deal_id
       ? supabase.from("deals").select("id, title, stage, value, deal_type").eq("id", lead.converted_deal_id).single()
       : Promise.resolve({ data: null, error: null }),
@@ -161,8 +179,12 @@ export default async function LeadDetailPage({
     );
   }
 
-  const customer = customerResult?.data ?? null;
+  const person = personResult?.data ?? null;
   const deal = dealResult?.data ?? null;
+  const docCategories = docCategoryChoices((fieldOptionRows ?? []) as LeadFieldOption[]);
+  const kycDocuments = (customerDocsResult.data ?? []).filter((doc) =>
+    KYC_DOC_CATEGORIES.has(normalizeDocCategory(doc.category))
+  );
   const matches = matchesForRequirement(
     {
       preferred_areas: lead.preferred_areas,
@@ -187,7 +209,28 @@ export default async function LeadDetailPage({
       nationalities={(nationalityRows ?? []).map((row) => row.name)}
       fieldOptions={groupLeadFieldOptions((fieldOptionRows ?? []) as LeadFieldOption[])}
       followUps={followUpRows ?? []}
-      customer={customer}
+      customer={person}
+      personKyc={
+        person
+          ? {
+              nationality: person.nationality,
+              emirates_id: person.emirates_id,
+              passport_no: person.passport_no,
+              trn: person.trn,
+            }
+          : null
+      }
+      kycDocuments={kycDocuments.map((doc) => ({
+        id: doc.id,
+        name: doc.name,
+        storage_path: doc.storage_path,
+        mime_type: doc.mime_type,
+        category: doc.category,
+        expiry_date: doc.expiry_date,
+        notes: doc.notes,
+        created_at: doc.created_at,
+      }))}
+      kycDocCategories={docCategories}
       deal={deal}
       documents={documents ?? []}
       viewings={viewingRows ?? []}

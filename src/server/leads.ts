@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { applyLeadRouting, teamIdForUser } from "@/server/routing";
+import { copyCustomerKycDocumentsToDeal } from "@/server/kyc";
 import { revalidatePath } from "next/cache";
 import {
   LEAD_IMPORT_FIELDS,
@@ -453,6 +454,21 @@ export async function convertLead(
 
     const personId = await ensurePersonForLead(leadId, user.id, supabase);
 
+    let personKyc: {
+      nationality: string | null;
+      emirates_id: string | null;
+      passport_no: string | null;
+      trn: string | null;
+    } | null = null;
+    if (personId) {
+      const { data: person } = await supabase
+        .from("customers")
+        .select("nationality, emirates_id, passport_no, trn")
+        .eq("id", personId)
+        .maybeSingle();
+      personKyc = person;
+    }
+
     if (lead.converted_deal_id) {
       const { data: existingDeal } = await supabase
         .from("deals")
@@ -503,10 +519,10 @@ export async function convertLead(
         buyer_name: options.buyer_name?.trim() || lead.name,
         buyer_phone: options.buyer_phone?.trim() || lead.phone,
         buyer_email: options.buyer_email?.trim() || lead.email,
-        kyc_nationality: options.kyc_nationality?.trim() || lead.nationality,
-        kyc_emirates_id: options.kyc_emirates_id?.trim() || null,
-        kyc_passport_no: options.kyc_passport_no?.trim() || null,
-        kyc_trn: options.kyc_trn?.trim() || null,
+        kyc_nationality: options.kyc_nationality?.trim() || personKyc?.nationality || lead.nationality,
+        kyc_emirates_id: options.kyc_emirates_id?.trim() || personKyc?.emirates_id || null,
+        kyc_passport_no: options.kyc_passport_no?.trim() || personKyc?.passport_no || null,
+        kyc_trn: options.kyc_trn?.trim() || personKyc?.trn || null,
         property_title: propertyTitle,
         property_community: propertyCommunity,
         property_building: options.property_building?.trim() || null,
@@ -559,6 +575,10 @@ export async function convertLead(
           uploaded_by: user.id,
         }))
       );
+    }
+
+    if (personId) {
+      await copyCustomerKycDocumentsToDeal(personId, deal.id, user.id, supabase);
     }
 
     await supabase.from("lead_activities").insert({
