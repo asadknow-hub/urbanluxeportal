@@ -15,6 +15,8 @@ import {
   personKycReadiness,
   type PersonKycFields,
 } from "@/lib/kyc";
+import type { KycPersonRecord } from "@/lib/kyc-form";
+import { KycFormDialog } from "@/components/crm/kyc-form-dialog";
 import type { DocCategoryChoice } from "@/lib/lead-field-options";
 import { toast } from "sonner";
 import { ExternalLink, Loader2, ShieldCheck } from "lucide-react";
@@ -31,6 +33,7 @@ export function KycSection({
   leadId,
   personHref,
   fields,
+  person,
   documents,
   docCategories,
   canEdit,
@@ -40,6 +43,7 @@ export function KycSection({
   leadId?: string | null;
   personHref?: string;
   fields: PersonKycFields;
+  person: KycPersonRecord;
   documents: LeadDocument[];
   docCategories: DocCategoryChoice[];
   canEdit: boolean;
@@ -129,6 +133,7 @@ export function KycSection({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <KycFormDialog customerId={customerId} leadId={leadId} person={person} canEdit={canEdit} />
           <span
             className={cn(
               "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",

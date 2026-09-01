@@ -5,6 +5,7 @@ import { groupLeadFieldOptions, type LeadFieldOption } from "@/lib/lead-field-op
 import { matchesForRequirement, INVENTORY_MATCH_SELECT } from "@/lib/match-inventory";
 import { getLeadTimelinePage } from "@/server/lead-timeline";
 import { ensurePersonForLead } from "@/server/people";
+import { mergeKycPerson } from "@/lib/kyc-form";
 import { KYC_DOC_CATEGORIES } from "@/lib/kyc";
 import { normalizeDocCategory } from "@/lib/document-storage";
 import { docCategoryChoices } from "@/lib/lead-field-options";
@@ -127,7 +128,7 @@ export default async function LeadDetailPage({
     personId
       ? supabase
           .from("customers")
-          .select("id, name, phone, email, status, nationality, emirates_id, passport_no, trn")
+          .select("id, name, phone, email, status, nationality, emirates_id, passport_no, trn, address, kyc_form")
           .eq("id", personId)
           .single()
       : Promise.resolve({ data: null, error: null }),
@@ -220,6 +221,7 @@ export default async function LeadDetailPage({
             }
           : null
       }
+      kycPerson={person ? mergeKycPerson(person) : null}
       kycDocuments={kycDocuments.map((doc) => ({
         id: doc.id,
         name: doc.name,

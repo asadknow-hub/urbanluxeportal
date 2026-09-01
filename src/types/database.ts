@@ -479,6 +479,7 @@ export interface Database {
           status: string;
           client_since: string | null;
           lead_context: LeadContextJson | null;
+          kyc_form: Record<string, unknown>;
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
@@ -502,6 +503,7 @@ export interface Database {
           status?: string;
           client_since?: string | null;
           lead_context?: LeadContextJson | null;
+          kyc_form?: Record<string, unknown>;
         };
         Update: Partial<Database["public"]["Tables"]["customers"]["Insert"]>;
       };

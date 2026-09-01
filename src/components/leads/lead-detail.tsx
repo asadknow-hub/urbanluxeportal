@@ -20,6 +20,7 @@ import { LeadDocumentsList, type LeadDocument } from "@/components/leads/lead-do
 import { KycSection } from "@/components/crm/kyc-section";
 import type { DocCategoryChoice } from "@/lib/lead-field-options";
 import type { PersonKycFields } from "@/lib/kyc";
+import type { KycPersonRecord } from "@/lib/kyc-form";
 import { LeadAssignmentHistory } from "@/components/leads/lead-assignment-history";
 import type { LeadAssignmentRow } from "@/lib/lead-audit";
 import type { LeadTimelineItem } from "@/lib/lead-timeline";
@@ -377,6 +378,7 @@ export function LeadDetail({
   followUps,
   customer,
   personKyc,
+  kycPerson,
   kycDocuments = [],
   kycDocCategories = [],
   deal,
@@ -411,6 +413,7 @@ export function LeadDetail({
     trn?: string | null;
   } | null;
   personKyc?: PersonKycFields | null;
+  kycPerson?: KycPersonRecord | null;
   kycDocuments?: LeadDocument[];
   kycDocCategories?: DocCategoryChoice[];
   deal: { id: string; title: string; stage: string; value: number; deal_type: string } | null;
@@ -1450,12 +1453,13 @@ export function LeadDetail({
             canEdit={canEdit}
           />
 
-          {customer && personKyc ? (
+          {customer && personKyc && kycPerson ? (
             <KycSection
               customerId={customer.id}
               leadId={optimisticLead.id}
               personHref={`/customers/${customer.id}`}
               fields={personKyc}
+              person={kycPerson}
               documents={kycDocuments}
               docCategories={kycDocCategories}
               canEdit={canEdit}

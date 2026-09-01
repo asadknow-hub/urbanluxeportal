@@ -4,7 +4,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { IMAGES } from "@/lib/web/listings";
 import { HeroSection } from "@/components/web/hero-section";
-import { HomeListingsShowcase } from "@/components/web/home-listings-showcase";
 import { DevelopersMarquee } from "@/components/web/developers-marquee";
 import { WhyAgentsSection } from "@/components/web/why-agents-section";
 import { MarketGrowthSection } from "@/components/web/market-growth-section";
@@ -147,13 +146,7 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* 3 · Buy listings */}
-      <HomeListingsShowcase kind="sale" />
-
-      {/* 4 · Rent listings */}
-      <HomeListingsShowcase kind="rent" />
-
-      {/* 5 · Why Urban Luxe */}
+      {/* 3 · Why Urban Luxe */}
       <SplitSection
         bg="bg-white"
         image={
@@ -173,7 +166,7 @@ export function HomePage() {
         </Link>
       </SplitSection>
 
-      {/* 6 · Join us (careers) */}
+      {/* 4 · Join us (careers) */}
       <section className="bg-[var(--ul-secondary)] px-5 py-16 md:px-10 md:py-24">
         <div className="mx-auto grid max-w-[1280px] items-center gap-10 md:grid-cols-2 md:gap-16">
           <Reveal>
@@ -207,16 +200,16 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* 7 · Why our agents */}
+      {/* 5 · Why our agents */}
       <WhyAgentsSection />
 
-      {/* 8 · Market growth & appreciation */}
+      {/* 6 · Market growth & appreciation */}
       <MarketGrowthSection />
 
-      {/* 9 · Developers marquee */}
+      {/* 7 · Developers marquee */}
       <DevelopersMarquee />
 
-      {/* 10 · Insights */}
+      {/* 8 · Insights */}
       <section className="bg-white px-5 py-16 md:px-10 md:py-24">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
@@ -253,10 +246,10 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* 11 · Testimonials */}
+      {/* 9 · Testimonials */}
       <TestimonialsSection />
 
-      {/* 12 · CTA */}
+      {/* 10 · CTA */}
       <section className="border-t border-[var(--ul-hair)] bg-[var(--ul-tertiary)] px-5 py-16 md:px-10 md:py-20">
         <Reveal className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           <div>

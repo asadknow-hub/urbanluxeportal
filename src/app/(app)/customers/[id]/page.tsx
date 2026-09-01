@@ -16,6 +16,7 @@ import { dealStageLabel, normalizeDealStage } from "@/lib/deal-stages";
 import { CustomerNewDealDialog } from "@/components/customers/customer-new-deal-dialog";
 import { CustomerConvertBanner } from "@/components/customers/customer-convert-banner";
 import { KycSection } from "@/components/crm/kyc-section";
+import { mergeKycPerson } from "@/lib/kyc-form";
 import { KYC_DOC_CATEGORIES } from "@/lib/kyc";
 import { normalizeDocCategory } from "@/lib/document-storage";
 import { CustomerEditDialog } from "@/components/customers/customer-edit-dialog";
@@ -460,6 +461,7 @@ export default async function CustomerDetailPage({
           <KycSection
             customerId={customer.id}
             leadId={customer.lead_id}
+            person={mergeKycPerson(customer)}
             fields={{
               nationality: customer.nationality,
               emirates_id: customer.emirates_id,
