@@ -181,6 +181,7 @@ export async function updateDealStage(
 
       revalidatePath("/customers");
       if (customerId) revalidatePath(`/customers/${customerId}`);
+      revalidatePath("/company-properties");
       revalidatePath("/leads");
     } else if (parsed.data.stage === "lost") {
       await markPersonLost(deal.customer_id, supabase);
@@ -298,6 +299,7 @@ export async function addDealActivity(
 
     revalidatePath("/pipeline");
     revalidatePath(`/pipeline/${dealId}`);
+    revalidatePath("/company-properties");
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
@@ -336,6 +338,7 @@ export async function assignDeal(
 
     revalidatePath("/pipeline");
     revalidatePath(`/pipeline/${dealId}`);
+    revalidatePath("/company-properties");
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
@@ -350,6 +353,8 @@ export async function updateDeal(
     expected_close_date?: string | null;
     commission_rate?: number | null;
     commission_amount?: number | null;
+    agency_commission_rate?: number | null;
+    agency_commission_amount?: number | null;
   }
 ): Promise<ActionResult> {
   try {
@@ -368,6 +373,11 @@ export async function updateDeal(
     if (input.commission_amount !== undefined) {
       updateData.commission_amount = input.commission_amount != null ? Math.round(input.commission_amount * 100) : null;
     }
+    if (input.agency_commission_rate !== undefined) updateData.agency_commission_rate = input.agency_commission_rate;
+    if (input.agency_commission_amount !== undefined) {
+      updateData.agency_commission_amount =
+        input.agency_commission_amount != null ? Math.round(input.agency_commission_amount * 100) : null;
+    }
 
     const { error } = await supabase.from("deals").update(updateData).eq("id", dealId);
 
@@ -375,6 +385,7 @@ export async function updateDeal(
 
     revalidatePath("/pipeline");
     revalidatePath(`/pipeline/${dealId}`);
+    revalidatePath("/company-properties");
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
@@ -417,6 +428,7 @@ export async function updateDealTransaction(
       "property_building",
       "property_unit",
       "property_ref",
+      "property_type",
       "property_snapshot",
       "payment_method",
       "payment_notes",
@@ -451,6 +463,7 @@ export async function updateDealTransaction(
 
     revalidatePath("/pipeline");
     revalidatePath(`/pipeline/${dealId}`);
+    revalidatePath("/company-properties");
     revalidatePath("/customers");
     if (deal.customer_id) revalidatePath(`/customers/${deal.customer_id}`);
     return { ok: true };

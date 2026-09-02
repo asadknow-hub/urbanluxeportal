@@ -29,6 +29,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Deals", href: "/deals", icon: "KanbanSquare", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
   { label: "Reports", href: "/reports", icon: "BarChart3", roles: ["admin", "manager", "reception", "accountant"], group: "CRM" },
   { label: "People", href: "/customers", icon: "Contact", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
+  { label: "Properties", href: "/company-properties", icon: "Home", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
   { label: "Inventory", href: "/inventory", icon: "Building2", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "Inventory" },
   { label: "Settings", href: "/settings", icon: "Settings", roles: ["admin"], group: "System" },
 ];
@@ -43,6 +44,9 @@ export function isNavActive(pathname: string, href: string): boolean {
   }
   if (href === "/deals" || href === "/pipeline") {
     return pathname === "/deals" || pathname === "/pipeline" || pathname.startsWith("/pipeline/");
+  }
+  if (href === "/company-properties") {
+    return pathname === "/company-properties" || pathname.startsWith("/company-properties/");
   }
   if (href === "/inventory") {
     return pathname === "/inventory" || pathname.startsWith("/inventory/");

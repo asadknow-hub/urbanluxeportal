@@ -530,7 +530,10 @@ export interface Database {
           property_building: string | null;
           property_unit: string | null;
           property_ref: string | null;
+          property_type: string | null;
           property_snapshot: Record<string, unknown> | null;
+          agency_commission_amount: number | null;
+          agency_commission_rate: number | null;
           payment_method: string | null;
           payment_deposit: number | null;
           payment_balance: number | null;
@@ -570,7 +573,10 @@ export interface Database {
           property_building?: string | null;
           property_unit?: string | null;
           property_ref?: string | null;
+          property_type?: string | null;
           property_snapshot?: Record<string, unknown> | null;
+          agency_commission_amount?: number | null;
+          agency_commission_rate?: number | null;
           payment_method?: string | null;
           payment_deposit?: number | null;
           payment_balance?: number | null;
@@ -598,6 +604,7 @@ export interface Database {
           property_building: string | null;
           property_unit: string | null;
           property_ref: string | null;
+          property_type: string | null;
           property_snapshot: Record<string, unknown> | null;
           value: number;
           payment_method: string | null;
@@ -606,6 +613,8 @@ export interface Database {
           agent_name: string | null;
           agent_commission_amount: number | null;
           agent_commission_rate: number | null;
+          agency_commission_amount: number | null;
+          agency_commission_rate: number | null;
           acquired_at: string;
           created_at: string;
         };
@@ -619,6 +628,7 @@ export interface Database {
           property_building?: string | null;
           property_unit?: string | null;
           property_ref?: string | null;
+          property_type?: string | null;
           property_snapshot?: Record<string, unknown> | null;
           value?: number;
           payment_method?: string | null;
@@ -627,6 +637,8 @@ export interface Database {
           agent_name?: string | null;
           agent_commission_amount?: number | null;
           agent_commission_rate?: number | null;
+          agency_commission_amount?: number | null;
+          agency_commission_rate?: number | null;
           acquired_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["customer_properties"]["Insert"]>;

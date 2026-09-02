@@ -25,7 +25,6 @@ import { getStatusColor } from "@/lib/status-colors";
 import { formatAED } from "@/lib/money";
 import { formatDate, timeAgo } from "@/lib/dates";
 import { LeadContextPanel } from "@/components/crm/lead-context-panel";
-import { ConversionPath } from "@/components/crm/conversion-path";
 import { FollowUpPanel } from "@/components/crm/follow-up-panel";
 import { DealTransactionForm } from "@/components/pipeline/deal-transaction-form";
 import { PersonDocumentsKycSection } from "@/components/crm/person-documents-kyc-section";
@@ -49,7 +48,6 @@ import type { LeadDocument } from "@/components/leads/lead-documents";
 import { updateDealStage, addDealActivity } from "@/server/deals";
 import { toast } from "sonner";
 import {
-  ArrowLeft,
   Phone,
   Mail,
   MessageCircle,
@@ -103,6 +101,9 @@ type Deal = {
   property_building: string | null;
   property_unit: string | null;
   property_ref: string | null;
+  property_type: string | null;
+  agency_commission_amount: number | null;
+  agency_commission_rate: number | null;
   payment_method: string | null;
   payment_deposit: number | null;
   payment_balance: number | null;
@@ -316,18 +317,6 @@ export function DealDetail({
 
   return (
     <div className="mx-auto flex w-full max-w-[1460px] flex-col gap-[18px]">
-      <Link href="/pipeline" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" />
-        Back to pipeline
-      </Link>
-
-      <ConversionPath
-        current="deal"
-        lead={deal.lead ? { id: deal.lead.id, name: deal.lead.name } : deal.lead_id ? { id: deal.lead_id, name: deal.title } : null}
-        customer={deal.customer ? { id: deal.customer.id, name: deal.customer.name, status: deal.customer.status } : null}
-        deal={{ id: deal.id, title: deal.title, stage: deal.stage }}
-      />
-
       <section className="overflow-hidden rounded-[14px] border border-border bg-card">
         <div className="h-0.5 bg-primary" />
         <div className="flex items-start gap-4 p-6">

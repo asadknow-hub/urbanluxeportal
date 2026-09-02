@@ -317,14 +317,22 @@ export default async function CustomerDetailPage({
                         </div>
                       ) : null}
 
-                      {prop.deal_id && (
+                      <div className="mt-2 flex flex-wrap gap-3">
                         <Link
-                          href={`/pipeline/${prop.deal_id}`}
-                          className="mt-2 inline-block text-xs font-medium text-primary hover:underline"
+                          href={`/company-properties/${prop.id}`}
+                          className="text-xs font-medium text-primary hover:underline"
                         >
-                          View deal
+                          View property
                         </Link>
-                      )}
+                        {prop.deal_id ? (
+                          <Link
+                            href={`/pipeline/${prop.deal_id}`}
+                            className="text-xs font-medium text-primary hover:underline"
+                          >
+                            View deal
+                          </Link>
+                        ) : null}
+                      </div>
                     </div>
                   );
                 })}

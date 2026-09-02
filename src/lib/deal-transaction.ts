@@ -21,6 +21,7 @@ export type DealTransactionInput = {
   property_building?: string | null;
   property_unit?: string | null;
   property_ref?: string | null;
+  property_type?: string | null;
   property_snapshot?: DealPropertySnapshot | null;
   payment_method?: string | null;
   payment_deposit?: number | null;

@@ -11,6 +11,7 @@ import {
 } from "@/lib/deal-transaction";
 import { isDealClosed, isDealLost } from "@/lib/deal-stages";
 import { formatAED } from "@/lib/money";
+import { PROPERTY_TYPES } from "@/lib/inventory";
 import { toast } from "sonner";
 import { Building2, CreditCard, Plus, Trash2, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,9 @@ export type DealTransactionDeal = {
   property_building: string | null;
   property_unit: string | null;
   property_ref: string | null;
+  property_type: string | null;
+  agency_commission_amount: number | null;
+  agency_commission_rate: number | null;
   payment_method: string | null;
   payment_deposit: number | null;
   payment_balance: number | null;
@@ -157,6 +161,19 @@ export function DealTransactionForm({
             onSave={(v) => saveText("property_title", v)}
           />
         </LedgerRow>
+        <LedgerRow label="Type">
+          <QuietSelect
+            value={deal.property_type ?? ""}
+            disabled={!editable}
+            placeholder="Not captured"
+            options={PROPERTY_TYPES.map((t) => ({ value: t.value, label: t.label }))}
+            onChange={(v) => {
+              const next = v || null;
+              if ((deal.property_type ?? null) === next) return;
+              saveTx({ property_type: next });
+            }}
+          />
+        </LedgerRow>
         <LedgerRow label="Community">
           <QuietSaveInput
             value={deal.property_community ?? ""}
@@ -195,6 +212,37 @@ export function DealTransactionForm({
             disabled={!editable}
             placeholder={emptyPlaceholder("Rental Ejari")}
             onSave={(v) => saveText("ejari_no", v)}
+          />
+        </LedgerRow>
+        <LedgerRow label="Agency comm. rate">
+          <QuietSaveInput
+            type="number"
+            value={deal.agency_commission_rate != null ? String(deal.agency_commission_rate) : ""}
+            disabled={!editable}
+            placeholder={emptyPlaceholder("%")}
+            onSave={(v) => {
+              const next = v.trim() ? Number(v) : null;
+              if (next === (deal.agency_commission_rate ?? null)) return;
+              saveDeal({ agency_commission_rate: next });
+            }}
+          />
+        </LedgerRow>
+        <LedgerRow label="Agency commission">
+          <QuietSaveInput
+            type="number"
+            value={deal.agency_commission_amount ? String(deal.agency_commission_amount / 100) : ""}
+            disabled={!editable}
+            placeholder={
+              deal.agency_commission_rate != null && deal.value > 0 && !deal.agency_commission_amount
+                ? `Est. ${formatAED(Math.round((deal.value * deal.agency_commission_rate) / 100)).replace("AED ", "")}`
+                : emptyPlaceholder("AED")
+            }
+            onSave={(v) => {
+              const next = v.trim() ? Number(v) : null;
+              const current = deal.agency_commission_amount ? deal.agency_commission_amount / 100 : null;
+              if (next === current) return;
+              saveDeal({ agency_commission_amount: next });
+            }}
           />
         </LedgerRow>
       </Section>
@@ -352,7 +400,7 @@ export function DealTransactionForm({
             }}
           />
         </LedgerRow>
-        <LedgerRow label="Comm. rate">
+        <LedgerRow label="Agent comm. rate">
           <QuietSaveInput
             type="number"
             value={deal.commission_rate != null ? String(deal.commission_rate) : ""}
@@ -365,7 +413,7 @@ export function DealTransactionForm({
             }}
           />
         </LedgerRow>
-        <LedgerRow label="Commission">
+        <LedgerRow label="Agent commission">
           <QuietSaveInput
             type="number"
             value={deal.commission_amount ? String(deal.commission_amount / 100) : ""}

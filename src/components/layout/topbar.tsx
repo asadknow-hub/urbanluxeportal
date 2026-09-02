@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { NotificationBell } from "@/components/shared/notification-bell";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { TopbarSearch } from "@/components/layout/topbar-search";
@@ -29,6 +30,8 @@ export function Topbar({ user }: { user: SessionUser }) {
   const pathname = usePathname();
   const router = useRouter();
   const crumbs = breadcrumbsFor(pathname);
+  const parentCrumb = crumbs.length >= 2 ? crumbs[crumbs.length - 2] : null;
+  const showBack = parentCrumb?.href && crumbs.length >= 3;
   const initials = user.full_name
     .split(" ")
     .map((n) => n[0])
@@ -48,6 +51,16 @@ export function Topbar({ user }: { user: SessionUser }) {
       <MobileNav role={user.role as UserRole} />
 
       <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-1.5 text-sm md:flex">
+        {showBack && parentCrumb?.href ? (
+          <Link
+            href={parentCrumb.href}
+            prefetch
+            className="mr-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label={`Back to ${parentCrumb.label}`}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+        ) : null}
         {crumbs.map((crumb, i) => (
           <span key={`${crumb.label}-${i}`} className="flex items-center gap-1.5">
             {i > 0 && <span className="text-muted-foreground/50">/</span>}
