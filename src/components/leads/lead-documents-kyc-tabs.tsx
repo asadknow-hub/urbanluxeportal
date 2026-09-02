@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { LeadDocumentsChecklist } from "@/components/leads/lead-documents-checklist";
 import { KycFormFields, KycFormActions, useKycFormState } from "@/components/crm/kyc-form-panel";
+import { KycPdfPreview } from "@/components/crm/kyc-pdf-preview";
 import type { DocCategoryChoice } from "@/lib/lead-field-options";
 import type { KycPersonRecord } from "@/lib/kyc-form";
 import type { LeadDocument } from "@/components/leads/lead-documents";
@@ -54,12 +55,14 @@ export function LeadKycPage({
   person: KycPersonRecord;
   canEdit: boolean;
 }) {
+  const [previewKey, setPreviewKey] = useState(0);
   const kycState = useKycFormState({
     customerId,
     leadId,
     person,
     canEdit,
     autoSave: true,
+    onSaved: () => setPreviewKey((k) => k + 1),
   });
 
   return (
@@ -71,25 +74,28 @@ export function LeadKycPage({
           </Link>
         </div>
       ) : null}
-      <div className="flex min-h-[560px] flex-col rounded-[14px] border border-border bg-card p-4">
-        <KycFormFields
-          person={person}
-          form={kycState.form}
-          setForm={kycState.setForm}
-          core={kycState.core}
-          setCore={kycState.setCore}
-          pending={kycState.pending}
-          canEdit={canEdit}
-        />
-        <KycFormActions
-          pending={kycState.pending}
-          canEdit={canEdit}
-          pdfReady={kycState.pdfReady}
-          onSave={() => kycState.save()}
-          onGenerate={() => kycState.generatePdf()}
-          onPreview={() => kycState.previewPdf()}
-          onDownload={() => kycState.downloadPdf()}
-        />
+      <div className="grid gap-4 xl:grid-cols-2">
+        <div className="flex min-h-[560px] flex-col rounded-[14px] border border-border bg-card p-4">
+          <KycFormFields
+            person={person}
+            form={kycState.form}
+            setForm={kycState.setForm}
+            core={kycState.core}
+            setCore={kycState.setCore}
+            pending={kycState.pending}
+            canEdit={canEdit}
+          />
+          <KycFormActions
+            pending={kycState.pending}
+            canEdit={canEdit}
+            pdfReady={kycState.pdfReady}
+            onSave={() => kycState.save()}
+            onGenerate={() => kycState.generatePdf()}
+            onPreview={() => kycState.previewPdf()}
+            onDownload={() => kycState.downloadPdf()}
+          />
+        </div>
+        <KycPdfPreview customerId={customerId} refreshKey={previewKey} />
       </div>
     </div>
   );
