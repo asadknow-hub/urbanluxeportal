@@ -1465,6 +1465,9 @@ export function LeadDetail({
             if (doc) setOptimisticDocs((prev) => [{ ...doc, category: doc.category || "other" }, ...prev]);
             router.refresh();
           }}
+          onDocumentDeleted={(docId) => {
+            setOptimisticDocs((prev) => prev.filter((d) => d.id !== docId));
+          }}
         />
       ) : null}
 

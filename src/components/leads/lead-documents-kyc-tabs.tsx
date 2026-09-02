@@ -5,7 +5,6 @@ import Link from "next/link";
 import { LeadDocumentsChecklist } from "@/components/leads/lead-documents-checklist";
 import { KycFormFields, KycFormActions, useKycFormState } from "@/components/crm/kyc-form-panel";
 import { KycPdfPreview } from "@/components/crm/kyc-pdf-preview";
-import { normalizeDocCategory } from "@/lib/document-storage";
 import type { DocCategoryChoice } from "@/lib/lead-field-options";
 import type { KycPersonRecord } from "@/lib/kyc-form";
 import type { LeadDocument } from "@/components/leads/lead-documents";
@@ -17,6 +16,7 @@ export function LeadDocumentsPage({
   categories,
   canEdit,
   onDocumentSaved,
+  onDocumentDeleted,
 }: {
   leadId: string;
   customerId?: string | null;
@@ -24,6 +24,7 @@ export function LeadDocumentsPage({
   categories: DocCategoryChoice[];
   canEdit: boolean;
   onDocumentSaved?: (doc?: LeadDocument) => void;
+  onDocumentDeleted?: (docId: string) => void;
 }) {
   return (
     <LeadDocumentsChecklist
@@ -33,6 +34,7 @@ export function LeadDocumentsPage({
       categories={categories}
       canEdit={canEdit}
       onDocumentSaved={onDocumentSaved}
+      onDocumentDeleted={onDocumentDeleted}
     />
   );
 }
@@ -94,17 +96,19 @@ export function LeadKycPage({
   );
 }
 
-/** Merge lead + customer docs by category for checklist rows. */
+/** Merge lead + customer docs (all files, deduped by id). */
 export function useMergedLeadDocuments(
   leadDocuments: LeadDocument[],
   customerDocuments: LeadDocument[] = []
 ) {
   return useMemo(() => {
-    const byCategory = new Map<string, LeadDocument>();
+    const seen = new Set<string>();
+    const merged: LeadDocument[] = [];
     for (const doc of [...leadDocuments, ...customerDocuments]) {
-      const key = normalizeDocCategory(doc.category);
-      if (!byCategory.has(key)) byCategory.set(key, doc);
+      if (seen.has(doc.id)) continue;
+      seen.add(doc.id);
+      merged.push(doc);
     }
-    return Array.from(byCategory.values());
+    return merged.sort((a, b) => b.created_at.localeCompare(a.created_at));
   }, [leadDocuments, customerDocuments]);
 }

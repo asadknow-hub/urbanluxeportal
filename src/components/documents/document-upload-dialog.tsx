@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef, type ReactNode } from "react";
+import { useState, useTransition, useRef, useEffect, type ReactNode } from "react";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +33,7 @@ export function DocumentUploadDialog({
   trigger,
   onSaved,
   categories = [],
+  fixedCategory,
 }: {
   triggerLabel?: string;
   entityType?: string;
@@ -41,6 +42,8 @@ export function DocumentUploadDialog({
   trigger?: ReactNode;
   onSaved?: (doc?: { id: string; name: string; storage_path: string; mime_type: string; category: string; expiry_date: string | null; notes: string | null; created_at: string }) => void;
   categories?: DocCategoryChoice[];
+  /** When set, category is fixed — no dropdown; expiry/note shown alone. */
+  fixedCategory?: DocCategoryChoice;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -62,8 +65,9 @@ export function DocumentUploadDialog({
     notes: "",
   });
 
-  const categoryItems: DocCategoryChoice[] =
-    categories.length > 0
+  const categoryItems: DocCategoryChoice[] = fixedCategory
+    ? [fixedCategory]
+    : categories.length > 0
       ? categories
       : DOC_CATEGORIES.map((value) => ({
           value,
@@ -73,7 +77,18 @@ export function DocumentUploadDialog({
 
   const capture = form.category
     ? categoryItems.find((c) => c.value === form.category)?.capture ?? defaultDocCapture(form.category)
-    : null;
+    : fixedCategory?.capture ?? null;
+
+  useEffect(() => {
+    if (open && fixedCategory) {
+      setForm((prev) => ({
+        ...prev,
+        category: fixedCategory.value,
+        expiry_date: "",
+        notes: "",
+      }));
+    }
+  }, [open, fixedCategory]);
 
   function set<K extends keyof typeof form>(key: K, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -143,7 +158,13 @@ export function DocumentUploadDialog({
         toast.success("Document saved");
         setOpen(false);
         setUploadedFile(null);
-        setForm({ name: "", category: "", entity_type: entityType ?? "", expiry_date: "", notes: "" });
+        setForm({
+          name: "",
+          category: fixedCategory?.value ?? "",
+          entity_type: entityType ?? "",
+          expiry_date: "",
+          notes: "",
+        });
         onSaved?.(result.data);
       } else {
         await supabase.storage.from("documents").remove([path]);
@@ -178,7 +199,7 @@ export function DocumentUploadDialog({
               className="text-center text-[1.15rem] font-normal tracking-[0.12em] text-white uppercase"
               style={{ fontFamily: "var(--font-display), serif" }}
             >
-              Secure document upload
+              {fixedCategory ? `Upload ${fixedCategory.label}` : "Secure document upload"}
             </DialogTitle>
           </DialogHeader>
         </div>
@@ -229,6 +250,13 @@ export function DocumentUploadDialog({
             </div>
           )}
 
+          {fixedCategory ? (
+            <div className="rounded-[10px] border border-border bg-muted/40 px-4 py-3">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Category</p>
+              <p className="mt-0.5 text-sm font-semibold text-foreground">{fixedCategory.label}</p>
+            </div>
+          ) : null}
+
           <div className="space-y-2">
             <Label htmlFor="doc_name" className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
               Name *
@@ -243,6 +271,35 @@ export function DocumentUploadDialog({
             />
           </div>
 
+          {fixedCategory ? (
+            capture === "expiry" ? (
+              <div className="space-y-2">
+                <Label htmlFor="doc_expiry" className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Expiry date
+                </Label>
+                <Input
+                  id="doc_expiry"
+                  type="date"
+                  value={form.expiry_date}
+                  onChange={(e) => set("expiry_date", e.target.value)}
+                  className="h-11 rounded-[10px]"
+                />
+              </div>
+            ) : capture === "note" ? (
+              <div className="space-y-2">
+                <Label htmlFor="doc_notes" className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                  Note
+                </Label>
+                <Input
+                  id="doc_notes"
+                  value={form.notes}
+                  onChange={(e) => set("notes", e.target.value)}
+                  placeholder="e.g. Original at office"
+                  className="h-11 rounded-[10px]"
+                />
+              </div>
+            ) : null
+          ) : (
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Category *</Label>
@@ -294,6 +351,7 @@ export function DocumentUploadDialog({
               </div>
             )}
           </div>
+          )}
 
           {!entityType && (
             <div className="space-y-2">
