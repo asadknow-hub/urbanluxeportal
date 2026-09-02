@@ -9,61 +9,133 @@ const INK = rgb(0.05, 0.12, 0.35);
 
 type Point = { x: number; y: number };
 
-/** Calibrated against the Urban Luxe individual KYC PDF (A4, pdf.js text positions). */
+/** Baseline offset from printed label to value/check row (A4 template, pdf.js coords). */
+const DY = 17;
+const DY_CHECK = 5;
+
+function below(y: number, dy = DY): number {
+  return Math.round((y - dy) * 10) / 10;
+}
+
+/**
+ * Anchors from `public/KYC Form - Individual.pdf` (pdf.js text layer, Sep 2026).
+ * Values sit on the underline row below each label group.
+ */
+const LABELS_P1 = {
+  fullName: { x: 92, y: 715.4 },
+  dob: { x: 112, y: 694.5 },
+  passport: { x: 390, y: 694.5 },
+  nationality: { x: 98, y: 672.5 },
+  male: { x: 355, y: 671.3 },
+  female: { x: 407, y: 671.3 },
+  eid: { x: 102, y: 640.3 },
+  uaeYes: { x: 443, y: 640.8 },
+  uaeNo: { x: 483, y: 640.3 },
+  otherNationality: { x: 38, y: 600 },
+  pepSelfYes: { x: 238, y: 577.6 },
+  pepSelfNo: { x: 520, y: 577.6 },
+  pepSelfSpec: { x: 318, y: 577.6 },
+  pepRelYes: { x: 238, y: 517.6 },
+  pepRelNo: { x: 520, y: 517.6 },
+  pepRelSpec: { x: 318, y: 517.6 },
+  pepAssocYes: { x: 238, y: 468.3 },
+  pepAssocNo: { x: 520, y: 468.3 },
+  pepAssocSpec: { x: 318, y: 468.3 },
+  sanctionsYes: { x: 238, y: 428.8 },
+  sanctionsNo: { x: 520, y: 428.8 },
+  sanctionsSpec: { x: 318, y: 428.8 },
+  country: { x: 88, y: 322.1 },
+  city: { x: 208, y: 322.1 },
+  area: { x: 342, y: 322.1 },
+  street: { x: 488, y: 322.1 },
+  building: { x: 148, y: 292.1 },
+  flat: { x: 403, y: 292.1 },
+  poBox: { x: 503, y: 292.1 },
+  email: { x: 118, y: 260.8 },
+  phone: { x: 398, y: 260.8 },
+  otherAddress: { x: 38, y: 237.7 },
+  incomeSalary: { x: 136, y: 162.3 },
+  incomeSelf: { x: 207, y: 161.9 },
+  incomeMortgage: { x: 356, y: 161.9 },
+  incomeOther: { x: 208, y: 133.1 },
+  xferBank: { x: 151, y: 102.6 },
+  xferCash: { x: 259, y: 102.6 },
+  xferCheque: { x: 331, y: 102.6 },
+  xferVirtual: { x: 442, y: 102.6 },
+  wealth: { x: 38, y: 79.2 },
+} as const;
+
+const LABELS_P2 = {
+  employerName: { x: 125, y: 690.2 },
+  designation: { x: 385, y: 690.2 },
+  employerCountry: { x: 125, y: 669.3 },
+  employerAddress: { x: 355, y: 669.3 },
+  businessName: { x: 125, y: 589.6 },
+  lineOfBusiness: { x: 125, y: 568.9 },
+  businessCountry: { x: 395, y: 605.1 },
+  businessAddress: { x: 355, y: 584.5 },
+  signedDate: { x: 345, y: 301.6 },
+} as const;
+
+function fieldAnchor(label: Point, opts?: { dy?: number; check?: boolean }): Point {
+  const dy = opts?.dy ?? (opts?.check ? DY_CHECK : DY);
+  return { x: label.x, y: below(label.y, dy) };
+}
+
 const P1 = {
-  fullName: { x: 92, y: 698 },
-  dob: { x: 112, y: 678 },
-  passport: { x: 390, y: 678 },
-  nationality: { x: 98, y: 655 },
-  male: { x: 347, y: 666 },
-  female: { x: 399, y: 666 },
-  eid: { x: 102, y: 623 },
-  uaeYes: { x: 433, y: 636 },
-  uaeNo: { x: 474, y: 636 },
-  otherNationality: { x: 38, y: 582 },
-  pepSelfYes: { x: 238, y: 600 },
-  pepSelfNo: { x: 520, y: 600 },
-  pepSelfSpec: { x: 310, y: 600 },
-  pepRelYes: { x: 238, y: 573 },
-  pepRelNo: { x: 520, y: 573 },
-  pepRelSpec: { x: 310, y: 573 },
-  pepAssocYes: { x: 238, y: 513 },
-  pepAssocNo: { x: 520, y: 513 },
-  pepAssocSpec: { x: 310, y: 513 },
-  sanctionsYes: { x: 238, y: 474 },
-  sanctionsNo: { x: 520, y: 474 },
-  sanctionsSpec: { x: 310, y: 474 },
-  country: { x: 88, y: 302 },
-  city: { x: 208, y: 302 },
-  area: { x: 342, y: 302 },
-  street: { x: 488, y: 302 },
-  building: { x: 148, y: 272 },
-  flat: { x: 403, y: 272 },
-  poBox: { x: 503, y: 272 },
-  email: { x: 118, y: 241 },
-  phone: { x: 398, y: 241 },
-  otherAddressY: 210,
-  incomeSalary: { x: 140, y: 148 },
-  incomeSelf: { x: 211, y: 148 },
-  incomeMortgage: { x: 360, y: 148 },
-  incomeOther: { x: 208, y: 119 },
-  xferBank: { x: 155, y: 88 },
-  xferCash: { x: 263, y: 88 },
-  xferCheque: { x: 335, y: 88 },
-  xferVirtual: { x: 446, y: 88 },
-  wealthY: 58,
+  fullName: fieldAnchor(LABELS_P1.fullName),
+  dob: fieldAnchor(LABELS_P1.dob),
+  passport: fieldAnchor(LABELS_P1.passport),
+  nationality: fieldAnchor(LABELS_P1.nationality),
+  male: fieldAnchor(LABELS_P1.male, { check: true }),
+  female: fieldAnchor(LABELS_P1.female, { check: true }),
+  eid: fieldAnchor(LABELS_P1.eid),
+  uaeYes: fieldAnchor(LABELS_P1.uaeYes, { check: true }),
+  uaeNo: fieldAnchor(LABELS_P1.uaeNo, { check: true }),
+  otherNationality: fieldAnchor(LABELS_P1.otherNationality, { dy: 14 }),
+  pepSelfYes: fieldAnchor(LABELS_P1.pepSelfYes, { check: true }),
+  pepSelfNo: fieldAnchor(LABELS_P1.pepSelfNo, { check: true }),
+  pepSelfSpec: fieldAnchor(LABELS_P1.pepSelfSpec, { check: true }),
+  pepRelYes: fieldAnchor(LABELS_P1.pepRelYes, { check: true }),
+  pepRelNo: fieldAnchor(LABELS_P1.pepRelNo, { check: true }),
+  pepRelSpec: fieldAnchor(LABELS_P1.pepRelSpec, { check: true }),
+  pepAssocYes: fieldAnchor(LABELS_P1.pepAssocYes, { check: true }),
+  pepAssocNo: fieldAnchor(LABELS_P1.pepAssocNo, { check: true }),
+  pepAssocSpec: fieldAnchor(LABELS_P1.pepAssocSpec, { check: true }),
+  sanctionsYes: fieldAnchor(LABELS_P1.sanctionsYes, { check: true }),
+  sanctionsNo: fieldAnchor(LABELS_P1.sanctionsNo, { check: true }),
+  sanctionsSpec: fieldAnchor(LABELS_P1.sanctionsSpec, { check: true }),
+  country: fieldAnchor(LABELS_P1.country, { dy: 20 }),
+  city: fieldAnchor(LABELS_P1.city, { dy: 20 }),
+  area: fieldAnchor(LABELS_P1.area, { dy: 20 }),
+  street: fieldAnchor(LABELS_P1.street, { dy: 20 }),
+  building: fieldAnchor(LABELS_P1.building, { dy: 20 }),
+  flat: fieldAnchor(LABELS_P1.flat, { dy: 20 }),
+  poBox: fieldAnchor(LABELS_P1.poBox, { dy: 20 }),
+  email: fieldAnchor(LABELS_P1.email, { dy: 20 }),
+  phone: fieldAnchor(LABELS_P1.phone, { dy: 20 }),
+  otherAddressY: fieldAnchor(LABELS_P1.otherAddress, { dy: 20 }).y,
+  incomeSalary: fieldAnchor(LABELS_P1.incomeSalary, { check: true }),
+  incomeSelf: fieldAnchor(LABELS_P1.incomeSelf, { check: true }),
+  incomeMortgage: fieldAnchor(LABELS_P1.incomeMortgage, { check: true }),
+  incomeOther: fieldAnchor(LABELS_P1.incomeOther, { dy: 15 }),
+  xferBank: fieldAnchor(LABELS_P1.xferBank, { check: true }),
+  xferCash: fieldAnchor(LABELS_P1.xferCash, { check: true }),
+  xferCheque: fieldAnchor(LABELS_P1.xferCheque, { check: true }),
+  xferVirtual: fieldAnchor(LABELS_P1.xferVirtual, { check: true }),
+  wealthY: fieldAnchor(LABELS_P1.wealth, { dy: 12 }).y,
 } as const;
 
 const P2 = {
-  employerName: { x: 125, y: 669 },
-  employerCountry: { x: 195, y: 648 },
-  designation: { x: 385, y: 669 },
-  employerAddress: { x: 355, y: 648 },
-  businessName: { x: 125, y: 569 },
-  lineOfBusiness: { x: 125, y: 548 },
-  businessCountry: { x: 395, y: 582 },
-  businessAddress: { x: 355, y: 561 },
-  signedDate: { x: 345, y: 284 },
+  employerName: fieldAnchor(LABELS_P2.employerName, { dy: 21 }),
+  designation: fieldAnchor(LABELS_P2.designation, { dy: 21 }),
+  employerCountry: fieldAnchor(LABELS_P2.employerCountry, { dy: 17 }),
+  employerAddress: fieldAnchor(LABELS_P2.employerAddress, { dy: 17 }),
+  businessName: fieldAnchor(LABELS_P2.businessName, { dy: 18 }),
+  lineOfBusiness: fieldAnchor(LABELS_P2.lineOfBusiness, { dy: 17 }),
+  businessCountry: fieldAnchor(LABELS_P2.businessCountry, { dy: 17 }),
+  businessAddress: fieldAnchor(LABELS_P2.businessAddress, { dy: 17 }),
+  signedDate: fieldAnchor(LABELS_P2.signedDate, { dy: 17 }),
 } as const;
 
 function drawText(page: PDFPage, font: PDFFont, text: string, at: Point, size = FONT_SIZE) {
@@ -198,3 +270,6 @@ export function kycPdfFileName(personName: string): string {
     .slice(0, 60);
   return `KYC-${safe || "Individual"}.pdf`;
 }
+
+/** Exported for calibration scripts — computed overlay points. */
+export const KYC_PDF_LAYOUT = { P1, P2, LABELS_P1, LABELS_P2 } as const;
