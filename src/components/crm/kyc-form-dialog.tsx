@@ -42,7 +42,7 @@ export function KycFormDialog({
         <DialogHeader>
           <DialogTitle>Individual KYC form</DialogTitle>
           <DialogDescription>
-            Matches the Urban Luxe PDF — save here, then download or attach to the person record.
+            Matches the Urban Luxe PDF — save your answers, generate, then preview or download.
           </DialogDescription>
         </DialogHeader>
 
@@ -61,9 +61,11 @@ export function KycFormDialog({
         <KycFormActions
           pending={kycState.pending}
           canEdit={canEdit}
-          onDownload={kycState.downloadPdf}
-          onSavePdf={kycState.savePdfToDocuments}
+          pdfReady={kycState.pdfReady}
           onSave={() => kycState.save()}
+          onGenerate={() => kycState.generatePdf()}
+          onPreview={() => kycState.previewPdf()}
+          onDownload={() => kycState.downloadPdf()}
         />
       </DialogContent>
     </Dialog>

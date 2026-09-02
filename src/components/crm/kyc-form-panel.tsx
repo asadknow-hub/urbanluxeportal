@@ -7,10 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { saveKycFormPdf, updatePersonKycForm } from "@/server/kyc";
+import { updatePersonKycForm } from "@/server/kyc";
 import type { IndividualKycForm, KycPersonRecord } from "@/lib/kyc-form";
 import { toast } from "sonner";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Eye, FileOutput, Loader2 } from "lucide-react";
 
 function YesNoRow({
   label,
@@ -104,6 +104,7 @@ export function useKycFormState({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [pdfReady, setPdfReady] = useState(false);
   const [form, setForm] = useState<IndividualKycForm>(person.kyc_form ?? {});
   const [core, setCore] = useState({
     nationality: person.nationality ?? "",
@@ -123,6 +124,7 @@ export function useKycFormState({
       trn: person.trn ?? "",
     });
     dirtyRef.current = false;
+    setPdfReady(false);
   }, [person]);
 
   function save() {
@@ -150,6 +152,7 @@ export function useKycFormState({
   }
 
   function markDirty() {
+    setPdfReady(false);
     if (!canEdit || !autoSave) return;
     dirtyRef.current = true;
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -168,20 +171,41 @@ export function useKycFormState({
     markDirty();
   }
 
-  function downloadPdf() {
-    window.open(`/api/customers/${customerId}/kyc-form/pdf`, "_blank", "noopener,noreferrer");
-  }
-
-  function savePdfToDocuments() {
+  function generatePdf() {
     startTransition(async () => {
-      const result = await saveKycFormPdf(customerId, leadId);
+      const result = await updatePersonKycForm(
+        customerId,
+        {
+          nationality: core.nationality.trim() || null,
+          emirates_id: core.emirates_id.trim() || null,
+          passport_no: core.passport_no.trim() || null,
+          trn: core.trn.trim() || null,
+          kyc_form: form,
+        },
+        leadId
+      );
       if (result.ok) {
-        toast.success("KYC PDF saved to documents");
+        dirtyRef.current = false;
+        setPdfReady(true);
+        onSaved?.();
         router.refresh();
+        toast.success("PDF generated — preview or download below");
       } else {
-        toast.error(result.error ?? "Could not save PDF");
+        toast.error(result.error ?? "Could not generate PDF");
       }
     });
+  }
+
+  function previewPdf() {
+    window.open(
+      `/api/customers/${customerId}/kyc-form/pdf?inline=1&t=${Date.now()}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+
+  function downloadPdf() {
+    window.open(`/api/customers/${customerId}/kyc-form/pdf?t=${Date.now()}`, "_blank", "noopener,noreferrer");
   }
 
   return {
@@ -191,8 +215,10 @@ export function useKycFormState({
     core,
     setCore: updateCore,
     save,
+    generatePdf,
+    previewPdf,
     downloadPdf,
-    savePdfToDocuments,
+    pdfReady,
     person,
     canEdit,
   };
@@ -516,33 +542,66 @@ export function KycFormFields({
 export function KycFormActions({
   pending,
   canEdit,
+  pdfReady,
+  onGenerate,
+  onPreview,
   onDownload,
-  onSavePdf,
   onSave,
 }: {
   pending: boolean;
   canEdit: boolean;
+  pdfReady: boolean;
+  onGenerate: () => void;
+  onPreview: () => void;
   onDownload: () => void;
-  onSavePdf: () => void;
   onSave: () => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
-      <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={onDownload}>
-          <Download className="h-3.5 w-3.5" />
-          Download PDF
-        </Button>
+    <div className="space-y-3 border-t border-border pt-3">
+      <div className="flex flex-wrap items-center gap-2">
         {canEdit ? (
-          <Button type="button" variant="outline" size="sm" disabled={pending} onClick={onSavePdf}>
-            Save PDF to documents
-          </Button>
-        ) : null}
+          <>
+            <Button type="button" size="sm" disabled={pending} onClick={onSave}>
+              {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              className="gap-1.5"
+              disabled={pending}
+              onClick={onGenerate}
+            >
+              {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileOutput className="h-3.5 w-3.5" />}
+              Generate PDF
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={onPreview}>
+              <Eye className="h-3.5 w-3.5" />
+              Preview
+            </Button>
+            <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={onDownload}>
+              <Download className="h-3.5 w-3.5" />
+              Download
+            </Button>
+          </>
+        )}
       </div>
-      {canEdit ? (
-        <Button type="button" size="sm" disabled={pending} onClick={onSave}>
-          {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save now"}
-        </Button>
+
+      {canEdit && pdfReady ? (
+        <div className="flex flex-wrap items-center gap-2 rounded-[10px] border border-border bg-muted/40 px-3 py-2.5">
+          <span className="text-xs font-medium text-muted-foreground">PDF ready</span>
+          <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={onPreview}>
+            <Eye className="h-3.5 w-3.5" />
+            Preview
+          </Button>
+          <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={onDownload}>
+            <Download className="h-3.5 w-3.5" />
+            Download
+          </Button>
+        </div>
       ) : null}
     </div>
   );
