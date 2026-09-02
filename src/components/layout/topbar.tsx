@@ -30,8 +30,12 @@ export function Topbar({ user }: { user: SessionUser }) {
   const pathname = usePathname();
   const router = useRouter();
   const crumbs = breadcrumbsFor(pathname);
-  const parentCrumb = crumbs.length >= 2 ? crumbs[crumbs.length - 2] : null;
-  const showBack = parentCrumb?.href && crumbs.length >= 3;
+  const backCrumb = (() => {
+    for (let i = crumbs.length - 2; i >= 0; i--) {
+      if (crumbs[i].href) return crumbs[i];
+    }
+    return null;
+  })();
   const initials = user.full_name
     .split(" ")
     .map((n) => n[0])
@@ -50,17 +54,19 @@ export function Topbar({ user }: { user: SessionUser }) {
     <header className="sticky top-0 z-30 flex h-12 items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-md lg:px-5">
       <MobileNav role={user.role as UserRole} />
 
-      <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-1.5 text-sm md:flex">
-        {showBack && parentCrumb?.href ? (
+      <nav aria-label="Breadcrumb" className="flex min-w-0 flex-1 items-center gap-1.5 text-sm">
+        {backCrumb?.href ? (
           <Link
-            href={parentCrumb.href}
+            href={backCrumb.href}
             prefetch
-            className="mr-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-            aria-label={`Back to ${parentCrumb.label}`}
+            className="mr-1 inline-flex shrink-0 items-center gap-1 rounded-md border border-border bg-muted/50 px-2 py-1 text-xs font-medium text-foreground hover:bg-muted"
+            aria-label={`Back to ${backCrumb.label}`}
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>{backCrumb.label}</span>
           </Link>
         ) : null}
+        <span className="hidden min-w-0 items-center gap-1.5 md:flex">
         {crumbs.map((crumb, i) => (
           <span key={`${crumb.label}-${i}`} className="flex items-center gap-1.5">
             {i > 0 && <span className="text-muted-foreground/50">/</span>}
@@ -83,6 +89,7 @@ export function Topbar({ user }: { user: SessionUser }) {
             )}
           </span>
         ))}
+        </span>
       </nav>
 
       <div className="ml-auto flex items-center gap-2">

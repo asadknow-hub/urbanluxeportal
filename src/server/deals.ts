@@ -70,6 +70,7 @@ const dealStageSchema = z.object({
   ]),
   value: z.number().optional(),
   commission_amount: z.number().optional(),
+  agency_commission_amount: z.number().optional(),
   lost_reason: z.string().optional(),
 });
 
@@ -127,6 +128,9 @@ export async function updateDealStage(
       }
       if (parsed.data.commission_amount !== undefined) {
         preFinalize.commission_amount = Math.round(parsed.data.commission_amount * 100);
+      }
+      if (parsed.data.agency_commission_amount !== undefined) {
+        preFinalize.agency_commission_amount = Math.round(parsed.data.agency_commission_amount * 100);
       }
       if (Object.keys(preFinalize).length > 1) {
         const { error: preError } = await supabase

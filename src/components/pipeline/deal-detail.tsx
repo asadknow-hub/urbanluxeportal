@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition, type ComponentType } from "react";
+import { useMemo, useState, useTransition, useEffect, type ComponentType } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,8 @@ import { ViewingPanel, type ViewingRow, type InventoryChoice } from "@/component
 import { MatchPanel } from "@/components/crm/match-panel";
 import type { InventoryMatch } from "@/lib/match-inventory";
 import type { LeadContext } from "@/lib/lead-flow";
-import { dealReadyToFinalize, formatPropertyLine } from "@/lib/deal-transaction";
+import { dealReadyToFinalize, formatPropertyLine, PAYMENT_METHODS } from "@/lib/deal-transaction";
+import { formatPropertyType } from "@/lib/inventory";
 import {
   DEAL_PIPELINE_STAGES,
   dealStageLabel,
@@ -207,10 +208,15 @@ export function DealDetail({
   const [activityType, setActivityType] = useState("note");
   const [lostOpen, setLostOpen] = useState(false);
   const [closedOpen, setClosedOpen] = useState(false);
-  const [closedCommission, setClosedCommission] = useState(
-    deal.commission_amount ? String(deal.commission_amount / 100) : ""
-  );
+  const [closedAgentCommission, setClosedAgentCommission] = useState("");
+  const [closedAgencyCommission, setClosedAgencyCommission] = useState("");
   const [lostReason, setLostReason] = useState("");
+
+  useEffect(() => {
+    if (!closedOpen) return;
+    setClosedAgentCommission(deal.commission_amount ? String(deal.commission_amount / 100) : "");
+    setClosedAgencyCommission(deal.agency_commission_amount ? String(deal.agency_commission_amount / 100) : "");
+  }, [closedOpen, deal.commission_amount, deal.agency_commission_amount]);
 
   const colors = getStatusColor(normalizeDealStage(deal.stage));
   const canManage = canManageCrm(userRole);
@@ -266,7 +272,8 @@ export function DealDetail({
         id: deal.id,
         stage: "closed",
         value: deal.value ? deal.value / 100 : undefined,
-        commission_amount: closedCommission ? Number(closedCommission) : undefined,
+        commission_amount: closedAgentCommission.trim() ? Number(closedAgentCommission) : undefined,
+        agency_commission_amount: closedAgencyCommission.trim() ? Number(closedAgencyCommission) : undefined,
       });
       if (result.ok) {
         toast.success("Deal closed — client record updated");
@@ -532,43 +539,74 @@ export function DealDetail({
       />
 
       <Dialog open={closedOpen} onOpenChange={setClosedOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Close deal?</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            This marks the deal as <strong>closed</strong> and activates the linked person record with the
-            property, documents, and agent commission.
+            This marks the deal as <strong>closed</strong>, activates the customer profile, creates the company
+            property record, and copies documents from the pipeline.
           </p>
           {!finalizeReadiness.ok && (
             <p className="rounded-[8px] bg-amber-50 px-3 py-2 text-sm text-amber-900">
-              Still needed: {finalizeReadiness.missing.join(", ")}. Update the sections above first.
+              Still needed: {finalizeReadiness.missing.join(", ")}. Complete the Payment and Documents tabs first.
             </p>
           )}
-          <dl className="space-y-2 rounded-[10px] border border-border bg-muted/30 p-3 text-sm">
-            <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">Property</dt>
-              <dd className="text-right font-medium">{deal.property_title ? formatPropertyLine(deal) : "—"}</dd>
+          <div className="space-y-3 rounded-[10px] border border-border bg-muted/30 p-3 text-sm">
+            <CloseSummaryRow label="Property" value={deal.property_title ? formatPropertyLine(deal) : "—"} />
+            {deal.property_type ? (
+              <CloseSummaryRow label="Type" value={formatPropertyType(deal.property_type)} />
+            ) : null}
+            <CloseSummaryRow label="Buyer" value={deal.buyer_name ?? deal.customer?.name ?? "—"} />
+            <CloseSummaryRow label="Deal value" value={formatAED(deal.value)} />
+            {deal.payment_method ? (
+              <CloseSummaryRow
+                label="Payment"
+                value={PAYMENT_METHODS.find((m) => m.value === deal.payment_method)?.label ?? deal.payment_method}
+              />
+            ) : null}
+            {deal.assigned_to_profile ? (
+              <CloseSummaryRow label="Agent" value={deal.assigned_to_profile.full_name} />
+            ) : null}
+          </div>
+          <div className="space-y-3 rounded-[10px] border border-border p-3">
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-primary">Commission</p>
+            <p className="text-xs text-muted-foreground">
+              Pre-filled from Payment. Adjust here if needed before closing — saved on the property and customer
+              transaction.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="closed-agency-commission">Agency commission (AED)</Label>
+                <Input
+                  id="closed-agency-commission"
+                  type="number"
+                  min={0}
+                  value={closedAgencyCommission}
+                  onChange={(e) => setClosedAgencyCommission(e.target.value)}
+                  placeholder={
+                    deal.agency_commission_rate != null && deal.value > 0
+                      ? `Est. ${Math.round((deal.value * deal.agency_commission_rate) / 10000)}`
+                      : "Optional"
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="closed-agent-commission">Agent commission (AED)</Label>
+                <Input
+                  id="closed-agent-commission"
+                  type="number"
+                  min={0}
+                  value={closedAgentCommission}
+                  onChange={(e) => setClosedAgentCommission(e.target.value)}
+                  placeholder={
+                    deal.commission_rate != null && deal.value > 0
+                      ? `Est. ${Math.round((deal.value * deal.commission_rate) / 10000)}`
+                      : "Optional"
+                  }
+                />
+              </div>
             </div>
-            <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">Buyer</dt>
-              <dd className="font-medium">{deal.buyer_name ?? "—"}</dd>
-            </div>
-            <div className="flex justify-between gap-2">
-              <dt className="text-muted-foreground">Value</dt>
-              <dd className="font-medium">{formatAED(deal.value)}</dd>
-            </div>
-          </dl>
-          <div className="space-y-1.5">
-            <Label htmlFor="closed-commission">Agent commission (AED)</Label>
-            <Input
-              id="closed-commission"
-              type="number"
-              min={0}
-              value={closedCommission}
-              onChange={(e) => setClosedCommission(e.target.value)}
-              placeholder="Optional — saved on the customer transaction"
-            />
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setClosedOpen(false)}>
@@ -600,6 +638,15 @@ export function DealDetail({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function CloseSummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-3 border-b border-border/60 py-1.5 last:border-b-0">
+      <dt className="shrink-0 text-muted-foreground">{label}</dt>
+      <dd className="text-right font-medium text-foreground">{value}</dd>
     </div>
   );
 }

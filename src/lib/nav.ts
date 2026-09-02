@@ -26,7 +26,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Leads", href: "/leads", icon: "Users", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
   { label: "Follow-ups", href: "/leads/followups", icon: "CalendarClock", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
   { label: "Viewings", href: "/viewings", icon: "Calendar", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
-  { label: "Deals", href: "/deals", icon: "KanbanSquare", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
+  { label: "Deals", href: "/pipeline", icon: "KanbanSquare", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
   { label: "Reports", href: "/reports", icon: "BarChart3", roles: ["admin", "manager", "reception", "accountant"], group: "CRM" },
   { label: "People", href: "/customers", icon: "Contact", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
   { label: "Properties", href: "/company-properties", icon: "Home", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
@@ -62,6 +62,17 @@ export function breadcrumbsFor(pathname: string): { label: string; href?: string
   if (exact) {
     return [{ label: exact.group }, { label: exact.label }];
   }
+
+  if (pathname === "/pipeline" || pathname.startsWith("/pipeline/")) {
+    const parts = pathname.split("/").filter(Boolean);
+    const crumbs: { label: string; href?: string }[] = [
+      { label: "CRM" },
+      { label: "Pipeline", href: "/pipeline" },
+    ];
+    if (parts.length > 1) crumbs.push({ label: decodeURIComponent(parts[1]) });
+    return crumbs;
+  }
+
   const parent = [...NAV_ITEMS]
     .sort((a, b) => b.href.length - a.href.length)
     .find((item) => pathname.startsWith(`${item.href}/`) && isNavActive(pathname, item.href));
