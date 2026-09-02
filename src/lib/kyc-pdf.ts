@@ -4,10 +4,67 @@ import { PDFDocument, StandardFonts, rgb, type PDFPage, type PDFFont } from "pdf
 import type { IndividualKycForm, KycPersonRecord } from "@/lib/kyc-form";
 
 const TEMPLATE_PATH = path.join(process.cwd(), "public", "KYC Form - Individual.pdf");
-const FONT_SIZE = 9;
+const FONT_SIZE = 8.5;
 const INK = rgb(0.05, 0.12, 0.35);
 
 type Point = { x: number; y: number };
+
+/** Calibrated against the Urban Luxe individual KYC PDF (A4, pdf.js text positions). */
+const P1 = {
+  fullName: { x: 92, y: 698 },
+  dob: { x: 112, y: 678 },
+  passport: { x: 390, y: 678 },
+  nationality: { x: 98, y: 655 },
+  male: { x: 347, y: 666 },
+  female: { x: 399, y: 666 },
+  eid: { x: 102, y: 623 },
+  uaeYes: { x: 433, y: 636 },
+  uaeNo: { x: 474, y: 636 },
+  otherNationality: { x: 38, y: 582 },
+  pepSelfYes: { x: 238, y: 600 },
+  pepSelfNo: { x: 520, y: 600 },
+  pepSelfSpec: { x: 310, y: 600 },
+  pepRelYes: { x: 238, y: 573 },
+  pepRelNo: { x: 520, y: 573 },
+  pepRelSpec: { x: 310, y: 573 },
+  pepAssocYes: { x: 238, y: 513 },
+  pepAssocNo: { x: 520, y: 513 },
+  pepAssocSpec: { x: 310, y: 513 },
+  sanctionsYes: { x: 238, y: 474 },
+  sanctionsNo: { x: 520, y: 474 },
+  sanctionsSpec: { x: 310, y: 474 },
+  country: { x: 88, y: 302 },
+  city: { x: 208, y: 302 },
+  area: { x: 342, y: 302 },
+  street: { x: 488, y: 302 },
+  building: { x: 148, y: 272 },
+  flat: { x: 403, y: 272 },
+  poBox: { x: 503, y: 272 },
+  email: { x: 118, y: 241 },
+  phone: { x: 398, y: 241 },
+  otherAddressY: 210,
+  incomeSalary: { x: 140, y: 148 },
+  incomeSelf: { x: 211, y: 148 },
+  incomeMortgage: { x: 360, y: 148 },
+  incomeOther: { x: 208, y: 119 },
+  xferBank: { x: 155, y: 88 },
+  xferCash: { x: 263, y: 88 },
+  xferCheque: { x: 335, y: 88 },
+  xferVirtual: { x: 446, y: 88 },
+  wealthY: 58,
+} as const;
+
+const P2 = {
+  employerName: { x: 125, y: 669 },
+  employerCountry: { x: 195, y: 648 },
+  designation: { x: 385, y: 669 },
+  employerAddress: { x: 355, y: 648 },
+  businessName: { x: 125, y: 569 },
+  lineOfBusiness: { x: 125, y: 548 },
+  businessCountry: { x: 395, y: 582 },
+  businessAddress: { x: 355, y: 561 },
+  signedDate: { x: 345, y: 284 },
+} as const;
 
 function drawText(page: PDFPage, font: PDFFont, text: string, at: Point, size = FONT_SIZE) {
   const value = text.trim();
@@ -17,7 +74,7 @@ function drawText(page: PDFPage, font: PDFFont, text: string, at: Point, size = 
 
 function drawMark(page: PDFPage, font: PDFFont, at: Point, active: boolean) {
   if (!active) return;
-  page.drawText("X", { x: at.x, y: at.y, size: 10, font, color: INK });
+  page.drawText("X", { x: at.x, y: at.y, size: 9, font, color: INK });
 }
 
 function drawWrapped(
@@ -27,7 +84,7 @@ function drawWrapped(
   x: number,
   y: number,
   maxWidth: number,
-  lineHeight = 11
+  lineHeight = 10
 ) {
   const words = text.trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return;
@@ -63,83 +120,72 @@ export async function generateIndividualKycPdf(person: KycPersonRecord): Promise
 
   const [page1, page2] = pdf.getPages();
 
-  // Page 1 — customer details
-  drawText(page1, font, person.name, { x: 88, y: 704 });
-  drawText(page1, font, form.date_of_birth ?? "", { x: 108, y: 684 });
-  drawText(page1, font, person.passport_no ?? "", { x: 388, y: 684 });
-  drawText(page1, font, person.nationality ?? "", { x: 95, y: 661 });
-  drawMark(page1, font, { x: 365, y: 668 }, form.gender === "male");
-  drawMark(page1, font, { x: 417, y: 668 }, form.gender === "female");
-  drawText(page1, font, person.emirates_id ?? "", { x: 100, y: 629 });
-  drawMark(page1, font, { x: 448, y: 629 }, form.uae_residency === true);
-  drawMark(page1, font, { x: 489, y: 629 }, form.uae_residency === false);
-  drawText(page1, font, form.other_nationality ?? "", { x: 36, y: 587 });
+  drawText(page1, font, person.name, P1.fullName);
+  drawText(page1, font, form.date_of_birth ?? "", P1.dob);
+  drawText(page1, font, person.passport_no ?? "", P1.passport);
+  drawText(page1, font, person.nationality ?? "", P1.nationality);
+  drawMark(page1, font, P1.male, form.gender === "male");
+  drawMark(page1, font, P1.female, form.gender === "female");
+  drawText(page1, font, person.emirates_id ?? "", P1.eid);
+  drawMark(page1, font, P1.uaeYes, form.uae_residency === true);
+  drawMark(page1, font, P1.uaeNo, form.uae_residency === false);
+  drawText(page1, font, form.other_nationality ?? "", P1.otherNationality);
 
   const pepSelf = yesNo(form.pep_self);
-  drawMark(page1, font, { x: 250, y: 596 }, pepSelf.yes);
-  drawMark(page1, font, { x: 531, y: 596 }, pepSelf.no);
-  drawText(page1, font, pepSelf.specify, { x: 325, y: 596 });
+  drawMark(page1, font, P1.pepSelfYes, pepSelf.yes);
+  drawMark(page1, font, P1.pepSelfNo, pepSelf.no);
+  drawText(page1, font, pepSelf.specify, P1.pepSelfSpec);
 
   const pepRelative = yesNo(form.pep_relative);
-  drawMark(page1, font, { x: 250, y: 509 }, pepRelative.yes);
-  drawMark(page1, font, { x: 531, y: 509 }, pepRelative.no);
-  drawText(page1, font, pepRelative.specify, { x: 325, y: 509 });
+  drawMark(page1, font, P1.pepRelYes, pepRelative.yes);
+  drawMark(page1, font, P1.pepRelNo, pepRelative.no);
+  drawText(page1, font, pepRelative.specify, P1.pepRelSpec);
 
   const pepAssociate = yesNo(form.pep_associate);
-  drawMark(page1, font, { x: 250, y: 459 }, pepAssociate.yes);
-  drawMark(page1, font, { x: 531, y: 459 }, pepAssociate.no);
-  drawText(page1, font, pepAssociate.specify, { x: 325, y: 459 });
+  drawMark(page1, font, P1.pepAssocYes, pepAssociate.yes);
+  drawMark(page1, font, P1.pepAssocNo, pepAssociate.no);
+  drawText(page1, font, pepAssociate.specify, P1.pepAssocSpec);
 
   const sanctions = yesNo(form.sanctions);
-  drawMark(page1, font, { x: 250, y: 420 }, sanctions.yes);
-  drawMark(page1, font, { x: 531, y: 420 }, sanctions.no);
-  drawText(page1, font, sanctions.specify, { x: 325, y: 420 });
+  drawMark(page1, font, P1.sanctionsYes, sanctions.yes);
+  drawMark(page1, font, P1.sanctionsNo, sanctions.no);
+  drawText(page1, font, sanctions.specify, P1.sanctionsSpec);
 
-  // Address & contact
-  drawText(page1, font, form.country ?? "", { x: 85, y: 310 });
-  drawText(page1, font, form.city ?? "", { x: 205, y: 310 });
-  drawText(page1, font, form.area ?? "", { x: 340, y: 310 });
-  drawText(page1, font, form.street ?? "", { x: 485, y: 310 });
-  drawText(page1, font, form.building ?? "", { x: 145, y: 280 });
-  drawText(page1, font, form.flat ?? "", { x: 400, y: 280 });
-  drawText(page1, font, form.po_box ?? "", { x: 500, y: 280 });
-  drawText(page1, font, person.email ?? "", { x: 115, y: 249 });
-  drawText(page1, font, person.phone ?? "", { x: 395, y: 249 });
-  drawWrapped(
-    page1,
-    font,
-    form.other_country_address ?? person.address ?? "",
-    36,
-    218,
-    520
-  );
+  drawText(page1, font, form.country ?? "", P1.country);
+  drawText(page1, font, form.city ?? "", P1.city);
+  drawText(page1, font, form.area ?? "", P1.area);
+  drawText(page1, font, form.street ?? "", P1.street);
+  drawText(page1, font, form.building ?? "", P1.building);
+  drawText(page1, font, form.flat ?? "", P1.flat);
+  drawText(page1, font, form.po_box ?? "", P1.poBox);
+  drawText(page1, font, person.email ?? "", P1.email);
+  drawText(page1, font, person.phone ?? "", P1.phone);
+  drawWrapped(page1, font, form.other_country_address ?? person.address ?? "", 38, P1.otherAddressY, 520);
 
-  // Financial
-  drawMark(page1, font, { x: 153, y: 158 }, form.income_source === "salary");
-  drawMark(page1, font, { x: 224, y: 158 }, form.income_source === "self_employed");
-  drawMark(page1, font, { x: 373, y: 158 }, form.income_source === "mortgage");
-  drawText(page1, font, form.income_other ?? "", { x: 205, y: 127 });
-  drawMark(page1, font, { x: 168, y: 98 }, form.transfer_mode === "bank_transfer");
-  drawMark(page1, font, { x: 276, y: 98 }, form.transfer_mode === "cash");
-  drawMark(page1, font, { x: 348, y: 98 }, form.transfer_mode === "cheque");
-  drawMark(page1, font, { x: 459, y: 98 }, form.transfer_mode === "virtual_currency");
-  drawWrapped(page1, font, form.source_of_wealth ?? "", 36, 66, 520);
+  drawMark(page1, font, P1.incomeSalary, form.income_source === "salary");
+  drawMark(page1, font, P1.incomeSelf, form.income_source === "self_employed");
+  drawMark(page1, font, P1.incomeMortgage, form.income_source === "mortgage");
+  drawText(page1, font, form.income_other ?? "", P1.incomeOther);
+  drawMark(page1, font, P1.xferBank, form.transfer_mode === "bank_transfer");
+  drawMark(page1, font, P1.xferCash, form.transfer_mode === "cash");
+  drawMark(page1, font, P1.xferCheque, form.transfer_mode === "cheque");
+  drawMark(page1, font, P1.xferVirtual, form.transfer_mode === "virtual_currency");
+  drawWrapped(page1, font, form.source_of_wealth ?? "", 38, P1.wealthY, 520);
 
-  // Page 2 — employment
   const employed = form.employed ?? {};
-  drawText(page2, font, employed.employer_name ?? "", { x: 125, y: 677 });
-  drawText(page2, font, employed.employer_country ?? "", { x: 195, y: 656 });
-  drawText(page2, font, employed.designation ?? "", { x: 385, y: 677 });
-  drawText(page2, font, employed.address ?? "", { x: 355, y: 656 });
+  drawText(page2, font, employed.employer_name ?? "", P2.employerName);
+  drawText(page2, font, employed.employer_country ?? "", P2.employerCountry);
+  drawText(page2, font, employed.designation ?? "", P2.designation);
+  drawText(page2, font, employed.address ?? "", P2.employerAddress);
 
   const selfEmployed = form.self_employed ?? {};
-  drawText(page2, font, selfEmployed.business_name ?? "", { x: 125, y: 577 });
-  drawText(page2, font, selfEmployed.line_of_business ?? "", { x: 125, y: 556 });
-  drawText(page2, font, selfEmployed.country ?? "", { x: 395, y: 590 });
-  drawText(page2, font, selfEmployed.address ?? "", { x: 355, y: 569 });
+  drawText(page2, font, selfEmployed.business_name ?? "", P2.businessName);
+  drawText(page2, font, selfEmployed.line_of_business ?? "", P2.lineOfBusiness);
+  drawText(page2, font, selfEmployed.country ?? "", P2.businessCountry);
+  drawText(page2, font, selfEmployed.address ?? "", P2.businessAddress);
 
   const signedAt = form.form_signed_at ?? new Date().toISOString().slice(0, 10);
-  drawText(page2, font, signedAt, { x: 345, y: 292 });
+  drawText(page2, font, signedAt, P2.signedDate);
 
   return pdf.save();
 }

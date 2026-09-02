@@ -13,11 +13,10 @@ import { NationalityPicker } from "@/components/leads/nationality-picker";
 import { BlurSaveInput } from "@/components/leads/hover-edit-row";
 import { DocumentUploadDialog } from "@/components/documents/document-upload-dialog";
 import { ConvertLeadDialog } from "@/components/leads/convert-lead-dialog";
-import { ConversionPath } from "@/components/crm/conversion-path";
 import { ViewingPanel, type ViewingRow, type InventoryChoice } from "@/components/crm/viewing-panel";
 import { MatchPanel } from "@/components/crm/match-panel";
-import { LeadDocumentsList, type LeadDocument } from "@/components/leads/lead-documents";
-import { KycSection } from "@/components/crm/kyc-section";
+import { LeadDocumentsKycTabs } from "@/components/leads/lead-documents-kyc-tabs";
+import type { LeadDocument } from "@/components/leads/lead-documents";
 import type { DocCategoryChoice } from "@/lib/lead-field-options";
 import type { PersonKycFields } from "@/lib/kyc";
 import type { KycPersonRecord } from "@/lib/kyc-form";
@@ -710,18 +709,6 @@ export function LeadDetail({
 
   return (
     <div className="mx-auto flex w-full max-w-[1460px] flex-col gap-[18px]">
-      {(customer || deal) && (
-        <ConversionPath
-          current="lead"
-          lead={{ id: optimisticLead.id, name: optimisticLead.name }}
-          customer={
-            customer
-              ? { id: customer.id, name: customer.name, status: customer.status }
-              : null
-          }
-          deal={deal ? { id: deal.id, title: deal.title, stage: deal.stage } : null}
-        />
-      )}
       <section className="overflow-visible rounded-[14px] border border-border bg-card">
         <div className="flex flex-col gap-6 px-6 py-7 md:flex-row md:items-start md:gap-[26px] md:px-8">
           <div className="relative grid h-[84px] w-[84px] shrink-0 place-items-center rounded-md border-[1.5px] border-primary bg-[#F5EEDC]">
@@ -1453,46 +1440,20 @@ export function LeadDetail({
             canEdit={canEdit}
           />
 
-          {customer && personKyc && kycPerson ? (
-            <KycSection
-              customerId={customer.id}
-              leadId={optimisticLead.id}
-              personHref={`/customers/${customer.id}`}
-              fields={personKyc}
-              person={kycPerson}
-              documents={kycDocuments}
-              docCategories={kycDocCategories}
-              canEdit={canEdit}
-              variant="card"
-            />
-          ) : null}
-
-          <section className="rounded-[14px] border border-border bg-card px-[26px] py-6">
-            <div className="mb-1 flex items-baseline justify-between">
-              <h2 className="font-heading text-[1.12rem]" style={{ fontFamily: "var(--font-display), serif" }}>Documents</h2>
-              <span className="font-mono text-[0.8rem] text-muted-foreground">{optimisticDocs.length}</span>
-            </div>
-            <DocumentUploadDialog
-              entityType="lead"
-              entityId={optimisticLead.id}
-              categories={docCategoryChoices(fieldOptions.doc_category)}
-              onSaved={(doc) => {
-                if (doc) setOptimisticDocs((prev) => [{ ...doc, category: doc.category || "other" }, ...prev]);
-                router.refresh();
-              }}
-              trigger={
-                <span className="mt-3.5 block cursor-pointer rounded-[10px] border-[1.5px] border-dashed border-border px-4 py-[26px] text-center hover:border-primary hover:bg-[#F5EEDC]">
-                  <b className="text-[0.86rem] font-semibold text-[#8A6D2C]">Attach a document</b>
-                  <p className="mt-1 text-[0.76rem] text-muted-foreground">Choose a category first — passport, N.O.C., permit, and so on</p>
-                </span>
-              }
-            />
-            <LeadDocumentsList
-              documents={optimisticDocs}
-              onChange={setOptimisticDocs}
-              categories={docCategoryChoices(fieldOptions.doc_category)}
-            />
-          </section>
+          <LeadDocumentsKycTabs
+            leadId={optimisticLead.id}
+            customerId={customer?.id}
+            customerHref={customer ? `/customers/${customer.id}` : undefined}
+            person={kycPerson ?? null}
+            leadDocuments={optimisticDocs}
+            customerDocuments={kycDocuments}
+            docCategories={kycDocCategories}
+            canEdit={canEdit}
+            onLeadDocumentSaved={(doc) => {
+              if (doc) setOptimisticDocs((prev) => [{ ...doc, category: doc.category || "other" }, ...prev]);
+              router.refresh();
+            }}
+          />
 
           {customer && (
             <p className="px-1 text-xs text-muted-foreground">
@@ -1500,7 +1461,7 @@ export function LeadDetail({
               <Link href={`/customers/${customer.id}`} className="text-foreground hover:underline">
                 {customer.name}
               </Link>{" "}
-              — KYC above is stored on their profile.
+              — KYC is stored on their profile.
             </p>
           )}
         </div>

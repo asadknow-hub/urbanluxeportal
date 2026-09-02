@@ -4,10 +4,11 @@ import { generateIndividualKycPdf, kycPdfFileName } from "@/lib/kyc-pdf";
 export const dynamic = "force-dynamic";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
+  const inline = new URL(request.url).searchParams.get("inline") === "1";
   const loaded = await loadKycPerson(id);
   if (!loaded.ok || !loaded.data) {
     return new Response(loaded.error ?? "Not found", { status: loaded.error === "Unauthorized" ? 401 : 404 });
@@ -20,7 +21,7 @@ export async function GET(
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="${fileName}"`,
+      "Content-Disposition": `${inline ? "inline" : "attachment"}; filename="${fileName}"`,
       "Cache-Control": "no-store",
     },
   });
