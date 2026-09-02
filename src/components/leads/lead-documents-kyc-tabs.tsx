@@ -17,6 +17,7 @@ export function LeadDocumentsPage({
   canEdit,
   onDocumentSaved,
   onDocumentDeleted,
+  onDocumentUpdated,
 }: {
   leadId: string;
   customerId?: string | null;
@@ -25,6 +26,7 @@ export function LeadDocumentsPage({
   canEdit: boolean;
   onDocumentSaved?: (doc?: LeadDocument) => void;
   onDocumentDeleted?: (docId: string) => void;
+  onDocumentUpdated?: (doc: LeadDocument) => void;
 }) {
   return (
     <LeadDocumentsChecklist
@@ -35,6 +37,7 @@ export function LeadDocumentsPage({
       canEdit={canEdit}
       onDocumentSaved={onDocumentSaved}
       onDocumentDeleted={onDocumentDeleted}
+      onDocumentUpdated={onDocumentUpdated}
     />
   );
 }

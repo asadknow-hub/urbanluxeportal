@@ -1468,6 +1468,9 @@ export function LeadDetail({
           onDocumentDeleted={(docId) => {
             setOptimisticDocs((prev) => prev.filter((d) => d.id !== docId));
           }}
+          onDocumentUpdated={(doc) => {
+            setOptimisticDocs((prev) => prev.map((d) => (d.id === doc.id ? doc : d)));
+          }}
         />
       ) : null}
 

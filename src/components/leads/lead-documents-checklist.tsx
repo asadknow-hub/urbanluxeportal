@@ -4,19 +4,32 @@ import { useMemo, useState, useTransition } from "react";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { DocumentUploadDialog } from "@/components/documents/document-upload-dialog";
 import { DocumentPreviewDialog } from "@/components/documents/document-preview-dialog";
-import { deleteDocument } from "@/server/documents";
+import { deleteDocument, getSignedUrl, updateDocument } from "@/server/documents";
 import { normalizeDocCategory } from "@/lib/document-storage";
 import { LEAD_DOC_CHECKLIST_VALUES, type DocCategoryChoice } from "@/lib/lead-field-options";
 import { formatDate, formatDateTime } from "@/lib/dates";
 import type { LeadDocument } from "@/components/leads/lead-documents";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { Eye, Plus, Trash2, Upload } from "lucide-react";
+import { ExternalLink, Eye, Loader2, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
-type ChecklistRow =
-  | { kind: "empty"; cat: DocCategoryChoice }
-  | { kind: "doc"; cat: DocCategoryChoice; doc: LeadDocument };
+type CategoryGroup = {
+  cat: DocCategoryChoice;
+  docs: LeadDocument[];
+};
+
+const ROW_GRID =
+  "grid grid-cols-[minmax(140px,1.3fr)_6.5rem_8.5rem_8.5rem_minmax(80px,1fr)_minmax(260px,auto)] items-center gap-x-3";
 
 function expiryDaysHint(date: string | null | undefined): string | null {
   if (!date) return null;
@@ -26,34 +39,77 @@ function expiryDaysHint(date: string | null | undefined): string | null {
   return `${days}d left`;
 }
 
-function docStatus(
-  row: ChecklistRow
-): { label: string; className: string } {
-  if (row.kind === "empty") {
-    return {
-      label: "Not uploaded",
-      className: "bg-muted text-muted-foreground",
-    };
+function docStatus(doc: LeadDocument | undefined, cat: DocCategoryChoice): { label: string; className: string } {
+  if (!doc) {
+    return { label: "Not uploaded", className: "bg-white/15 text-white/90" };
   }
-  const { cat, doc } = row;
   if (cat.capture === "expiry" && doc.expiry_date) {
     const days = differenceInCalendarDays(parseISO(doc.expiry_date), new Date());
-    if (days < 0) {
-      return { label: "Expired", className: "bg-red-100 text-red-800" };
-    }
-    if (days <= 30) {
-      return { label: "Expiring soon", className: "bg-amber-100 text-amber-900" };
-    }
+    if (days < 0) return { label: "Expired", className: "bg-red-500/20 text-red-100" };
+    if (days <= 30) return { label: "Expiring soon", className: "bg-amber-400/25 text-amber-100" };
+  }
+  return { label: "Uploaded", className: "bg-emerald-500/20 text-emerald-100" };
+}
+
+function fileStatus(doc: LeadDocument, cat: DocCategoryChoice): { label: string; className: string } {
+  if (cat.capture === "expiry" && doc.expiry_date) {
+    const days = differenceInCalendarDays(parseISO(doc.expiry_date), new Date());
+    if (days < 0) return { label: "Expired", className: "bg-red-100 text-red-800" };
+    if (days <= 30) return { label: "Expiring soon", className: "bg-amber-100 text-amber-900" };
   }
   return { label: "Uploaded", className: "bg-emerald-100 text-emerald-800" };
 }
 
-function StatusBadge({ row }: { row: ChecklistRow }) {
-  const status = docStatus(row);
+function StatusPill({ label, className }: { label: string; className: string }) {
   return (
-    <span className={cn("inline-flex rounded-full px-2.5 py-0.5 text-[0.72rem] font-semibold", status.className)}>
-      {status.label}
+    <span className={cn("inline-flex rounded-full px-2.5 py-0.5 text-[0.72rem] font-semibold", className)}>
+      {label}
     </span>
+  );
+}
+
+function FileRowCells({
+  doc,
+  cat,
+}: {
+  doc: LeadDocument;
+  cat: DocCategoryChoice;
+}) {
+  const status = fileStatus(doc, cat);
+  const expiryHint = doc.expiry_date ? expiryDaysHint(doc.expiry_date) : null;
+
+  return (
+    <>
+      <div className="min-w-0">
+        <p className="truncate font-medium text-foreground">{doc.name}</p>
+      </div>
+      <StatusPill label={status.label} className={status.className} />
+      <span className="font-mono text-[0.76rem] text-foreground">{formatDateTime(doc.created_at)}</span>
+      <div className="text-[0.82rem]">
+        {cat.capture === "expiry" ? (
+          doc.expiry_date ? (
+            <div>
+              <span className="font-mono text-[0.76rem] text-foreground">{formatDate(doc.expiry_date)}</span>
+              {expiryHint ? (
+                <span
+                  className={cn(
+                    "mt-0.5 block text-[0.72rem]",
+                    expiryHint.startsWith("Expired") ? "text-destructive" : "text-muted-foreground"
+                  )}
+                >
+                  {expiryHint}
+                </span>
+              ) : null}
+            </div>
+          ) : (
+            <span className="italic text-muted-foreground">No date set</span>
+          )
+        ) : (
+          "—"
+        )}
+      </div>
+      <span className="truncate text-muted-foreground">{doc.notes?.trim() || "—"}</span>
+    </>
   );
 }
 
@@ -65,6 +121,7 @@ export function LeadDocumentsChecklist({
   canEdit,
   onDocumentSaved,
   onDocumentDeleted,
+  onDocumentUpdated,
   embedded = false,
 }: {
   leadId: string;
@@ -74,39 +131,70 @@ export function LeadDocumentsChecklist({
   canEdit: boolean;
   onDocumentSaved?: (doc?: LeadDocument) => void;
   onDocumentDeleted?: (docId: string) => void;
+  onDocumentUpdated?: (doc: LeadDocument) => void;
   embedded?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   const [preview, setPreview] = useState<LeadDocument | null>(null);
+  const [editing, setEditing] = useState<{ doc: LeadDocument; cat: DocCategoryChoice } | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editExpiry, setEditExpiry] = useState("");
+  const [editNotes, setEditNotes] = useState("");
 
-  const rows = useMemo(() => {
+  const groups = useMemo((): CategoryGroup[] => {
     const sorted = [...categories].sort((a, b) => {
       const ai = LEAD_DOC_CHECKLIST_VALUES.indexOf(a.value as (typeof LEAD_DOC_CHECKLIST_VALUES)[number]);
       const bi = LEAD_DOC_CHECKLIST_VALUES.indexOf(b.value as (typeof LEAD_DOC_CHECKLIST_VALUES)[number]);
       return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
     });
 
-    const result: ChecklistRow[] = [];
-    for (const cat of sorted) {
-      const docs = documents
+    return sorted.map((cat) => ({
+      cat,
+      docs: documents
         .filter((d) => normalizeDocCategory(d.category) === cat.value)
-        .sort((a, b) => b.created_at.localeCompare(a.created_at));
-      if (docs.length === 0) {
-        result.push({ kind: "empty", cat });
-      } else {
-        for (const doc of docs) {
-          result.push({ kind: "doc", cat, doc });
-        }
-      }
-    }
-    return result;
+        .sort((a, b) => b.created_at.localeCompare(a.created_at)),
+    }));
   }, [categories, documents]);
 
-  const categoriesWithDocs = useMemo(() => {
-    const set = new Set<string>();
-    for (const doc of documents) set.add(normalizeDocCategory(doc.category));
-    return set.size;
-  }, [documents]);
+  const categoriesWithDocs = useMemo(
+    () => groups.filter((g) => g.docs.length > 0).length,
+    [groups]
+  );
+
+  function openInTab(doc: LeadDocument) {
+    startTransition(async () => {
+      const result = await getSignedUrl(doc.storage_path);
+      if (result.ok && result.data?.url) window.open(result.data.url, "_blank", "noopener,noreferrer");
+      else toast.error(result.error ?? "Could not open file");
+    });
+  }
+
+  function openEdit(doc: LeadDocument, cat: DocCategoryChoice) {
+    setEditing({ doc, cat });
+    setEditName(doc.name);
+    setEditExpiry(doc.expiry_date ?? "");
+    setEditNotes(doc.notes ?? "");
+  }
+
+  function saveEdit() {
+    if (!editing || !editName.trim()) return;
+    const { doc, cat } = editing;
+    const name = editName.trim();
+    const expiry_date = cat.capture === "expiry" ? editExpiry || null : null;
+    const notes = cat.capture === "note" ? editNotes.trim() || null : doc.notes?.trim() || null;
+    const updated: LeadDocument = { ...doc, name, expiry_date, notes };
+    onDocumentUpdated?.(updated);
+    setEditing(null);
+    startTransition(async () => {
+      const result = await updateDocument(doc.id, { name, expiry_date, notes });
+      if (!result.ok) {
+        onDocumentUpdated?.(doc);
+        toast.error(result.error ?? "Could not update document");
+      } else {
+        toast.success("Document updated");
+      }
+    });
+  }
 
   function removeDoc(doc: LeadDocument) {
     if (!window.confirm(`Delete "${doc.name}"?`)) return;
@@ -122,18 +210,43 @@ export function LeadDocumentsChecklist({
     });
   }
 
-  function showCategoryLabel(row: ChecklistRow, index: number): boolean {
-    if (index === 0) return true;
-    const prev = rows[index - 1];
-    return prev.cat.value !== row.cat.value;
+  function FileActions({ doc, cat, compact = false }: { doc: LeadDocument; cat: DocCategoryChoice; compact?: boolean }) {
+    const btn = compact ? "h-7 gap-1 px-2 text-xs" : "h-7 gap-1 px-2.5 text-xs";
+    return (
+      <div className="flex flex-wrap justify-end gap-1">
+        <Button type="button" size="sm" variant="outline" className={btn} onClick={() => setPreview(doc)}>
+          <Eye className="h-3 w-3" />
+          Preview
+        </Button>
+        <Button type="button" size="sm" variant="outline" className={btn} onClick={() => openInTab(doc)}>
+          <ExternalLink className="h-3 w-3" />
+          Open
+        </Button>
+        {canEdit ? (
+          <>
+            <Button type="button" size="sm" variant="outline" className={btn} onClick={() => openEdit(doc, cat)}>
+              <Pencil className="h-3 w-3" />
+              Edit
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className={cn(btn, "text-destructive hover:bg-destructive/10 hover:text-destructive")}
+              disabled={pending}
+              onClick={() => removeDoc(doc)}
+            >
+              <Trash2 className="h-3 w-3" />
+              Delete
+            </Button>
+          </>
+        ) : null}
+      </div>
+    );
   }
 
   return (
-    <div
-      className={cn(
-        embedded ? "" : "overflow-hidden rounded-[14px] border border-border bg-card"
-      )}
-    >
+    <div className={cn(embedded ? "" : "overflow-hidden rounded-[14px] border border-border bg-card")}>
       <div
         className={cn(
           "flex flex-wrap items-center justify-between gap-3 px-4 py-3",
@@ -151,7 +264,7 @@ export function LeadDocumentsChecklist({
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">
-            {categoriesWithDocs} of {categories.length} categories have files — rows turn green when uploaded
+            {categoriesWithDocs} of {categories.length} categories have files
           </p>
         )}
         {canEdit ? (
@@ -170,147 +283,106 @@ export function LeadDocumentsChecklist({
         ) : null}
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[980px] border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/40 text-left text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground">
-              <th className="px-4 py-2.5">Document</th>
-              <th className="px-4 py-2.5 w-32">Status</th>
-              <th className="px-4 py-2.5 w-36">Uploaded</th>
-              <th className="px-4 py-2.5 w-36">Expiry</th>
-              <th className="px-4 py-2.5">Notes</th>
-              <th className="px-4 py-2.5 w-[220px] text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, index) => {
-              const uploadedRow = row.kind === "doc";
-              const cat = row.cat;
-              const doc = row.kind === "doc" ? row.doc : undefined;
-              const showLabel = showCategoryLabel(row, index);
-              const expiryHint = doc?.expiry_date ? expiryDaysHint(doc.expiry_date) : null;
+      <div className="hidden border-b border-border bg-muted/40 px-4 py-2.5 text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground lg:grid lg:grid-cols-[minmax(140px,1.3fr)_6.5rem_8.5rem_8.5rem_minmax(80px,1fr)_minmax(260px,auto)] lg:gap-x-3">
+        <span>Document</span>
+        <span>Status</span>
+        <span>Uploaded</span>
+        <span>Expiry</span>
+        <span>Notes</span>
+        <span className="text-right">Actions</span>
+      </div>
 
-              return (
-                <tr
-                  key={row.kind === "doc" ? row.doc.id : `empty-${cat.value}`}
-                  className={cn(
-                    "border-b border-border/60 transition-colors",
-                    uploadedRow ? "bg-emerald-50/70 hover:bg-emerald-50" : "hover:bg-muted/30"
+      <div className="overflow-x-auto">
+      <div className="min-w-[980px] divide-y divide-border/60">
+        {groups.map(({ cat, docs }) => {
+          const headerStatus = docStatus(docs[0], cat);
+
+          if (docs.length === 0) {
+            return (
+              <div key={cat.value} className={cn(ROW_GRID, "px-4 py-3 hover:bg-muted/20")}>
+                <p className="font-medium text-foreground">{cat.label}</p>
+                <StatusPill label="Not uploaded" className="bg-muted text-muted-foreground" />
+                <span className="text-muted-foreground">—</span>
+                <span className="text-muted-foreground">—</span>
+                <span className="text-muted-foreground">—</span>
+                <div className="flex justify-end">
+                  {canEdit ? (
+                    <DocumentUploadDialog
+                      entityType="lead"
+                      entityId={leadId}
+                      fixedCategory={cat}
+                      onSaved={(d) => onDocumentSaved?.(d as LeadDocument | undefined)}
+                      trigger={
+                        <Button type="button" size="sm" variant="outline" className="h-7 gap-1 px-2 text-xs">
+                          <Plus className="h-3 w-3" />
+                          Add new
+                        </Button>
+                      }
+                    />
+                  ) : (
+                    <span className="text-xs italic text-muted-foreground">—</span>
                   )}
-                >
-                  <td className="px-4 py-2.5">
-                    {showLabel ? (
-                      <p className="font-medium text-foreground">{cat.label}</p>
-                    ) : (
-                      <p className="pl-3 text-xs text-muted-foreground">↳ additional file</p>
-                    )}
-                    {doc ? (
-                      <p className={cn("truncate text-[0.82rem] text-muted-foreground", showLabel ? "mt-0.5" : "")}>
-                        {doc.name}
-                      </p>
-                    ) : null}
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <StatusBadge row={row} />
-                  </td>
-                  <td className="px-4 py-2.5 text-[0.82rem] text-muted-foreground">
-                    {doc ? (
-                      <span className="font-mono text-[0.78rem] text-foreground">{formatDateTime(doc.created_at)}</span>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td className="px-4 py-2.5 text-[0.82rem]">
-                    {cat.capture === "expiry" && doc ? (
-                      doc.expiry_date ? (
-                        <div>
-                          <span className="font-mono text-[0.78rem] text-foreground">{formatDate(doc.expiry_date)}</span>
-                          {expiryHint ? (
-                            <span
-                              className={cn(
-                                "mt-0.5 block text-[0.72rem]",
-                                expiryHint.startsWith("Expired") ? "text-destructive" : "text-muted-foreground"
-                              )}
-                            >
-                              {expiryHint}
-                            </span>
-                          ) : null}
-                        </div>
-                      ) : (
-                        <span className="italic text-muted-foreground">No date set</span>
-                      )
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td className="max-w-[220px] truncate px-4 py-2.5 text-muted-foreground">
-                    {doc?.notes?.trim() || "—"}
-                  </td>
-                  <td className="px-4 py-2.5">
-                    <div className="flex flex-wrap justify-end gap-1.5">
-                      {doc ? (
-                        <>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div key={cat.value} className="px-4 py-3">
+              <div className="overflow-hidden rounded-[12px] border border-primary/30 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-3 bg-primary px-4 py-3 text-primary-foreground">
+                  <div className="min-w-0">
+                    <p className="font-heading text-[1rem] font-semibold" style={{ fontFamily: "var(--font-display), serif" }}>
+                      {cat.label}
+                    </p>
+                    <p className="text-[0.72rem] text-white/65">
+                      {docs.length} file{docs.length === 1 ? "" : "s"} uploaded
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusPill label={headerStatus.label} className={headerStatus.className} />
+                    {canEdit ? (
+                      <DocumentUploadDialog
+                        entityType="lead"
+                        entityId={leadId}
+                        fixedCategory={cat}
+                        onSaved={(d) => onDocumentSaved?.(d as LeadDocument | undefined)}
+                        trigger={
                           <Button
                             type="button"
                             size="sm"
-                            variant="outline"
-                            className="h-7 gap-1 px-2 text-xs"
-                            onClick={() => setPreview(doc)}
+                            variant="secondary"
+                            className="h-7 gap-1 border-0 bg-secondary px-2.5 text-xs text-secondary-foreground hover:bg-secondary/90"
                           >
-                            <Eye className="h-3 w-3" />
-                            Preview
+                            <Plus className="h-3 w-3" />
+                            Add new
                           </Button>
-                          {canEdit ? (
-                            <>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                className="h-7 gap-1 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                disabled={pending}
-                                onClick={() => removeDoc(doc)}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                                Delete
-                              </Button>
-                              <DocumentUploadDialog
-                                entityType="lead"
-                                entityId={leadId}
-                                fixedCategory={cat}
-                                onSaved={(d) => onDocumentSaved?.(d as LeadDocument | undefined)}
-                                trigger={
-                                  <Button type="button" size="sm" variant="outline" className="h-7 gap-1 px-2 text-xs">
-                                    <Plus className="h-3 w-3" />
-                                    Add new
-                                  </Button>
-                                }
-                              />
-                            </>
-                          ) : null}
-                        </>
-                      ) : canEdit ? (
-                        <DocumentUploadDialog
-                          entityType="lead"
-                          entityId={leadId}
-                          fixedCategory={cat}
-                          onSaved={(d) => onDocumentSaved?.(d as LeadDocument | undefined)}
-                          trigger={
-                            <Button type="button" size="sm" variant="outline" className="h-7 gap-1 px-2 text-xs">
-                              <Plus className="h-3 w-3" />
-                              Add new
-                            </Button>
-                          }
-                        />
-                      ) : (
-                        <span className="text-xs italic text-muted-foreground">—</span>
+                        }
+                      />
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="divide-y divide-border/70 bg-card">
+                  {docs.map((doc, idx) => (
+                    <div
+                      key={doc.id}
+                      className={cn(
+                        ROW_GRID,
+                        "gap-y-2 px-4 py-3",
+                        idx % 2 === 0 ? "bg-emerald-50/40" : "bg-white"
                       )}
+                    >
+                      <FileRowCells doc={doc} cat={cat} />
+                      <FileActions doc={doc} cat={cat} />
                     </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                  ))}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
       </div>
 
       {customerId ? (
@@ -330,6 +402,56 @@ export function LeadDocumentsChecklist({
           mimeType={preview.mime_type}
         />
       ) : null}
+
+      <Dialog open={editing !== null} onOpenChange={(open) => { if (!open) setEditing(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit document</DialogTitle>
+          </DialogHeader>
+          {editing ? (
+            <div className="space-y-4">
+              <div className="rounded-[10px] border border-border bg-muted/40 px-3 py-2">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-wide text-muted-foreground">Category</p>
+                <p className="text-sm font-medium text-foreground">{editing.cat.label}</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit_doc_name">Name</Label>
+                <Input id="edit_doc_name" value={editName} onChange={(e) => setEditName(e.target.value)} />
+              </div>
+              {editing.cat.capture === "expiry" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="edit_doc_expiry">Expiry date</Label>
+                  <Input
+                    id="edit_doc_expiry"
+                    type="date"
+                    value={editExpiry}
+                    onChange={(e) => setEditExpiry(e.target.value)}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="edit_doc_notes">Note</Label>
+                  <Input
+                    id="edit_doc_notes"
+                    value={editNotes}
+                    onChange={(e) => setEditNotes(e.target.value)}
+                    placeholder="Optional note"
+                  />
+                </div>
+              )}
+            </div>
+          ) : null}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)}>
+              Cancel
+            </Button>
+            <Button disabled={!editName.trim() || pending} onClick={saveEdit}>
+              {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
