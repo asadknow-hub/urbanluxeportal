@@ -8,6 +8,7 @@ import { KycPdfPreview } from "@/components/crm/kyc-pdf-preview";
 import type { DocCategoryChoice } from "@/lib/lead-field-options";
 import type { KycPersonRecord } from "@/lib/kyc-form";
 import type { LeadDocument } from "@/components/leads/lead-documents";
+import { mergePersonDocumentsByStoragePath } from "@/lib/person-documents";
 
 export function LeadDocumentsPage({
   uploadEntityType,
@@ -107,18 +108,13 @@ export function LeadKycPage({
   );
 }
 
-/** Merge documents from lead, customer, deal, etc. (deduped by id). */
+/** Merge documents from lead, deal, customer, etc. (deduped by storage_path; later sources win). */
 export function useMergedPersonDocuments(...sources: LeadDocument[][]) {
-  return useMemo(() => {
-    const seen = new Set<string>();
-    const merged: LeadDocument[] = [];
-    for (const doc of sources.flat()) {
-      if (seen.has(doc.id)) continue;
-      seen.add(doc.id);
-      merged.push(doc);
-    }
-    return merged.sort((a, b) => b.created_at.localeCompare(a.created_at));
-  }, [sources]);
+  return useMemo(
+    () => mergePersonDocumentsByStoragePath(...sources),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- flatten source arrays for stable deps
+    sources.flatMap((batch) => batch.map((doc) => `${doc.id}:${doc.storage_path}`))
+  );
 }
 
 /** @deprecated Use useMergedPersonDocuments */

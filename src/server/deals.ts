@@ -9,6 +9,7 @@ import { revalidatePath } from "next/cache";
 import { dealReadyToFinalize, type DealTransactionInput } from "@/lib/deal-transaction";
 import { canManageCrm } from "@/lib/permissions";
 import { markPersonLost, syncPersonKycFromDeal } from "@/server/people";
+import { fetchMergedDealDocuments } from "@/lib/person-documents";
 
 export type ActionResult<T = unknown> = {
   ok: boolean;
@@ -16,13 +17,13 @@ export type ActionResult<T = unknown> = {
   error?: string;
 };
 
+/** On deal close: attach lead + deal document references to the customer (same storage_path, new rows). */
 async function copyEntityDocumentsToCustomer(
   supabase: CrmDb,
   customerId: string,
   sources: { entity_type: string; entity_id: string }[],
   uploadedBy: string
 ) {
-
   const { data: existing } = await supabase
     .from("documents")
     .select("storage_path")
@@ -106,14 +107,13 @@ export async function updateDealStage(
     let customerId: string | undefined = deal.customer_id ?? undefined;
 
     if (parsed.data.stage === "closed") {
-      const { data: dealDocuments } = await supabase
-        .from("documents")
-        .select("category")
-        .eq("entity_type", "deal")
-        .eq("entity_id", parsed.data.id)
-        .is("deleted_at", null);
+      const mergedDocuments = await fetchMergedDealDocuments(supabase, {
+        id: parsed.data.id,
+        lead_id: deal.lead_id,
+        customer_id: deal.customer_id,
+      });
 
-      const readiness = dealReadyToFinalize(deal, dealDocuments ?? []);
+      const readiness = dealReadyToFinalize(deal, mergedDocuments);
       if (!readiness.ok) {
         return {
           ok: false,

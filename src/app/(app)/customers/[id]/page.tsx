@@ -18,6 +18,7 @@ import { CustomerConvertBanner } from "@/components/customers/customer-convert-b
 import { CustomerEditDialog } from "@/components/customers/customer-edit-dialog";
 import { PersonDocumentsKycSection } from "@/components/crm/person-documents-kyc-section";
 import { mergeKycPerson } from "@/lib/kyc-form";
+import { fetchMergedCustomerDocuments } from "@/lib/person-documents";
 import { leadDocChecklistCategories, type LeadFieldOption } from "@/lib/lead-field-options";
 import { canManageCrm } from "@/lib/permissions";
 import Link from "next/link";
@@ -64,7 +65,7 @@ export default async function CustomerDetailPage({
 
   if (error || !customer) notFound();
 
-  const [{ data: deals }, { data: properties }, { data: activities }, { data: documents }, { data: agents }, { data: docCategoryRows }] =
+  const [{ data: deals }, { data: properties }, { data: activities }, { data: agents }, { data: docCategoryRows }] =
     await Promise.all([
     supabase
       .from("deals")
@@ -88,13 +89,6 @@ export default async function CustomerDetailPage({
       .eq("entity_id", id)
       .order("created_at", { ascending: false })
       .limit(15),
-    supabase
-      .from("documents")
-      .select("*")
-      .eq("entity_type", "customer")
-      .eq("entity_id", id)
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false }),
     supabase
       .from("profiles")
       .select("id, full_name, role")
@@ -149,34 +143,11 @@ export default async function CustomerDetailPage({
   }
 
   const dealIds = (deals ?? []).map((deal) => deal.id);
-  const [{ data: leadDocuments }, { data: dealDocuments }] = await Promise.all([
-    customer.lead_id
-      ? supabase
-          .from("documents")
-          .select("*")
-          .eq("entity_type", "lead")
-          .eq("entity_id", customer.lead_id)
-          .is("deleted_at", null)
-          .order("created_at", { ascending: false })
-      : Promise.resolve({ data: [], error: null }),
-    dealIds.length > 0
-      ? supabase
-          .from("documents")
-          .select("*")
-          .eq("entity_type", "deal")
-          .in("entity_id", dealIds)
-          .is("deleted_at", null)
-          .order("created_at", { ascending: false })
-      : Promise.resolve({ data: [], error: null }),
-  ]);
-
-  const mergedMap = new Map<string, NonNullable<typeof documents>[number]>();
-  for (const doc of [...(leadDocuments ?? []), ...(dealDocuments ?? []), ...(documents ?? [])]) {
-    mergedMap.set(doc.id, doc);
-  }
-  const mergedDocuments = Array.from(mergedMap.values()).sort((a, b) =>
-    b.created_at.localeCompare(a.created_at)
-  );
+  const mergedDocuments = await fetchMergedCustomerDocuments(supabase, {
+    customerId: id,
+    leadId: customer.lead_id,
+    dealIds,
+  });
   const kycPerson = mergeKycPerson(customer);
 
   const waLink = whatsappLink(customer.phone);

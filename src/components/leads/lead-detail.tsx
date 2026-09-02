@@ -379,7 +379,7 @@ export function LeadDetail({
   customer,
   personKyc,
   kycPerson,
-  kycDocuments = [],
+  customerDocuments = [],
   kycDocCategories = [],
   deal,
   documents,
@@ -414,7 +414,10 @@ export function LeadDetail({
   } | null;
   personKyc?: PersonKycFields | null;
   kycPerson?: KycPersonRecord | null;
+/** @deprecated Pass customerDocuments instead. */
   kycDocuments?: LeadDocument[];
+  /** Person-profile documents merged into the Documents tab (deduped by storage_path). */
+  customerDocuments?: LeadDocument[];
   kycDocCategories?: DocCategoryChoice[];
   deal: { id: string; title: string; stage: string; value: number; deal_type: string } | null;
   documents: DocumentRow[];
@@ -461,7 +464,7 @@ export function LeadDetail({
   const [noteDraft, setNoteDraft] = useState("");
   const [leadPage, setLeadPage] = useState<LeadPageView>("overview");
 
-  const mergedDocuments = useMergedLeadDocuments(optimisticDocs, kycDocuments);
+  const mergedDocuments = useMergedLeadDocuments(optimisticDocs, customerDocuments);
 
   const currentStage = stages.find((s) => s.id === optimisticLead.stage_id) ?? null;
   const pipelineStages = stages.filter((s) => s.kind !== "lost" && s.kind !== "junk");

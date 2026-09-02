@@ -6,6 +6,7 @@ import { leadDocChecklistCategories, type LeadFieldOption } from "@/lib/lead-fie
 import { matchesForRequirement, INVENTORY_MATCH_SELECT } from "@/lib/match-inventory";
 import { ensurePersonForLead } from "@/server/people";
 import { mergeKycPerson } from "@/lib/kyc-form";
+import { mergePersonDocumentsByStoragePath } from "@/lib/person-documents";
 
 export const dynamic = "force-dynamic";
 
@@ -163,13 +164,10 @@ export default async function DealDetailPage({
   const person = personResult?.data ?? deal.customer ?? null;
   const kycPerson = person ? mergeKycPerson(person) : null;
 
-  type DocRow = NonNullable<typeof documents>[number];
-  const mergedMap = new Map<string, DocRow>();
-  for (const doc of [...(leadDocuments ?? []), ...(customerDocuments ?? []), ...(documents ?? [])]) {
-    mergedMap.set(doc.id, doc);
-  }
-  const mergedDocuments = Array.from(mergedMap.values()).sort((a, b) =>
-    b.created_at.localeCompare(a.created_at)
+  const mergedDocuments = mergePersonDocumentsByStoragePath(
+    leadDocuments ?? [],
+    customerDocuments ?? [],
+    documents ?? []
   );
 
   return (

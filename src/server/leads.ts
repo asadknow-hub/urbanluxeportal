@@ -5,7 +5,6 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { applyLeadRouting, teamIdForUser } from "@/server/routing";
-import { copyCustomerKycDocumentsToDeal } from "@/server/kyc";
 import { revalidatePath } from "next/cache";
 import {
   LEAD_IMPORT_FIELDS,
@@ -558,28 +557,6 @@ export async function convertLead(
     if (updateError) return { ok: false, error: updateError.message };
 
     await markPersonQualified(personId, supabase);
-
-    const { data: leadDocs } = await supabase
-      .from("documents")
-      .select("name, storage_path, mime_type, size_bytes, category, expiry_date, notes")
-      .eq("entity_type", "lead")
-      .eq("entity_id", leadId)
-      .is("deleted_at", null);
-
-    if (leadDocs && leadDocs.length > 0) {
-      await supabase.from("documents").insert(
-        leadDocs.map((doc) => ({
-          ...doc,
-          entity_type: "deal",
-          entity_id: deal.id,
-          uploaded_by: user.id,
-        }))
-      );
-    }
-
-    if (personId) {
-      await copyCustomerKycDocumentsToDeal(personId, deal.id, user.id, supabase);
-    }
 
     await supabase.from("lead_activities").insert({
       lead_id: leadId,

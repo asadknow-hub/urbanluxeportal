@@ -6,8 +6,6 @@ import { matchesForRequirement, INVENTORY_MATCH_SELECT } from "@/lib/match-inven
 import { getLeadTimelinePage } from "@/server/lead-timeline";
 import { ensurePersonForLead } from "@/server/people";
 import { mergeKycPerson } from "@/lib/kyc-form";
-import { KYC_DOC_CATEGORIES } from "@/lib/kyc";
-import { normalizeDocCategory } from "@/lib/document-storage";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -182,9 +180,16 @@ export default async function LeadDetailPage({
   const person = personResult?.data ?? null;
   const deal = dealResult?.data ?? null;
   const docCategories = leadDocChecklistCategories((fieldOptionRows ?? []) as LeadFieldOption[]);
-  const kycDocuments = (customerDocsResult.data ?? []).filter((doc) =>
-    KYC_DOC_CATEGORIES.has(normalizeDocCategory(doc.category))
-  );
+  const customerDocuments = (customerDocsResult.data ?? []).map((doc) => ({
+    id: doc.id,
+    name: doc.name,
+    storage_path: doc.storage_path,
+    mime_type: doc.mime_type,
+    category: doc.category,
+    expiry_date: doc.expiry_date,
+    notes: doc.notes,
+    created_at: doc.created_at,
+  }));
   const matches = matchesForRequirement(
     {
       preferred_areas: lead.preferred_areas,
@@ -221,16 +226,7 @@ export default async function LeadDetailPage({
           : null
       }
       kycPerson={person ? mergeKycPerson(person) : null}
-      kycDocuments={kycDocuments.map((doc) => ({
-        id: doc.id,
-        name: doc.name,
-        storage_path: doc.storage_path,
-        mime_type: doc.mime_type,
-        category: doc.category,
-        expiry_date: doc.expiry_date,
-        notes: doc.notes,
-        created_at: doc.created_at,
-      }))}
+      customerDocuments={customerDocuments}
       kycDocCategories={docCategories}
       deal={deal}
       documents={documents ?? []}

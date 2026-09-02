@@ -263,6 +263,7 @@ export async function saveKycFormPdf(
 }
 
 /** Copy person KYC documents onto a deal (e.g. at convert). Skips duplicates by storage_path. */
+/** @deprecated Deal pages merge customer documents at read time; use copy only for explicit migration. */
 export async function copyCustomerKycDocumentsToDeal(
   customerId: string,
   dealId: string,
