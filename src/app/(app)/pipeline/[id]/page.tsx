@@ -2,8 +2,10 @@ import { notFound } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { DealDetail } from "@/components/pipeline/deal-detail";
-import { docCategoryChoices, type LeadFieldOption } from "@/lib/lead-field-options";
+import { leadDocChecklistCategories, type LeadFieldOption } from "@/lib/lead-field-options";
 import { matchesForRequirement, INVENTORY_MATCH_SELECT } from "@/lib/match-inventory";
+import { ensurePersonForLead } from "@/server/people";
+import { mergeKycPerson } from "@/lib/kyc-form";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +26,7 @@ export default async function DealDetailPage({
       `*,
       customer:customers(
         id, name, phone, email, nationality, status, lead_id,
+        emirates_id, passport_no, trn, address, kyc_form,
         assigned_to_profile:profiles!customers_assigned_to_fkey(id, full_name)
       ),
       assigned_to_profile:profiles!deals_assigned_to_fkey(id, full_name, avatar_url, role),
@@ -61,7 +64,11 @@ export default async function DealDetailPage({
     .eq("is_active", true)
     .order("full_name");
 
-  const [{ data: documents }, { data: docCategoryRows }, { data: viewingRows }, { data: inventoryRows }, { data: shortlistRows }] = await Promise.all([
+  const personId =
+    deal.customer_id ||
+    (deal.lead_id ? await ensurePersonForLead(deal.lead_id, user.id, supabase) : null);
+
+  const [{ data: documents }, { data: docCategoryRows }, { data: viewingRows }, { data: inventoryRows }, { data: shortlistRows }, { data: leadDocuments }, { data: customerDocuments }, personResult] = await Promise.all([
     supabase
       .from("documents")
       .select("*")
@@ -97,6 +104,31 @@ export default async function DealDetailPage({
         property:properties(id, property_code, community, building_name, unit_number, property_type, bedrooms, status)`
       )
       .eq("deal_id", id),
+    deal.lead_id
+      ? supabase
+          .from("documents")
+          .select("*")
+          .eq("entity_type", "lead")
+          .eq("entity_id", deal.lead_id)
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
+    personId
+      ? supabase
+          .from("documents")
+          .select("*")
+          .eq("entity_type", "customer")
+          .eq("entity_id", personId)
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
+    personId
+      ? supabase
+          .from("customers")
+          .select("id, name, phone, email, status, nationality, emirates_id, passport_no, trn, address, kyc_form")
+          .eq("id", personId)
+          .single()
+      : Promise.resolve({ data: null, error: null }),
   ]);
 
   let leadFollowUp: {
@@ -127,13 +159,38 @@ export default async function DealDetailPage({
     }
   }
 
+  const docCategories = leadDocChecklistCategories((docCategoryRows ?? []) as LeadFieldOption[]);
+  const person = personResult?.data ?? deal.customer ?? null;
+  const kycPerson = person ? mergeKycPerson(person) : null;
+
+  type DocRow = NonNullable<typeof documents>[number];
+  const mergedMap = new Map<string, DocRow>();
+  for (const doc of [...(leadDocuments ?? []), ...(customerDocuments ?? []), ...(documents ?? [])]) {
+    mergedMap.set(doc.id, doc);
+  }
+  const mergedDocuments = Array.from(mergedMap.values()).sort((a, b) =>
+    b.created_at.localeCompare(a.created_at)
+  );
+
   return (
     <DealDetail
       deal={deal}
       activities={activities ?? []}
       agents={agents ?? []}
       documents={documents ?? []}
-      docCategories={docCategoryChoices((docCategoryRows ?? []) as LeadFieldOption[])}
+      mergedDocuments={mergedDocuments.map((doc) => ({
+        id: doc.id,
+        name: doc.name,
+        storage_path: doc.storage_path,
+        mime_type: doc.mime_type,
+        category: doc.category,
+        expiry_date: doc.expiry_date,
+        notes: doc.notes,
+        created_at: doc.created_at,
+      }))}
+      docCategories={docCategories}
+      kycPerson={kycPerson}
+      personCustomerId={person?.id ?? null}
       viewings={viewingRows ?? []}
       inventory={inventoryRows ?? []}
       matches={matchesForRequirement(

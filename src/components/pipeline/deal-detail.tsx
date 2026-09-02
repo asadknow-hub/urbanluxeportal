@@ -27,8 +27,8 @@ import { formatDate, timeAgo } from "@/lib/dates";
 import { LeadContextPanel } from "@/components/crm/lead-context-panel";
 import { ConversionPath } from "@/components/crm/conversion-path";
 import { FollowUpPanel } from "@/components/crm/follow-up-panel";
-import { DealDocumentsSection } from "@/components/pipeline/deal-documents-section";
 import { DealTransactionForm } from "@/components/pipeline/deal-transaction-form";
+import { PersonDocumentsKycSection } from "@/components/crm/person-documents-kyc-section";
 import { DealShortlist, type DealPropertyRow } from "@/components/pipeline/deal-shortlist";
 import { ViewingPanel, type ViewingRow, type InventoryChoice } from "@/components/crm/viewing-panel";
 import { MatchPanel } from "@/components/crm/match-panel";
@@ -44,6 +44,8 @@ import {
 } from "@/lib/deal-stages";
 import { canManageCrm } from "@/lib/permissions";
 import type { DocCategoryChoice } from "@/lib/lead-field-options";
+import type { KycPersonRecord } from "@/lib/kyc-form";
+import type { LeadDocument } from "@/components/leads/lead-documents";
 import { updateDealStage, addDealActivity } from "@/server/deals";
 import { toast } from "sonner";
 import {
@@ -156,7 +158,10 @@ export function DealDetail({
   activities,
   agents,
   documents,
+  mergedDocuments = documents,
   docCategories = [],
+  kycPerson = null,
+  personCustomerId = null,
   viewings,
   inventory,
   shortlist,
@@ -178,7 +183,10 @@ export function DealDetail({
     notes: string | null;
     created_at: string;
   }[];
+  mergedDocuments?: LeadDocument[];
   docCategories?: DocCategoryChoice[];
+  kycPerson?: KycPersonRecord | null;
+  personCustomerId?: string | null;
   viewings: ViewingRow[];
   inventory: InventoryChoice[];
   shortlist: DealPropertyRow[];
@@ -225,7 +233,7 @@ export function DealDetail({
     return list;
   }, [agents, deal.assigned_to, deal.assigned_to_profile]);
 
-  const finalizeReadiness = dealReadyToFinalize(deal, documents);
+  const finalizeReadiness = dealReadyToFinalize(deal, mergedDocuments);
 
   function handleStageChange(newStage: string) {
     if (newStage === currentStageKey) return;
@@ -398,6 +406,27 @@ export function DealDetail({
         )}
       </div>
 
+      <PersonDocumentsKycSection
+        uploadEntityType="deal"
+        uploadEntityId={deal.id}
+        customerId={personCustomerId ?? deal.customer?.id}
+        leadId={deal.lead_id}
+        customerHref={deal.customer ? `/customers/${deal.customer.id}` : undefined}
+        person={kycPerson}
+        documents={mergedDocuments.map((doc) => ({
+          id: doc.id,
+          name: doc.name,
+          storage_path: doc.storage_path,
+          mime_type: doc.mime_type,
+          category: doc.category,
+          expiry_date: doc.expiry_date ?? null,
+          notes: doc.notes ?? null,
+          created_at: doc.created_at,
+        }))}
+        categories={docCategories}
+        canEdit={canEdit && !deal.finalized_at}
+        sourcesHint="Includes files from the linked lead, person profile, and this deal. New uploads here attach to the deal."
+        overview={
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_360px]">
         <div className="space-y-4">
           <DealTransactionForm
@@ -508,24 +537,10 @@ export function DealDetail({
               canEdit={canEdit}
             />
           ) : null}
-
-          <DealDocumentsSection
-            dealId={deal.id}
-            initialDocuments={documents.map((doc) => ({
-              id: doc.id,
-              name: doc.name,
-              storage_path: doc.storage_path,
-              mime_type: doc.mime_type,
-              category: doc.category,
-              expiry_date: doc.expiry_date,
-              notes: doc.notes,
-              created_at: doc.created_at,
-            }))}
-            categories={docCategories}
-            canEdit={canEdit && !deal.finalized_at}
-          />
         </div>
       </div>
+        }
+      />
 
       <Dialog open={closedOpen} onOpenChange={setClosedOpen}>
         <DialogContent className="max-w-md">

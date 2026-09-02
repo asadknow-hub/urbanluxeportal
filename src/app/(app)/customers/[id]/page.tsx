@@ -15,13 +15,10 @@ import { formatPropertyLine } from "@/lib/deal-transaction";
 import { dealStageLabel, normalizeDealStage } from "@/lib/deal-stages";
 import { CustomerNewDealDialog } from "@/components/customers/customer-new-deal-dialog";
 import { CustomerConvertBanner } from "@/components/customers/customer-convert-banner";
-import { KycSection } from "@/components/crm/kyc-section";
-import { mergeKycPerson } from "@/lib/kyc-form";
-import { KYC_DOC_CATEGORIES } from "@/lib/kyc";
-import { normalizeDocCategory } from "@/lib/document-storage";
 import { CustomerEditDialog } from "@/components/customers/customer-edit-dialog";
-import { CustomerDocumentsSection } from "@/components/customers/customer-documents-section";
-import { docCategoryChoices, type LeadFieldOption } from "@/lib/lead-field-options";
+import { PersonDocumentsKycSection } from "@/components/crm/person-documents-kyc-section";
+import { mergeKycPerson } from "@/lib/kyc-form";
+import { leadDocChecklistCategories, type LeadFieldOption } from "@/lib/lead-field-options";
 import { canManageCrm } from "@/lib/permissions";
 import Link from "next/link";
 import {
@@ -113,7 +110,7 @@ export default async function CustomerDetailPage({
   ]);
 
   const canEdit = canManageCrm(user.role) || customer.assigned_to === user.id;
-  const docCategories = docCategoryChoices((docCategoryRows ?? []) as LeadFieldOption[]);
+  const docCategories = leadDocChecklistCategories((docCategoryRows ?? []) as LeadFieldOption[]);
 
   let originatingLead = null;
   let leadFollowUp: {
@@ -151,16 +148,41 @@ export default async function CustomerDetailPage({
     }
   }
 
+  const dealIds = (deals ?? []).map((deal) => deal.id);
+  const [{ data: leadDocuments }, { data: dealDocuments }] = await Promise.all([
+    customer.lead_id
+      ? supabase
+          .from("documents")
+          .select("*")
+          .eq("entity_type", "lead")
+          .eq("entity_id", customer.lead_id)
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
+    dealIds.length > 0
+      ? supabase
+          .from("documents")
+          .select("*")
+          .eq("entity_type", "deal")
+          .in("entity_id", dealIds)
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false })
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+
+  const mergedMap = new Map<string, NonNullable<typeof documents>[number]>();
+  for (const doc of [...(leadDocuments ?? []), ...(dealDocuments ?? []), ...(documents ?? [])]) {
+    mergedMap.set(doc.id, doc);
+  }
+  const mergedDocuments = Array.from(mergedMap.values()).sort((a, b) =>
+    b.created_at.localeCompare(a.created_at)
+  );
+  const kycPerson = mergeKycPerson(customer);
+
   const waLink = whatsappLink(customer.phone);
   const leadContext = customer.lead_context as LeadContext | null;
   const statusColors = getStatusColor(customer.status);
   const customerTags = (customer.tags ?? []).filter(Boolean);
-  const kycDocuments = (documents ?? []).filter((doc) =>
-    KYC_DOC_CATEGORIES.has(normalizeDocCategory(doc.category))
-  );
-  const otherDocuments = (documents ?? []).filter(
-    (doc) => !KYC_DOC_CATEGORIES.has(normalizeDocCategory(doc.category))
-  );
   const hasOpenDeal = (deals ?? []).some((deal) => deal.stage !== "closed" && deal.stage !== "lost");
   const showConvertBanner =
     !!originatingLead &&
@@ -251,6 +273,27 @@ export default async function CustomerDetailPage({
         </div>
       </section>
 
+      <PersonDocumentsKycSection
+        uploadEntityType="customer"
+        uploadEntityId={customer.id}
+        customerId={customer.id}
+        leadId={customer.lead_id}
+        customerHref={`/customers/${customer.id}`}
+        person={kycPerson}
+        documents={mergedDocuments.map((doc) => ({
+          id: doc.id,
+          name: doc.name,
+          storage_path: doc.storage_path,
+          mime_type: doc.mime_type,
+          category: doc.category,
+          expiry_date: doc.expiry_date,
+          notes: doc.notes,
+          created_at: doc.created_at,
+        }))}
+        categories={docCategories}
+        canEdit={canEdit}
+        sourcesHint="Includes files from the originating lead, linked deals, and this customer profile. New uploads here attach to the customer."
+        overview={
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_360px]">
         <div className="space-y-4">
           {(properties ?? []).length > 0 && (
@@ -353,22 +396,6 @@ export default async function CustomerDetailPage({
             </div>
           </div>
 
-          <CustomerDocumentsSection
-            customerId={customer.id}
-            initialDocuments={otherDocuments.map((doc) => ({
-              id: doc.id,
-              name: doc.name,
-              storage_path: doc.storage_path,
-              mime_type: doc.mime_type,
-              category: doc.category,
-              expiry_date: doc.expiry_date,
-              notes: doc.notes,
-              created_at: doc.created_at,
-            }))}
-            categories={docCategories}
-            canEdit={canEdit}
-          />
-
           <div className="overflow-hidden rounded-[14px] border border-border bg-card p-5">
             <h2 className="mb-4 text-sm font-semibold text-foreground">Recent activity</h2>
             <div className="space-y-3">
@@ -458,31 +485,6 @@ export default async function CustomerDetailPage({
             </div>
           </div>
 
-          <KycSection
-            customerId={customer.id}
-            leadId={customer.lead_id}
-            person={mergeKycPerson(customer)}
-            fields={{
-              nationality: customer.nationality,
-              emirates_id: customer.emirates_id,
-              passport_no: customer.passport_no,
-              trn: customer.trn,
-            }}
-            documents={kycDocuments.map((doc) => ({
-              id: doc.id,
-              name: doc.name,
-              storage_path: doc.storage_path,
-              mime_type: doc.mime_type,
-              category: doc.category,
-              expiry_date: doc.expiry_date,
-              notes: doc.notes,
-              created_at: doc.created_at,
-            }))}
-            docCategories={docCategories}
-            canEdit={canEdit}
-            variant="sidebar"
-          />
-
           <LeadContextPanel
             context={leadContext}
             leadHref={customer.lead_id ? `/leads/${customer.lead_id}` : undefined}
@@ -512,6 +514,8 @@ export default async function CustomerDetailPage({
           )}
         </div>
       </div>
+        }
+      />
     </div>
   );
 }

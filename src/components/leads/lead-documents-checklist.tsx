@@ -114,7 +114,8 @@ function FileRowCells({
 }
 
 export function LeadDocumentsChecklist({
-  leadId,
+  uploadEntityType,
+  uploadEntityId,
   customerId,
   documents,
   categories,
@@ -123,8 +124,10 @@ export function LeadDocumentsChecklist({
   onDocumentDeleted,
   onDocumentUpdated,
   embedded = false,
+  sourcesHint,
 }: {
-  leadId: string;
+  uploadEntityType: string;
+  uploadEntityId: string;
   customerId?: string | null;
   documents: LeadDocument[];
   categories: DocCategoryChoice[];
@@ -133,6 +136,7 @@ export function LeadDocumentsChecklist({
   onDocumentDeleted?: (docId: string) => void;
   onDocumentUpdated?: (doc: LeadDocument) => void;
   embedded?: boolean;
+  sourcesHint?: string;
 }) {
   const [pending, startTransition] = useTransition();
   const [preview, setPreview] = useState<LeadDocument | null>(null);
@@ -269,8 +273,8 @@ export function LeadDocumentsChecklist({
         )}
         {canEdit ? (
           <DocumentUploadDialog
-            entityType="lead"
-            entityId={leadId}
+            entityType={uploadEntityType}
+            entityId={uploadEntityId}
             categories={categories}
             onSaved={(doc) => onDocumentSaved?.(doc as LeadDocument | undefined)}
             trigger={
@@ -308,8 +312,8 @@ export function LeadDocumentsChecklist({
                 <div className="flex justify-end">
                   {canEdit ? (
                     <DocumentUploadDialog
-                      entityType="lead"
-                      entityId={leadId}
+                      entityType={uploadEntityType}
+                      entityId={uploadEntityId}
                       fixedCategory={cat}
                       onSaved={(d) => onDocumentSaved?.(d as LeadDocument | undefined)}
                       trigger={
@@ -343,8 +347,8 @@ export function LeadDocumentsChecklist({
                     <StatusPill label={headerStatus.label} className={headerStatus.className} />
                     {canEdit ? (
                       <DocumentUploadDialog
-                        entityType="lead"
-                        entityId={leadId}
+                        entityType={uploadEntityType}
+                        entityId={uploadEntityId}
                         fixedCategory={cat}
                         onSaved={(d) => onDocumentSaved?.(d as LeadDocument | undefined)}
                         trigger={
@@ -385,7 +389,9 @@ export function LeadDocumentsChecklist({
       </div>
       </div>
 
-      {customerId ? (
+      {sourcesHint ? (
+        <p className="border-t border-border px-4 py-2 text-xs text-muted-foreground">{sourcesHint}</p>
+      ) : customerId ? (
         <p className="border-t border-border px-4 py-2 text-xs text-muted-foreground">
           ID documents on the person profile are included in the KYC tab and customer record.
         </p>

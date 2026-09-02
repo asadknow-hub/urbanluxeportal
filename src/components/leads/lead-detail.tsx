@@ -1456,7 +1456,8 @@ export function LeadDetail({
 
       {leadPage === "documents" ? (
         <LeadDocumentsPage
-          leadId={optimisticLead.id}
+          uploadEntityType="lead"
+          uploadEntityId={optimisticLead.id}
           customerId={customer?.id}
           documents={mergedDocuments}
           categories={kycDocCategories}

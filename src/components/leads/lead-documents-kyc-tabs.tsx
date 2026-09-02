@@ -10,7 +10,8 @@ import type { KycPersonRecord } from "@/lib/kyc-form";
 import type { LeadDocument } from "@/components/leads/lead-documents";
 
 export function LeadDocumentsPage({
-  leadId,
+  uploadEntityType,
+  uploadEntityId,
   customerId,
   documents,
   categories,
@@ -18,8 +19,10 @@ export function LeadDocumentsPage({
   onDocumentSaved,
   onDocumentDeleted,
   onDocumentUpdated,
+  sourcesHint,
 }: {
-  leadId: string;
+  uploadEntityType: string;
+  uploadEntityId: string;
   customerId?: string | null;
   documents: LeadDocument[];
   categories: DocCategoryChoice[];
@@ -27,10 +30,12 @@ export function LeadDocumentsPage({
   onDocumentSaved?: (doc?: LeadDocument) => void;
   onDocumentDeleted?: (docId: string) => void;
   onDocumentUpdated?: (doc: LeadDocument) => void;
+  sourcesHint?: string;
 }) {
   return (
     <LeadDocumentsChecklist
-      leadId={leadId}
+      uploadEntityType={uploadEntityType}
+      uploadEntityId={uploadEntityId}
       customerId={customerId}
       documents={documents}
       categories={categories}
@@ -38,6 +43,7 @@ export function LeadDocumentsPage({
       onDocumentSaved={onDocumentSaved}
       onDocumentDeleted={onDocumentDeleted}
       onDocumentUpdated={onDocumentUpdated}
+      sourcesHint={sourcesHint}
     />
   );
 }
@@ -101,19 +107,24 @@ export function LeadKycPage({
   );
 }
 
-/** Merge lead + customer docs (all files, deduped by id). */
-export function useMergedLeadDocuments(
-  leadDocuments: LeadDocument[],
-  customerDocuments: LeadDocument[] = []
-) {
+/** Merge documents from lead, customer, deal, etc. (deduped by id). */
+export function useMergedPersonDocuments(...sources: LeadDocument[][]) {
   return useMemo(() => {
     const seen = new Set<string>();
     const merged: LeadDocument[] = [];
-    for (const doc of [...leadDocuments, ...customerDocuments]) {
+    for (const doc of sources.flat()) {
       if (seen.has(doc.id)) continue;
       seen.add(doc.id);
       merged.push(doc);
     }
     return merged.sort((a, b) => b.created_at.localeCompare(a.created_at));
-  }, [leadDocuments, customerDocuments]);
+  }, [sources]);
+}
+
+/** @deprecated Use useMergedPersonDocuments */
+export function useMergedLeadDocuments(
+  leadDocuments: LeadDocument[],
+  customerDocuments: LeadDocument[] = []
+) {
+  return useMergedPersonDocuments(leadDocuments, customerDocuments);
 }
