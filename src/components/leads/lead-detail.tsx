@@ -714,11 +714,6 @@ export function LeadDetail({
   return (
     <div className="mx-auto flex w-full max-w-[1460px] flex-col gap-[18px]">
       <section className="overflow-visible rounded-[14px] border border-border bg-card">
-        <LeadPageTabs
-          value={leadPage}
-          onChange={setLeadPage}
-          kycDisabled={!customer || !kycPerson}
-        />
         <div className="flex flex-col gap-6 px-6 py-7 md:flex-row md:items-start md:gap-[26px] md:px-8">
           <div className="relative grid h-[84px] w-[84px] shrink-0 place-items-center rounded-md border-[1.5px] border-primary bg-accent">
             <span className="absolute inset-[5px] rounded-[3px] border border-primary/35" />
@@ -875,7 +870,7 @@ export function LeadDetail({
               <DocumentUploadDialog
                 entityType="lead"
                 entityId={optimisticLead.id}
-                categories={docCategoryChoices(fieldOptions.doc_category)}
+                categories={kycDocCategories.length > 0 ? kycDocCategories : docCategoryChoices(fieldOptions.doc_category)}
                 onSaved={(doc) => {
                   if (doc) setOptimisticDocs((prev) => [{ ...doc, category: doc.category || "other" }, ...prev]);
                   router.refresh();
@@ -978,6 +973,12 @@ export function LeadDetail({
           </div>
         )}
       </section>
+
+      <LeadPageTabs
+        value={leadPage}
+        onChange={setLeadPage}
+        kycDisabled={!customer || !kycPerson}
+      />
 
       {leadPage === "overview" ? (
       <div className="grid grid-cols-1 items-start gap-[18px] xl:grid-cols-[1fr_360px]">

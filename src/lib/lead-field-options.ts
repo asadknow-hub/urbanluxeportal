@@ -78,6 +78,39 @@ export type DocCategoryChoice = {
   capture: DocCaptureMode;
 };
 
+/** Core lead/deal document checklist — excludes invoice, receipt, marketing, etc. */
+export const LEAD_DOC_CHECKLIST_VALUES = [
+  "emirates_id",
+  "passport",
+  "visa",
+  "title_deed",
+  "mou",
+  "tenancy_contract",
+  "noc",
+  "permit",
+  "contract",
+  "cheque_copy",
+  "other",
+] as const;
+
+export function leadDocChecklistCategories(
+  options: LeadFieldOption[] | DocCategoryChoice[] | undefined
+): DocCategoryChoice[] {
+  const choices =
+    options?.length && "capture" in options[0]
+      ? (options as DocCategoryChoice[])
+      : docCategoryChoices(options as LeadFieldOption[] | undefined);
+  const allowed = new Set<string>(LEAD_DOC_CHECKLIST_VALUES);
+  const order = LEAD_DOC_CHECKLIST_VALUES as readonly string[];
+  return choices
+    .filter((row) => allowed.has(row.value))
+    .sort((a, b) => {
+      const ai = order.indexOf(a.value);
+      const bi = order.indexOf(b.value);
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    });
+}
+
 export function docCategoryChoices(options: LeadFieldOption[] | undefined): DocCategoryChoice[] {
   return (options ?? []).map((row) => ({
     value: row.value,

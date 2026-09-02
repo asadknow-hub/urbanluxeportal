@@ -12,19 +12,7 @@ import { cn } from "@/lib/utils";
 import { ExternalLink, Upload } from "lucide-react";
 import { toast } from "sonner";
 
-const CHECKLIST_ORDER = [
-  "emirates_id",
-  "passport",
-  "visa",
-  "title_deed",
-  "mou",
-  "tenancy_contract",
-  "noc",
-  "permit",
-  "contract",
-  "cheque_copy",
-  "other",
-];
+import { LEAD_DOC_CHECKLIST_VALUES } from "@/lib/lead-field-options";
 
 function expiryLabel(date: string | null | undefined): string {
   if (!date) return "—";
@@ -55,8 +43,8 @@ export function LeadDocumentsChecklist({
 
   const rows = useMemo(() => {
     const sorted = [...categories].sort((a, b) => {
-      const ai = CHECKLIST_ORDER.indexOf(a.value);
-      const bi = CHECKLIST_ORDER.indexOf(b.value);
+      const ai = LEAD_DOC_CHECKLIST_VALUES.indexOf(a.value as (typeof LEAD_DOC_CHECKLIST_VALUES)[number]);
+      const bi = LEAD_DOC_CHECKLIST_VALUES.indexOf(b.value as (typeof LEAD_DOC_CHECKLIST_VALUES)[number]);
       return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
     });
 

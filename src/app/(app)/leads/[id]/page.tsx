@@ -1,14 +1,13 @@
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LeadDetail } from "@/components/leads/lead-detail";
-import { groupLeadFieldOptions, type LeadFieldOption } from "@/lib/lead-field-options";
+import { groupLeadFieldOptions, leadDocChecklistCategories, type LeadFieldOption } from "@/lib/lead-field-options";
 import { matchesForRequirement, INVENTORY_MATCH_SELECT } from "@/lib/match-inventory";
 import { getLeadTimelinePage } from "@/server/lead-timeline";
 import { ensurePersonForLead } from "@/server/people";
 import { mergeKycPerson } from "@/lib/kyc-form";
 import { KYC_DOC_CATEGORIES } from "@/lib/kyc";
 import { normalizeDocCategory } from "@/lib/document-storage";
-import { docCategoryChoices } from "@/lib/lead-field-options";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -182,7 +181,7 @@ export default async function LeadDetailPage({
 
   const person = personResult?.data ?? null;
   const deal = dealResult?.data ?? null;
-  const docCategories = docCategoryChoices((fieldOptionRows ?? []) as LeadFieldOption[]);
+  const docCategories = leadDocChecklistCategories((fieldOptionRows ?? []) as LeadFieldOption[]);
   const kycDocuments = (customerDocsResult.data ?? []).filter((doc) =>
     KYC_DOC_CATEGORIES.has(normalizeDocCategory(doc.category))
   );
