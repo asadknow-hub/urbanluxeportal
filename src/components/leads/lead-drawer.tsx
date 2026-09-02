@@ -209,7 +209,7 @@ export function LeadDrawer({ lead, onClose }: { lead: LeadRow; onClose: () => vo
           {/* Actions */}
           {lead.status !== "converted" && lead.status !== "unqualified" && (
             <div className="flex flex-col gap-2">
-              <Button className="bg-primary text-primary-foreground hover:bg-[#8A6D2C]" onClick={handleConvert}>
+              <Button className="bg-secondary text-secondary-foreground hover:bg-secondary/90" onClick={handleConvert}>
                 <UserPlus className="mr-2 h-4 w-4" />
                 Convert to customer + deal
               </Button>

@@ -15,7 +15,8 @@ import { DocumentUploadDialog } from "@/components/documents/document-upload-dia
 import { ConvertLeadDialog } from "@/components/leads/convert-lead-dialog";
 import { ViewingPanel, type ViewingRow, type InventoryChoice } from "@/components/crm/viewing-panel";
 import { MatchPanel } from "@/components/crm/match-panel";
-import { LeadDocumentsKycTabs } from "@/components/leads/lead-documents-kyc-tabs";
+import { LeadDocumentsPage, LeadKycPage, useMergedLeadDocuments } from "@/components/leads/lead-documents-kyc-tabs";
+import { LeadPageTabs, type LeadPageView } from "@/components/leads/lead-page-tabs";
 import type { LeadDocument } from "@/components/leads/lead-documents";
 import type { DocCategoryChoice } from "@/lib/lead-field-options";
 import type { PersonKycFields } from "@/lib/kyc";
@@ -232,7 +233,7 @@ function SnapshotBlock({ title, children }: { title: string; children: React.Rea
   return (
     <div className="min-w-0">
       <p className="mb-2 flex justify-center">
-        <span className="rounded-full bg-[#F5EEDC] px-3 py-0.5 text-center text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[#8A6D2C]">
+        <span className="rounded-full bg-accent px-3 py-0.5 text-center text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-secondary">
           {title}
         </span>
       </p>
@@ -310,7 +311,7 @@ function ChoicePicker({
               key={opt.value}
               type="button"
               className={`rounded-md px-2.5 py-1.5 text-left text-[0.84rem] hover:bg-muted ${
-                opt.value === value ? "bg-[#F5EEDC] text-[#8A6D2C]" : "text-foreground"
+                opt.value === value ? "bg-accent text-secondary" : "text-foreground"
               }`}
               onClick={() => {
                 onChange(opt.value);
@@ -458,6 +459,9 @@ export function LeadDetail({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [activityFilter, setActivityFilter] = useState("all");
   const [noteDraft, setNoteDraft] = useState("");
+  const [leadPage, setLeadPage] = useState<LeadPageView>("overview");
+
+  const mergedDocuments = useMergedLeadDocuments(optimisticDocs, kycDocuments);
 
   const currentStage = stages.find((s) => s.id === optimisticLead.stage_id) ?? null;
   const pipelineStages = stages.filter((s) => s.kind !== "lost" && s.kind !== "junk");
@@ -710,10 +714,15 @@ export function LeadDetail({
   return (
     <div className="mx-auto flex w-full max-w-[1460px] flex-col gap-[18px]">
       <section className="overflow-visible rounded-[14px] border border-border bg-card">
+        <LeadPageTabs
+          value={leadPage}
+          onChange={setLeadPage}
+          kycDisabled={!customer || !kycPerson}
+        />
         <div className="flex flex-col gap-6 px-6 py-7 md:flex-row md:items-start md:gap-[26px] md:px-8">
-          <div className="relative grid h-[84px] w-[84px] shrink-0 place-items-center rounded-md border-[1.5px] border-primary bg-[#F5EEDC]">
+          <div className="relative grid h-[84px] w-[84px] shrink-0 place-items-center rounded-md border-[1.5px] border-primary bg-accent">
             <span className="absolute inset-[5px] rounded-[3px] border border-primary/35" />
-            <span className="font-heading text-[1.8rem] tracking-wide text-[#8A6D2C]" style={{ fontFamily: "var(--font-display), serif" }}>
+            <span className="font-heading text-[1.8rem] tracking-wide text-secondary" style={{ fontFamily: "var(--font-display), serif" }}>
               {initials(optimisticLead.name)}
             </span>
           </div>
@@ -880,7 +889,7 @@ export function LeadDetail({
               {deal ? (
                 <Link
                   href={`/pipeline/${deal.id}`}
-                  className="inline-flex h-[42px] items-center gap-2 rounded-[10px] bg-primary px-5 text-[0.88rem] font-semibold text-white hover:bg-[#8A6D2C]"
+                  className="inline-flex h-[42px] items-center gap-2 rounded-[10px] bg-secondary px-5 text-[0.88rem] font-semibold text-white hover:bg-secondary/90"
                 >
                   Open deal <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -888,7 +897,7 @@ export function LeadDetail({
                 <button
                   type="button"
                   onClick={() => setConverting(true)}
-                  className="inline-flex h-[42px] items-center gap-2 rounded-[10px] bg-primary px-5 text-[0.88rem] font-semibold text-white hover:bg-[#8A6D2C]"
+                  className="inline-flex h-[42px] items-center gap-2 rounded-[10px] bg-secondary px-5 text-[0.88rem] font-semibold text-white hover:bg-secondary/90"
                 >
                   Convert to deal <ArrowRight className="h-4 w-4" />
                 </button>
@@ -937,7 +946,7 @@ export function LeadDetail({
                         <span
                           title="Days in this stage versus the SLA in Lead Settings"
                           className={`absolute -top-6 whitespace-nowrap font-mono text-[0.7rem] ${
-                            slaClock.overdue ? "font-semibold text-red-700" : "text-[#8A6D2C]"
+                            slaClock.overdue ? "font-semibold text-red-700" : "text-secondary"
                           }`}
                         >
                           {slaClock.dayNum}/{slaClock.sla}d
@@ -945,14 +954,14 @@ export function LeadDetail({
                         </span>
                       )}
                       {isCurrent ? (
-                        <span className="h-[13px] w-[13px] rotate-45 rounded-[2px] bg-primary shadow-[0_0_0_5px_#F5EEDC]" />
+                        <span className="h-[13px] w-[13px] rotate-45 rounded-[2px] bg-primary shadow-[0_0_0_5px_var(--accent)]" />
                       ) : (
                         <span className={`h-3 w-[1.5px] ${isDone ? "bg-primary" : "bg-[#C9C6BB]"}`} />
                       )}
                       <span
                         className={`absolute top-3.5 whitespace-nowrap text-[0.72rem] font-medium tracking-wide ${
                           isCurrent
-                            ? "top-[18px] text-[0.7rem] font-bold uppercase tracking-[0.08em] text-[#8A6D2C]"
+                            ? "top-[18px] text-[0.7rem] font-bold uppercase tracking-[0.08em] text-secondary"
                             : isDone
                               ? "text-muted-foreground"
                               : "hidden text-muted-foreground md:block"
@@ -970,6 +979,7 @@ export function LeadDetail({
         )}
       </section>
 
+      {leadPage === "overview" ? (
       <div className="grid grid-cols-1 items-start gap-[18px] xl:grid-cols-[1fr_360px]">
         <div className="flex min-w-0 flex-col gap-[18px]">
           <section className="rounded-[14px] border border-border bg-card px-[22px] py-4">
@@ -1246,8 +1256,8 @@ export function LeadDetail({
                     a.type === "claimed";
                   return (
                     <div key={a.id} className="relative pb-[22px] last:pb-1">
-                      <div className={`absolute top-1 -left-[26px] grid h-[15px] w-[15px] place-items-center rounded-full border-[1.5px] bg-card ${key ? "border-primary bg-[#F5EEDC]" : "border-muted-foreground"}`}>
-                        <i className={`block h-[5px] w-[5px] rounded-full ${key ? "bg-[#8A6D2C]" : "bg-muted-foreground"}`} />
+                      <div className={`absolute top-1 -left-[26px] grid h-[15px] w-[15px] place-items-center rounded-full border-[1.5px] bg-card ${key ? "border-primary bg-accent" : "border-muted-foreground"}`}>
+                        <i className={`block h-[5px] w-[5px] rounded-full ${key ? "bg-secondary" : "bg-muted-foreground"}`} />
                       </div>
                       <div className="flex items-baseline justify-between gap-3">
                         <span>
@@ -1283,16 +1293,16 @@ export function LeadDetail({
         </div>
 
         <div className="flex flex-col gap-[18px]">
-          <section className="rounded-[14px] bg-[#16241F] px-[26px] py-6 text-[#EDEBE0]">
-            <p className="mb-2.5 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-primary">Next step</p>
-            <h2 className="font-heading text-[1.12rem] text-[#F4F2EA]" style={{ fontFamily: "var(--font-display), serif" }}>{followUpTitle()}</h2>
-            <p className="mt-1.5 mb-[18px] text-[0.92rem] leading-relaxed text-[#D8D5C8]">
+          <section className="rounded-[14px] bg-primary px-[26px] py-6 text-primary-foreground">
+            <p className="mb-2.5 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-secondary">Next step</p>
+            <h2 className="font-heading text-[1.12rem] text-white" style={{ fontFamily: "var(--font-display), serif" }}>{followUpTitle()}</h2>
+            <p className="mt-1.5 mb-[18px] text-[0.92rem] leading-relaxed text-white/80">
               {optimisticLead.next_follow_up_at ? (
                 <>
-                  <span className="font-mono text-[0.86rem] text-primary">{formatDateTime(optimisticLead.next_follow_up_at)}</span>
+                  <span className="font-mono text-[0.86rem] text-secondary">{formatDateTime(optimisticLead.next_follow_up_at)}</span>
                   {isOverdue(optimisticLead.next_follow_up_at) ? ". This follow-up is overdue." : "."}
                   {scheduledFollowUp?.notes ? (
-                    <span className="mt-2 block text-[0.88rem] text-[#EDEBE0]">{scheduledFollowUp.notes}</span>
+                    <span className="mt-2 block text-[0.88rem] text-white/90">{scheduledFollowUp.notes}</span>
                   ) : null}
                 </>
               ) : firstResponse?.tone === "overdue" ? (
@@ -1304,16 +1314,16 @@ export function LeadDetail({
               )}
             </p>
             <div className="flex items-center gap-2.5 border-t border-white/12 py-3">
-              <div className="grid h-[34px] w-[34px] place-items-center rounded-full bg-primary/20 font-heading text-[0.78rem] text-primary" style={{ fontFamily: "var(--font-display), serif" }}>
+              <div className="grid h-[34px] w-[34px] place-items-center rounded-full bg-secondary/20 font-heading text-[0.78rem] text-secondary" style={{ fontFamily: "var(--font-display), serif" }}>
                 {optimisticLead.assigned_to_profile ? initials(optimisticLead.assigned_to_profile.full_name) : "—"}
               </div>
               <div className="min-w-0 flex-1 leading-tight">
                 <b className="block text-[0.86rem] font-semibold text-white">{optimisticLead.assigned_to_profile?.full_name ?? "Unassigned"}</b>
-                <span className="text-[0.72rem] uppercase tracking-wide text-[#9AA39B]">{optimisticLead.assigned_to_profile?.role ?? "Agent"}</span>
+                <span className="text-[0.72rem] uppercase tracking-wide text-white/55">{optimisticLead.assigned_to_profile?.role ?? "Agent"}</span>
               </div>
               {canManage && (
                 <Select value={optimisticLead.assigned_to ?? "unassigned"} onValueChange={(v) => handleAssign(v === "unassigned" ? null : v ?? null)}>
-                  <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-[0.78rem] font-semibold text-primary shadow-none">
+                  <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-[0.78rem] font-semibold text-secondary shadow-none">
                     <span>Reassign</span>
                   </SelectTrigger>
                   <SelectContent>
@@ -1336,13 +1346,13 @@ export function LeadDetail({
               </div>
             ) : (
               <div className="mt-3.5 flex gap-2.5">
-                <button type="button" className="inline-flex h-[42px] flex-1 items-center justify-center rounded-[10px] bg-primary text-[0.88rem] font-semibold text-white hover:bg-[#8A6D2C]" onClick={() => setShowFollowUpForm(true)}>
+                <button type="button" className="inline-flex h-[42px] flex-1 items-center justify-center rounded-[10px] bg-secondary text-[0.88rem] font-semibold text-white hover:bg-secondary/90" onClick={() => setShowFollowUpForm(true)}>
                   Set follow-up
                 </button>
                 {optimisticLead.next_follow_up_at ? (
                   <button
                     type="button"
-                    className="inline-flex h-[42px] flex-1 items-center justify-center rounded-[10px] border border-white/25 text-[0.88rem] font-semibold text-[#EDEBE0] hover:border-white"
+                    className="inline-flex h-[42px] flex-1 items-center justify-center rounded-[10px] border border-white/25 text-[0.88rem] font-semibold text-white/90 hover:border-white"
                     disabled={pending}
                     onClick={handleMarkDone}
                   >
@@ -1364,7 +1374,7 @@ export function LeadDetail({
               {score}<small className="ml-1 font-sans text-base text-muted-foreground">/ 100</small>
             </div>
             <div className="mt-4 h-[5px] overflow-hidden rounded-[3px] bg-border">
-              <i className="block h-full rounded-[3px] bg-linear-to-r from-primary to-[#8A6D2C]" style={{ width: `${Math.min(100, score)}%` }} />
+              <i className="block h-full rounded-[3px] bg-linear-to-r from-primary to-secondary" style={{ width: `${Math.min(100, score)}%` }} />
             </div>
             <div className="mt-2 flex justify-between font-mono text-[0.68rem] text-muted-foreground">
               <span>0</span><span>{scoreLegend || "Set bands in Lead Settings"}</span><span>100</span>
@@ -1439,33 +1449,37 @@ export function LeadDetail({
             defaultAgentId={optimisticLead.assigned_to}
             canEdit={canEdit}
           />
-
-          <LeadDocumentsKycTabs
-            leadId={optimisticLead.id}
-            customerId={customer?.id}
-            customerHref={customer ? `/customers/${customer.id}` : undefined}
-            person={kycPerson ?? null}
-            leadDocuments={optimisticDocs}
-            customerDocuments={kycDocuments}
-            docCategories={kycDocCategories}
-            canEdit={canEdit}
-            onLeadDocumentSaved={(doc) => {
-              if (doc) setOptimisticDocs((prev) => [{ ...doc, category: doc.category || "other" }, ...prev]);
-              router.refresh();
-            }}
-          />
-
-          {customer && (
-            <p className="px-1 text-xs text-muted-foreground">
-              Person record{" "}
-              <Link href={`/customers/${customer.id}`} className="text-foreground hover:underline">
-                {customer.name}
-              </Link>{" "}
-              — KYC is stored on their profile.
-            </p>
-          )}
         </div>
       </div>
+      ) : null}
+
+      {leadPage === "documents" ? (
+        <LeadDocumentsPage
+          leadId={optimisticLead.id}
+          customerId={customer?.id}
+          documents={mergedDocuments}
+          categories={kycDocCategories}
+          canEdit={canEdit}
+          onDocumentSaved={(doc) => {
+            if (doc) setOptimisticDocs((prev) => [{ ...doc, category: doc.category || "other" }, ...prev]);
+            router.refresh();
+          }}
+        />
+      ) : null}
+
+      {leadPage === "kyc" && customer && kycPerson ? (
+        <LeadKycPage
+          leadId={optimisticLead.id}
+          customerId={customer.id}
+          customerHref={`/customers/${customer.id}`}
+          person={kycPerson}
+          canEdit={canEdit}
+        />
+      ) : leadPage === "kyc" ? (
+        <div className="rounded-[14px] border border-border bg-card p-6 text-sm text-muted-foreground">
+          Person record required for KYC. Open this lead again in a moment or refresh the page.
+        </div>
+      ) : null}
 
       <ConvertLeadDialog
         open={converting}

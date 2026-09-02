@@ -49,72 +49,73 @@
 }
 
 :root {
-  --background: #f6f3ee;
-  --foreground: #14110e;
-  --card: #fffcf8;
-  --card-foreground: #14110e;
-  --popover: #fffcf8;
-  --popover-foreground: #14110e;
-  --primary: #b0893a;
-  --primary-foreground: #14110e;
-  --secondary: #1b2430;
-  --secondary-foreground: #f6f3ee;
-  --muted: #efe8dc;
-  --muted-foreground: #8a8178;
-  --accent: #efe8dc;
-  --accent-foreground: #14110e;
+  /* Urban Luxe CRM — aligned with public site (blue + green) */
+  --background: #f4f7fb;
+  --foreground: #0b1d3d;
+  --card: #ffffff;
+  --card-foreground: #0b1d3d;
+  --popover: #ffffff;
+  --popover-foreground: #0b1d3d;
+  --primary: #0b1d3d;
+  --primary-foreground: #ffffff;
+  --secondary: #1e7a4a;
+  --secondary-foreground: #ffffff;
+  --muted: #e8eef5;
+  --muted-foreground: #5c6b7f;
+  --accent: #e8f5ee;
+  --accent-foreground: #0b1d3d;
   --destructive: #dc2626;
-  --border: #e4d9c8;
-  --input: #e4d9c8;
-  --ring: #b0893a;
-  --chart-1: #b0893a;
-  --chart-2: #1b2430;
-  --chart-3: #8a8178;
-  --chart-4: #c4a574;
+  --border: #d4dee9;
+  --input: #d4dee9;
+  --ring: #1e7a4a;
+  --chart-1: #0b1d3d;
+  --chart-2: #1e7a4a;
+  --chart-3: #5c6b7f;
+  --chart-4: #3d9e6a;
   --chart-5: #dc2626;
   --radius: 0.875rem;
-  --sidebar: #14110e;
-  --sidebar-foreground: #f6f3ee;
-  --sidebar-primary: #b0893a;
-  --sidebar-primary-foreground: #14110e;
-  --sidebar-accent: #1f1b16;
-  --sidebar-accent-foreground: #f6f3ee;
-  --sidebar-border: #2a241c;
-  --sidebar-ring: #b0893a;
+  --sidebar: #0b1d3d;
+  --sidebar-foreground: #f4f7fb;
+  --sidebar-primary: #1e7a4a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #132a4f;
+  --sidebar-accent-foreground: #f4f7fb;
+  --sidebar-border: #1a3358;
+  --sidebar-ring: #1e7a4a;
 }
 
 .dark {
-  --background: #0f0d0b;
-  --foreground: #f6f3ee;
-  --card: #1a1714;
-  --card-foreground: #f6f3ee;
-  --popover: #1a1714;
-  --popover-foreground: #f6f3ee;
-  --primary: #c4a574;
-  --primary-foreground: #14110e;
-  --secondary: #2a241c;
-  --secondary-foreground: #f6f3ee;
-  --muted: #2a241c;
-  --muted-foreground: #b8aea2;
-  --accent: #2a241c;
-  --accent-foreground: #f6f3ee;
+  --background: #071428;
+  --foreground: #f4f7fb;
+  --card: #0f2038;
+  --card-foreground: #f4f7fb;
+  --popover: #0f2038;
+  --popover-foreground: #f4f7fb;
+  --primary: #3d6db3;
+  --primary-foreground: #ffffff;
+  --secondary: #2d9a5e;
+  --secondary-foreground: #ffffff;
+  --muted: #132a4f;
+  --muted-foreground: #9aadc4;
+  --accent: #0f2e22;
+  --accent-foreground: #f4f7fb;
   --destructive: #f87171;
-  --border: #3a332a;
-  --input: #3a332a;
-  --ring: #c4a574;
-  --chart-1: #c4a574;
-  --chart-2: #8a8178;
-  --chart-3: #efe8dc;
-  --chart-4: #b0893a;
+  --border: #1a3358;
+  --input: #1a3358;
+  --ring: #2d9a5e;
+  --chart-1: #3d6db3;
+  --chart-2: #2d9a5e;
+  --chart-3: #9aadc4;
+  --chart-4: #5cb87a;
   --chart-5: #f87171;
-  --sidebar: #0f0d0b;
-  --sidebar-foreground: #f6f3ee;
-  --sidebar-primary: #c4a574;
-  --sidebar-primary-foreground: #14110e;
-  --sidebar-accent: #1a1714;
-  --sidebar-accent-foreground: #f6f3ee;
-  --sidebar-border: #2a241c;
-  --sidebar-ring: #c4a574;
+  --sidebar: #071428;
+  --sidebar-foreground: #f4f7fb;
+  --sidebar-primary: #2d9a5e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #0f2038;
+  --sidebar-accent-foreground: #f4f7fb;
+  --sidebar-border: #1a3358;
+  --sidebar-ring: #2d9a5e;
 }
 
 @layer base {
@@ -140,6 +141,26 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+.scrollbar-brand {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--secondary) 70%, transparent) transparent;
+}
+.scrollbar-brand::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.scrollbar-brand::-webkit-scrollbar-track,
+.scrollbar-brand::-webkit-scrollbar-corner {
+  background: transparent;
+}
+.scrollbar-brand::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--secondary) 75%, transparent);
+  border-radius: 999px;
+}
+.scrollbar-brand::-webkit-scrollbar-thumb:hover {
+  background-color: var(--secondary);
 }
 
 .scrollbar-gold {

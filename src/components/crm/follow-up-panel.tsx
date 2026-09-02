@@ -75,7 +75,7 @@ export function FollowUpPanel({
   }
 
   return (
-    <div className="overflow-hidden rounded-[14px] border border-border bg-[#16241F] p-4 text-[#EDEBE0]">
+    <div className="overflow-hidden rounded-[14px] border border-border bg-primary p-4 text-primary-foreground">
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <CalendarClock className="h-4 w-4 text-primary" />
@@ -92,7 +92,7 @@ export function FollowUpPanel({
             {overdue ? "Overdue — " : "Scheduled for "}
             <span className="font-mono text-primary">{formatDateTime(followUpAt)}</span>
           </p>
-          {notes ? <p className="text-[0.88rem] text-[#EDEBE0]">{notes}</p> : null}
+          {notes ? <p className="text-[0.88rem] text-white/90">{notes}</p> : null}
           {canEdit && (
             <div className="flex gap-2 pt-1">
               <Button

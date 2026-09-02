@@ -172,7 +172,7 @@ export function DocumentUploadDialog({
         className="w-[95vw] max-w-lg overflow-hidden rounded-[14px] border border-border p-0 shadow-xl sm:max-w-lg"
         closeClassName="text-white/70 hover:bg-white/10 hover:text-white"
       >
-        <div className="bg-[#16241F] px-6 py-5 text-center">
+        <div className="bg-primary px-6 py-5 text-center">
           <DialogHeader>
             <DialogTitle
               className="text-center text-[1.15rem] font-normal tracking-[0.12em] text-white uppercase"
@@ -204,7 +204,7 @@ export function DocumentUploadDialog({
               handleFileUpload(e.dataTransfer.files?.[0] ?? null);
             }}
             className={`block cursor-pointer rounded-[10px] border-[1.5px] border-dashed px-4 py-8 text-center transition-colors ${
-              dragOver ? "border-primary bg-[#F5EEDC]" : "border-border hover:border-primary hover:bg-[#F5EEDC]/60"
+              dragOver ? "border-primary bg-accent" : "border-border hover:border-primary hover:bg-accent/60"
             }`}
           >
             <span className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full border border-border bg-card">
@@ -317,7 +317,7 @@ export function DocumentUploadDialog({
             <Button type="button" variant="outline" onClick={() => setOpen(false)} className="h-[42px] rounded-full px-6">
               Cancel
             </Button>
-            <Button type="submit" disabled={pending || uploading || !uploadedFile || !form.category} className="h-[42px] rounded-full bg-primary px-5 text-white hover:bg-[#8A6D2C]">
+            <Button type="submit" disabled={pending || uploading || !uploadedFile || !form.category} className="h-[42px] rounded-full bg-secondary px-5 text-white hover:bg-secondary/90">
               {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save document
             </Button>

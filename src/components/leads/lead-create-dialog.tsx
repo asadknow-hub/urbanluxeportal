@@ -348,7 +348,7 @@ export function LeadCreateDialog({
           {groups.map((group) => (
             <section key={group.name}>
               <p className="mb-3 flex justify-center">
-                <span className="rounded-full bg-[#F5EEDC] px-3 py-0.5 text-center text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[#8A6D2C]">
+                <span className="rounded-full bg-accent px-3 py-0.5 text-center text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-secondary">
                   {group.name}
                 </span>
               </p>
@@ -358,7 +358,7 @@ export function LeadCreateDialog({
 
           <section>
             <p className="mb-3 flex justify-center">
-              <span className="rounded-full bg-[#F5EEDC] px-3 py-0.5 text-center text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[#8A6D2C]">
+              <span className="rounded-full bg-accent px-3 py-0.5 text-center text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-secondary">
                 Assignment
               </span>
             </p>
