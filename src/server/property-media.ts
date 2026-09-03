@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { canManageCrm } from "@/lib/permissions";
+import { propertyMediaPublicUrl } from "@/lib/property-media";
 import { revalidatePath } from "next/cache";
 
 export type ActionResult<T = unknown> = {
@@ -19,12 +20,6 @@ const addSchema = z.object({
   caption: z.string().trim().optional().nullable(),
   sortOrder: z.number().int().optional(),
 });
-
-function propertyMediaPublicUrl(storagePath: string) {
-  const base = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
-  if (!base) return storagePath;
-  return `${base}/storage/v1/object/public/property-media/${storagePath.replace(/^\//, "")}`;
-}
 
 export async function addPropertyMedia(
   input: z.infer<typeof addSchema>
@@ -115,5 +110,3 @@ export async function deletePropertyMedia(id: string): Promise<ActionResult> {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
   }
 }
-
-export { propertyMediaPublicUrl };

@@ -5,7 +5,7 @@ import { canManageCrm } from "@/lib/permissions";
 import { PropertyDetailView } from "@/components/inventory/property-detail-view";
 import { groupLeadFieldOptions, leadDocChecklistCategories, type LeadFieldOption } from "@/lib/lead-field-options";
 import type { LeadDocument } from "@/components/leads/lead-documents";
-import { propertyMediaPublicUrl } from "@/server/property-media";
+import { propertyMediaPublicUrl } from "@/lib/property-media";
 
 export const dynamic = "force-dynamic";
 
