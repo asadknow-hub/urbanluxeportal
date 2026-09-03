@@ -72,6 +72,7 @@ export function ViewingPanel({
   const [propertyId, setPropertyId] = useState<string>("");
   const [agentId, setAgentId] = useState(defaultAgentId ?? "");
   const [note, setNote] = useState("");
+  const [outcomeNotes, setOutcomeNotes] = useState<Record<string, string>>({});
 
   const upcoming = useMemo(
     () => viewings.filter((row) => row.status === "scheduled"),
@@ -102,9 +103,19 @@ export function ViewingPanel({
 
   function handleOutcome(id: string, status: "completed" | "no_show" | "cancelled", outcome?: string) {
     startTransition(async () => {
-      const result = await updateViewingOutcome({ id, status, outcome: outcome || null });
+      const result = await updateViewingOutcome({
+        id,
+        status,
+        outcome: outcome || null,
+        outcome_note: outcomeNotes[id]?.trim() || null,
+      });
       if (result.ok) {
         toast.success("Viewing updated");
+        setOutcomeNotes((prev) => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
         router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
@@ -227,13 +238,23 @@ export function ViewingPanel({
                     })()}
                   </p>
                   {row.note ? <p className="mt-1 text-xs text-muted-foreground">{row.note}</p> : null}
+                  {row.outcome_note ? (
+                    <p className="mt-1 text-xs text-muted-foreground">Note: {row.outcome_note}</p>
+                  ) : null}
                 </div>
                 <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {VIEWING_STATUSES.find((s) => s.value === row.status)?.label ?? row.status}
                 </span>
               </div>
               {canEdit && row.status === "scheduled" ? (
-                <div className="mt-2 flex flex-wrap gap-1.5">
+                <div className="mt-2 space-y-2">
+                  <Input
+                    value={outcomeNotes[row.id] ?? ""}
+                    onChange={(e) => setOutcomeNotes((prev) => ({ ...prev, [row.id]: e.target.value }))}
+                    placeholder="Outcome note (optional)"
+                    className="h-8 text-xs"
+                  />
+                  <div className="flex flex-wrap gap-1.5">
                   {VIEWING_OUTCOMES.map((outcome) => (
                     <Button
                       key={outcome.value}
@@ -267,6 +288,7 @@ export function ViewingPanel({
                   >
                     Cancel
                   </Button>
+                  </div>
                 </div>
               ) : null}
               {row.outcome && row.status !== "scheduled" ? (

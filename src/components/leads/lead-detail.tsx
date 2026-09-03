@@ -144,6 +144,16 @@ type LeadFollowUp = {
 
 type DocumentRow = LeadDocument;
 
+type DuplicateLeadMatch = {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  stage_id: string | null;
+  updated_at: string;
+  assigned_to: string | null;
+};
+
 type Agent = { id: string; full_name: string; role: string };
 type Stage = { id: string; name: string; color: string; kind: string; sort: number; helper_text: string | null; stale_after_days?: number | null };
 
@@ -424,7 +434,7 @@ export function LeadDetail({
   inventory: InventoryChoice[];
   proposedProperties?: LeadProposedProperty[];
   matches?: InventoryMatch[];
-  duplicateMatches: unknown[];
+  duplicateMatches: DuplicateLeadMatch[];
   assignments?: LeadAssignmentRow[];
   userRole: string;
   userId: string;
@@ -437,7 +447,7 @@ export function LeadDetail({
   const [timelineCursor, setTimelineCursor] = useState(initialTimelineCursor);
   const [activityCount, setActivityCount] = useState(initialActivityCount);
   const [timelineLoading, setTimelineLoading] = useState(false);
-  const skipFilterFetch = useRef(true);
+  const skipTimelineBootstrap = useRef(true);
   const [optimisticDocs, setOptimisticDocs] = useState<LeadDocument[]>(
     documents.map((doc) => ({ ...doc, category: doc.category || "other" }))
   );
@@ -449,7 +459,7 @@ export function LeadDetail({
     setTimelineCursor(initialTimelineCursor);
     setActivityCount(initialActivityCount);
     setOptimisticDocs(documents.map((doc) => ({ ...doc, category: doc.category || "other" })));
-    skipFilterFetch.current = true;
+    skipTimelineBootstrap.current = true;
   }, [lead, followUps, initialTimeline, initialTimelineCursor, initialActivityCount, documents]);
 
   const [editing, setEditing] = useState<string | null>(null);
@@ -460,12 +470,12 @@ export function LeadDetail({
   const [reasonDialog, setReasonDialog] = useState<{ stageId: string; stageName: string; kind: string } | null>(null);
   const [selectedReason, setSelectedReason] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [activityFilter] = useState("all");
   const [leadPage, setLeadPage] = useState<LeadPageView>("overview");
   const [contactMethod, setContactMethod] = useState<"whatsapp" | "call" | "email" | "in_person" | null>(null);
   const [contactNote, setContactNote] = useState("");
   const [contactHistoryOpen, setContactHistoryOpen] = useState(false);
   const [activityExpanded, setActivityExpanded] = useState(false);
+  const [followUpHistoryOpen, setFollowUpHistoryOpen] = useState(false);
 
   const mergedDocuments = useMergedLeadDocuments(optimisticDocs, customerDocuments);
 
@@ -506,6 +516,14 @@ export function LeadDetail({
   );
   const firstResponse = firstResponseClock(optimisticLead);
   const scheduledFollowUp = optimisticFollowUps.find((row) => row.status === "scheduled") ?? null;
+  const pastFollowUps = useMemo(
+    () =>
+      optimisticFollowUps
+        .filter((row) => row.status !== "scheduled")
+        .sort((a, b) => b.scheduled_at.localeCompare(a.scheduled_at)),
+    [optimisticFollowUps]
+  );
+  const visiblePastFollowUps = followUpHistoryOpen ? pastFollowUps : pastFollowUps.slice(0, 3);
   const contactAttempts = useMemo(
     () =>
       timelineItems.filter((item) =>
@@ -531,13 +549,13 @@ export function LeadDetail({
   const contactedStage = currentStage?.name?.toLowerCase().includes("contacted") === true;
 
   useEffect(() => {
-    if (skipFilterFetch.current) {
-      skipFilterFetch.current = false;
+    if (skipTimelineBootstrap.current) {
+      skipTimelineBootstrap.current = false;
       return;
     }
     let cancelled = false;
     setTimelineLoading(true);
-    void loadLeadTimelinePage(optimisticLead.id, null, activityFilter).then((result) => {
+    void loadLeadTimelinePage(optimisticLead.id, null, "all").then((result) => {
       if (cancelled) return;
       if (result.ok) {
         setTimelineItems(result.items);
@@ -550,7 +568,7 @@ export function LeadDetail({
     return () => {
       cancelled = true;
     };
-  }, [activityFilter, optimisticLead.id]);
+  }, [optimisticLead.id]);
 
   function saveField(payload: Record<string, unknown>, nextState: Partial<Lead>, close = true) {
     setOptimisticLead((prev) => ({ ...prev, ...nextState }));
@@ -665,6 +683,8 @@ export function LeadDetail({
   function handleScheduleFollowUp() {
     if (!followUpDate) return;
     const iso = new Date(followUpDate).toISOString();
+    const previousFollowUps = optimisticFollowUps;
+    const previousLead = optimisticLead;
     setOptimisticLead((prev) => ({ ...prev, next_follow_up_at: iso }));
     setOptimisticFollowUps((prev) => [
       {
@@ -684,7 +704,9 @@ export function LeadDetail({
         setFollowUpNotes("");
         router.refresh();
       } else {
-        setOptimisticLead(lead);
+        setOptimisticLead(previousLead);
+        setOptimisticFollowUps(previousFollowUps);
+        setShowFollowUpForm(true);
         toast.error(result.error ?? "Failed");
       }
     });
@@ -764,8 +786,9 @@ export function LeadDetail({
           ? `WhatsApp ${optimisticLead.phone}`
           : `Emailed ${optimisticLead.email}`;
     startTransition(async () => {
-      await addLeadActivity(optimisticLead.id, type, summary);
-      router.refresh();
+      const result = await addLeadActivity(optimisticLead.id, type, summary);
+      if (result.ok) router.refresh();
+      else toast.error(result.error ?? "Could not log contact");
     });
   }
 
@@ -841,6 +864,28 @@ export function LeadDetail({
                 {customer.name ? ` · ${customer.name}` : ""}
                 {customer.nationality ? ` · ${customer.nationality}` : ""}
               </p>
+            ) : null}
+            {duplicateMatches.length > 0 ? (
+              <div className="mb-2.5 rounded-[10px] border border-amber-200 bg-amber-50 px-3 py-2.5">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-amber-900">
+                  Possible duplicates ({duplicateMatches.length})
+                </p>
+                <ul className="mt-1.5 space-y-1">
+                  {duplicateMatches.map((dup) => {
+                    const stageName = stages.find((s) => s.id === dup.stage_id)?.name;
+                    return (
+                      <li key={dup.id} className="flex flex-wrap items-baseline justify-between gap-2 text-[0.8rem]">
+                        <Link href={`/leads/${dup.id}`} className="font-medium text-amber-950 hover:underline">
+                          {dup.name}
+                        </Link>
+                        <span className="text-amber-900/70">
+                          {[dup.phone, dup.email, stageName, timeAgo(dup.updated_at)].filter(Boolean).join(" · ")}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             ) : null}
             <div className="flex flex-wrap items-center gap-x-[22px] gap-y-2 text-[0.86rem] text-muted-foreground">
               <FloatPicker
@@ -1613,6 +1658,45 @@ export function LeadDetail({
                   ) : null}
                 </div>
               )}
+              {pastFollowUps.length > 0 ? (
+                <div className="mt-4 border-t border-[#eadfcb] pt-3">
+                  <p className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#8a6a32]/80">
+                    History
+                  </p>
+                  <ul className="space-y-2">
+                    {visiblePastFollowUps.map((row) => (
+                      <li key={row.id} className="rounded-lg border border-[#eadfcb] bg-white px-2.5 py-2">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <span className="text-[0.78rem] font-semibold capitalize text-[#1f2933]">
+                            {row.status.replace(/_/g, " ")}
+                          </span>
+                          <span className="shrink-0 text-[0.68rem] text-[#8a6a32]/80" title={formatDateTime(row.scheduled_at)}>
+                            {formatDateTime(row.scheduled_at)}
+                          </span>
+                        </div>
+                        {row.notes ? (
+                          <p className="mt-0.5 text-[0.78rem] leading-snug text-foreground/80">{row.notes}</p>
+                        ) : null}
+                        {row.completed_at ? (
+                          <p className="mt-0.5 text-[0.68rem] text-muted-foreground">
+                            Done {formatDateTime(row.completed_at)}
+                          </p>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                  {pastFollowUps.length > 3 ? (
+                    <button
+                      type="button"
+                      className="mt-2 inline-flex w-full items-center justify-center gap-1 text-[0.75rem] font-semibold text-[#8a6a32] hover:text-[#1f2933]"
+                      onClick={() => setFollowUpHistoryOpen((v) => !v)}
+                    >
+                      {followUpHistoryOpen ? "Show less" : `Show ${pastFollowUps.length - 3} more`}
+                      <ChevronDown className={`h-3.5 w-3.5 transition-transform ${followUpHistoryOpen ? "rotate-180" : ""}`} />
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           </section>
 
@@ -1704,6 +1788,7 @@ export function LeadDetail({
 
           <MatchPanel
             matches={matches}
+            leadId={optimisticLead.id}
             dealId={optimisticLead.converted_deal_id}
             canEdit={canEdit}
           />

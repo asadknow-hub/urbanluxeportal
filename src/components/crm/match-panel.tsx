@@ -7,16 +7,18 @@ import { Button } from "@/components/ui/button";
 import { propertyLabel } from "@/lib/inventory";
 import { formatAED } from "@/lib/money";
 import type { InventoryMatch } from "@/lib/match-inventory";
-import { addDealProperty } from "@/server/inventory";
+import { addDealProperty, addLeadProperty } from "@/server/inventory";
 import { toast } from "sonner";
 import { Loader2, Sparkles } from "lucide-react";
 
 export function MatchPanel({
   matches,
+  leadId,
   dealId,
   canEdit,
 }: {
   matches: InventoryMatch[];
+  leadId?: string | null;
   dealId?: string | null;
   canEdit: boolean;
 }) {
@@ -28,16 +30,23 @@ export function MatchPanel({
   if (top.length === 0) return null;
 
   function handleShortlist(propertyId: string) {
-    if (!dealId) {
-      toast.message("Convert the lead to a deal to shortlist this unit.");
+    if (!dealId && !leadId) {
+      toast.message("Cannot shortlist without a lead or deal.");
       return;
     }
     setPendingId(propertyId);
     startTransition(async () => {
-      const result = await addDealProperty({ dealId, propertyId, role: "suggested" });
+      const result = dealId
+        ? await addDealProperty({ dealId, propertyId, role: "suggested" })
+        : await addLeadProperty({
+            leadId: leadId!,
+            propertyId,
+            role: "proposed",
+            dealId: null,
+          });
       setPendingId(null);
       if (result.ok) {
-        toast.success("Added to shortlist");
+        toast.success(dealId ? "Added to shortlist" : "Added as proposed property");
         router.refresh();
       } else {
         toast.error(result.error ?? "Could not add");
@@ -55,6 +64,7 @@ export function MatchPanel({
           </h2>
           <p className="mt-0.5 text-[0.8rem] text-muted-foreground">
             Ranked from this person’s areas, beds, type, and budget.
+            {dealId ? " Shortlist onto the deal." : " Connect as proposed property on this lead."}
           </p>
         </div>
       </div>
@@ -73,7 +83,7 @@ export function MatchPanel({
                 <div className="h-full bg-primary" style={{ width: `${Math.min(100, row.score)}%` }} />
               </div>
             </div>
-            {canEdit && dealId ? (
+            {canEdit && (dealId || leadId) ? (
               <Button
                 size="sm"
                 variant="outline"
@@ -81,7 +91,13 @@ export function MatchPanel({
                 disabled={pending}
                 onClick={() => handleShortlist(row.id)}
               >
-                {pending && pendingId === row.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Shortlist"}
+                {pending && pendingId === row.id ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : dealId ? (
+                  "Shortlist"
+                ) : (
+                  "Propose"
+                )}
               </Button>
             ) : (
               <Link href={`/inventory/${row.id}`} className="shrink-0 text-xs text-muted-foreground hover:text-foreground">

@@ -157,7 +157,7 @@ export default async function LeadDetailPage({
       .select(INVENTORY_MATCH_SELECT)
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
-      .limit(200),
+      .limit(1000),
     supabase
       .from("lead_properties")
       .select(

@@ -539,6 +539,24 @@ export async function updateLead(
 
     await ensurePersonForLead(id, user.id, supabase);
 
+    // Nationality SoT for KYC is the person; snapshot edits must mirror both ways.
+    if (Object.prototype.hasOwnProperty.call(patch, "nationality")) {
+      const { data: leadRow } = await supabase
+        .from("leads")
+        .select("customer_id")
+        .eq("id", id)
+        .maybeSingle();
+      if (leadRow?.customer_id) {
+        await supabase
+          .from("customers")
+          .update({
+            nationality: (patch.nationality as string | null) ?? null,
+            updated_at: now,
+          })
+          .eq("id", leadRow.customer_id);
+      }
+    }
+
     const changed = Object.keys(patch).join(", ");
     await supabase.from("lead_activities").insert({
       lead_id: id,
@@ -681,6 +699,7 @@ export async function convertLead(
       .update({
         status: "converted",
         converted_deal_id: deal.id,
+        converted_customer_id: personId ?? lead.converted_customer_id,
         stage_id: convertedStage?.id ?? lead.stage_id,
         stage_entered_at: convertedStage?.id ? now : lead.stage_entered_at,
         updated_at: now,
