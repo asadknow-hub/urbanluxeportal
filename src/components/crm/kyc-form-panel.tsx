@@ -579,6 +579,7 @@ export function KycFormActions({
   onPreview,
   onDownload,
   onSave,
+  showPdfActions = true,
 }: {
   pending: boolean;
   canEdit: boolean;
@@ -587,6 +588,8 @@ export function KycFormActions({
   onPreview: () => void;
   onDownload: () => void;
   onSave: () => void;
+  /** When false, only Save is shown (PDF actions live in the KYC file section). */
+  showPdfActions?: boolean;
 }) {
   return (
     <div className="space-y-3 border-t border-border pt-3">
@@ -596,19 +599,21 @@ export function KycFormActions({
             <Button type="button" size="sm" disabled={pending} onClick={onSave}>
               {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              className="gap-1.5"
-              disabled={pending}
-              onClick={onGenerate}
-            >
-              {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileOutput className="h-3.5 w-3.5" />}
-              Generate PDF
-            </Button>
+            {showPdfActions ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                className="gap-1.5"
+                disabled={pending}
+                onClick={onGenerate}
+              >
+                {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileOutput className="h-3.5 w-3.5" />}
+                Generate PDF
+              </Button>
+            ) : null}
           </>
-        ) : (
+        ) : showPdfActions ? (
           <>
             <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={onPreview}>
               <Eye className="h-3.5 w-3.5" />
@@ -619,10 +624,10 @@ export function KycFormActions({
               Download
             </Button>
           </>
-        )}
+        ) : null}
       </div>
 
-      {canEdit && pdfReady ? (
+      {showPdfActions && canEdit && pdfReady ? (
         <div className="flex flex-wrap items-center gap-2 rounded-[10px] border border-border bg-muted/40 px-3 py-2.5">
           <span className="text-xs font-medium text-muted-foreground">PDF ready</span>
           <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={onPreview}>

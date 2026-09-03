@@ -1689,6 +1689,9 @@ export function LeadDetail({
           onDocumentSaved={(doc) => {
             if (doc) setOptimisticDocs((prev) => [{ ...doc, category: doc.category || "other" }, ...prev]);
           }}
+          onDocumentDeleted={(docId) => {
+            setOptimisticDocs((prev) => prev.filter((d) => d.id !== docId));
+          }}
         />
       ) : leadPage === "kyc" ? (
         <div className="rounded-[14px] border border-border bg-card p-6 text-sm text-muted-foreground">

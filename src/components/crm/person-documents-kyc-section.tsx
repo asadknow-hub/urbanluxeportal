@@ -81,6 +81,9 @@ export function PersonDocumentsKycSection({
             if (doc) setOptimisticDocs((prev) => [{ ...doc, category: doc.category || "other" }, ...prev]);
             router.refresh();
           }}
+          onDocumentDeleted={(docId) => {
+            setOptimisticDocs((prev) => prev.filter((d) => d.id !== docId));
+          }}
         />
       ) : page === "kyc" ? (
         <div className="rounded-[14px] border border-border bg-card p-6 text-sm text-muted-foreground">
