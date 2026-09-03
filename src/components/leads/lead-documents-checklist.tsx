@@ -58,15 +58,13 @@ function nearestExpiryHint(docs: LeadDocument[], cat: DocCategoryChoice): string
 function scopeCompletedStyles(tone: "client" | "property") {
   if (tone === "property") {
     return {
-      card: "border-secondary/35 bg-secondary/8",
-      header: "border-b border-secondary/20 bg-secondary/15",
-      file: "bg-secondary/5",
+      row: "bg-secondary/14",
+      header: "border-b border-secondary/20",
     };
   }
   return {
-    card: "border-primary/35 bg-primary/8",
-    header: "border-b border-primary/20 bg-primary/12",
-    file: "bg-primary/5",
+    row: "bg-primary/14",
+    header: "border-b border-primary/20",
   };
 }
 
@@ -300,75 +298,73 @@ export function LeadDocumentsChecklist({
             }
 
             return (
-              <div key={cat.value} className="px-2 py-1.5">
-                <div className={cn("overflow-hidden rounded-[10px] border", filledStyles.card)}>
-                  <div className={cn("flex items-center justify-between gap-2 px-2.5 py-1.5", filledStyles.header)}>
-                    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
-                      <p className="truncate text-[0.84rem] font-semibold text-foreground">{cat.label}</p>
-                      {cardExpiry ? (
-                        <span
-                          className={cn(
-                            "text-[0.72rem] font-semibold tabular-nums",
-                            cardExpiry.startsWith("Expired") || cardExpiry === "Expires today"
-                              ? "text-red-700"
-                              : cardExpiry.includes("d left") && Number.parseInt(cardExpiry, 10) <= 30
-                                ? "text-amber-800"
-                                : tone === "property"
-                                  ? "text-secondary"
-                                  : "text-primary"
-                          )}
-                        >
-                          {cardExpiry}
-                        </span>
-                      ) : null}
-                      <span className="text-[0.68rem] text-muted-foreground">
-                        {docs.length} file{docs.length === 1 ? "" : "s"}
+              <div key={cat.value} className={cn(filledStyles.row)}>
+                <div className={cn("flex items-center justify-between gap-2 px-3 py-1.5", filledStyles.header)}>
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <p className="truncate text-[0.84rem] font-semibold text-foreground">{cat.label}</p>
+                    {cardExpiry ? (
+                      <span
+                        className={cn(
+                          "text-[0.72rem] font-semibold tabular-nums",
+                          cardExpiry.startsWith("Expired") || cardExpiry === "Expires today"
+                            ? "text-red-700"
+                            : cardExpiry.includes("d left") && Number.parseInt(cardExpiry, 10) <= 30
+                              ? "text-amber-800"
+                              : tone === "property"
+                                ? "text-secondary"
+                                : "text-primary"
+                        )}
+                      >
+                        {cardExpiry}
                       </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <StatusPill
-                        label={fileStatus(docs[0], cat).label}
-                        className={fileStatus(docs[0], cat).className}
+                    ) : null}
+                    <span className="text-[0.68rem] text-muted-foreground">
+                      {docs.length} file{docs.length === 1 ? "" : "s"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <StatusPill
+                      label={fileStatus(docs[0], cat).label}
+                      className={fileStatus(docs[0], cat).className}
+                    />
+                    {canEdit ? (
+                      <DocumentUploadDialog
+                        entityType={uploadEntityType}
+                        entityId={uploadEntityId}
+                        fixedCategory={cat}
+                        propertyId={cat.scope === "property" ? defaultPropertyId : null}
+                        propertyChoices={cat.scope === "property" ? propertyChoices : []}
+                        onSaved={(d) => onDocumentSaved?.(d as LeadDocument | undefined)}
+                        trigger={
+                          <Button type="button" size="sm" variant="ghost" className="h-6 gap-1 px-1.5 text-[0.68rem]">
+                            <Plus className="h-3 w-3" />
+                            Add
+                          </Button>
+                        }
                       />
-                      {canEdit ? (
-                        <DocumentUploadDialog
-                          entityType={uploadEntityType}
-                          entityId={uploadEntityId}
-                          fixedCategory={cat}
-                          propertyId={cat.scope === "property" ? defaultPropertyId : null}
-                          propertyChoices={cat.scope === "property" ? propertyChoices : []}
-                          onSaved={(d) => onDocumentSaved?.(d as LeadDocument | undefined)}
-                          trigger={
-                            <Button type="button" size="sm" variant="ghost" className="h-6 gap-1 px-1.5 text-[0.68rem]">
-                              <Plus className="h-3 w-3" />
-                              Add
-                            </Button>
-                          }
-                        />
-                      ) : null}
-                    </div>
+                    ) : null}
                   </div>
-                  <div className="divide-y divide-border/40">
-                    {docs.map((doc) => (
-                      <div key={doc.id} className={cn("px-2.5 py-1.5", filledStyles.file)}>
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="truncate text-[0.82rem] font-medium text-foreground">{doc.name}</p>
-                            <p className="text-[0.68rem] text-muted-foreground">
-                              {formatDateTime(doc.created_at)}
-                              {cat.capture === "expiry" && doc.expiry_date
-                                ? ` · Exp ${formatDate(doc.expiry_date)}${expiryDaysHint(doc.expiry_date) ? ` (${expiryDaysHint(doc.expiry_date)})` : ""}`
-                                : cat.capture === "note" && doc.notes
-                                  ? ` · ${doc.notes}`
-                                  : ""}
-                            </p>
-                          </div>
-                          <StatusPill label={fileStatus(doc, cat).label} className={fileStatus(doc, cat).className} />
+                </div>
+                <div className="divide-y divide-black/5">
+                  {docs.map((doc) => (
+                    <div key={doc.id} className="px-3 py-1.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="truncate text-[0.82rem] font-medium text-foreground">{doc.name}</p>
+                          <p className="text-[0.68rem] text-muted-foreground">
+                            {formatDateTime(doc.created_at)}
+                            {cat.capture === "expiry" && doc.expiry_date
+                              ? ` · Exp ${formatDate(doc.expiry_date)}${expiryDaysHint(doc.expiry_date) ? ` (${expiryDaysHint(doc.expiry_date)})` : ""}`
+                              : cat.capture === "note" && doc.notes
+                                ? ` · ${doc.notes}`
+                                : ""}
+                          </p>
                         </div>
-                        <FileActions doc={doc} cat={cat} />
+                        <StatusPill label={fileStatus(doc, cat).label} className={fileStatus(doc, cat).className} />
                       </div>
-                    ))}
-                  </div>
+                      <FileActions doc={doc} cat={cat} />
+                    </div>
+                  ))}
                 </div>
               </div>
             );

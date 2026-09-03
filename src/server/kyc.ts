@@ -256,6 +256,7 @@ export async function saveKycFormPdf(
     }
 
     if (leadId) revalidatePath(`/leads/${leadId}`);
+    revalidatePath(`/customers/${customerId}`);
     return { ok: true, data: { documentId: doc.data.id } };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };

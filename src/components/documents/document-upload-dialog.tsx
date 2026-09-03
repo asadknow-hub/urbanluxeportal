@@ -36,6 +36,7 @@ export function DocumentUploadDialog({
   fixedCategory,
   propertyId,
   propertyChoices = [],
+  fixedNotes = null,
 }: {
   triggerLabel?: string;
   entityType?: string;
@@ -48,6 +49,8 @@ export function DocumentUploadDialog({
   fixedCategory?: DocCategoryChoice;
   propertyId?: string | null;
   propertyChoices?: { id: string; label: string }[];
+  /** When set, always stored on the document (e.g. signed KYC). */
+  fixedNotes?: string | null;
 }) {
   const inputId = useId();
   const [open, setOpen] = useState(false);
@@ -160,7 +163,7 @@ export function DocumentUploadDialog({
         entity_id: entityId ?? null,
         property_id: linkedPropertyId || propertyId || null,
         expiry_date: capture === "expiry" ? form.expiry_date || null : null,
-        notes: capture === "note" ? form.notes.trim() || null : null,
+        notes: fixedNotes ?? (capture === "note" ? form.notes.trim() || null : null),
       });
       if (result.ok) {
         toast.success("Document saved");
@@ -323,8 +326,8 @@ export function DocumentUploadDialog({
           </div>
 
           {fixedCategory ? (
-            <div className="min-h-[4.75rem]">
-              {capture === "expiry" ? (
+            <div className={fixedNotes ? undefined : "min-h-[4.75rem]"}>
+              {fixedNotes ? null : capture === "expiry" ? (
                 <div className="space-y-2">
                   <Label htmlFor={`${inputId}-expiry`} className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
                     Expiry date

@@ -5,10 +5,20 @@ import Link from "next/link";
 import { LeadDocumentsChecklist } from "@/components/leads/lead-documents-checklist";
 import { KycFormFields, KycFormActions, useKycFormState } from "@/components/crm/kyc-form-panel";
 import { KycPdfPreview } from "@/components/crm/kyc-pdf-preview";
+import { DocumentUploadDialog } from "@/components/documents/document-upload-dialog";
+import { Button } from "@/components/ui/button";
+import { formatDateTime } from "@/lib/dates";
 import type { DocCategoryChoice } from "@/lib/lead-field-options";
 import type { KycPersonRecord } from "@/lib/kyc-form";
 import type { LeadDocument } from "@/components/leads/lead-documents";
 import { mergePersonDocumentsByStoragePath } from "@/lib/person-documents";
+import { FileOutput, FileUp, Loader2 } from "lucide-react";
+
+function isKycFileDoc(doc: LeadDocument) {
+  const name = doc.name.toLowerCase();
+  const notes = (doc.notes ?? "").toLowerCase();
+  return name.includes("kyc") || notes.includes("kyc");
+}
 
 export function LeadDocumentsPage({
   uploadEntityType,
@@ -61,12 +71,16 @@ export function LeadKycPage({
   customerHref,
   person,
   canEdit,
+  documents = [],
+  onDocumentSaved,
 }: {
   leadId: string;
   customerId: string;
   customerHref?: string;
   person: KycPersonRecord;
   canEdit: boolean;
+  documents?: LeadDocument[];
+  onDocumentSaved?: (doc?: LeadDocument) => void;
 }) {
   const [previewKey, setPreviewKey] = useState(0);
   const kycState = useKycFormState({
@@ -77,6 +91,12 @@ export function LeadKycPage({
     autoSave: true,
     onSaved: () => setPreviewKey((k) => k + 1),
   });
+
+  const latestKycFile = useMemo(() => {
+    return [...documents]
+      .filter(isKycFileDoc)
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))[0] ?? null;
+  }, [documents]);
 
   return (
     <div className="space-y-3">
@@ -108,7 +128,74 @@ export function LeadKycPage({
             onDownload={() => kycState.downloadPdf()}
           />
         </div>
-        <KycPdfPreview customerId={customerId} refreshKey={previewKey} />
+        <KycPdfPreview
+          customerId={customerId}
+          refreshKey={previewKey}
+          fileBar={
+            <div className="bg-primary px-4 py-3 text-white">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-heading text-[1rem] text-white" style={{ fontFamily: "var(--font-display), serif" }}>
+                    KYC file
+                  </p>
+                  {latestKycFile ? (
+                    <p className="mt-0.5 truncate text-[0.75rem] text-white/75" title={latestKycFile.name}>
+                      Latest: {latestKycFile.name}
+                      <span className="text-white/55"> · {formatDateTime(latestKycFile.created_at)}</span>
+                    </p>
+                  ) : (
+                    <p className="mt-0.5 text-[0.75rem] text-white/70">
+                      No saved KYC PDF on file yet
+                    </p>
+                  )}
+                </div>
+                {canEdit ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={kycState.pending}
+                      className="h-8 gap-1.5 border-0 bg-white text-primary hover:bg-white/90"
+                      onClick={() => kycState.generateAndSavePdf()}
+                    >
+                      {kycState.pending ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <FileOutput className="h-3.5 w-3.5" />
+                      )}
+                      Generate &amp; Save the latest
+                    </Button>
+                    <DocumentUploadDialog
+                      entityType="customer"
+                      entityId={customerId}
+                      fixedCategory={{
+                        value: "other",
+                        label: "Signed KYC",
+                        capture: "note",
+                        scope: "individual",
+                      }}
+                      fixedNotes="Signed KYC form"
+                      onSaved={(doc) => {
+                        onDocumentSaved?.(doc as LeadDocument | undefined);
+                        setPreviewKey((k) => k + 1);
+                      }}
+                      trigger={
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="h-8 gap-1.5 border-0 bg-white/20 text-white hover:bg-white/30"
+                        >
+                          <FileUp className="h-3.5 w-3.5" />
+                          Upload a signed copy
+                        </Button>
+                      }
+                    />
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          }
+        />
       </div>
     </div>
   );

@@ -76,6 +76,11 @@ export function PersonDocumentsKycSection({
           customerHref={customerHref}
           person={person}
           canEdit={canEdit}
+          documents={optimisticDocs}
+          onDocumentSaved={(doc) => {
+            if (doc) setOptimisticDocs((prev) => [{ ...doc, category: doc.category || "other" }, ...prev]);
+            router.refresh();
+          }}
         />
       ) : page === "kyc" ? (
         <div className="rounded-[14px] border border-border bg-card p-6 text-sm text-muted-foreground">

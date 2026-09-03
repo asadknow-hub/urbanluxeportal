@@ -1685,6 +1685,10 @@ export function LeadDetail({
           customerHref={`/customers/${customer.id}`}
           person={kycPerson}
           canEdit={canEdit}
+          documents={mergedDocuments}
+          onDocumentSaved={(doc) => {
+            if (doc) setOptimisticDocs((prev) => [{ ...doc, category: doc.category || "other" }, ...prev]);
+          }}
         />
       ) : leadPage === "kyc" ? (
         <div className="rounded-[14px] border border-border bg-card p-6 text-sm text-muted-foreground">

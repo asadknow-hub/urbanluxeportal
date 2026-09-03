@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { updatePersonKycForm } from "@/server/kyc";
+import { updatePersonKycForm, saveKycFormPdf } from "@/server/kyc";
 import type { IndividualKycForm, KycPersonRecord } from "@/lib/kyc-form";
 import { toast } from "sonner";
 import { Download, Eye, FileOutput, Loader2 } from "lucide-react";
@@ -196,6 +196,37 @@ export function useKycFormState({
     });
   }
 
+  function generateAndSavePdf() {
+    startTransition(async () => {
+      const result = await updatePersonKycForm(
+        customerId,
+        {
+          nationality: core.nationality.trim() || null,
+          emirates_id: core.emirates_id.trim() || null,
+          passport_no: core.passport_no.trim() || null,
+          trn: core.trn.trim() || null,
+          kyc_form: form,
+        },
+        leadId
+      );
+      if (!result.ok) {
+        toast.error(result.error ?? "Could not save KYC form");
+        return;
+      }
+      dirtyRef.current = false;
+      setPdfReady(true);
+      onSaved?.();
+      const saved = await saveKycFormPdf(customerId, leadId);
+      if (saved.ok) {
+        toast.success("Latest KYC PDF generated and saved to documents");
+        router.refresh();
+      } else {
+        toast.error(saved.error ?? "PDF generated, but could not save to documents");
+        router.refresh();
+      }
+    });
+  }
+
   function previewPdf() {
     window.open(
       `/api/customers/${customerId}/kyc-form/pdf?inline=1&t=${Date.now()}`,
@@ -216,6 +247,7 @@ export function useKycFormState({
     setCore: updateCore,
     save,
     generatePdf,
+    generateAndSavePdf,
     previewPdf,
     downloadPdf,
     pdfReady,
