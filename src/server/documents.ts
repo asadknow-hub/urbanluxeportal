@@ -54,8 +54,22 @@ async function assertCanWriteDocument(input: {
     return data ? null : "You cannot attach files to this deal";
   }
   if (kind === "customer") {
-    const { data } = await supabase.from("customers").select("id").eq("id", id).is("deleted_at", null).maybeSingle();
-    return data ? null : "You cannot attach files to this person";
+    const { data: person } = await supabase
+      .from("customers")
+      .select("id")
+      .eq("id", id)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (person) return null;
+    // Person may be unreadable while a writable lead still owns the file (merged checklist).
+    const { data: linkedLead } = await supabase
+      .from("leads")
+      .select("id")
+      .is("deleted_at", null)
+      .or(`customer_id.eq.${id},converted_customer_id.eq.${id}`)
+      .limit(1)
+      .maybeSingle();
+    return linkedLead ? null : "You cannot attach files to this person";
   }
   if (kind === "staff" || kind === "profile") {
     if (id === input.user.id || canManageCrm(input.user.role)) return null;
@@ -171,14 +185,20 @@ export async function deleteDocument(id: string): Promise<ActionResult> {
     const existing = await loadVisibleDocument(id);
     if (!existing) return { ok: false, error: "Not found" };
 
+    const denied = await assertCanWriteDocument({
+      user,
+      entityType: existing.entity_type,
+      entityId: existing.entity_id,
+      storagePath: existing.storage_path,
+    });
+    if (denied) return { ok: false, error: denied };
+
     const supabase = await createSupabaseServerClient();
 
-    const { error } = await supabase
-      .from("documents")
-      .update({ deleted_at: new Date().toISOString() })
-      .eq("id", id);
+    const { data, error } = await supabase.rpc("crm_soft_delete_document", { p_id: id });
 
     if (error) return { ok: false, error: error.message };
+    if (!data) return { ok: false, error: "Document already deleted or not found" };
 
     await logActivity({
       actorId: user.id,
