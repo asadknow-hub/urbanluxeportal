@@ -108,7 +108,8 @@ function isRecordPathSegment(segment: string) {
   );
 }
 
-/** List/section pages get a gradient hero title in the top bar; detail pages keep breadcrumbs. */
+/** Every page gets a gradient header — section pages show the section name,
+ *  detail pages show the parent category name. */
 export function sectionHeaderFor(pathname: string): SectionHeader | null {
   const override = SECTION_OVERRIDES[pathname];
   if (override) return override;
@@ -121,18 +122,48 @@ export function sectionHeaderFor(pathname: string): SectionHeader | null {
     };
   }
 
-  // Sub-routes that are still section screens (not entity detail).
   const parts = pathname.split("/").filter(Boolean);
-  if (parts.length >= 2 && !isRecordPathSegment(parts[parts.length - 1] ?? "")) {
+
+  // Detail pages (e.g. /leads/[id], /pipeline/[id], /customers/[id], etc.)
+  // show the parent section's gradient header.
+  if (parts.length >= 2 && isRecordPathSegment(parts[parts.length - 1] ?? "")) {
     const parent = [...NAV_ITEMS]
       .sort((a, b) => b.href.length - a.href.length)
-      .find((item) => pathname.startsWith(`${item.href}/`) && item.href !== "/leads");
-    if (parent && pathname.startsWith("/settings/")) {
+      .find((item) => pathname.startsWith(`${item.href}/`) || pathname.startsWith(`${item.href}`));
+    if (parent) {
+      return {
+        title: parent.label,
+        gradient: SECTION_GRADIENT[parent.group as keyof typeof SECTION_GRADIENT] ?? SECTION_GRADIENT.CRM,
+      };
+    }
+    // Pipeline detail
+    if (parts[0] === "pipeline") {
+      return {
+        title: "Deals",
+        gradient: SECTION_GRADIENT.CRM,
+      };
+    }
+  }
+
+  // Sub-routes that are still section screens (not entity detail).
+  if (parts.length >= 2 && !isRecordPathSegment(parts[parts.length - 1] ?? "")) {
+    // Settings sub-pages
+    if (pathname.startsWith("/settings/")) {
       const tail = parts[parts.length - 1] ?? "";
       const label = tail.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
       return {
         title: label,
         gradient: SECTION_GRADIENT.System,
+      };
+    }
+    // Any other sub-route of a nav item
+    const parent = [...NAV_ITEMS]
+      .sort((a, b) => b.href.length - a.href.length)
+      .find((item) => pathname.startsWith(`${item.href}/`));
+    if (parent) {
+      return {
+        title: parent.label,
+        gradient: SECTION_GRADIENT[parent.group as keyof typeof SECTION_GRADIENT] ?? SECTION_GRADIENT.CRM,
       };
     }
   }

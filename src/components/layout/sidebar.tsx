@@ -40,19 +40,8 @@ export function Sidebar({ user }: { user: SessionUser }) {
         collapsed ? "w-[72px]" : "w-56"
       )}
     >
-      <div className="relative flex h-12 items-center border-b border-sidebar-border px-3">
+      <div className="flex h-12 items-center border-b border-sidebar-border px-3">
         <BrandMark compact={collapsed} />
-        <button
-          type="button"
-          onClick={toggle}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className={cn(
-            "absolute -right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-transform duration-200 hover:text-foreground",
-            collapsed && "rotate-180"
-          )}
-        >
-          <ChevronLeft className="h-3 w-3" />
-        </button>
       </div>
 
       <nav className="scrollbar-gold flex-1 overflow-y-auto px-2 py-3">
@@ -92,6 +81,21 @@ export function Sidebar({ user }: { user: SessionUser }) {
           </div>
         ))}
       </nav>
+
+      <div className="border-t border-sidebar-border px-2 py-2">
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className={cn(
+            "flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] text-sidebar-foreground/60 transition-colors duration-200 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+            collapsed && "justify-center px-0"
+          )}
+        >
+          <ChevronLeft className={cn("h-4 w-4 shrink-0 transition-transform duration-200", collapsed && "rotate-180")} />
+          {!collapsed && <span>Collapse</span>}
+        </button>
+      </div>
     </aside>
   );
 }

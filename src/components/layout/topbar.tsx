@@ -92,71 +92,73 @@ export function Topbar({ user }: { user: SessionUser }) {
     </div>
   );
 
-  if (section) {
-    return (
-      <header
-        className={cn(
-          "sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-white/10 bg-gradient-to-r px-4 shadow-sm lg:h-16 lg:px-5",
-          section.gradient
-        )}
-      >
-        <MobileNav role={user.role as UserRole} inverted />
+  return (
+    <header
+      className={cn(
+        "sticky top-0 z-30 flex items-center gap-3 border-b shadow-sm",
+        section
+          ? cn("h-14 border-white/10 bg-gradient-to-r px-4 lg:px-5", section.gradient)
+          : "h-12 border-border bg-background/90 px-4 backdrop-blur-md lg:px-5"
+      )}
+    >
+      <MobileNav role={user.role as UserRole} inverted={!!section} />
 
+      {/* Back button — always visible on the left */}
+      {backCrumb?.href ? (
+        <Link
+          href={backCrumb.href}
+          prefetch
+          className={cn(
+            "relative z-10 inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium",
+            section
+              ? "border border-white/20 bg-white/10 text-white hover:bg-white/20"
+              : "border border-border bg-muted/50 text-foreground hover:bg-muted"
+          )}
+          aria-label={`Back to ${backCrumb.label}`}
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">{backCrumb.label}</span>
+        </Link>
+      ) : null}
+
+      {/* Centered title for section/gradient headers */}
+      {section ? (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-28">
           <h1
-            className="truncate text-center font-heading text-lg font-semibold uppercase tracking-[0.22em] text-white drop-shadow-sm lg:text-2xl"
+            className="truncate text-center font-heading text-lg font-semibold uppercase tracking-[0.22em] text-white drop-shadow-sm lg:text-xl"
             style={{ fontFamily: "var(--font-display), serif" }}
           >
             {section.title}
           </h1>
         </div>
-
-        {utilities}
-      </header>
-    );
-  }
-
-  return (
-    <header className="sticky top-0 z-30 flex h-12 items-center gap-3 border-b border-border bg-background/90 px-4 backdrop-blur-md lg:px-5">
-      <MobileNav role={user.role as UserRole} />
-
-      <nav aria-label="Breadcrumb" className="flex min-w-0 flex-1 items-center gap-1.5 text-sm">
-        {backCrumb?.href ? (
-          <Link
-            href={backCrumb.href}
-            prefetch
-            className="mr-1 inline-flex shrink-0 items-center gap-1 rounded-md border border-border bg-muted/50 px-2 py-1 text-xs font-medium text-foreground hover:bg-muted"
-            aria-label={`Back to ${backCrumb.label}`}
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            <span>{backCrumb.label}</span>
-          </Link>
-        ) : null}
-        <span className="hidden min-w-0 items-center gap-1.5 md:flex">
-          {crumbs.map((crumb, i) => (
-            <span key={`${crumb.label}-${i}`} className="flex items-center gap-1.5">
-              {i > 0 && <span className="text-muted-foreground/50">/</span>}
-              {crumb.href && i < crumbs.length - 1 ? (
-                <Link href={crumb.href} prefetch className="truncate text-muted-foreground hover:text-foreground">
-                  {crumb.label}
-                </Link>
-              ) : (
-                <span
-                  className={
-                    i === crumbs.length - 1
-                      ? isRecordId(crumb.label)
-                        ? "truncate font-normal text-muted-foreground/55"
-                        : "truncate font-medium text-foreground"
-                      : "truncate text-muted-foreground"
-                  }
-                >
-                  {crumb.label}
-                </span>
-              )}
-            </span>
-          ))}
-        </span>
-      </nav>
+      ) : (
+        <nav aria-label="Breadcrumb" className="flex min-w-0 flex-1 items-center gap-1.5 text-sm">
+          <span className="hidden min-w-0 items-center gap-1.5 md:flex">
+            {crumbs.map((crumb, i) => (
+              <span key={`${crumb.label}-${i}`} className="flex items-center gap-1.5">
+                {i > 0 && <span className="text-muted-foreground/50">/</span>}
+                {crumb.href && i < crumbs.length - 1 ? (
+                  <Link href={crumb.href} prefetch className="truncate text-muted-foreground hover:text-foreground">
+                    {crumb.label}
+                  </Link>
+                ) : (
+                  <span
+                    className={
+                      i === crumbs.length - 1
+                        ? isRecordId(crumb.label)
+                          ? "truncate font-normal text-muted-foreground/55"
+                          : "truncate font-medium text-foreground"
+                        : "truncate text-muted-foreground"
+                    }
+                  >
+                    {crumb.label}
+                  </span>
+                )}
+              </span>
+            ))}
+          </span>
+        </nav>
+      )}
 
       {utilities}
     </header>
