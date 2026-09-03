@@ -103,6 +103,8 @@ type Lead = {
   score: number | null;
   assigned_to: string | null;
   next_follow_up_at: string | null;
+  lost_reason: string | null;
+  junk_reason: string | null;
   converted_customer_id: string | null;
   converted_deal_id: string | null;
   customer_id: string | null;
@@ -470,6 +472,21 @@ export function LeadDetail({
   const currentStage = stages.find((s) => s.id === optimisticLead.stage_id) ?? null;
   const pipelineStages = stages.filter((s) => s.kind !== "lost" && s.kind !== "junk");
   const lostStage = stages.find((s) => s.kind === "lost");
+  const junkStage = stages.find((s) => s.kind === "junk");
+  const terminalReason =
+    currentStage?.kind === "junk"
+      ? optimisticLead.junk_reason
+      : currentStage?.kind === "lost"
+        ? optimisticLead.lost_reason
+        : optimisticLead.junk_reason ?? optimisticLead.lost_reason;
+  const terminalReasonLabel = terminalReason
+    ? optionLabel(
+        currentStage?.kind === "junk" || (!currentStage && optimisticLead.junk_reason)
+          ? fieldOptions.junk_reason
+          : fieldOptions.lost_reason,
+        terminalReason
+      )
+    : null;
   const waLink = whatsappLink(optimisticLead.phone);
   const mailLink = optimisticLead.email ? `mailto:${optimisticLead.email}` : null;
   const phoneHref = telLink(optimisticLead.phone);
@@ -614,7 +631,21 @@ export function LeadDetail({
 
   function handleReasonConfirm() {
     if (!reasonDialog || !selectedReason) return;
-    setOptimisticLead((prev) => ({ ...prev, stage_id: reasonDialog.stageId, status: "unqualified", stage_entered_at: new Date().toISOString() }));
+    const previous = {
+      stage_id: optimisticLead.stage_id,
+      stage_entered_at: optimisticLead.stage_entered_at,
+      status: optimisticLead.status,
+      lost_reason: optimisticLead.lost_reason,
+      junk_reason: optimisticLead.junk_reason,
+    };
+    setOptimisticLead((prev) => ({
+      ...prev,
+      stage_id: reasonDialog.stageId,
+      status: "unqualified",
+      stage_entered_at: new Date().toISOString(),
+      lost_reason: reasonDialog.kind === "lost" ? selectedReason : prev.lost_reason,
+      junk_reason: reasonDialog.kind === "junk" ? selectedReason : prev.junk_reason,
+    }));
     setReasonDialog(null);
     startTransition(async () => {
       const extra: { lost_reason?: string; junk_reason?: string } = {};
@@ -624,7 +655,7 @@ export function LeadDetail({
       if (result.ok) {
         router.refresh();
       } else {
-        setOptimisticLead((prev) => ({ ...prev, stage_id: lead.stage_id, stage_entered_at: lead.stage_entered_at }));
+        setOptimisticLead((prev) => ({ ...prev, ...previous }));
         toast.error(result.error ?? "Failed");
       }
       setSelectedReason("");
@@ -752,7 +783,13 @@ export function LeadDetail({
           <div className="min-w-0 flex-1">
             <div className="mb-1.5 flex flex-wrap items-center gap-2.5 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               {currentStage && (
-                <span className="rounded-full border border-[#D9D5E8] bg-[#EDEBF4] px-2.5 py-0.5 tracking-[0.06em] text-[#4C4470] normal-case">
+                <span
+                  className={
+                    currentStage.kind === "lost" || currentStage.kind === "junk"
+                      ? "rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 tracking-[0.06em] text-red-800 normal-case"
+                      : "rounded-full border border-[#D9D5E8] bg-[#EDEBF4] px-2.5 py-0.5 tracking-[0.06em] text-[#4C4470] normal-case"
+                  }
+                >
                   {currentStage.name}
                 </span>
               )}
@@ -761,6 +798,23 @@ export function LeadDetail({
               <span className="h-1 w-1 rounded-full bg-[#C4C1B6]" />
               <span>{optionLabel(fieldOptions.interest, optimisticLead.interest)}</span>
             </div>
+            {terminalReasonLabel ? (
+              <div
+                className={
+                  currentStage?.kind === "junk"
+                    ? "mb-2.5 rounded-[10px] border border-amber-200 bg-amber-50 px-3 py-2 text-[0.82rem] text-amber-950"
+                    : "mb-2.5 rounded-[10px] border border-red-200 bg-red-50 px-3 py-2 text-[0.82rem] text-red-950"
+                }
+              >
+                <span className="font-semibold">
+                  {currentStage?.kind === "junk" || (!currentStage && optimisticLead.junk_reason)
+                    ? "Junk reason"
+                    : "Lost reason"}
+                  :
+                </span>{" "}
+                {terminalReasonLabel}
+              </div>
+            ) : null}
             {editing === "name" ? (
               <BlurSaveInput
                 value={optimisticLead.name}
@@ -906,6 +960,11 @@ export function LeadDetail({
                   {lostStage && (
                     <DropdownMenuItem onClick={() => handleStageChange(lostStage.id)}>
                       Mark as lost
+                    </DropdownMenuItem>
+                  )}
+                  {junkStage && (
+                    <DropdownMenuItem onClick={() => handleStageChange(junkStage.id)}>
+                      Mark as junk
                     </DropdownMenuItem>
                   )}
                   {canManage && (
