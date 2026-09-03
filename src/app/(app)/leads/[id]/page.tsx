@@ -48,21 +48,6 @@ export default async function LeadDetailPage({
     );
   }
 
-  const duplicateClauses: string[] = [];
-  if (lead.phone) duplicateClauses.push(`phone.eq.${lead.phone}`);
-  if (lead.email) duplicateClauses.push(`email.eq.${lead.email}`);
-
-  const duplicateMatches = duplicateClauses.length > 0
-    ? await supabase
-        .from("leads")
-        .select("id, name, phone, email, stage_id, updated_at, assigned_to")
-        .is("deleted_at", null)
-        .neq("id", lead.id)
-        .or(duplicateClauses.join(","))
-        .order("updated_at", { ascending: false })
-        .limit(6)
-    : { data: [], error: null };
-
   if (user.role === "agent" && lead.assigned_to !== user.id && lead.assigned_to !== null) {
     return (
       <div className="p-4">
@@ -288,7 +273,6 @@ export default async function LeadDetailPage({
       inventory={inventoryRows ?? []}
       proposedProperties={proposedProperties}
       matches={matches}
-      duplicateMatches={duplicateMatches.data ?? []}
       assignments={(assignmentRows ?? []).map((row) => ({
         ...row,
         from_profile: firstRel(row.from_profile as { full_name: string } | { full_name: string }[] | null),

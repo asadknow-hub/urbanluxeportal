@@ -144,16 +144,6 @@ type LeadFollowUp = {
 
 type DocumentRow = LeadDocument;
 
-type DuplicateLeadMatch = {
-  id: string;
-  name: string;
-  phone: string | null;
-  email: string | null;
-  stage_id: string | null;
-  updated_at: string;
-  assigned_to: string | null;
-};
-
 type Agent = { id: string; full_name: string; role: string };
 type Stage = { id: string; name: string; color: string; kind: string; sort: number; helper_text: string | null; stale_after_days?: number | null };
 
@@ -394,7 +384,6 @@ export function LeadDetail({
   inventory,
   proposedProperties = [],
   matches = [],
-  duplicateMatches,
   assignments = [],
   userRole,
   userId,
@@ -434,7 +423,6 @@ export function LeadDetail({
   inventory: InventoryChoice[];
   proposedProperties?: LeadProposedProperty[];
   matches?: InventoryMatch[];
-  duplicateMatches: DuplicateLeadMatch[];
   assignments?: LeadAssignmentRow[];
   userRole: string;
   userId: string;
@@ -864,28 +852,6 @@ export function LeadDetail({
                 {customer.name ? ` · ${customer.name}` : ""}
                 {customer.nationality ? ` · ${customer.nationality}` : ""}
               </p>
-            ) : null}
-            {duplicateMatches.length > 0 ? (
-              <div className="mb-2.5 rounded-[10px] border border-amber-200 bg-amber-50 px-3 py-2.5">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-amber-900">
-                  Possible duplicates ({duplicateMatches.length})
-                </p>
-                <ul className="mt-1.5 space-y-1">
-                  {duplicateMatches.map((dup) => {
-                    const stageName = stages.find((s) => s.id === dup.stage_id)?.name;
-                    return (
-                      <li key={dup.id} className="flex flex-wrap items-baseline justify-between gap-2 text-[0.8rem]">
-                        <Link href={`/leads/${dup.id}`} className="font-medium text-amber-950 hover:underline">
-                          {dup.name}
-                        </Link>
-                        <span className="text-amber-900/70">
-                          {[dup.phone, dup.email, stageName, timeAgo(dup.updated_at)].filter(Boolean).join(" · ")}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
             ) : null}
             <div className="flex flex-wrap items-center gap-x-[22px] gap-y-2 text-[0.86rem] text-muted-foreground">
               <FloatPicker
