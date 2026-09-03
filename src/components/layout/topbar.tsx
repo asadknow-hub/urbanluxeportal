@@ -32,12 +32,6 @@ export function Topbar({ user }: { user: SessionUser }) {
   const router = useRouter();
   const section = sectionHeaderFor(pathname);
   const crumbs = breadcrumbsFor(pathname);
-  const backCrumb = (() => {
-    for (let i = crumbs.length - 2; i >= 0; i--) {
-      if (crumbs[i].href) return crumbs[i];
-    }
-    return null;
-  })();
   const initials = user.full_name
     .split(" ")
     .map((n) => n[0])
@@ -103,23 +97,20 @@ export function Topbar({ user }: { user: SessionUser }) {
     >
       <MobileNav role={user.role as UserRole} inverted={!!section} />
 
-      {/* Back button — always visible on the left */}
-      {backCrumb?.href ? (
-        <Link
-          href={backCrumb.href}
-          prefetch
-          className={cn(
-            "relative z-10 inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium",
-            section
-              ? "border border-white/20 bg-white/10 text-white hover:bg-white/20"
-              : "border border-border bg-muted/50 text-foreground hover:bg-muted"
-          )}
-          aria-label={`Back to ${backCrumb.label}`}
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">{backCrumb.label}</span>
-        </Link>
-      ) : null}
+      {/* Back button — arrow only, always visible */}
+      <button
+        type="button"
+        onClick={() => router.back()}
+        className={cn(
+          "relative z-10 inline-flex shrink-0 items-center justify-center rounded-md p-1.5",
+          section
+            ? "text-white/80 hover:bg-white/15 hover:text-white"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+        )}
+        aria-label="Go back"
+      >
+        <ArrowLeft className="h-4 w-4" />
+      </button>
 
       {/* Centered title for section/gradient headers */}
       {section ? (

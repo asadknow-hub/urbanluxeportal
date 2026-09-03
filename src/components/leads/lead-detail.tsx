@@ -464,6 +464,8 @@ export function LeadDetail({
   const [activityFilter, setActivityFilter] = useState("all");
   const [noteDraft, setNoteDraft] = useState("");
   const [leadPage, setLeadPage] = useState<LeadPageView>("overview");
+  const [contactMethod, setContactMethod] = useState<"whatsapp" | "call" | "email" | "in_person" | null>(null);
+  const [contactNote, setContactNote] = useState("");
 
   const mergedDocuments = useMergedLeadDocuments(optimisticDocs, customerDocuments);
 
@@ -558,6 +560,21 @@ export function LeadDetail({
     });
   }
 
+  function stageNavEffect(stageName: string) {
+    const lower = stageName.toLowerCase();
+    if (lower.includes("contacted")) {
+      setLeadPage("overview");
+      setTimeout(() => document.getElementById("contact-attempts-section")?.scrollIntoView({ behavior: "smooth", block: "center" }), 150);
+    } else if (lower.includes("qualified")) {
+      setLeadPage("documents");
+    } else if (lower.includes("viewing") && lower.includes("scheduled")) {
+      setLeadPage("overview");
+      setTimeout(() => document.getElementById("viewings-section")?.scrollIntoView({ behavior: "smooth", block: "center" }), 150);
+    } else if (lower.includes("viewing") && (lower.includes("done") || lower.includes("offer"))) {
+      setLeadPage("kyc");
+    }
+  }
+
   function handleStageChange(stageId: string) {
     const stage = stages.find((s) => s.id === stageId);
     if (!stage) return;
@@ -576,6 +593,7 @@ export function LeadDetail({
       return;
     }
     setOptimisticLead((prev) => ({ ...prev, stage_id: stageId, stage_entered_at: new Date().toISOString() }));
+    stageNavEffect(stage.name);
     startTransition(async () => {
       const result = await updateLeadStage(optimisticLead.id, stageId);
       if (result.ok) {
@@ -947,7 +965,8 @@ export function LeadDetail({
                       type="button"
                       disabled={!canEdit || pending}
                       onClick={() => handleStageChange(stage.id)}
-                      className={`absolute top-1/2 flex -translate-y-1/2 flex-col ${
+                      title={stage.name}
+                      className={`group absolute top-1/2 flex -translate-y-1/2 flex-col ${
                         isFirst
                           ? "left-0 items-start"
                           : isLast
@@ -957,17 +976,10 @@ export function LeadDetail({
                       style={isFirst || isLast ? undefined : { left: `${left}%` }}
                     >
                       {isDone && <Check className="absolute -top-5 h-[13px] w-[13px] text-primary" />}
-                      {isCurrent && slaClock && (
-                        <span
-                          title="Days in this stage versus the SLA in Lead Settings"
-                          className={`absolute -top-6 whitespace-nowrap font-mono text-[0.7rem] ${
-                            slaClock.overdue ? "font-semibold text-red-700" : "text-secondary"
-                          }`}
-                        >
-                          {slaClock.dayNum}/{slaClock.sla}d
-                          {slaClock.overdue ? " overdue" : ""}
-                        </span>
-                      )}
+                      {/* Tooltip on hover */}
+                      <span className="pointer-events-none absolute -top-7 hidden whitespace-nowrap rounded bg-foreground px-2 py-0.5 text-[0.65rem] font-medium text-background shadow group-hover:block">
+                        {stage.name}
+                      </span>
                       {isCurrent ? (
                         <span className="h-[13px] w-[13px] rotate-45 rounded-[2px] bg-primary shadow-[0_0_0_5px_var(--accent)]" />
                       ) : (
@@ -1314,6 +1326,72 @@ export function LeadDetail({
         </div>
 
         <div className="flex flex-col gap-[18px]">
+          <section
+            id="contact-attempts-section"
+            className={`rounded-[14px] border bg-card px-[26px] py-6 transition-shadow ${
+              currentStage?.name?.toLowerCase().includes("contacted")
+                ? "border-primary ring-2 ring-primary/30"
+                : "border-border"
+            }`}
+          >
+            <h2 className="font-heading text-[1.12rem]" style={{ fontFamily: "var(--font-display), serif" }}>Contact Attempts</h2>
+            <p className="mt-1 mb-4 text-[0.78rem] text-muted-foreground">Log how you reached out to this lead.</p>
+            <div className="flex gap-2">
+              {([
+                { key: "whatsapp" as const, label: "WhatsApp", icon: <MessageCircle className="h-5 w-5" /> },
+                { key: "call" as const, label: "Call", icon: <Phone className="h-5 w-5" /> },
+                { key: "email" as const, label: "Email", icon: <Mail className="h-5 w-5" /> },
+                { key: "in_person" as const, label: "In Person", icon: <Building2 className="h-5 w-5" /> },
+              ]).map((m) => (
+                <button
+                  key={m.key}
+                  type="button"
+                  title={m.label}
+                  onClick={() => setContactMethod(contactMethod === m.key ? null : m.key)}
+                  className={`grid h-11 w-11 place-items-center rounded-[10px] border transition-colors ${
+                    contactMethod === m.key
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
+                  }`}
+                >
+                  {m.icon}
+                </button>
+              ))}
+            </div>
+            <Textarea
+              rows={2}
+              value={contactNote}
+              onChange={(e) => setContactNote(e.target.value)}
+              placeholder="What happened? e.g. Left voicemail, scheduled callback…"
+              className="mt-3 min-h-[60px] resize-none text-sm"
+            />
+            <Button
+              size="sm"
+              className="mt-3 w-full"
+              disabled={!contactMethod || pending}
+              onClick={() => {
+                if (!contactMethod) return;
+                const label = contactMethod === "in_person" ? "In-person" : contactMethod.charAt(0).toUpperCase() + contactMethod.slice(1);
+                const summary = contactNote.trim()
+                  ? `${label}: ${contactNote.trim()}`
+                  : `${label} contact attempt`;
+                startTransition(async () => {
+                  const result = await addLeadActivity(optimisticLead.id, contactMethod, summary);
+                  if (result.ok) {
+                    toast.success("Contact attempt logged");
+                    setContactMethod(null);
+                    setContactNote("");
+                    router.refresh();
+                  } else {
+                    toast.error(result.error ?? "Failed");
+                  }
+                });
+              }}
+            >
+              Save
+            </Button>
+          </section>
+
           <section className="rounded-[14px] bg-primary px-[26px] py-6 text-primary-foreground">
             <p className="mb-2.5 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-secondary">Next step</p>
             <h2 className="font-heading text-[1.12rem] text-white" style={{ fontFamily: "var(--font-display), serif" }}>{followUpTitle()}</h2>
@@ -1383,6 +1461,18 @@ export function LeadDetail({
               </div>
             )}
           </section>
+
+          <div id="viewings-section">
+            <ViewingPanel
+              leadId={optimisticLead.id}
+              dealId={optimisticLead.converted_deal_id}
+              viewings={viewings}
+              properties={inventory}
+              agents={agents}
+              defaultAgentId={optimisticLead.assigned_to}
+              canEdit={canEdit}
+            />
+          </div>
 
           <section className="rounded-[14px] border border-border bg-card px-[26px] py-6">
             <div className="flex items-baseline justify-between">
@@ -1458,16 +1548,6 @@ export function LeadDetail({
           <MatchPanel
             matches={matches}
             dealId={optimisticLead.converted_deal_id}
-            canEdit={canEdit}
-          />
-
-          <ViewingPanel
-            leadId={optimisticLead.id}
-            dealId={optimisticLead.converted_deal_id}
-            viewings={viewings}
-            properties={inventory}
-            agents={agents}
-            defaultAgentId={optimisticLead.assigned_to}
             canEdit={canEdit}
           />
         </div>
