@@ -28,7 +28,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createLead, type ExistingCustomerMatch } from "@/server/leads";
+import { createLead, checkExistingCustomerMatch, type ExistingCustomerMatch } from "@/server/leads";
+import { normalizePhoneDigits } from "@/lib/phone";
 import { toast } from "sonner";
 import { ChevronDown, Loader2, Plus, X } from "lucide-react";
 
@@ -76,6 +77,12 @@ const EMPTY_FORM: FormState = {
   score_band: "",
 };
 
+const EMAIL_LOOKUP_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function phoneReadyForLookup(value: string) {
+  return normalizePhoneDigits(value).length >= 7;
+}
+
 function requiredMark(key: string) {
   return key === "name" || key === "phone" || key === "source" || key === "interest";
 }
@@ -98,14 +105,98 @@ export function LeadCreateDialog({
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [callDraft, setCallDraft] = useState("");
   const [existingCustomer, setExistingCustomer] = useState<ExistingCustomerMatch | null>(null);
+  const [liveMatch, setLiveMatch] = useState<ExistingCustomerMatch | null>(null);
+  const [matchChecking, setMatchChecking] = useState(false);
+  const [linkedOwnerId, setLinkedOwnerId] = useState<string | null>(null);
+  const [ignoredMatchId, setIgnoredMatchId] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
       setForm(EMPTY_FORM);
       setCallDraft("");
       setExistingCustomer(null);
+      setLiveMatch(null);
+      setMatchChecking(false);
+      setLinkedOwnerId(null);
+      setIgnoredMatchId(null);
     }
   }, [open]);
+
+  // Live owner match as WhatsApp / email / call numbers are entered.
+  useEffect(() => {
+    if (!open) return;
+
+    const phone = form.phone.trim();
+    const email = form.email.trim();
+    const draft = callDraft.trim();
+    const callNumbers = [
+      ...form.call_numbers,
+      ...(phoneReadyForLookup(draft) ? [draft] : []),
+    ];
+
+    const phoneOk = phoneReadyForLookup(phone) || callNumbers.some(phoneReadyForLookup);
+    const emailOk = EMAIL_LOOKUP_RE.test(email);
+    if (!phoneOk && !emailOk) {
+      setLiveMatch(null);
+      setMatchChecking(false);
+      setLinkedOwnerId(null);
+      return;
+    }
+
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      setMatchChecking(true);
+      const result = await checkExistingCustomerMatch({
+        phone: phoneReadyForLookup(phone) ? phone : null,
+        email: emailOk ? email : null,
+        call_numbers: callNumbers.filter(phoneReadyForLookup),
+      });
+      if (cancelled) return;
+      setMatchChecking(false);
+      if (!result.ok) {
+        setLiveMatch(null);
+        return;
+      }
+      const customer = result.data?.customer ?? null;
+      if (!customer) {
+        setLiveMatch(null);
+        setLinkedOwnerId(null);
+        return;
+      }
+      if (customer.id === ignoredMatchId) {
+        setLiveMatch(null);
+        return;
+      }
+      setLiveMatch(customer);
+      setForm((prev) => {
+        const next = { ...prev };
+        let changed = false;
+        if (!prev.name.trim() && customer.name?.trim()) {
+          next.name = customer.name.trim();
+          changed = true;
+        }
+        if (!prev.nationality.trim() && customer.nationality?.trim()) {
+          next.nationality = customer.nationality.trim();
+          changed = true;
+        }
+        if (!prev.email.trim() && customer.email?.trim()) {
+          next.email = customer.email.trim();
+          changed = true;
+        }
+        return changed ? next : prev;
+      });
+    }, 350);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [open, form.phone, form.email, form.call_numbers, callDraft, ignoredMatchId]);
+
+  // Re-allow match prompts only when committed contact fields change (not while typing call draft).
+  useEffect(() => {
+    setIgnoredMatchId(null);
+  }, [form.phone, form.email, form.call_numbers]);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -148,33 +239,37 @@ export function LeadCreateDialog({
     };
   }
 
+  function validateRequired(): string | null {
+    if (!form.name.trim()) return "Name is required";
+    if (!form.phone.trim()) return "WhatsApp is required";
+    if (!form.source) return "Source is required — pick one from Lead Settings";
+    if (!form.interest) return "Interest is required — pick one from Lead Settings";
+    return null;
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.name.trim()) {
-      toast.error("Name is required");
-      return;
-    }
-    if (!form.phone.trim()) {
-      toast.error("WhatsApp is required");
-      return;
-    }
-    if (!form.source) {
-      toast.error("Source is required — pick one from Lead Settings");
-      return;
-    }
-    if (!form.interest) {
-      toast.error("Interest is required — pick one from Lead Settings");
+    const error = validateRequired();
+    if (error) {
+      toast.error(error);
       return;
     }
 
+    const ownerId = linkedOwnerId;
+
     startTransition(async () => {
-      const result = await createLead(buildPayload());
+      if (!ownerId && liveMatch && liveMatch.id !== ignoredMatchId) {
+        setExistingCustomer(liveMatch);
+        return;
+      }
+      const result = await createLead(buildPayload(ownerId));
       if (result.ok && result.data && "needsConfirm" in result.data && result.data.needsConfirm) {
         setExistingCustomer(result.data.customer);
+        setLiveMatch(result.data.customer);
         return;
       }
       if (result.ok && result.data && "id" in result.data) {
-        toast.success("Lead created");
+        toast.success(ownerId ? `Lead created under ${liveMatch?.name ?? "owner"}` : "Lead created");
         setOpen(false);
         router.push(`/leads/${result.data.id}`);
       } else {
@@ -184,11 +279,19 @@ export function LeadCreateDialog({
   }
 
   function confirmLinkExisting() {
-    if (!existingCustomer) return;
+    const owner = existingCustomer ?? liveMatch;
+    if (!owner) return;
+    const error = validateRequired();
+    if (error) {
+      toast.error(error);
+      setLinkedOwnerId(owner.id);
+      setExistingCustomer(null);
+      return;
+    }
     startTransition(async () => {
-      const result = await createLead(buildPayload(existingCustomer.id));
+      const result = await createLead(buildPayload(owner.id));
       if (result.ok && result.data && "id" in result.data) {
-        toast.success(`Lead created under ${existingCustomer.name}`);
+        toast.success(`Lead created under ${owner.name}`);
         setExistingCustomer(null);
         setOpen(false);
         router.push(`/leads/${result.data.id}`);
@@ -196,6 +299,37 @@ export function LeadCreateDialog({
         toast.error(result.error ?? "Failed to create lead");
       }
     });
+  }
+
+  function linkLiveOwner() {
+    if (!liveMatch) return;
+    setLinkedOwnerId(liveMatch.id);
+    setIgnoredMatchId(null);
+    const error = validateRequired();
+    if (error) {
+      toast.message(`Linked to ${liveMatch.name}`, {
+        description: `${error}. Finish the required fields, then Create lead.`,
+      });
+      return;
+    }
+    startTransition(async () => {
+      const result = await createLead(buildPayload(liveMatch.id));
+      if (result.ok && result.data && "id" in result.data) {
+        toast.success(`Lead created under ${liveMatch.name}`);
+        setOpen(false);
+        router.push(`/leads/${result.data.id}`);
+      } else {
+        toast.error(result.error ?? "Failed to create lead");
+      }
+    });
+  }
+
+  function dismissLiveMatch() {
+    if (!liveMatch) return;
+    setIgnoredMatchId(liveMatch.id);
+    setLinkedOwnerId(null);
+    setLiveMatch(null);
+    setExistingCustomer(null);
   }
 
   function renderField(field: LeadSnapshotField) {
@@ -435,6 +569,62 @@ export function LeadCreateDialog({
           </p>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="scrollbar-gold max-h-[min(72vh,40rem)] space-y-5 overflow-y-auto px-6 py-5">
+          {matchChecking && !liveMatch ? (
+            <p className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Checking for an existing owner…
+            </p>
+          ) : null}
+
+          {liveMatch ? (
+            <div className="rounded-[10px] border border-primary/30 bg-primary/5 p-3 space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-primary">
+                    {linkedOwnerId === liveMatch.id ? "Linked owner" : "Existing owner match"}
+                  </p>
+                  <p className="mt-1 font-semibold text-foreground">{liveMatch.name}</p>
+                  <p className="mt-0.5 text-xs capitalize text-muted-foreground">{liveMatch.status}</p>
+                  {liveMatch.phone ? <p className="mt-1 text-xs">{liveMatch.phone}</p> : null}
+                  {liveMatch.email ? <p className="text-xs">{liveMatch.email}</p> : null}
+                  {liveMatch.nationality ? (
+                    <p className="text-xs text-muted-foreground">Nationality: {liveMatch.nationality}</p>
+                  ) : null}
+                </div>
+                {matchChecking ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" /> : null}
+              </div>
+              {liveMatch.matchReasons?.length ? (
+                <ul className="space-y-1 border-t border-border/60 pt-2">
+                  {liveMatch.matchReasons.map((reason, idx) => (
+                    <li key={`${reason.field}-${idx}`} className="text-xs text-foreground">
+                      <span className="font-medium">{matchFieldLabel(reason.field)}</span>
+                      {": "}
+                      <span className="text-muted-foreground">{reason.leadValue}</span>
+                      {reason.ownerValue !== reason.leadValue ? (
+                        <span className="text-muted-foreground"> → owner {reason.ownerValue}</span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-8"
+                  disabled={pending}
+                  onClick={linkLiveOwner}
+                >
+                  {pending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
+                  {linkedOwnerId === liveMatch.id ? "Create under this owner" : "Use this owner"}
+                </Button>
+                <Button type="button" size="sm" variant="outline" className="h-8" onClick={dismissLiveMatch}>
+                  Not this owner
+                </Button>
+              </div>
+            </div>
+          ) : null}
+
           {groups.map((group) => (
             <section key={group.name}>
               <p className="mb-3 flex justify-center">

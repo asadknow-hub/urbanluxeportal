@@ -77,6 +77,50 @@ export type ExistingCustomerMatch = {
   matchReasons: CustomerContactMatchReason[];
 };
 
+function toExistingCustomerMatch(
+  matched: NonNullable<Awaited<ReturnType<typeof findCustomerByContact>>>
+): ExistingCustomerMatch {
+  return {
+    id: matched.customer.id,
+    name: matched.customer.name,
+    phone: matched.customer.phone,
+    email: matched.customer.email,
+    status: matched.customer.status,
+    nationality: matched.customer.nationality,
+    matchReasons: matched.reasons,
+  };
+}
+
+/** Live lookup while typing WhatsApp / call number / email on create lead. */
+export async function checkExistingCustomerMatch(input: {
+  phone?: string | null;
+  email?: string | null;
+  call_numbers?: string[] | null;
+}): Promise<ActionResult<{ customer: ExistingCustomerMatch | null }>> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+
+    const phone = input.phone?.trim() || null;
+    const email = input.email?.trim() || null;
+    const callNumbers = (input.call_numbers ?? []).map((n) => n.trim()).filter(Boolean);
+
+    const supabase = await createSupabaseServerClient();
+    const matched = await findCustomerByContact(supabase, {
+      phone,
+      email,
+      callNumbers,
+    });
+
+    return {
+      ok: true,
+      data: { customer: matched ? toExistingCustomerMatch(matched) : null },
+    };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
 export async function createLead(
   input: z.infer<typeof leadSchema>
 ): Promise<
@@ -111,15 +155,7 @@ export async function createLead(
           ok: true,
           data: {
             needsConfirm: true,
-            customer: {
-              id: matched.customer.id,
-              name: matched.customer.name,
-              phone: matched.customer.phone,
-              email: matched.customer.email,
-              status: matched.customer.status,
-              nationality: matched.customer.nationality,
-              matchReasons: matched.reasons,
-            },
+            customer: toExistingCustomerMatch(matched),
           },
         };
       }
