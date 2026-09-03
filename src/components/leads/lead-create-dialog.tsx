@@ -493,14 +493,39 @@ export function LeadCreateDialog({
           {existingCustomer ? (
             <div className="space-y-3 text-sm">
               <p className="text-muted-foreground">
-                A customer with this phone or email already exists. Create a new lead under the same owner?
+                A customer already matches contact details on this lead. Create a new lead under the same owner?
               </p>
               <div className="rounded-[10px] border border-border bg-muted/30 p-3">
                 <p className="font-semibold text-foreground">{existingCustomer.name}</p>
                 <p className="mt-1 text-xs capitalize text-muted-foreground">{existingCustomer.status}</p>
                 {existingCustomer.phone ? <p className="mt-1 text-xs">{existingCustomer.phone}</p> : null}
                 {existingCustomer.email ? <p className="text-xs">{existingCustomer.email}</p> : null}
+                {existingCustomer.nationality ? (
+                  <p className="text-xs text-muted-foreground">Nationality: {existingCustomer.nationality}</p>
+                ) : null}
               </div>
+              {existingCustomer.matchReasons?.length ? (
+                <div className="rounded-[10px] border border-border p-3">
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                    Matched on
+                  </p>
+                  <ul className="mt-2 space-y-1.5">
+                    {existingCustomer.matchReasons.map((reason, idx) => (
+                      <li key={`${reason.field}-${idx}`} className="text-xs text-foreground">
+                        <span className="font-medium">{matchFieldLabel(reason.field)}</span>
+                        {": "}
+                        <span className="text-muted-foreground">{reason.leadValue}</span>
+                        {reason.ownerValue !== reason.leadValue ? (
+                          <span className="text-muted-foreground">
+                            {" "}
+                            → owner {reason.ownerValue}
+                          </span>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </div>
           ) : null}
           <DialogFooter>
@@ -520,6 +545,12 @@ export function LeadCreateDialog({
 
 function Field({ children }: { children: React.ReactNode }) {
   return <div className="space-y-1.5">{children}</div>;
+}
+
+function matchFieldLabel(field: "whatsapp" | "call_number" | "email") {
+  if (field === "whatsapp") return "WhatsApp";
+  if (field === "call_number") return "Call number";
+  return "Email";
 }
 
 function OptionSelect({

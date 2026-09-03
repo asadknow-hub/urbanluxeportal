@@ -23,7 +23,14 @@ import type { DealTransactionInput } from "@/lib/deal-transaction";
 import { canManageCrm } from "@/lib/permissions";
 import { leadStatusForStageKind, resolveDefaultLeadStageId } from "@/lib/lead-stages";
 import { HUMAN_LEAD_ACTIVITY_TYPES } from "@/lib/lead-sla";
-import { ensurePersonForLead, markPersonLost, markPersonQualified, syncPersonAssignment } from "@/server/people";
+import {
+  ensurePersonForLead,
+  findCustomerByContact,
+  markPersonLost,
+  markPersonQualified,
+  syncPersonAssignment,
+  type CustomerContactMatchReason,
+} from "@/server/people";
 
 export type ConvertLeadInput = DealTransactionInput & {
   dealTitle?: string;
@@ -66,6 +73,8 @@ export type ExistingCustomerMatch = {
   phone: string | null;
   email: string | null;
   status: string;
+  nationality: string | null;
+  matchReasons: CustomerContactMatchReason[];
 };
 
 export async function createLead(
@@ -88,42 +97,45 @@ export async function createLead(
       .filter(Boolean);
     const phone = parsed.data.phone?.trim() || null;
     const email = parsed.data.email?.trim() || null;
+    let nationality = parsed.data.nationality?.trim() || null;
 
     // If not confirming an existing owner, check customers for phone/email/call-number matches.
     if (!parsed.data.existing_customer_id) {
-      const matchPhones = [phone, ...callNumbers].filter(Boolean) as string[];
-      let matchedCustomer: ExistingCustomerMatch | null = null;
-
-      for (const p of matchPhones) {
-        const { data } = await supabase
-          .from("customers")
-          .select("id, name, phone, email, status")
-          .eq("phone", p)
-          .is("deleted_at", null)
-          .limit(1)
-          .maybeSingle();
-        if (data) {
-          matchedCustomer = data;
-          break;
-        }
-      }
-
-      if (!matchedCustomer && email) {
-        const { data } = await supabase
-          .from("customers")
-          .select("id, name, phone, email, status")
-          .eq("email", email)
-          .is("deleted_at", null)
-          .limit(1)
-          .maybeSingle();
-        if (data) matchedCustomer = data;
-      }
-
-      if (matchedCustomer) {
+      const matched = await findCustomerByContact(supabase, {
+        phone,
+        email,
+        callNumbers,
+      });
+      if (matched) {
         return {
           ok: true,
-          data: { needsConfirm: true, customer: matchedCustomer },
+          data: {
+            needsConfirm: true,
+            customer: {
+              id: matched.customer.id,
+              name: matched.customer.name,
+              phone: matched.customer.phone,
+              email: matched.customer.email,
+              status: matched.customer.status,
+              nationality: matched.customer.nationality,
+              matchReasons: matched.reasons,
+            },
+          },
         };
+      }
+    } else {
+      // Linking under a known owner — keep owner KYC; seed blank lead nationality from owner.
+      const { data: owner } = await supabase
+        .from("customers")
+        .select("id, nationality")
+        .eq("id", parsed.data.existing_customer_id)
+        .is("deleted_at", null)
+        .maybeSingle();
+      if (!owner) {
+        return { ok: false, error: "Selected owner was not found" };
+      }
+      if (!nationality && owner.nationality?.trim()) {
+        nationality = owner.nationality.trim();
       }
     }
 
@@ -150,6 +162,8 @@ export async function createLead(
       stageId = await resolveDefaultLeadStageId(supabase);
     }
 
+    const linkingExisting = Boolean(parsed.data.existing_customer_id);
+
     const { data, error } = await supabase
       .from("leads")
       .insert({
@@ -170,7 +184,7 @@ export async function createLead(
         team_id: user.team_id,
         stage_id: stageId,
         status: "new",
-        nationality: parsed.data.nationality || null,
+        nationality,
         financing: parsed.data.financing || null,
         timeframe: parsed.data.timeframe || null,
         purpose: parsed.data.purpose || null,
@@ -187,7 +201,8 @@ export async function createLead(
     if (error) return { ok: false, error: error.message };
 
     await applyLeadRouting(supabase, data.id, parsed.data.assigned_to, "created", user.team_id, parsed.data.source);
-    await ensurePersonForLead(data.id, user.id, supabase);
+    // Linking an existing owner: fill blank fields only — never overwrite nationality/KYC.
+    await ensurePersonForLead(data.id, user.id, supabase, linkingExisting ? "fill" : "overwrite");
 
     await logActivity({
       actorId: user.id,
@@ -578,7 +593,11 @@ export async function convertLead(
         buyer_name: options.buyer_name?.trim() || lead.name,
         buyer_phone: options.buyer_phone?.trim() || lead.phone,
         buyer_email: options.buyer_email?.trim() || lead.email,
-        kyc_nationality: options.kyc_nationality?.trim() || personKyc?.nationality || lead.nationality,
+        kyc_nationality:
+          options.kyc_nationality?.trim() ||
+          personKyc?.nationality?.trim() ||
+          lead.nationality?.trim() ||
+          null,
         kyc_emirates_id: options.kyc_emirates_id?.trim() || personKyc?.emirates_id || null,
         kyc_passport_no: options.kyc_passport_no?.trim() || personKyc?.passport_no || null,
         kyc_trn: options.kyc_trn?.trim() || personKyc?.trn || null,

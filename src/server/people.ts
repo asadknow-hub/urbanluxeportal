@@ -2,6 +2,7 @@
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isWorkingCustomerStatus } from "@/lib/customer-status";
+import { normalizePhoneDigits, phonesLikelyMatch } from "@/lib/phone";
 import type { CrmDb } from "@/server/routing";
 
 type LeadRow = {
@@ -19,6 +20,118 @@ type LeadRow = {
   status: string;
 };
 
+export type CustomerContactMatchField = "whatsapp" | "call_number" | "email";
+
+export type CustomerContactMatchReason = {
+  field: CustomerContactMatchField;
+  leadValue: string;
+  ownerValue: string;
+};
+
+type CustomerContactRow = {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  status: string;
+  nationality: string | null;
+};
+
+const CUSTOMER_CONTACT_SELECT = "id, name, phone, email, status, nationality";
+
+/** Exact + normalized phone / case-insensitive email match against customers. */
+export async function findCustomerByContact(
+  supabase: CrmDb,
+  input: {
+    phone?: string | null;
+    email?: string | null;
+    callNumbers?: string[] | null;
+  }
+): Promise<{ customer: CustomerContactRow; reasons: CustomerContactMatchReason[] } | null> {
+  const whatsapp = input.phone?.trim() || null;
+  const email = input.email?.trim() || null;
+  const callNumbers = (input.callNumbers ?? []).map((n) => n.trim()).filter(Boolean);
+  const phoneInputs = [whatsapp, ...callNumbers].filter(Boolean) as string[];
+
+  const byId = new Map<string, CustomerContactRow>();
+
+  for (const p of phoneInputs) {
+    const { data: exact } = await supabase
+      .from("customers")
+      .select(CUSTOMER_CONTACT_SELECT)
+      .eq("phone", p)
+      .is("deleted_at", null)
+      .limit(1)
+      .maybeSingle();
+    if (exact) byId.set(exact.id, exact as CustomerContactRow);
+
+    const digits = normalizePhoneDigits(p);
+    const suffix = digits.length >= 9 ? digits.slice(-9) : "";
+    if (suffix) {
+      const { data: fuzzy } = await supabase
+        .from("customers")
+        .select(CUSTOMER_CONTACT_SELECT)
+        .ilike("phone", `%${suffix}`)
+        .is("deleted_at", null)
+        .limit(15);
+      for (const row of fuzzy ?? []) {
+        if (phonesLikelyMatch(p, row.phone)) {
+          byId.set(row.id, row as CustomerContactRow);
+        }
+      }
+    }
+  }
+
+  if (email) {
+    const { data: byEmail } = await supabase
+      .from("customers")
+      .select(CUSTOMER_CONTACT_SELECT)
+      .ilike("email", email)
+      .is("deleted_at", null)
+      .limit(5);
+    for (const row of byEmail ?? []) {
+      byId.set(row.id, row as CustomerContactRow);
+    }
+  }
+
+  if (byId.size === 0) return null;
+
+  let best: { customer: CustomerContactRow; reasons: CustomerContactMatchReason[] } | null = null;
+
+  for (const customer of byId.values()) {
+    const reasons: CustomerContactMatchReason[] = [];
+    if (whatsapp && phonesLikelyMatch(whatsapp, customer.phone)) {
+      reasons.push({
+        field: "whatsapp",
+        leadValue: whatsapp,
+        ownerValue: customer.phone ?? whatsapp,
+      });
+    }
+    for (const call of callNumbers) {
+      if (phonesLikelyMatch(call, customer.phone)) {
+        reasons.push({
+          field: "call_number",
+          leadValue: call,
+          ownerValue: customer.phone ?? call,
+        });
+      }
+    }
+    if (email && customer.email && email.toLowerCase() === customer.email.toLowerCase()) {
+      reasons.push({
+        field: "email",
+        leadValue: email,
+        ownerValue: customer.email,
+      });
+    }
+    if (reasons.length === 0) continue;
+    if (!best || reasons.length > best.reasons.length) {
+      best = { customer, reasons };
+    }
+  }
+
+  return best;
+}
+
 async function loadLead(supabase: CrmDb, leadId: string) {
   const { data } = await supabase
     .from("leads")
@@ -33,18 +146,20 @@ async function loadLead(supabase: CrmDb, leadId: string) {
 /**
  * Every live lead has a customer row from first contact.
  * Matches existing people by phone/email before inserting.
+ * @param linkMode - when attaching to an existing owner, only fill blank owner fields
  */
 export async function ensurePersonForLead(
   leadId: string,
   actorId?: string | null,
-  client?: CrmDb
+  client?: CrmDb,
+  linkMode: "overwrite" | "fill" = "overwrite"
 ): Promise<string | null> {
   const supabase = client ?? (await createSupabaseServerClient());
   const lead = await loadLead(supabase, leadId);
   if (!lead) return null;
 
   if (lead.customer_id) {
-    await syncWorkingPerson(supabase, lead);
+    await syncWorkingPerson(supabase, lead, linkMode);
     return lead.customer_id;
   }
 
@@ -66,26 +181,12 @@ export async function ensurePersonForLead(
 
   let personId = byLead?.id ?? null;
 
-  if (!personId && lead.phone) {
-    const { data } = await supabase
-      .from("customers")
-      .select("id")
-      .eq("phone", lead.phone)
-      .is("deleted_at", null)
-      .limit(1)
-      .maybeSingle();
-    personId = data?.id ?? null;
-  }
-
-  if (!personId && lead.email) {
-    const { data } = await supabase
-      .from("customers")
-      .select("id")
-      .eq("email", lead.email)
-      .is("deleted_at", null)
-      .limit(1)
-      .maybeSingle();
-    personId = data?.id ?? null;
+  if (!personId) {
+    const matched = await findCustomerByContact(supabase, {
+      phone: lead.phone,
+      email: lead.email,
+    });
+    personId = matched?.customer.id ?? null;
   }
 
   if (!personId) {
@@ -130,29 +231,55 @@ export async function ensurePersonForLead(
   return personId;
 }
 
-async function syncWorkingPerson(supabase: CrmDb, lead: LeadRow) {
+async function syncWorkingPerson(
+  supabase: CrmDb,
+  lead: LeadRow,
+  mode: "overwrite" | "fill" = "overwrite"
+) {
   if (!lead.customer_id) return;
   const { data: person } = await supabase
     .from("customers")
-    .select("id, status")
+    .select("id, status, name, phone, email, nationality, notes, tags, assigned_to")
     .eq("id", lead.customer_id)
     .maybeSingle();
   if (!person || !isWorkingCustomerStatus(person.status)) return;
 
-  await supabase
-    .from("customers")
-    .update({
-      name: lead.name,
-      phone: lead.phone,
-      email: lead.email,
-      nationality: lead.nationality,
-      notes: lead.notes,
-      tags: lead.tags ?? [],
-      assigned_to: lead.assigned_to,
-      lead_id: lead.id,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", lead.customer_id);
+  const update: Record<string, unknown> = {
+    lead_id: lead.id,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (mode === "fill") {
+    // Linking a new lead under an existing owner — never wipe established KYC/contact.
+    if (!person.phone?.trim() && lead.phone?.trim()) update.phone = lead.phone.trim();
+    if (!person.email?.trim() && lead.email?.trim()) update.email = lead.email.trim();
+    if (!person.nationality?.trim() && lead.nationality?.trim()) update.nationality = lead.nationality.trim();
+    if (!person.notes?.trim() && lead.notes?.trim()) update.notes = lead.notes.trim();
+    if ((!person.tags || person.tags.length === 0) && lead.tags?.length) update.tags = lead.tags;
+    if (!person.assigned_to && lead.assigned_to) update.assigned_to = lead.assigned_to;
+  } else {
+    // Primary working lead still drives contact name/assignment, but never null-wipe
+    // or clobber established owner nationality (KYC lives on the customer).
+    if (lead.name?.trim()) update.name = lead.name.trim();
+    if (lead.phone?.trim()) update.phone = lead.phone.trim();
+    if (lead.email?.trim()) update.email = lead.email.trim();
+    if (!person.nationality?.trim() && lead.nationality?.trim()) {
+      update.nationality = lead.nationality.trim();
+    }
+    if (lead.notes !== null && lead.notes !== undefined) update.notes = lead.notes;
+    if (lead.tags) update.tags = lead.tags;
+    if (lead.assigned_to !== undefined) update.assigned_to = lead.assigned_to;
+  }
+
+  if (Object.keys(update).length <= 2) {
+    await supabase
+      .from("customers")
+      .update({ lead_id: lead.id, updated_at: new Date().toISOString() })
+      .eq("id", lead.customer_id);
+    return;
+  }
+
+  await supabase.from("customers").update(update).eq("id", lead.customer_id);
 }
 
 export async function markPersonQualified(customerId: string | null, client?: CrmDb) {
