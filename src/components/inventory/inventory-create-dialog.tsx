@@ -149,226 +149,388 @@ export function InventoryCreateDialog({
           )
         }
       />
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
-        <DialogHeader>
-          <DialogTitle>Add property</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <p className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              Category
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {LISTING_TYPES.map((row) => (
-                <button
-                  key={row.value}
-                  type="button"
-                  onClick={() => setListingType(row.value)}
-                  className={cn(
-                    "rounded-[10px] border px-3 py-2.5 text-sm font-semibold",
-                    listingType === row.value
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card text-foreground hover:border-primary/40"
-                  )}
+      <DialogContent
+        className="!flex max-h-[90vh] w-[min(36rem,95vw)] flex-col gap-0 overflow-hidden rounded-[14px] border border-secondary/25 p-0 shadow-xl sm:max-w-xl"
+        closeClassName="text-white/70 hover:bg-white/10 hover:text-white"
+      >
+        <div className="shrink-0 bg-secondary px-6 py-5 text-center">
+          <DialogHeader>
+            <DialogTitle
+              className="text-center text-[1.15rem] font-normal tracking-[0.12em] text-white uppercase"
+              style={{ fontFamily: "var(--font-display), serif" }}
+            >
+              Add property
+            </DialogTitle>
+          </DialogHeader>
+          <p className="mt-1.5 text-[0.78rem] text-white/75">
+            Create a Buy, Rent, or Off-plan listing in inventory
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex min-h-0 w-full flex-1 flex-col">
+          <div className="scrollbar-gold min-h-0 flex-1 space-y-5 overflow-y-auto bg-card px-6 py-5">
+            <div>
+              <p className="mb-2 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                Category
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {LISTING_TYPES.map((row) => (
+                  <button
+                    key={row.value}
+                    type="button"
+                    onClick={() => setListingType(row.value)}
+                    className={cn(
+                      "rounded-[10px] border px-3 py-2.5 text-sm font-semibold transition-colors",
+                      listingType === row.value
+                        ? "border-secondary bg-secondary text-white shadow-sm"
+                        : "border-border bg-white text-foreground hover:border-secondary/40 hover:bg-secondary/5"
+                    )}
+                  >
+                    {row.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-3.5 sm:grid-cols-2">
+              <Field label="Community">
+                <Input
+                  value={form.community}
+                  onChange={(e) => set("community", e.target.value)}
+                  placeholder="Downtown Dubai"
+                  className="h-11 rounded-[10px]"
+                />
+              </Field>
+              <Field label="Building">
+                <Input
+                  value={form.building_name}
+                  onChange={(e) => set("building_name", e.target.value)}
+                  className="h-11 rounded-[10px]"
+                />
+              </Field>
+              <Field label="Unit">
+                <Input
+                  value={form.unit_number}
+                  onChange={(e) => set("unit_number", e.target.value)}
+                  placeholder="1204"
+                  className="h-11 rounded-[10px]"
+                />
+              </Field>
+              <Field label="Floor">
+                <Input
+                  value={form.floor}
+                  onChange={(e) => set("floor", e.target.value)}
+                  placeholder="Optional"
+                  className="h-11 rounded-[10px]"
+                />
+              </Field>
+              <Field label="Type">
+                <Select value={form.property_type} onValueChange={(v) => set("property_type", v ?? "apartment")}>
+                  <SelectTrigger className="h-11 rounded-[10px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PROPERTY_TYPES.map((row) => (
+                      <SelectItem key={row.value} value={row.value}>
+                        {row.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field label="Bedrooms">
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.bedrooms}
+                  onChange={(e) => set("bedrooms", e.target.value)}
+                  className="h-11 rounded-[10px]"
+                />
+              </Field>
+              <Field label="Bathrooms">
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.bathrooms}
+                  onChange={(e) => set("bathrooms", e.target.value)}
+                  className="h-11 rounded-[10px]"
+                />
+              </Field>
+              <Field label="Price (AED)">
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.asking_price_aed}
+                  onChange={(e) => set("asking_price_aed", e.target.value)}
+                  className="h-11 rounded-[10px]"
+                />
+              </Field>
+            </div>
+
+            {listingType === "sale" ? (
+              <CategoryBlock title="Buy details">
+                <Field label="Title deed">
+                  <Input
+                    value={form.title_deed_number}
+                    onChange={(e) => set("title_deed_number", e.target.value)}
+                    className="h-11 rounded-[10px] bg-white"
+                  />
+                </Field>
+                <Field label="Trakheesi permit">
+                  <Input
+                    value={form.trakheesi_permit_no}
+                    onChange={(e) => set("trakheesi_permit_no", e.target.value)}
+                    className="h-11 rounded-[10px] bg-white"
+                  />
+                </Field>
+                <Field label="Service charge (AED)">
+                  <Input
+                    type="number"
+                    min={0}
+                    value={form.service_charge_aed}
+                    onChange={(e) => set("service_charge_aed", e.target.value)}
+                    className="h-11 rounded-[10px] bg-white"
+                  />
+                </Field>
+                <Field label="Mortgage available">
+                  <Select value={form.mortgage_available} onValueChange={(v) => set("mortgage_available", v ?? "no")}>
+                    <SelectTrigger className="h-11 rounded-[10px] bg-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="no">No</SelectItem>
+                      <SelectItem value="yes">Yes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </CategoryBlock>
+            ) : null}
+
+            {listingType === "rent" ? (
+              <CategoryBlock title="Rent details">
+                <Field label="Frequency">
+                  <Select value={form.rent_frequency} onValueChange={(v) => set("rent_frequency", v ?? "yearly")}>
+                    <SelectTrigger className="h-11 rounded-[10px] bg-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {RENT_FREQUENCIES.map((row) => (
+                        <SelectItem key={row.value} value={row.value}>
+                          {row.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="Cheques">
+                  <Input
+                    type="number"
+                    min={0}
+                    value={form.cheques}
+                    onChange={(e) => set("cheques", e.target.value)}
+                    className="h-11 rounded-[10px] bg-white"
+                  />
+                </Field>
+                <Field label="Security deposit (AED)">
+                  <Input
+                    type="number"
+                    min={0}
+                    value={form.security_deposit_aed}
+                    onChange={(e) => set("security_deposit_aed", e.target.value)}
+                    className="h-11 rounded-[10px] bg-white"
+                  />
+                </Field>
+                <Field label="Furnishing">
+                  <Select
+                    value={form.furnishing || "none"}
+                    onValueChange={(v) => set("furnishing", v === "none" ? "" : v ?? "")}
+                  >
+                    <SelectTrigger className="h-11 rounded-[10px] bg-white">
+                      <SelectValue placeholder="Optional" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Not set</SelectItem>
+                      {FURNISHING.map((row) => (
+                        <SelectItem key={row.value} value={row.value}>
+                          {row.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="Available from" className="sm:col-span-2">
+                  <Input
+                    type="date"
+                    value={form.available_from}
+                    onChange={(e) => set("available_from", e.target.value)}
+                    className="h-11 rounded-[10px] bg-white"
+                  />
+                </Field>
+              </CategoryBlock>
+            ) : null}
+
+            {listingType === "off_plan" ? (
+              <CategoryBlock title="Off-plan details">
+                <Field label="Developer">
+                  <Input
+                    value={form.developer_name}
+                    onChange={(e) => set("developer_name", e.target.value)}
+                    className="h-11 rounded-[10px] bg-white"
+                  />
+                </Field>
+                <Field label="Project">
+                  <Input
+                    value={form.project_name}
+                    onChange={(e) => set("project_name", e.target.value)}
+                    className="h-11 rounded-[10px] bg-white"
+                  />
+                </Field>
+                <Field label="Payment plan">
+                  <Input
+                    value={form.payment_plan}
+                    onChange={(e) => set("payment_plan", e.target.value)}
+                    placeholder="80/20, 70/30…"
+                    className="h-11 rounded-[10px] bg-white"
+                  />
+                </Field>
+                <Field label="Handover">
+                  <Input
+                    type="date"
+                    value={form.handover_date}
+                    onChange={(e) => set("handover_date", e.target.value)}
+                    className="h-11 rounded-[10px] bg-white"
+                  />
+                </Field>
+                <Field label="Oqood" className="sm:col-span-2">
+                  <Input
+                    value={form.oqood_number}
+                    onChange={(e) => set("oqood_number", e.target.value)}
+                    className="h-11 rounded-[10px] bg-white"
+                  />
+                </Field>
+              </CategoryBlock>
+            ) : null}
+
+            {listingType !== "off_plan" ? (
+              <div className="grid gap-3.5 sm:grid-cols-2">
+                <Field label="Developer">
+                  <Input
+                    value={form.developer_name}
+                    onChange={(e) => set("developer_name", e.target.value)}
+                    placeholder="Optional"
+                    className="h-11 rounded-[10px]"
+                  />
+                </Field>
+                <Field label="Project">
+                  <Input
+                    value={form.project_name}
+                    onChange={(e) => set("project_name", e.target.value)}
+                    placeholder="Optional"
+                    className="h-11 rounded-[10px]"
+                  />
+                </Field>
+              </div>
+            ) : null}
+
+            <div className="grid gap-3.5 sm:grid-cols-2">
+              <Field label="Owner">
+                <Select value={form.owner_id || "none"} onValueChange={(v) => set("owner_id", v === "none" ? "" : v ?? "")}>
+                  <SelectTrigger className="h-11 rounded-[10px]">
+                    <span className="truncate">
+                      {owners.find((o) => o.id === form.owner_id)?.name ?? "Unassigned"}
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Unassigned</SelectItem>
+                    {owners.map((owner) => (
+                      <SelectItem key={owner.id} value={owner.id}>
+                        {owner.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field label="Assigned agent">
+                <Select
+                  value={form.assigned_to || "none"}
+                  onValueChange={(v) => set("assigned_to", v === "none" ? "" : v ?? "")}
                 >
-                  {row.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>Community</Label>
-              <Input value={form.community} onChange={(e) => set("community", e.target.value)} placeholder="Downtown Dubai" />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Building</Label>
-              <Input value={form.building_name} onChange={(e) => set("building_name", e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Unit</Label>
-              <Input value={form.unit_number} onChange={(e) => set("unit_number", e.target.value)} placeholder="1204" />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Type</Label>
-              <Select value={form.property_type} onValueChange={(v) => set("property_type", v ?? "apartment")}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PROPERTY_TYPES.map((row) => (
-                    <SelectItem key={row.value} value={row.value}>
-                      {row.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Bedrooms</Label>
-              <Input type="number" min={0} value={form.bedrooms} onChange={(e) => set("bedrooms", e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Bathrooms</Label>
-              <Input type="number" min={0} value={form.bathrooms} onChange={(e) => set("bathrooms", e.target.value)} />
-            </div>
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label>Price (AED)</Label>
-              <Input type="number" min={0} value={form.asking_price_aed} onChange={(e) => set("asking_price_aed", e.target.value)} />
-            </div>
-          </div>
-
-          {listingType === "sale" ? (
-            <div className="grid gap-3 rounded-[12px] border border-border bg-muted/20 p-3 sm:grid-cols-2">
-              <p className="sm:col-span-2 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Buy</p>
-              <div className="space-y-1.5">
-                <Label>Title deed</Label>
-                <Input value={form.title_deed_number} onChange={(e) => set("title_deed_number", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Trakheesi permit</Label>
-                <Input value={form.trakheesi_permit_no} onChange={(e) => set("trakheesi_permit_no", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Service charge (AED)</Label>
-                <Input type="number" min={0} value={form.service_charge_aed} onChange={(e) => set("service_charge_aed", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Mortgage available</Label>
-                <Select value={form.mortgage_available} onValueChange={(v) => set("mortgage_available", v ?? "no")}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-11 rounded-[10px]">
+                    <span className="truncate">
+                      {agents.find((a) => a.id === form.assigned_to)?.full_name ?? "Unassigned"}
+                    </span>
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="no">No</SelectItem>
-                    <SelectItem value="yes">Yes</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          ) : null}
-
-          {listingType === "rent" ? (
-            <div className="grid gap-3 rounded-[12px] border border-[#fdba74] bg-[#fff7ed] p-3 sm:grid-cols-2">
-              <p className="sm:col-span-2 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#9a3412]">Rent</p>
-              <div className="space-y-1.5">
-                <Label>Frequency</Label>
-                <Select value={form.rent_frequency} onValueChange={(v) => set("rent_frequency", v ?? "yearly")}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {RENT_FREQUENCIES.map((row) => (
-                      <SelectItem key={row.value} value={row.value}>{row.label}</SelectItem>
+                    <SelectItem value="none">Unassigned</SelectItem>
+                    {agents.map((agent) => (
+                      <SelectItem key={agent.id} value={agent.id}>
+                        {agent.full_name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Cheques</Label>
-                <Input type="number" min={0} value={form.cheques} onChange={(e) => set("cheques", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Security deposit (AED)</Label>
-                <Input type="number" min={0} value={form.security_deposit_aed} onChange={(e) => set("security_deposit_aed", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Furnishing</Label>
-                <Select value={form.furnishing || "none"} onValueChange={(v) => set("furnishing", v === "none" ? "" : v ?? "")}>
-                  <SelectTrigger><SelectValue placeholder="Optional" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Not set</SelectItem>
-                    {FURNISHING.map((row) => (
-                      <SelectItem key={row.value} value={row.value}>{row.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label>Available from</Label>
-                <Input type="date" value={form.available_from} onChange={(e) => set("available_from", e.target.value)} />
-              </div>
+              </Field>
             </div>
-          ) : null}
 
-          {listingType === "off_plan" ? (
-            <div className="grid gap-3 rounded-[12px] border border-[#c4b5fd] bg-[#f5f3ff] p-3 sm:grid-cols-2">
-              <p className="sm:col-span-2 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#5b21b6]">Off-plan</p>
-              <div className="space-y-1.5">
-                <Label>Developer</Label>
-                <Input value={form.developer_name} onChange={(e) => set("developer_name", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Project</Label>
-                <Input value={form.project_name} onChange={(e) => set("project_name", e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Payment plan</Label>
-                <Input value={form.payment_plan} onChange={(e) => set("payment_plan", e.target.value)} placeholder="80/20, 70/30…" />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Handover</Label>
-                <Input type="date" value={form.handover_date} onChange={(e) => set("handover_date", e.target.value)} />
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label>Oqood</Label>
-                <Input value={form.oqood_number} onChange={(e) => set("oqood_number", e.target.value)} />
-              </div>
-            </div>
-          ) : null}
-
-          {listingType !== "off_plan" ? (
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label>Developer</Label>
-                <Input value={form.developer_name} onChange={(e) => set("developer_name", e.target.value)} placeholder="Optional" />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Project</Label>
-                <Input value={form.project_name} onChange={(e) => set("project_name", e.target.value)} placeholder="Optional" />
-              </div>
-            </div>
-          ) : null}
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>Owner</Label>
-              <Select value={form.owner_id || "none"} onValueChange={(v) => set("owner_id", v === "none" ? "" : v ?? "")}>
-                <SelectTrigger>
-                  <span className="truncate">{owners.find((o) => o.id === form.owner_id)?.name ?? "Unassigned"}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Unassigned</SelectItem>
-                  {owners.map((owner) => (
-                    <SelectItem key={owner.id} value={owner.id}>{owner.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Assigned agent</Label>
-              <Select value={form.assigned_to || "none"} onValueChange={(v) => set("assigned_to", v === "none" ? "" : v ?? "")}>
-                <SelectTrigger>
-                  <span className="truncate">{agents.find((a) => a.id === form.assigned_to)?.full_name ?? "Unassigned"}</span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Unassigned</SelectItem>
-                  {agents.map((agent) => (
-                    <SelectItem key={agent.id} value={agent.id}>{agent.full_name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Field label="Notes">
+              <Textarea
+                rows={3}
+                value={form.notes}
+                onChange={(e) => set("notes", e.target.value)}
+                className="rounded-[10px]"
+                placeholder="Optional notes about this listing"
+              />
+            </Field>
           </div>
-          <div className="space-y-1.5">
-            <Label>Notes</Label>
-            <Textarea rows={2} value={form.notes} onChange={(e) => set("notes", e.target.value)} />
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={pending}>
-              {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save property"}
+
+          <div className="flex shrink-0 justify-end gap-3 border-t border-border bg-secondary/5 px-6 py-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              className="h-[42px] rounded-full px-6"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={pending}
+              className="h-[42px] rounded-full bg-secondary px-5 text-white hover:bg-secondary/90"
+            >
+              {pending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Save property
             </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function Field({
+  label,
+  children,
+  className,
+}: {
+  label: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("space-y-1.5", className)}>
+      <Label className="text-[0.72rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+        {label}
+      </Label>
+      {children}
+    </div>
+  );
+}
+
+function CategoryBlock({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="space-y-3 rounded-[12px] border border-secondary/25 bg-secondary/8 p-4">
+      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-secondary">{title}</p>
+      <div className="grid gap-3.5 sm:grid-cols-2">{children}</div>
+    </div>
   );
 }
