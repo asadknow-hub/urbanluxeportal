@@ -175,8 +175,9 @@ export async function createLead(
       }
     }
 
-    // Duplicate lead guard (same WhatsApp or email on another open lead)
-    if (phone || email) {
+    // Duplicate lead guard — skip when intentionally linking under an existing owner
+    // (same WhatsApp/email is expected for a second opportunity on that person).
+    if (!parsed.data.existing_customer_id && (phone || email)) {
       let dupQuery = supabase
         .from("leads")
         .select("id, name, phone, email")
