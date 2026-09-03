@@ -31,7 +31,8 @@ import {
 import { createLead, checkExistingCustomerMatch, type ExistingCustomerMatch } from "@/server/leads";
 import { normalizePhoneDigits } from "@/lib/phone";
 import { toast } from "sonner";
-import { ChevronDown, Loader2, Plus, X } from "lucide-react";
+import { Check, ChevronDown, Loader2, Lock, Plus, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type FormState = {
   name: string;
@@ -79,12 +80,31 @@ const EMPTY_FORM: FormState = {
 
 const EMAIL_LOOKUP_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const LOCKED_CONTACT_KEYS = new Set(["name", "phone", "email", "nationality"]);
+
+const GROUP_PILL: Record<string, string> = {
+  Contact: "bg-sky-100 text-sky-800",
+  Tastes: "bg-violet-100 text-violet-800",
+  Financing: "bg-amber-100 text-amber-900",
+  Notes: "bg-rose-100 text-rose-800",
+  Scoring: "bg-emerald-100 text-emerald-800",
+  Assignment: "bg-accent text-secondary",
+};
+
 function phoneReadyForLookup(value: string) {
   return normalizePhoneDigits(value).length >= 7;
 }
 
 function requiredMark(key: string) {
   return key === "name" || key === "phone" || key === "source" || key === "interest";
+}
+
+function lockedInputClass(locked: boolean) {
+  return cn(
+    "h-10",
+    locked &&
+      "cursor-not-allowed border-secondary/40 bg-accent text-secondary font-medium shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--secondary)_25%,transparent)]"
+  );
 }
 
 export function LeadCreateDialog({
@@ -110,6 +130,8 @@ export function LeadCreateDialog({
   const [linkedOwnerId, setLinkedOwnerId] = useState<string | null>(null);
   const [ignoredMatchId, setIgnoredMatchId] = useState<string | null>(null);
 
+  const ownerLocked = Boolean(linkedOwnerId);
+
   useEffect(() => {
     if (open) {
       setForm(EMPTY_FORM);
@@ -124,7 +146,7 @@ export function LeadCreateDialog({
 
   // Live owner match as WhatsApp / email / call numbers are entered.
   useEffect(() => {
-    if (!open) return;
+    if (!open || ownerLocked) return;
 
     const phone = form.phone.trim();
     const email = form.email.trim();
@@ -139,7 +161,6 @@ export function LeadCreateDialog({
     if (!phoneOk && !emailOk) {
       setLiveMatch(null);
       setMatchChecking(false);
-      setLinkedOwnerId(null);
       return;
     }
 
@@ -158,47 +179,27 @@ export function LeadCreateDialog({
         return;
       }
       const customer = result.data?.customer ?? null;
-      if (!customer) {
-        setLiveMatch(null);
-        setLinkedOwnerId(null);
-        return;
-      }
-      if (customer.id === ignoredMatchId) {
+      if (!customer || customer.id === ignoredMatchId) {
         setLiveMatch(null);
         return;
       }
       setLiveMatch(customer);
-      setForm((prev) => {
-        const next = { ...prev };
-        let changed = false;
-        if (!prev.name.trim() && customer.name?.trim()) {
-          next.name = customer.name.trim();
-          changed = true;
-        }
-        if (!prev.nationality.trim() && customer.nationality?.trim()) {
-          next.nationality = customer.nationality.trim();
-          changed = true;
-        }
-        if (!prev.email.trim() && customer.email?.trim()) {
-          next.email = customer.email.trim();
-          changed = true;
-        }
-        return changed ? next : prev;
-      });
     }, 350);
 
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [open, form.phone, form.email, form.call_numbers, callDraft, ignoredMatchId]);
+  }, [open, form.phone, form.email, form.call_numbers, callDraft, ignoredMatchId, ownerLocked]);
 
   // Re-allow match prompts only when committed contact fields change (not while typing call draft).
   useEffect(() => {
+    if (ownerLocked) return;
     setIgnoredMatchId(null);
-  }, [form.phone, form.email, form.call_numbers]);
+  }, [form.phone, form.email, form.call_numbers, ownerLocked]);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
+    if (ownerLocked && LOCKED_CONTACT_KEYS.has(key as string)) return;
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
@@ -211,6 +212,24 @@ export function LeadCreateDialog({
     }
     set("call_numbers", [...form.call_numbers, next]);
     setCallDraft("");
+  }
+
+  function applyOwnerToForm(owner: ExistingCustomerMatch) {
+    setLinkedOwnerId(owner.id);
+    setIgnoredMatchId(null);
+    setLiveMatch(owner);
+    setExistingCustomer(null);
+    setForm((prev) => ({
+      ...prev,
+      name: owner.name?.trim() || prev.name,
+      phone: owner.phone?.trim() || prev.phone,
+      email: owner.email?.trim() || prev.email,
+      // Always take owner nationality when linking — never keep a conflicting form value.
+      nationality: owner.nationality?.trim() || prev.nationality,
+    }));
+    toast.success(`Owner linked: ${owner.name}`, {
+      description: "Contact fields filled from the owner and locked.",
+    });
   }
 
   function buildPayload(existingCustomerId?: string | null) {
@@ -281,52 +300,17 @@ export function LeadCreateDialog({
   function confirmLinkExisting() {
     const owner = existingCustomer ?? liveMatch;
     if (!owner) return;
-    const error = validateRequired();
-    if (error) {
-      toast.error(error);
-      setLinkedOwnerId(owner.id);
-      setExistingCustomer(null);
-      return;
-    }
-    startTransition(async () => {
-      const result = await createLead(buildPayload(owner.id));
-      if (result.ok && result.data && "id" in result.data) {
-        toast.success(`Lead created under ${owner.name}`);
-        setExistingCustomer(null);
-        setOpen(false);
-        router.push(`/leads/${result.data.id}`);
-      } else {
-        toast.error(result.error ?? "Failed to create lead");
-      }
-    });
+    applyOwnerToForm(owner);
   }
 
   function linkLiveOwner() {
     if (!liveMatch) return;
-    setLinkedOwnerId(liveMatch.id);
-    setIgnoredMatchId(null);
-    const error = validateRequired();
-    if (error) {
-      toast.message(`Linked to ${liveMatch.name}`, {
-        description: `${error}. Finish the required fields, then Create lead.`,
-      });
-      return;
-    }
-    startTransition(async () => {
-      const result = await createLead(buildPayload(liveMatch.id));
-      if (result.ok && result.data && "id" in result.data) {
-        toast.success(`Lead created under ${liveMatch.name}`);
-        setOpen(false);
-        router.push(`/leads/${result.data.id}`);
-      } else {
-        toast.error(result.error ?? "Failed to create lead");
-      }
-    });
+    applyOwnerToForm(liveMatch);
   }
 
   function dismissLiveMatch() {
-    if (!liveMatch) return;
-    setIgnoredMatchId(liveMatch.id);
+    if (!liveMatch && !linkedOwnerId) return;
+    if (liveMatch) setIgnoredMatchId(liveMatch.id);
     setLinkedOwnerId(null);
     setLiveMatch(null);
     setExistingCustomer(null);
@@ -334,10 +318,19 @@ export function LeadCreateDialog({
 
   function renderField(field: LeadSnapshotField) {
     const options = fieldOptions[field.key] ?? [];
+    const locked = ownerLocked && LOCKED_CONTACT_KEYS.has(field.key);
     const label = (
-      <Label className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-        {field.label}
-        {requiredMark(field.key) ? <span className="ml-0.5 text-primary">*</span> : null}
+      <Label
+        className={cn(
+          "text-[0.68rem] font-semibold uppercase tracking-[0.1em]",
+          locked ? "text-secondary" : "text-muted-foreground"
+        )}
+      >
+        <span className="inline-flex items-center gap-1">
+          {locked ? <Lock className="h-3 w-3" /> : null}
+          {field.label}
+          {requiredMark(field.key) ? <span className="ml-0.5 text-primary">*</span> : null}
+        </span>
       </Label>
     );
 
@@ -349,8 +342,9 @@ export function LeadCreateDialog({
             value={form.name}
             onChange={(e) => set("name", e.target.value)}
             required
+            readOnly={locked}
             placeholder="Full name"
-            className="h-10"
+            className={lockedInputClass(locked)}
           />
         </Field>
       );
@@ -363,8 +357,9 @@ export function LeadCreateDialog({
             value={form.phone}
             onChange={(e) => set("phone", e.target.value)}
             required
+            readOnly={locked}
             placeholder="+971 50 123 4567"
-            className="h-10"
+            className={lockedInputClass(locked)}
           />
         </Field>
       );
@@ -423,8 +418,9 @@ export function LeadCreateDialog({
             type="email"
             value={form.email}
             onChange={(e) => set("email", e.target.value)}
+            readOnly={locked}
             placeholder="email@example.com"
-            className="h-10"
+            className={lockedInputClass(locked)}
           />
         </Field>
       );
@@ -436,6 +432,7 @@ export function LeadCreateDialog({
           <NationalitySelect
             value={form.nationality}
             options={nationalities}
+            locked={locked}
             onChange={(next) => set("nationality", next)}
           />
         </Field>
@@ -559,9 +556,9 @@ export function LeadCreateDialog({
         )}
       />
       <DialogContent className="max-h-[90vh] w-[min(48rem,calc(100vw-2rem))] gap-0 overflow-hidden p-0 sm:max-w-3xl">
-        <div className="h-0.5 bg-primary" />
-        <DialogHeader className="border-b border-border px-6 py-4">
-          <DialogTitle className="font-heading text-xl" style={{ fontFamily: "var(--font-display), serif" }}>
+        <div className="h-1 bg-gradient-to-r from-primary via-secondary to-sky-500" />
+        <DialogHeader className="border-b border-border bg-gradient-to-br from-accent/80 via-background to-sky-50 px-6 py-4">
+          <DialogTitle className="font-heading text-xl text-primary" style={{ fontFamily: "var(--font-display), serif" }}>
             New lead
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
@@ -570,18 +567,37 @@ export function LeadCreateDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="scrollbar-gold max-h-[min(72vh,40rem)] space-y-5 overflow-y-auto px-6 py-5">
           {matchChecking && !liveMatch ? (
-            <p className="flex items-center gap-2 text-xs text-muted-foreground">
+            <p className="flex items-center gap-2 text-xs text-sky-700">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
               Checking for an existing owner…
             </p>
           ) : null}
 
           {liveMatch ? (
-            <div className="rounded-[10px] border border-primary/30 bg-primary/5 p-3 space-y-3">
+            <div
+              className={cn(
+                "space-y-3 rounded-[12px] border p-3.5 shadow-sm",
+                ownerLocked
+                  ? "border-secondary/40 bg-gradient-to-br from-accent to-emerald-50"
+                  : "border-amber-300/70 bg-gradient-to-br from-amber-50 to-orange-50"
+              )}
+            >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-primary">
-                    {linkedOwnerId === liveMatch.id ? "Linked owner" : "Existing owner match"}
+                  <p
+                    className={cn(
+                      "text-[0.68rem] font-semibold uppercase tracking-[0.1em]",
+                      ownerLocked ? "text-secondary" : "text-amber-800"
+                    )}
+                  >
+                    {ownerLocked ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Check className="h-3.5 w-3.5" />
+                        Linked owner
+                      </span>
+                    ) : (
+                      "Existing owner match"
+                    )}
                   </p>
                   <p className="mt-1 font-semibold text-foreground">{liveMatch.name}</p>
                   <p className="mt-0.5 text-xs capitalize text-muted-foreground">{liveMatch.status}</p>
@@ -594,7 +610,7 @@ export function LeadCreateDialog({
                 {matchChecking ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" /> : null}
               </div>
               {liveMatch.matchReasons?.length ? (
-                <ul className="space-y-1 border-t border-border/60 pt-2">
+                <ul className="space-y-1 border-t border-black/5 pt-2">
                   {liveMatch.matchReasons.map((reason, idx) => (
                     <li key={`${reason.field}-${idx}`} className="text-xs text-foreground">
                       <span className="font-medium">{matchFieldLabel(reason.field)}</span>
@@ -608,16 +624,22 @@ export function LeadCreateDialog({
                 </ul>
               ) : null}
               <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  className="h-8"
-                  disabled={pending}
-                  onClick={linkLiveOwner}
-                >
-                  {pending && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
-                  {linkedOwnerId === liveMatch.id ? "Create under this owner" : "Use this owner"}
-                </Button>
+                {!ownerLocked ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="h-8 bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                    disabled={pending}
+                    onClick={linkLiveOwner}
+                  >
+                    Use this owner
+                  </Button>
+                ) : (
+                  <p className="inline-flex items-center gap-1.5 text-xs font-medium text-secondary">
+                    <Lock className="h-3.5 w-3.5" />
+                    Contact fields filled from owner — finish source &amp; interest, then create.
+                  </p>
+                )}
                 <Button type="button" size="sm" variant="outline" className="h-8" onClick={dismissLiveMatch}>
                   Not this owner
                 </Button>
@@ -628,17 +650,34 @@ export function LeadCreateDialog({
           {groups.map((group) => (
             <section key={group.name}>
               <p className="mb-3 flex justify-center">
-                <span className="rounded-full bg-accent px-3 py-0.5 text-center text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-secondary">
+                <span
+                  className={cn(
+                    "rounded-full px-3 py-0.5 text-center text-[0.62rem] font-semibold uppercase tracking-[0.16em]",
+                    GROUP_PILL[group.name] ?? "bg-accent text-secondary"
+                  )}
+                >
                   {group.name}
                 </span>
               </p>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{group.fields.map(renderField)}</div>
+              <div
+                className={cn(
+                  "grid grid-cols-1 gap-3 rounded-[12px] sm:grid-cols-2",
+                  group.name === "Contact" && ownerLocked && "border border-secondary/20 bg-accent/40 p-3"
+                )}
+              >
+                {group.fields.map(renderField)}
+              </div>
             </section>
           ))}
 
           <section>
             <p className="mb-3 flex justify-center">
-              <span className="rounded-full bg-accent px-3 py-0.5 text-center text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-secondary">
+              <span
+                className={cn(
+                  "rounded-full px-3 py-0.5 text-center text-[0.62rem] font-semibold uppercase tracking-[0.16em]",
+                  GROUP_PILL.Assignment
+                )}
+              >
                 Assignment
               </span>
             </p>
@@ -662,13 +701,17 @@ export function LeadCreateDialog({
             </Field>
           </section>
 
-          <div className="flex justify-end gap-3 border-t border-border pt-4">
+          <div className="flex justify-end gap-3 border-t border-border bg-gradient-to-r from-transparent via-accent/30 to-sky-50/80 pt-4">
             <Button type="button" variant="outline" className="h-10 px-5" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" className="h-10 px-5" disabled={pending || !form.name.trim() || !form.phone.trim()}>
+            <Button
+              type="submit"
+              className="h-10 px-5"
+              disabled={pending || !form.name.trim() || !form.phone.trim()}
+            >
               {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create lead
+              {ownerLocked ? "Create under owner" : "Create lead"}
             </Button>
           </div>
         </form>
@@ -683,9 +726,9 @@ export function LeadCreateDialog({
           {existingCustomer ? (
             <div className="space-y-3 text-sm">
               <p className="text-muted-foreground">
-                A customer already matches contact details on this lead. Create a new lead under the same owner?
+                A customer already matches contact details on this lead. Apply this owner to the form?
               </p>
-              <div className="rounded-[10px] border border-border bg-muted/30 p-3">
+              <div className="rounded-[10px] border border-amber-200 bg-amber-50 p-3">
                 <p className="font-semibold text-foreground">{existingCustomer.name}</p>
                 <p className="mt-1 text-xs capitalize text-muted-foreground">{existingCustomer.status}</p>
                 {existingCustomer.phone ? <p className="mt-1 text-xs">{existingCustomer.phone}</p> : null}
@@ -722,9 +765,13 @@ export function LeadCreateDialog({
             <Button type="button" variant="outline" onClick={() => setExistingCustomer(null)}>
               Cancel
             </Button>
-            <Button type="button" disabled={pending} onClick={confirmLinkExisting}>
-              {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create lead under this owner
+            <Button
+              type="button"
+              className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
+              disabled={pending}
+              onClick={confirmLinkExisting}
+            >
+              Use this owner
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -779,14 +826,23 @@ function NationalitySelect({
   value,
   options,
   onChange,
+  locked = false,
 }: {
   value: string;
   options: string[];
   onChange: (next: string) => void;
+  locked?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   if (options.length === 0) {
     return <p className="rounded-md border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">Add nationalities in Lead Settings → Fields.</p>;
+  }
+  if (locked) {
+    return (
+      <div className={cn(lockedInputClass(true), "flex items-center px-3 text-sm")}>
+        {value || "—"}
+      </div>
+    );
   }
   return (
     <Popover open={open} onOpenChange={setOpen}>
