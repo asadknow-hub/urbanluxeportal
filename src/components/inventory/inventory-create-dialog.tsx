@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, cloneElement, isValidElement, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -38,16 +38,24 @@ export function InventoryCreateDialog({
   defaultAgentId,
   owners = [],
   triggerLabel = "Add property",
+  trigger,
+  navigateOnCreate = true,
+  onCreated,
+  defaultListingType,
 }: {
   agents: { id: string; full_name: string }[];
   defaultAgentId?: string;
   owners?: { id: string; name: string }[];
   triggerLabel?: string;
+  trigger?: ReactNode;
+  navigateOnCreate?: boolean;
+  onCreated?: (data: { id: string; property_code: string }) => void | Promise<void>;
+  defaultListingType?: ListingKind;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
-  const [listingType, setListingType] = useState<ListingKind>("sale");
+  const [listingType, setListingType] = useState<ListingKind>(defaultListingType ?? "sale");
   const [form, setForm] = useState({
     community: "",
     building_name: "",
@@ -116,7 +124,10 @@ export function InventoryCreateDialog({
       if (result.ok) {
         toast.success(`Saved ${result.data?.property_code}`);
         setOpen(false);
-        router.push(`/inventory/${result.data?.id}`);
+        if (result.data && onCreated) await onCreated(result.data);
+        if (navigateOnCreate && result.data?.id) {
+          router.push(`/inventory/${result.data.id}`);
+        }
         router.refresh();
       } else {
         toast.error(result.error ?? "Could not save property");
@@ -127,12 +138,16 @@ export function InventoryCreateDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
-        render={(props) => (
-          <Button {...props}>
-            <Plus className="mr-1.5 h-4 w-4" />
-            {triggerLabel}
-          </Button>
-        )}
+        render={(props) =>
+          trigger && isValidElement(trigger) ? (
+            cloneElement(trigger, props as never)
+          ) : (
+            <Button {...props}>
+              <Plus className="mr-1.5 h-4 w-4" />
+              {triggerLabel}
+            </Button>
+          )
+        }
       />
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>

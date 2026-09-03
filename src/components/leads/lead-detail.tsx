@@ -14,6 +14,10 @@ import { BlurSaveInput } from "@/components/leads/hover-edit-row";
 import { DocumentUploadDialog } from "@/components/documents/document-upload-dialog";
 import { ConvertLeadDialog } from "@/components/leads/convert-lead-dialog";
 import { ViewingPanel, type ViewingRow, type InventoryChoice } from "@/components/crm/viewing-panel";
+import {
+  LeadProposedPropertySection,
+  type LeadProposedProperty,
+} from "@/components/leads/lead-proposed-property";
 import { MatchPanel } from "@/components/crm/match-panel";
 import { LeadDocumentsPage, LeadKycPage, useMergedLeadDocuments } from "@/components/leads/lead-documents-kyc-tabs";
 import { LeadPageTabs, type LeadPageView } from "@/components/leads/lead-page-tabs";
@@ -376,6 +380,7 @@ export function LeadDetail({
   documents,
   viewings,
   inventory,
+  proposedProperties = [],
   matches = [],
   duplicateMatches,
   assignments = [],
@@ -415,6 +420,7 @@ export function LeadDetail({
   documents: DocumentRow[];
   viewings: ViewingRow[];
   inventory: InventoryChoice[];
+  proposedProperties?: LeadProposedProperty[];
   matches?: InventoryMatch[];
   duplicateMatches: unknown[];
   assignments?: LeadAssignmentRow[];
@@ -1254,6 +1260,24 @@ export function LeadDetail({
                 </SnapshotBlock>
               </div>
             </div>
+
+            <LeadProposedPropertySection
+              leadId={optimisticLead.id}
+              dealId={deal?.id ?? optimisticLead.converted_deal_id}
+              linked={proposedProperties}
+              inventory={inventory}
+              agents={agents}
+              defaultAgentId={optimisticLead.assigned_to ?? userId}
+              canEdit={canEdit}
+              canCreateProperty={canManage}
+              defaultListingType={
+                optimisticLead.interest === "rent"
+                  ? "rent"
+                  : optimisticLead.interest === "off_plan"
+                    ? "off_plan"
+                    : "sale"
+              }
+            />
           </section>
 
           <section className="rounded-[14px] border border-border bg-card px-[26px] py-6">

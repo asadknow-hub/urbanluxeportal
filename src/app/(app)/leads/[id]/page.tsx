@@ -93,6 +93,7 @@ export default async function LeadDetailPage({
     dealResult,
     { data: viewingRows },
     { data: inventoryRows },
+    { data: proposedPropertyRows },
     { data: assignmentRows },
     timelineResult,
     siblingLeads,
@@ -158,6 +159,14 @@ export default async function LeadDetailPage({
       .order("created_at", { ascending: false })
       .limit(200),
     supabase
+      .from("lead_properties")
+      .select(
+        `id, property_id, role,
+        property:properties(id, property_code, community, building_name, unit_number, property_type, bedrooms)`
+      )
+      .eq("lead_id", id)
+      .order("created_at", { ascending: false }),
+    supabase
       .from("lead_assignments")
       .select(
         `id, from_user, to_user, reason, created_at,
@@ -217,6 +226,13 @@ export default async function LeadDetailPage({
     inventoryRows ?? []
   );
 
+  const proposedProperties = (proposedPropertyRows ?? []).map((row) => ({
+    id: row.id,
+    property_id: row.property_id,
+    role: row.role,
+    property: Array.isArray(row.property) ? row.property[0] ?? null : row.property,
+  }));
+
   return (
     <LeadDetail
       lead={lead}
@@ -248,6 +264,7 @@ export default async function LeadDetailPage({
       documents={documents ?? []}
       viewings={viewingRows ?? []}
       inventory={inventoryRows ?? []}
+      proposedProperties={proposedProperties}
       matches={matches}
       duplicateMatches={duplicateMatches.data ?? []}
       assignments={(assignmentRows ?? []).map((row) => ({

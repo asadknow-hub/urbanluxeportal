@@ -933,6 +933,27 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["deal_properties"]["Insert"]>;
       };
+      lead_properties: {
+        Row: {
+          id: string;
+          lead_id: string;
+          property_id: string;
+          listing_id: string | null;
+          role: string;
+          notes: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          lead_id: string;
+          property_id: string;
+          listing_id?: string | null;
+          role?: string;
+          notes?: string | null;
+          created_by?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["lead_properties"]["Insert"]>;
+      };
     };
     Functions: {
       next_doc_number: {

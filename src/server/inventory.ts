@@ -553,6 +553,99 @@ export async function removeDealProperty(dealId: string, propertyId: string): Pr
   }
 }
 
+async function assertCanMutateLead(leadId: string, user: SessionUser): Promise<string | null> {
+  if (user.role === "accountant") return "Not authorized";
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase.from("leads").select("id").eq("id", leadId).is("deleted_at", null).maybeSingle();
+  if (!data) return "Lead not found";
+  return null;
+}
+
+export async function addLeadProperty(input: {
+  leadId: string;
+  propertyId: string;
+  listingId?: string | null;
+  role?: string;
+  notes?: string | null;
+  dealId?: string | null;
+}): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    const denied = await assertCanMutateLead(input.leadId, user);
+    if (denied) return { ok: false, error: denied };
+
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase.from("lead_properties").upsert(
+      {
+        lead_id: input.leadId,
+        property_id: input.propertyId,
+        listing_id: input.listingId || null,
+        role: input.role || "proposed",
+        notes: input.notes || null,
+        created_by: user.id,
+      },
+      { onConflict: "lead_id,property_id" }
+    );
+    if (error) return { ok: false, error: error.message };
+
+    const { data: property } = await supabase
+      .from("properties")
+      .select("property_code, community, building_name, unit_number")
+      .eq("id", input.propertyId)
+      .maybeSingle();
+
+    await supabase.from("lead_activities").insert({
+      lead_id: input.leadId,
+      type: "note",
+      summary: `Proposed property ${property?.property_code ?? ""}${
+        property?.community ? ` · ${property.community}` : ""
+      }${property?.unit_number ? ` ${property.unit_number}` : ""}`.trim(),
+      created_by: user.id,
+    });
+
+    if (input.dealId) {
+      await supabase.from("deal_properties").upsert(
+        {
+          deal_id: input.dealId,
+          property_id: input.propertyId,
+          listing_id: input.listingId || null,
+          role: "suggested",
+          created_by: user.id,
+        },
+        { onConflict: "deal_id,property_id" }
+      );
+      revalidatePath(`/pipeline/${input.dealId}`);
+    }
+
+    revalidatePath(`/leads/${input.leadId}`);
+    revalidatePath("/leads");
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function removeLeadProperty(leadId: string, propertyId: string): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    const denied = await assertCanMutateLead(leadId, user);
+    if (denied) return { ok: false, error: denied };
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase
+      .from("lead_properties")
+      .delete()
+      .eq("lead_id", leadId)
+      .eq("property_id", propertyId);
+    if (error) return { ok: false, error: error.message };
+    revalidatePath(`/leads/${leadId}`);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
 export async function searchInventory(query: string): Promise<
   ActionResult<
     {
