@@ -18,7 +18,7 @@ export default async function InventoryDetailPage({
   const supabase = await createSupabaseServerClient();
   const { id } = await params;
 
-  const [{ data: property, error }, { data: fieldOptionRows }, { data: owners }] = await Promise.all([
+  const [{ data: property, error }, { data: fieldOptionRows }, { data: owners }, { data: agents }] = await Promise.all([
     supabase
       .from("properties")
       .select(
@@ -33,6 +33,12 @@ export default async function InventoryDetailPage({
       .single(),
     supabase.from("lead_field_options").select("id, field_key, value, label, sort, extra").eq("field_key", "doc_category").order("sort"),
     supabase.from("customers").select("id, name").is("deleted_at", null).order("name").limit(200),
+    supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("role", ["admin", "manager", "reception", "agent"])
+      .eq("is_active", true)
+      .order("full_name"),
   ]);
 
   if (error || !property) notFound();
@@ -100,6 +106,7 @@ export default async function InventoryDetailPage({
       developer={developer}
       project={project}
       agent={agent}
+      agents={agents ?? []}
       owner={owner}
       owners={owners ?? []}
       documents={documents}

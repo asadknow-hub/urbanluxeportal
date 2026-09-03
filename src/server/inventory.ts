@@ -279,6 +279,151 @@ export async function updateProperty(
   }
 }
 
+const propertyDetailsPatchSchema = z.object({
+  community: z.string().trim().optional().nullable(),
+  building_name: z.string().trim().optional().nullable(),
+  unit_number: z.string().trim().optional().nullable(),
+  property_type: z.string().min(1).optional(),
+  bedrooms: z.number().int().min(0).optional().nullable(),
+  bathrooms: z.number().int().min(0).optional().nullable(),
+  floor: z.string().trim().optional().nullable(),
+  bua_sqft: z.number().optional().nullable(),
+  title_deed_number: z.string().trim().optional().nullable(),
+  oqood_number: z.string().trim().optional().nullable(),
+  notes: z.string().optional().nullable(),
+  assigned_to: z.string().min(1).optional().nullable(),
+  developer_name: z.string().trim().optional().nullable(),
+  project_name: z.string().trim().optional().nullable(),
+  listing: z
+    .object({
+      asking_price_aed: z.number().optional().nullable(),
+      trakheesi_permit_no: z.string().trim().optional().nullable(),
+      furnishing: z.enum(["furnished", "semi", "unfurnished"]).optional().nullable(),
+      available_from: z.string().trim().optional().nullable(),
+      rent_frequency: z.enum(["yearly", "monthly", "weekly"]).optional().nullable(),
+      security_deposit_aed: z.number().optional().nullable(),
+      cheques: z.number().int().min(0).optional().nullable(),
+      service_charge_aed: z.number().optional().nullable(),
+      payment_plan: z.string().trim().optional().nullable(),
+      handover_date: z.string().trim().optional().nullable(),
+      mortgage_available: z.boolean().optional().nullable(),
+    })
+    .optional(),
+});
+
+/** Partial update for click-to-edit on the property detail page. */
+export async function patchPropertyDetails(
+  id: string,
+  input: z.infer<typeof propertyDetailsPatchSchema>
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    const denied = assertCanWriteCatalog(user);
+    if (denied) return { ok: false, error: denied };
+
+    const parsed = propertyDetailsPatchSchema.safeParse(input);
+    if (!parsed.success) {
+      return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    }
+
+    const data = parsed.data;
+    const supabase = await createSupabaseServerClient();
+    const propertyUpdate: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if ("community" in data) propertyUpdate.community = data.community || null;
+    if ("building_name" in data) propertyUpdate.building_name = data.building_name || null;
+    if ("unit_number" in data) propertyUpdate.unit_number = data.unit_number || null;
+    if ("property_type" in data && data.property_type) propertyUpdate.property_type = data.property_type;
+    if ("bedrooms" in data) propertyUpdate.bedrooms = data.bedrooms ?? null;
+    if ("bathrooms" in data) propertyUpdate.bathrooms = data.bathrooms ?? null;
+    if ("floor" in data) propertyUpdate.floor = data.floor || null;
+    if ("bua_sqft" in data) propertyUpdate.bua_sqft = data.bua_sqft ?? null;
+    if ("title_deed_number" in data) propertyUpdate.title_deed_number = data.title_deed_number || null;
+    if ("oqood_number" in data) propertyUpdate.oqood_number = data.oqood_number || null;
+    if ("notes" in data) propertyUpdate.notes = data.notes || null;
+    if ("assigned_to" in data) propertyUpdate.assigned_to = data.assigned_to || null;
+
+    if ("developer_name" in data || "project_name" in data) {
+      const developerId =
+        "developer_name" in data
+          ? await resolveDeveloper(supabase, data.developer_name, user.id)
+          : undefined;
+      if (developerId !== undefined) propertyUpdate.developer_id = developerId;
+      if ("project_name" in data) {
+        const { data: current } = await supabase
+          .from("properties")
+          .select("developer_id")
+          .eq("id", id)
+          .maybeSingle();
+        const projectDeveloperId =
+          developerId !== undefined ? developerId : current?.developer_id ?? null;
+        propertyUpdate.project_id = await resolveProject(
+          supabase,
+          data.project_name,
+          projectDeveloperId,
+          null,
+          user.id
+        );
+      }
+    }
+
+    if (Object.keys(propertyUpdate).length > 1) {
+      const { error } = await supabase.from("properties").update(propertyUpdate).eq("id", id);
+      if (error) return { ok: false, error: error.message };
+    }
+
+    if (data.listing) {
+      const listing = data.listing;
+      const listingUpdate: Record<string, unknown> = {};
+      if ("asking_price_aed" in listing) {
+        listingUpdate.asking_price =
+          listing.asking_price_aed != null ? aedToFils(listing.asking_price_aed) : 0;
+      }
+      if ("trakheesi_permit_no" in listing) {
+        listingUpdate.trakheesi_permit_no = listing.trakheesi_permit_no || null;
+      }
+      if ("furnishing" in listing) listingUpdate.furnishing = listing.furnishing || null;
+      if ("available_from" in listing) listingUpdate.available_from = listing.available_from || null;
+      if ("rent_frequency" in listing) listingUpdate.rent_frequency = listing.rent_frequency || null;
+      if ("security_deposit_aed" in listing) {
+        listingUpdate.security_deposit =
+          listing.security_deposit_aed != null ? aedToFils(listing.security_deposit_aed) : null;
+      }
+      if ("cheques" in listing) listingUpdate.cheques = listing.cheques ?? null;
+      if ("service_charge_aed" in listing) {
+        listingUpdate.service_charge =
+          listing.service_charge_aed != null ? aedToFils(listing.service_charge_aed) : null;
+      }
+      if ("payment_plan" in listing) listingUpdate.payment_plan = listing.payment_plan || null;
+      if ("handover_date" in listing) listingUpdate.handover_date = listing.handover_date || null;
+      if ("mortgage_available" in listing) {
+        listingUpdate.mortgage_available = listing.mortgage_available ?? null;
+      }
+
+      if (Object.keys(listingUpdate).length > 0) {
+        const { data: existing } = await supabase
+          .from("listings")
+          .select("id")
+          .eq("property_id", id)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (!existing) return { ok: false, error: "No listing on this property yet" };
+        const { error } = await supabase.from("listings").update(listingUpdate).eq("id", existing.id);
+        if (error) return { ok: false, error: error.message };
+      }
+    }
+
+    revalidateInventory(id);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
 export async function addDealProperty(input: {
   dealId: string;
   propertyId: string;
