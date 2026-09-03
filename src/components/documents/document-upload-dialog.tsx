@@ -21,7 +21,7 @@ import {
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { createDocument } from "@/server/documents";
 import { canonicalDocumentPath, formatDocCategory, normalizeDocCategory, DOC_CATEGORIES } from "@/lib/document-storage";
-import { defaultDocCapture, type DocCategoryChoice } from "@/lib/lead-field-options";
+import { defaultDocCapture, defaultDocScope, type DocCategoryChoice } from "@/lib/lead-field-options";
 import { toast } from "sonner";
 import { Loader2, Upload, FileCheck2, X } from "lucide-react";
 
@@ -34,6 +34,8 @@ export function DocumentUploadDialog({
   onSaved,
   categories = [],
   fixedCategory,
+  propertyId,
+  propertyChoices = [],
 }: {
   triggerLabel?: string;
   entityType?: string;
@@ -44,6 +46,8 @@ export function DocumentUploadDialog({
   categories?: DocCategoryChoice[];
   /** When set, category is fixed — no dropdown; expiry/note shown alone. */
   fixedCategory?: DocCategoryChoice;
+  propertyId?: string | null;
+  propertyChoices?: { id: string; label: string }[];
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -57,6 +61,7 @@ export function DocumentUploadDialog({
   } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [linkedPropertyId, setLinkedPropertyId] = useState(propertyId ?? "");
   const [form, setForm] = useState({
     name: "",
     category: "",
@@ -73,6 +78,7 @@ export function DocumentUploadDialog({
           value,
           label: formatDocCategory(value),
           capture: defaultDocCapture(value),
+          scope: defaultDocScope(value),
         }));
 
   const capture = form.category
@@ -151,6 +157,7 @@ export function DocumentUploadDialog({
         category,
         entity_type: linkedType,
         entity_id: entityId ?? null,
+        property_id: linkedPropertyId || propertyId || null,
         expiry_date: capture === "expiry" ? form.expiry_date || null : null,
         notes: capture === "note" ? form.notes.trim() || null : null,
       });
@@ -254,6 +261,30 @@ export function DocumentUploadDialog({
             <div className="rounded-[10px] border border-border bg-muted/40 px-4 py-3">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Category</p>
               <p className="mt-0.5 text-sm font-semibold text-foreground">{fixedCategory.label}</p>
+              {fixedCategory.scope === "property" ? (
+                <p className="mt-1 text-xs text-secondary">Property document — also appears on the property file.</p>
+              ) : (
+                <p className="mt-1 text-xs text-muted-foreground">Individual document — stays on the person / KYC file.</p>
+              )}
+            </div>
+          ) : null}
+
+          {(fixedCategory?.scope === "property" || categoryItems.find((c) => c.value === form.category)?.scope === "property") && propertyChoices.length > 0 ? (
+            <div className="space-y-2">
+              <Label className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Property</Label>
+              <Select value={linkedPropertyId || "none"} onValueChange={(v) => setLinkedPropertyId(v === "none" ? "" : v ?? "")}>
+                <SelectTrigger className="h-11 rounded-[10px]">
+                  <span className="truncate">
+                    {propertyChoices.find((p) => p.id === linkedPropertyId)?.label ?? "Select property"}
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Not linked yet</SelectItem>
+                  {propertyChoices.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           ) : null}
 

@@ -655,6 +655,7 @@ export interface Database {
           category: string;
           entity_type: string | null;
           entity_id: string | null;
+          property_id: string | null;
           expiry_date: string | null;
           notes: string | null;
           ai_extracted: Record<string, unknown> | null;
@@ -671,6 +672,7 @@ export interface Database {
           category?: string;
           entity_type?: string | null;
           entity_id?: string | null;
+          property_id?: string | null;
           expiry_date?: string | null;
           notes?: string | null;
           ai_extracted?: Record<string, unknown> | null;
@@ -806,6 +808,7 @@ export interface Database {
           oqood_number: string | null;
           dld_property_number: string | null;
           assigned_to: string | null;
+          owner_id: string | null;
           notes: string | null;
           created_by: string | null;
           created_at: string;
@@ -833,6 +836,7 @@ export interface Database {
           oqood_number?: string | null;
           dld_property_number?: string | null;
           assigned_to?: string | null;
+          owner_id?: string | null;
           notes?: string | null;
           created_by?: string | null;
         };
@@ -849,6 +853,13 @@ export interface Database {
           trakheesi_permit_no: string | null;
           available_from: string | null;
           furnishing: string | null;
+          rent_frequency: string | null;
+          security_deposit: number | null;
+          cheques: number | null;
+          service_charge: number | null;
+          payment_plan: string | null;
+          handover_date: string | null;
+          mortgage_available: boolean | null;
           notes: string | null;
           created_by: string | null;
           created_at: string;
@@ -864,6 +875,13 @@ export interface Database {
           trakheesi_permit_no?: string | null;
           available_from?: string | null;
           furnishing?: string | null;
+          rent_frequency?: string | null;
+          security_deposit?: number | null;
+          cheques?: number | null;
+          service_charge?: number | null;
+          payment_plan?: string | null;
+          handover_date?: string | null;
+          mortgage_available?: boolean | null;
           notes?: string | null;
           created_by?: string | null;
         };

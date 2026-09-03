@@ -21,6 +21,7 @@ function revalidateDocumentPaths(entityType?: string | null, entityId?: string |
   if (entityType === "deal") revalidatePath(`/pipeline/${entityId}`);
   if (entityType === "staff") revalidatePath(`/team/${entityId}`);
   if (entityType === "customer") revalidatePath(`/customers/${entityId}`);
+  if (entityType === "property") revalidatePath(`/inventory/${entityId}`);
 }
 
 async function assertCanWriteDocument(input: {
@@ -60,6 +61,11 @@ async function assertCanWriteDocument(input: {
     if (id === input.user.id || canManageCrm(input.user.role)) return null;
     return "You cannot attach files to this staff record";
   }
+  if (kind === "property") {
+    if (!canManageCrm(input.user.role)) return "Not authorized";
+    const { data } = await supabase.from("properties").select("id").eq("id", id).is("deleted_at", null).maybeSingle();
+    return data ? null : "You cannot attach files to this property";
+  }
   if (canManageCrm(input.user.role)) return null;
   return "You cannot attach files to this record";
 }
@@ -83,6 +89,7 @@ const documentSchema = z.object({
   category: z.string().min(1, "Category required"),
   entity_type: z.string().optional().nullable(),
   entity_id: z.string().min(1).optional().nullable(),
+  property_id: z.string().min(1).optional().nullable(),
   expiry_date: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
 });
@@ -119,6 +126,10 @@ export async function createDocument(
         category: normalizeDocCategory(parsed.data.category),
         entity_type: parsed.data.entity_type || null,
         entity_id: parsed.data.entity_id || null,
+        property_id:
+          parsed.data.property_id ||
+          (parsed.data.entity_type === "property" ? parsed.data.entity_id : null) ||
+          null,
         expiry_date: parsed.data.expiry_date || null,
         notes: parsed.data.notes?.trim() || null,
         uploaded_by: user.id,
@@ -145,6 +156,7 @@ export async function createDocument(
     }
 
     revalidateDocumentPaths(parsed.data.entity_type, parsed.data.entity_id);
+    if (parsed.data.property_id) revalidatePath(`/inventory/${parsed.data.property_id}`);
     return { ok: true, data: data };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };

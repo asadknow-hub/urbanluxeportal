@@ -1615,6 +1615,11 @@ export function LeadDetail({
           onDocumentUpdated={(doc) => {
             setOptimisticDocs((prev) => prev.map((d) => (d.id === doc.id ? doc : d)));
           }}
+          propertyChoices={inventory.map((unit) => ({
+            id: unit.id,
+            label: [unit.property_code, unit.community, unit.building_name, unit.unit_number].filter(Boolean).join(" · "),
+          }))}
+          defaultPropertyId={viewings.find((row) => row.property_id)?.property_id ?? null}
         />
       ) : null}
 

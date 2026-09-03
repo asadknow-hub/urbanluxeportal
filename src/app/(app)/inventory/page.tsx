@@ -40,7 +40,7 @@ export default async function InventoryPage({
     );
   }
 
-  const [{ data: properties, count, error }, { data: agents }] = await Promise.all([
+  const [{ data: properties, count, error }, { data: agents }, { data: owners }] = await Promise.all([
     query.limit(80),
     supabase
       .from("profiles")
@@ -48,6 +48,7 @@ export default async function InventoryPage({
       .in("role", ["admin", "manager", "reception", "agent"])
       .eq("is_active", true)
       .order("full_name"),
+    supabase.from("customers").select("id, name").is("deleted_at", null).order("name").limit(200),
   ]);
 
   if (error) console.error("[inventory]", error.message);
@@ -59,7 +60,7 @@ export default async function InventoryPage({
         description="Internal stock for matching and viewings. Public brochure listings stay on the website."
         actions={
           canManageCrm(user.role) ? (
-            <InventoryCreateDialog agents={agents ?? []} defaultAgentId={user.id} />
+            <InventoryCreateDialog agents={agents ?? []} owners={owners ?? []} defaultAgentId={user.id} />
           ) : null
         }
       />

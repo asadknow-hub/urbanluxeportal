@@ -21,6 +21,8 @@ export function LeadDocumentsPage({
   onDocumentDeleted,
   onDocumentUpdated,
   sourcesHint,
+  propertyChoices,
+  defaultPropertyId,
 }: {
   uploadEntityType: string;
   uploadEntityId: string;
@@ -32,6 +34,8 @@ export function LeadDocumentsPage({
   onDocumentDeleted?: (docId: string) => void;
   onDocumentUpdated?: (doc: LeadDocument) => void;
   sourcesHint?: string;
+  propertyChoices?: { id: string; label: string }[];
+  defaultPropertyId?: string | null;
 }) {
   return (
     <LeadDocumentsChecklist
@@ -45,6 +49,8 @@ export function LeadDocumentsPage({
       onDocumentDeleted={onDocumentDeleted}
       onDocumentUpdated={onDocumentUpdated}
       sourcesHint={sourcesHint}
+      propertyChoices={propertyChoices}
+      defaultPropertyId={defaultPropertyId}
     />
   );
 }

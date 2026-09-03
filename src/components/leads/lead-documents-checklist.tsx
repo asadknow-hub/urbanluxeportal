@@ -125,6 +125,8 @@ export function LeadDocumentsChecklist({
   onDocumentUpdated,
   embedded = false,
   sourcesHint,
+  propertyChoices = [],
+  defaultPropertyId = null,
 }: {
   uploadEntityType: string;
   uploadEntityId: string;
@@ -137,6 +139,8 @@ export function LeadDocumentsChecklist({
   onDocumentUpdated?: (doc: LeadDocument) => void;
   embedded?: boolean;
   sourcesHint?: string;
+  propertyChoices?: { id: string; label: string }[];
+  defaultPropertyId?: string | null;
 }) {
   const [pending, startTransition] = useTransition();
   const [preview, setPreview] = useState<LeadDocument | null>(null);
@@ -276,6 +280,8 @@ export function LeadDocumentsChecklist({
             entityType={uploadEntityType}
             entityId={uploadEntityId}
             categories={categories}
+            propertyId={defaultPropertyId}
+            propertyChoices={propertyChoices}
             onSaved={(doc) => onDocumentSaved?.(doc as LeadDocument | undefined)}
             trigger={
               <Button size="sm" variant="outline" className="gap-1.5">
@@ -298,7 +304,15 @@ export function LeadDocumentsChecklist({
 
       <div className="overflow-x-auto">
       <div className="min-w-[980px] divide-y divide-border/60">
-        {groups.map(({ cat, docs }) => {
+        {(["individual", "property"] as const).map((scope) => {
+          const scoped = groups.filter((g) => (g.cat.scope ?? "individual") === scope);
+          if (scoped.length === 0) return null;
+          return (
+            <div key={scope}>
+              <div className="bg-muted/50 px-4 py-2 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                {scope === "property" ? "Property documents" : "Individual documents"}
+              </div>
+              {scoped.map(({ cat, docs }) => {
           const headerStatus = docStatus(docs[0], cat);
 
           if (docs.length === 0) {
@@ -315,6 +329,8 @@ export function LeadDocumentsChecklist({
                       entityType={uploadEntityType}
                       entityId={uploadEntityId}
                       fixedCategory={cat}
+                      propertyId={cat.scope === "property" ? defaultPropertyId : null}
+                      propertyChoices={cat.scope === "property" ? propertyChoices : []}
                       onSaved={(d) => onDocumentSaved?.(d as LeadDocument | undefined)}
                       trigger={
                         <Button type="button" size="sm" variant="outline" className="h-7 gap-1 px-2 text-xs">
@@ -350,6 +366,8 @@ export function LeadDocumentsChecklist({
                         entityType={uploadEntityType}
                         entityId={uploadEntityId}
                         fixedCategory={cat}
+                        propertyId={cat.scope === "property" ? defaultPropertyId : null}
+                        propertyChoices={cat.scope === "property" ? propertyChoices : []}
                         onSaved={(d) => onDocumentSaved?.(d as LeadDocument | undefined)}
                         trigger={
                           <Button
@@ -383,6 +401,9 @@ export function LeadDocumentsChecklist({
                   ))}
                 </div>
               </div>
+            </div>
+          );
+              })}
             </div>
           );
         })}

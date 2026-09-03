@@ -21,7 +21,7 @@ import { createDocument as createDoc, deleteDocument as deleteDoc, getSignedUrl 
 import { formatDate } from "@/lib/dates";
 import { dealStageLabel } from "@/lib/deal-stages";
 import { canonicalDocumentPath, formatDocCategory, normalizeDocCategory } from "@/lib/document-storage";
-import { defaultDocCapture, type DocCategoryChoice } from "@/lib/lead-field-options";
+import { defaultDocCapture, defaultDocScope, type DocCategoryChoice } from "@/lib/lead-field-options";
 import { toast } from "sonner";
 import {
   Loader2,
@@ -641,6 +641,7 @@ function DocumentsTab({
           value,
           label: formatDocCategory(value),
           capture: defaultDocCapture(value),
+          scope: defaultDocScope(value),
         }));
 
   const capture = docCategory

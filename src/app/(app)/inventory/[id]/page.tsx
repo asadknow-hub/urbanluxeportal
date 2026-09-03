@@ -1,11 +1,10 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { PageHeader } from "@/components/primitives/page-header";
-import { formatPropertyType, propertyLabel } from "@/lib/inventory";
-import { formatAED } from "@/lib/money";
-import { ArrowLeft } from "lucide-react";
+import { canManageCrm } from "@/lib/permissions";
+import { PropertyDetailView } from "@/components/inventory/property-detail-view";
+import { groupLeadFieldOptions, leadDocChecklistCategories, type LeadFieldOption } from "@/lib/lead-field-options";
+import type { LeadDocument } from "@/components/leads/lead-documents";
 
 export const dynamic = "force-dynamic";
 
@@ -19,100 +18,93 @@ export default async function InventoryDetailPage({
   const supabase = await createSupabaseServerClient();
   const { id } = await params;
 
-  const { data: property, error } = await supabase
-    .from("properties")
-    .select(
-      `*,
-      developer:developers(id, name),
-      project:projects(id, name, community),
-      assigned_to_profile:profiles!properties_assigned_to_fkey(id, full_name),
-      listings(*)`
-    )
-    .eq("id", id)
-    .is("deleted_at", null)
-    .single();
+  const [{ data: property, error }, { data: fieldOptionRows }, { data: owners }] = await Promise.all([
+    supabase
+      .from("properties")
+      .select(
+        `*,
+        developer:developers(id, name),
+        project:projects(id, name, community),
+        assigned_to_profile:profiles!properties_assigned_to_fkey(id, full_name),
+        listings(*)`
+      )
+      .eq("id", id)
+      .is("deleted_at", null)
+      .single(),
+    supabase.from("lead_field_options").select("id, field_key, value, label, sort, extra").eq("field_key", "doc_category").order("sort"),
+    supabase.from("customers").select("id, name").is("deleted_at", null).order("name").limit(200),
+  ]);
 
   if (error || !property) notFound();
 
   const listings = Array.isArray(property.listings) ? property.listings : [];
+  const listing = listings[0] ?? null;
   const developer = Array.isArray(property.developer) ? property.developer[0] : property.developer;
   const project = Array.isArray(property.project) ? property.project[0] : property.project;
   const agent = Array.isArray(property.assigned_to_profile)
     ? property.assigned_to_profile[0]
     : property.assigned_to_profile;
 
+  const { data: ownerRow } = property.owner_id
+    ? await supabase
+        .from("customers")
+        .select("id, name, phone, email, nationality, status")
+        .eq("id", property.owner_id)
+        .maybeSingle()
+    : { data: null };
+
+  const owner = ownerRow;
+
+  const { data: directDocs } = await supabase
+    .from("documents")
+    .select("id, name, storage_path, mime_type, category, expiry_date, notes, created_at, property_id, entity_type")
+    .is("deleted_at", null)
+    .or(`and(entity_type.eq.property,entity_id.eq.${id}),property_id.eq.${id}`)
+    .order("created_at", { ascending: false });
+
+  const documents: LeadDocument[] = (directDocs ?? []).map((doc) => ({
+    id: doc.id,
+    name: doc.name,
+    storage_path: doc.storage_path,
+    mime_type: doc.mime_type,
+    category: doc.category || "other",
+    expiry_date: doc.expiry_date,
+    notes: doc.notes,
+    created_at: doc.created_at,
+    property_id: doc.property_id,
+  }));
+
+  const grouped = groupLeadFieldOptions((fieldOptionRows ?? []) as LeadFieldOption[]);
+  const categories = leadDocChecklistCategories(grouped.doc_category);
+
   return (
-    <div className="mx-auto flex max-w-[860px] flex-col gap-4">
-      <Link href="/inventory" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-        <ArrowLeft className="h-4 w-4" />
-        Inventory
-      </Link>
-      <PageHeader
-        title={property.property_code}
-        description={propertyLabel(property)}
-      />
-      <div className="overflow-hidden rounded-[14px] border border-border bg-card p-5">
-        <div className="-mx-5 -mt-5 mb-4 h-0.5 bg-primary" />
-        <dl className="grid gap-3 sm:grid-cols-2 text-sm">
-          <div>
-            <dt className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Type</dt>
-            <dd>{formatPropertyType(property.property_type)}</dd>
-          </div>
-          <div>
-            <dt className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</dt>
-            <dd className="capitalize">{property.status.replace(/_/g, " ")}</dd>
-          </div>
-          <div>
-            <dt className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Beds / baths</dt>
-            <dd>
-              {property.bedrooms ?? "—"} / {property.bathrooms ?? "—"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">BUA</dt>
-            <dd>{property.bua_sqft ? `${property.bua_sqft} sqft` : "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Developer</dt>
-            <dd>{developer?.name ?? "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Project</dt>
-            <dd>{project?.name ?? "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Agent</dt>
-            <dd>{agent?.full_name ?? "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Title / Oqood</dt>
-            <dd>
-              {property.title_deed_number || property.oqood_number || "—"}
-            </dd>
-          </div>
-        </dl>
-        {property.notes ? <p className="mt-4 text-sm text-muted-foreground">{property.notes}</p> : null}
-      </div>
-      <div className="overflow-hidden rounded-[14px] border border-border bg-card p-5">
-        <h2 className="mb-3 text-sm font-semibold">Listings</h2>
-        {listings.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No listing on this unit yet.</p>
-        ) : (
-          <div className="space-y-2">
-            {listings.map((listing: { id: string; listing_type: string; asking_price: number; listing_status: string; trakheesi_permit_no: string | null }) => (
-              <div key={listing.id} className="flex justify-between rounded-[10px] border border-border px-3 py-2 text-sm">
-                <span className="capitalize">
-                  {listing.listing_type.replace(/_/g, " ")} · {listing.listing_status.replace(/_/g, " ")}
-                </span>
-                <span>
-                  {formatAED(listing.asking_price)}
-                  {listing.trakheesi_permit_no ? ` · ${listing.trakheesi_permit_no}` : ""}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+    <PropertyDetailView
+      property={{
+        id: property.id,
+        property_code: property.property_code,
+        community: property.community,
+        building_name: property.building_name,
+        unit_number: property.unit_number,
+        property_type: property.property_type,
+        bedrooms: property.bedrooms,
+        bathrooms: property.bathrooms,
+        floor: property.floor,
+        bua_sqft: property.bua_sqft,
+        status: property.status,
+        title_deed_number: property.title_deed_number,
+        oqood_number: property.oqood_number,
+        notes: property.notes,
+        owner_id: property.owner_id,
+      }}
+      listing={listing}
+      developer={developer}
+      project={project}
+      agent={agent}
+      owner={owner}
+      owners={owners ?? []}
+      documents={documents}
+      categories={categories}
+      canEdit={canManageCrm(user.role)}
+    />
   );
 }

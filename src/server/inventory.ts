@@ -43,6 +43,15 @@ const propertySchema = z.object({
   asking_price_aed: z.number().optional().nullable(),
   trakheesi_permit_no: z.string().trim().optional().nullable(),
   furnishing: z.enum(["furnished", "semi", "unfurnished"]).optional().nullable(),
+  available_from: z.string().trim().optional().nullable(),
+  rent_frequency: z.enum(["yearly", "monthly", "weekly"]).optional().nullable(),
+  security_deposit_aed: z.number().optional().nullable(),
+  cheques: z.number().int().min(0).optional().nullable(),
+  service_charge_aed: z.number().optional().nullable(),
+  payment_plan: z.string().trim().optional().nullable(),
+  handover_date: z.string().trim().optional().nullable(),
+  mortgage_available: z.boolean().optional().nullable(),
+  owner_id: z.string().min(1).optional().nullable(),
 });
 
 async function resolveDeveloper(
@@ -96,6 +105,7 @@ async function resolveProject(
 
 function revalidateInventory(id?: string) {
   revalidatePath("/inventory");
+  revalidatePath("/company-properties");
   if (id) revalidatePath(`/inventory/${id}`);
   revalidatePath("/pipeline");
   revalidatePath("/leads");
@@ -163,6 +173,7 @@ export async function createProperty(
         oqood_number: data.oqood_number || null,
         dld_property_number: data.dld_property_number || null,
         assigned_to: data.assigned_to || user.id,
+        owner_id: data.owner_id || null,
         notes: data.notes || null,
         developer_id: developerId,
         project_id: projectId,
@@ -182,6 +193,14 @@ export async function createProperty(
         assigned_agent_id: data.assigned_to || user.id,
         trakheesi_permit_no: data.trakheesi_permit_no || null,
         furnishing: data.furnishing || null,
+        available_from: data.available_from || null,
+        rent_frequency: data.listing_type === "rent" ? data.rent_frequency || "yearly" : null,
+        security_deposit: data.security_deposit_aed != null ? aedToFils(data.security_deposit_aed) : null,
+        cheques: data.cheques ?? null,
+        service_charge: data.service_charge_aed != null ? aedToFils(data.service_charge_aed) : null,
+        payment_plan: data.listing_type === "off_plan" ? data.payment_plan || null : null,
+        handover_date: data.listing_type === "off_plan" ? data.handover_date || null : null,
+        mortgage_available: data.listing_type === "sale" ? Boolean(data.mortgage_available) : null,
         created_by: user.id,
       });
     }
@@ -244,6 +263,7 @@ export async function updateProperty(
         oqood_number: data.oqood_number || null,
         dld_property_number: data.dld_property_number || null,
         assigned_to: data.assigned_to || null,
+        owner_id: data.owner_id || null,
         notes: data.notes || null,
         developer_id: developerId,
         project_id: projectId,
@@ -421,6 +441,28 @@ export async function searchInventory(query: string): Promise<
     const { data, error } = await request;
     if (error) return { ok: false, error: error.message };
     return { ok: true, data: data ?? [] };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function assignPropertyOwner(
+  propertyId: string,
+  ownerId: string | null
+): Promise<ActionResult> {
+  try {
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Unauthorized" };
+    const denied = assertCanWriteCatalog(user);
+    if (denied) return { ok: false, error: denied };
+    const supabase = await createSupabaseServerClient();
+    const { error } = await supabase
+      .from("properties")
+      .update({ owner_id: ownerId, updated_at: new Date().toISOString() })
+      .eq("id", propertyId);
+    if (error) return { ok: false, error: error.message };
+    revalidateInventory(propertyId);
+    return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
   }

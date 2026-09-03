@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { deleteDocument, getSignedUrl, updateDocument } from "@/server/documents";
 import { formatDocCategory } from "@/lib/document-storage";
-import { defaultDocCapture, type DocCategoryChoice } from "@/lib/lead-field-options";
+import { defaultDocCapture, defaultDocScope, type DocCategoryChoice } from "@/lib/lead-field-options";
 import { formatDate } from "@/lib/dates";
 import { toast } from "sonner";
 import { ExternalLink, Pencil, Trash2, Loader2 } from "lucide-react";
@@ -33,6 +33,7 @@ export type LeadDocument = {
   created_at: string;
   expiry_date?: string | null;
   notes?: string | null;
+  property_id?: string | null;
 };
 
 function captureFor(categories: DocCategoryChoice[], value: string) {
@@ -155,7 +156,7 @@ export function LeadDocumentsList({
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                {(categories.length ? categories : [{ value: editCategory, label: formatDocCategory(editCategory), capture: defaultDocCapture(editCategory) }]).map((category) => (
+                {(categories.length ? categories : [{ value: editCategory, label: formatDocCategory(editCategory), capture: defaultDocCapture(editCategory), scope: defaultDocScope(editCategory) }]).map((category) => (
                   <SelectItem key={category.value} value={category.value}>
                     {category.label}
                   </SelectItem>

@@ -9,6 +9,7 @@ import {
   isRangeOptionField,
   slugifyOptionValue,
   defaultDocCapture,
+  defaultDocScope,
   type LeadOptionFieldKey,
 } from "@/lib/lead-field-options";
 import type { ActionResult } from "@/server/leads";
@@ -74,7 +75,7 @@ export async function mergeLeadFieldOptions(
           value: row.value,
           label: row.label,
           sort,
-          extra: fieldKey === "doc_category" ? { capture: defaultDocCapture(row.value) } : {},
+          extra: fieldKey === "doc_category" ? { capture: defaultDocCapture(row.value), scope: defaultDocScope(row.value) } : {},
         };
       })
     );
@@ -151,7 +152,7 @@ export async function addLeadFieldOption(
         value,
         label,
         sort,
-        extra: fieldKey === "doc_category" ? { capture: defaultDocCapture(value) } : {},
+        extra: fieldKey === "doc_category" ? { capture: defaultDocCapture(value), scope: defaultDocScope(value) } : {},
       });
       if (error) return { ok: false, error: error.message };
     }
@@ -193,6 +194,9 @@ export async function updateLeadFieldOptionExtra(
     if (patch.capture != null && patch.capture !== "expiry" && patch.capture !== "note") {
       return { ok: false, error: "Capture must be expiry or note" };
     }
+    if (patch.scope != null && patch.scope !== "individual" && patch.scope !== "property") {
+      return { ok: false, error: "Scope must be individual or property" };
+    }
 
     const { data: row, error: readError } = await supabase
       .from("lead_field_options")
@@ -202,6 +206,9 @@ export async function updateLeadFieldOptionExtra(
     if (readError) return { ok: false, error: readError.message };
     if (patch.capture != null && row?.field_key !== "doc_category") {
       return { ok: false, error: "Capture only applies to document categories" };
+    }
+    if (patch.scope != null && row?.field_key !== "doc_category") {
+      return { ok: false, error: "Scope only applies to document categories" };
     }
     if ("default_assignee_id" in patch && row?.field_key !== "source") {
       return { ok: false, error: "Default assignee only applies to lead sources" };

@@ -14,7 +14,9 @@ import {
 } from "@/server/lead-field-options";
 import {
   docCaptureMode,
+  docScopeOf,
   type DocCaptureMode,
+  type DocScope,
   type LeadFieldOption,
 } from "@/lib/lead-field-options";
 import type { ActionResult } from "@/server/leads";
@@ -202,9 +204,10 @@ export function LeadOptionsManager({
               </li>
             )}
             {kind === "list" && fieldKey === "doc_category" && (
-              <li className="grid grid-cols-[minmax(0,1fr)_10.5rem_1.75rem] items-center gap-2 px-1 pb-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+              <li className="grid grid-cols-[minmax(0,1fr)_7.5rem_7.5rem_1.75rem] items-center gap-2 px-1 pb-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
                 <span>Category</span>
                 <span>On upload</span>
+                <span>Goes to</span>
                 <span />
               </li>
             )}
@@ -212,7 +215,9 @@ export function LeadOptionsManager({
               <li
                 key={row.id}
                 className={
-                  fieldKey === "doc_category" || fieldKey === "source"
+                  fieldKey === "doc_category"
+                    ? "grid grid-cols-[minmax(0,1fr)_7.5rem_7.5rem_1.75rem] items-center gap-2 rounded-md px-1 py-1.5"
+                    : fieldKey === "source"
                     ? "grid grid-cols-[minmax(0,1fr)_11rem_1.75rem] items-center gap-2 rounded-md px-1 py-1.5"
                     : "flex items-center justify-between gap-2 rounded-md px-1 py-1.5"
                 }
@@ -248,6 +253,7 @@ export function LeadOptionsManager({
                   </Select>
                 )}
                 {fieldKey === "doc_category" && (
+                  <>
                   <Select
                     value={docCaptureMode(row)}
                     onValueChange={(v) => {
@@ -264,6 +270,23 @@ export function LeadOptionsManager({
                       <SelectItem value="note">Note</SelectItem>
                     </SelectContent>
                   </Select>
+                  <Select
+                    value={docScopeOf(row)}
+                    onValueChange={(v) => {
+                      const scope = (v === "property" ? "property" : "individual") as DocScope;
+                      run(() => updateLeadFieldOptionExtra(row.id, { scope }), "Scope updated");
+                    }}
+                    disabled={pending}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="individual">Individual</SelectItem>
+                      <SelectItem value="property">Property</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  </>
                 )}
                 <button
                   type="button"

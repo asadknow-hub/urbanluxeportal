@@ -72,11 +72,34 @@ export function docCaptureMode(
   return defaultDocCapture(option?.value ?? value ?? "");
 }
 
+export type DocScope = "individual" | "property";
+
 export type DocCategoryChoice = {
   value: string;
   label: string;
   capture: DocCaptureMode;
+  scope: DocScope;
 };
+
+const PROPERTY_DOC_DEFAULTS = new Set([
+  "title_deed",
+  "mou",
+  "tenancy_contract",
+  "noc",
+  "permit",
+  "contract",
+  "cheque_copy",
+]);
+
+export function defaultDocScope(value: string): DocScope {
+  return PROPERTY_DOC_DEFAULTS.has(value) ? "property" : "individual";
+}
+
+export function docScopeOf(option: LeadFieldOption | undefined, value?: string): DocScope {
+  const raw = option?.extra?.scope;
+  if (raw === "property" || raw === "individual") return raw;
+  return defaultDocScope(option?.value ?? value ?? "");
+}
 
 /** Core lead/deal document checklist — excludes invoice, receipt, marketing, etc. */
 export const LEAD_DOC_CHECKLIST_VALUES = [
@@ -116,6 +139,7 @@ export function docCategoryChoices(options: LeadFieldOption[] | undefined): DocC
     value: row.value,
     label: row.label,
     capture: docCaptureMode(row),
+    scope: docScopeOf(row),
   }));
 }
 

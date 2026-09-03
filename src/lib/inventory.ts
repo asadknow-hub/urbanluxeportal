@@ -20,9 +20,15 @@ export const PROPERTY_STATUSES = [
 ] as const;
 
 export const LISTING_TYPES = [
-  { value: "sale", label: "Sale" },
+  { value: "sale", label: "Buy" },
   { value: "rent", label: "Rent" },
   { value: "off_plan", label: "Off-plan" },
+] as const;
+
+export const RENT_FREQUENCIES = [
+  { value: "yearly", label: "Yearly" },
+  { value: "monthly", label: "Monthly" },
+  { value: "weekly", label: "Weekly" },
 ] as const;
 
 export const LISTING_STATUSES = [
