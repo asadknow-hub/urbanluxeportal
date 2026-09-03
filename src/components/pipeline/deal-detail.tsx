@@ -61,6 +61,9 @@ import {
   Tag,
   CheckCircle2,
   XCircle,
+  User,
+  Building2,
+  FolderOpen,
 } from "lucide-react";
 
 const STAGES = DEAL_PIPELINE_STAGES;
@@ -539,76 +542,106 @@ export function DealDetail({
       />
 
       <Dialog open={closedOpen} onOpenChange={setClosedOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl gap-0 p-0 sm:max-w-2xl">
+          <DialogHeader className="border-b border-border px-6 py-4">
             <DialogTitle>Close deal?</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              Marks this deal <strong>closed</strong> and creates the long-term records below.
+            </p>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            This marks the deal as <strong>closed</strong>, activates the customer profile, creates the company
-            property record, and copies documents from the pipeline.
-          </p>
-          {!finalizeReadiness.ok && (
-            <p className="rounded-[8px] bg-amber-50 px-3 py-2 text-sm text-amber-900">
-              Still needed: {finalizeReadiness.missing.join(", ")}. Complete the Payment and Documents tabs first.
-            </p>
-          )}
-          <div className="space-y-3 rounded-[10px] border border-border bg-muted/30 p-3 text-sm">
-            <CloseSummaryRow label="Property" value={deal.property_title ? formatPropertyLine(deal) : "—"} />
-            {deal.property_type ? (
-              <CloseSummaryRow label="Type" value={formatPropertyType(deal.property_type)} />
-            ) : null}
-            <CloseSummaryRow label="Buyer" value={deal.buyer_name ?? deal.customer?.name ?? "—"} />
-            <CloseSummaryRow label="Deal value" value={formatAED(deal.value)} />
-            {deal.payment_method ? (
-              <CloseSummaryRow
-                label="Payment"
-                value={PAYMENT_METHODS.find((m) => m.value === deal.payment_method)?.label ?? deal.payment_method}
+
+          <div className="space-y-4 px-6 py-4">
+            {!finalizeReadiness.ok && (
+              <p className="rounded-[8px] bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                Still needed: {finalizeReadiness.missing.join(", ")}. Complete Payment and Documents first.
+              </p>
+            )}
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              <CloseOutcomeCard
+                icon={User}
+                title="Owner"
+                description="Customer profile activated (or created) with buyer + KYC details."
+                detail={deal.buyer_name ?? deal.customer?.name ?? "—"}
               />
-            ) : null}
-            {deal.assigned_to_profile ? (
-              <CloseSummaryRow label="Agent" value={deal.assigned_to_profile.full_name} />
-            ) : null}
-          </div>
-          <div className="space-y-3 rounded-[10px] border border-border p-3">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-primary">Commission</p>
-            <p className="text-xs text-muted-foreground">
-              Pre-filled from Payment. Adjust here if needed before closing — saved on the property and customer
-              transaction.
-            </p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="closed-agency-commission">Agency commission (AED)</Label>
-                <Input
-                  id="closed-agency-commission"
-                  type="number"
-                  min={0}
-                  value={closedAgencyCommission}
-                  onChange={(e) => setClosedAgencyCommission(e.target.value)}
-                  placeholder={
-                    deal.agency_commission_rate != null && deal.value > 0
-                      ? `Est. ${Math.round((deal.value * deal.agency_commission_rate) / 10000)}`
-                      : "Optional"
-                  }
-                />
+              <CloseOutcomeCard
+                icon={Building2}
+                title="Property"
+                description="Company property record under Properties, linked to this deal."
+                detail={deal.property_title ? formatPropertyLine(deal) : "—"}
+              />
+              <CloseOutcomeCard
+                icon={FolderOpen}
+                title="Documents"
+                description="Pipeline files copied onto the owner profile."
+                detail="Lead + deal docs"
+              />
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2 rounded-[10px] border border-border bg-muted/30 p-3 text-sm">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-primary">Deal summary</p>
+                <CloseSummaryRow label="Property" value={deal.property_title ? formatPropertyLine(deal) : "—"} />
+                {deal.property_type ? (
+                  <CloseSummaryRow label="Type" value={formatPropertyType(deal.property_type)} />
+                ) : null}
+                <CloseSummaryRow label="Owner / buyer" value={deal.buyer_name ?? deal.customer?.name ?? "—"} />
+                <CloseSummaryRow label="Deal value" value={formatAED(deal.value)} />
+                {deal.payment_method ? (
+                  <CloseSummaryRow
+                    label="Payment"
+                    value={
+                      PAYMENT_METHODS.find((m) => m.value === deal.payment_method)?.label ?? deal.payment_method
+                    }
+                  />
+                ) : null}
+                {deal.assigned_to_profile ? (
+                  <CloseSummaryRow label="Agent" value={deal.assigned_to_profile.full_name} />
+                ) : null}
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="closed-agent-commission">Agent commission (AED)</Label>
-                <Input
-                  id="closed-agent-commission"
-                  type="number"
-                  min={0}
-                  value={closedAgentCommission}
-                  onChange={(e) => setClosedAgentCommission(e.target.value)}
-                  placeholder={
-                    deal.commission_rate != null && deal.value > 0
-                      ? `Est. ${Math.round((deal.value * deal.commission_rate) / 10000)}`
-                      : "Optional"
-                  }
-                />
+
+              <div className="space-y-3 rounded-[10px] border border-border p-3">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-primary">Commission</p>
+                <p className="text-xs text-muted-foreground">
+                  Pre-filled from Payment. Adjust before closing — saved on the property record.
+                </p>
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="closed-agency-commission">Agency commission (AED)</Label>
+                    <Input
+                      id="closed-agency-commission"
+                      type="number"
+                      min={0}
+                      value={closedAgencyCommission}
+                      onChange={(e) => setClosedAgencyCommission(e.target.value)}
+                      placeholder={
+                        deal.agency_commission_rate != null && deal.value > 0
+                          ? `Est. ${Math.round((deal.value * deal.agency_commission_rate) / 10000)}`
+                          : "Optional"
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="closed-agent-commission">Agent commission (AED)</Label>
+                    <Input
+                      id="closed-agent-commission"
+                      type="number"
+                      min={0}
+                      value={closedAgentCommission}
+                      onChange={(e) => setClosedAgentCommission(e.target.value)}
+                      placeholder={
+                        deal.commission_rate != null && deal.value > 0
+                          ? `Est. ${Math.round((deal.value * deal.commission_rate) / 10000)}`
+                          : "Optional"
+                      }
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          <DialogFooter>
+
+          <DialogFooter className="border-t border-border bg-muted/20 px-6 py-3">
             <Button variant="outline" size="sm" onClick={() => setClosedOpen(false)}>
               Cancel
             </Button>
@@ -647,6 +680,33 @@ function CloseSummaryRow({ label, value }: { label: string; value: string }) {
     <div className="flex justify-between gap-3 border-b border-border/60 py-1.5 last:border-b-0">
       <dt className="shrink-0 text-muted-foreground">{label}</dt>
       <dd className="text-right font-medium text-foreground">{value}</dd>
+    </div>
+  );
+}
+
+function CloseOutcomeCard({
+  icon: Icon,
+  title,
+  description,
+  detail,
+}: {
+  icon: ComponentType<{ className?: string }>;
+  title: string;
+  description: string;
+  detail: string;
+}) {
+  return (
+    <div className="rounded-[10px] border border-primary/20 bg-primary/5 p-3">
+      <div className="mb-2 flex items-center gap-2">
+        <span className="grid h-8 w-8 place-items-center rounded-md bg-primary/10 text-primary">
+          <Icon className="h-4 w-4" />
+        </span>
+        <p className="text-sm font-semibold text-foreground">{title}</p>
+      </div>
+      <p className="text-xs leading-relaxed text-muted-foreground">{description}</p>
+      <p className="mt-2 truncate text-xs font-medium text-foreground" title={detail}>
+        {detail}
+      </p>
     </div>
   );
 }
