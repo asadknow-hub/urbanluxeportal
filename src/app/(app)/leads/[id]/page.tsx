@@ -162,7 +162,10 @@ export default async function LeadDetailPage({
       .from("lead_properties")
       .select(
         `id, property_id, role,
-        property:properties(id, property_code, community, building_name, unit_number, property_type, bedrooms)`
+        property:properties(
+          id, property_code, community, building_name, unit_number, property_type, bedrooms,
+          listings(asking_price, listing_type)
+        )`
       )
       .eq("lead_id", id)
       .order("created_at", { ascending: false }),
@@ -226,12 +229,31 @@ export default async function LeadDetailPage({
     inventoryRows ?? []
   );
 
-  const proposedProperties = (proposedPropertyRows ?? []).map((row) => ({
-    id: row.id,
-    property_id: row.property_id,
-    role: row.role,
-    property: Array.isArray(row.property) ? row.property[0] ?? null : row.property,
-  }));
+  const proposedProperties = (proposedPropertyRows ?? []).map((row) => {
+    const property = Array.isArray(row.property) ? row.property[0] ?? null : row.property;
+    const listings = property && Array.isArray((property as { listings?: unknown }).listings)
+      ? ((property as { listings: { asking_price: number; listing_type: string }[] }).listings)
+      : [];
+    const listing = listings[0] ?? null;
+    return {
+      id: row.id,
+      property_id: row.property_id,
+      role: row.role,
+      property: property
+        ? {
+            id: property.id,
+            property_code: property.property_code,
+            community: property.community,
+            building_name: property.building_name,
+            unit_number: property.unit_number,
+            property_type: property.property_type,
+            bedrooms: property.bedrooms,
+            asking_price: listing?.asking_price ?? null,
+            listing_type: listing?.listing_type ?? null,
+          }
+        : null,
+    };
+  });
 
   return (
     <LeadDetail

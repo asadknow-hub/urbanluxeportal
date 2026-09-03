@@ -11,12 +11,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { InventoryCreateDialog } from "@/components/inventory/inventory-create-dialog";
 import { propertyLabel } from "@/lib/inventory";
+import { formatAED } from "@/lib/money";
+import { whatsappLink } from "@/lib/phone";
 import { addLeadProperty, removeLeadProperty } from "@/server/inventory";
+import { ensurePropertyShareLink } from "@/server/property-share";
 import { toast } from "sonner";
-import { Building2, Link2, Loader2, Plus, Search, X } from "lucide-react";
+import { Building2, Copy, Link2, Loader2, MessageCircle, Plus, Search, Share2, X } from "lucide-react";
 import type { InventoryChoice } from "@/components/crm/viewing-panel";
 
 export type LeadProposedProperty = {
@@ -31,12 +40,36 @@ export type LeadProposedProperty = {
     unit_number: string | null;
     property_type: string;
     bedrooms: number | null;
+    asking_price?: number | null;
+    listing_type?: string | null;
   } | null;
 };
+
+function shareMessage(input: {
+  clientName: string;
+  label: string;
+  priceLine: string | null;
+  url: string;
+}) {
+  const greeting = input.clientName.trim() ? `Hi ${input.clientName.trim()},` : "Hi,";
+  return [
+    greeting,
+    "",
+    "Here is a property I think could work for you:",
+    input.label,
+    input.priceLine,
+    "",
+    input.url,
+  ]
+    .filter((line) => line !== null)
+    .join("\n");
+}
 
 export function LeadProposedPropertySection({
   leadId,
   dealId,
+  clientName,
+  clientPhone,
   linked,
   inventory,
   agents,
@@ -47,6 +80,8 @@ export function LeadProposedPropertySection({
 }: {
   leadId: string;
   dealId?: string | null;
+  clientName?: string | null;
+  clientPhone?: string | null;
   linked: LeadProposedProperty[];
   inventory: InventoryChoice[];
   agents: { id: string; full_name: string }[];
@@ -59,8 +94,10 @@ export function LeadProposedPropertySection({
   const [pending, startTransition] = useTransition();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [sharingId, setSharingId] = useState<string | null>(null);
 
   const linkedIds = useMemo(() => new Set(linked.map((row) => row.property_id)), [linked]);
+  const clientWa = whatsappLink(clientPhone);
 
   const choices = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -108,19 +145,66 @@ export function LeadProposedPropertySection({
     });
   }
 
+  async function resolveShareUrl(propertyId: string) {
+    setSharingId(propertyId);
+    try {
+      const result = await ensurePropertyShareLink(propertyId);
+      if (!result.ok || !result.data) {
+        toast.error(result.error ?? "Could not create share link");
+        return null;
+      }
+      return `${window.location.origin}${result.data.path}`;
+    } finally {
+      setSharingId(null);
+    }
+  }
+
+  async function copyShareLink(row: LeadProposedProperty) {
+    const url = await resolveShareUrl(row.property_id);
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Public link copied");
+    } catch {
+      toast.message(url);
+    }
+  }
+
+  async function shareOnWhatsApp(row: LeadProposedProperty) {
+    const url = await resolveShareUrl(row.property_id);
+    if (!url) return;
+    const unit = row.property;
+    const label = unit ? propertyLabel(unit) : "Property";
+    const priceLine =
+      unit?.asking_price != null && unit.asking_price > 0 ? formatAED(unit.asking_price) : null;
+    const text = shareMessage({
+      clientName: clientName ?? "",
+      label,
+      priceLine,
+      url,
+    });
+    const href = clientWa
+      ? `${clientWa}?text=${encodeURIComponent(text)}`
+      : `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(href, "_blank", "noopener,noreferrer");
+  }
+
   return (
-    <div className="mt-5 border-t border-border/70 pt-5">
-      <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+    <section className="rounded-[14px] border border-border bg-card px-[26px] py-6">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="flex items-center gap-2 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            <Building2 className="h-3.5 w-3.5" />
+          <h2
+            className="flex items-center gap-2 font-heading text-[1.12rem]"
+            style={{ fontFamily: "var(--font-display), serif" }}
+          >
+            <Building2 className="h-4 w-4 text-primary" />
             Proposed property
-          </h3>
+          </h2>
           <p className="mt-1 text-sm text-foreground">
             Do you have a property to connect that you are proposing?
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Link a unit from inventory, or create a new Buy / Rent / Off-plan file.
+          <p className="mt-0.5 text-[0.8rem] text-muted-foreground">
+            Link from inventory or create a new Buy / Rent / Off-plan file, then share a public link with the client.
           </p>
         </div>
         {canEdit ? (
@@ -212,20 +296,23 @@ export function LeadProposedPropertySection({
       </div>
 
       {linked.length === 0 ? (
-        <p className="rounded-[12px] border border-dashed border-border bg-muted/20 px-4 py-5 text-sm text-muted-foreground">
+        <p className="rounded-[12px] border border-dashed border-border bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
           No proposed property yet.
         </p>
       ) : (
         <ul className="space-y-2">
           {linked.map((row) => {
             const unit = row.property;
-            const label = unit
-              ? propertyLabel(unit)
-              : "Property";
+            const label = unit ? propertyLabel(unit) : "Property";
+            const price =
+              unit?.asking_price != null && unit.asking_price > 0
+                ? formatAED(unit.asking_price)
+                : null;
+            const busy = sharingId === row.property_id;
             return (
               <li
                 key={row.id}
-                className="flex items-center justify-between gap-3 rounded-[12px] border border-border bg-card px-3 py-2.5"
+                className="flex items-center justify-between gap-3 rounded-[12px] border border-border bg-background/60 px-3 py-3"
               >
                 <div className="min-w-0">
                   <Link href={`/inventory/${row.property_id}`} className="text-sm font-medium hover:text-primary">
@@ -234,24 +321,46 @@ export function LeadProposedPropertySection({
                   <p className="text-xs capitalize text-muted-foreground">
                     {row.role.replace(/_/g, " ")}
                     {unit?.property_type ? ` · ${unit.property_type.replace(/_/g, " ")}` : ""}
+                    {price ? ` · ${price}` : ""}
                   </p>
                 </div>
-                {canEdit ? (
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() => disconnect(row.property_id)}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-                    aria-label="Disconnect property"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                ) : null}
+                <div className="flex shrink-0 items-center gap-1">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
+                      disabled={busy}
+                      aria-label="Share property"
+                    >
+                      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-52">
+                      <DropdownMenuItem onClick={() => void copyShareLink(row)}>
+                        <Copy className="mr-2 h-4 w-4" />
+                        Copy public link
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => void shareOnWhatsApp(row)}>
+                        <MessageCircle className="mr-2 h-4 w-4" />
+                        WhatsApp to client
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  {canEdit ? (
+                    <button
+                      type="button"
+                      disabled={pending}
+                      onClick={() => disconnect(row.property_id)}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                      aria-label="Disconnect property"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  ) : null}
+                </div>
               </li>
             );
           })}
         </ul>
       )}
-    </div>
+    </section>
   );
 }

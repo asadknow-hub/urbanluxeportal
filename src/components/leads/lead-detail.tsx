@@ -1260,25 +1260,27 @@ export function LeadDetail({
                 </SnapshotBlock>
               </div>
             </div>
-
-            <LeadProposedPropertySection
-              leadId={optimisticLead.id}
-              dealId={deal?.id ?? optimisticLead.converted_deal_id}
-              linked={proposedProperties}
-              inventory={inventory}
-              agents={agents}
-              defaultAgentId={optimisticLead.assigned_to ?? userId}
-              canEdit={canEdit}
-              canCreateProperty={canManage}
-              defaultListingType={
-                optimisticLead.interest === "rent"
-                  ? "rent"
-                  : optimisticLead.interest === "off_plan"
-                    ? "off_plan"
-                    : "sale"
-              }
-            />
           </section>
+
+          <LeadProposedPropertySection
+            leadId={optimisticLead.id}
+            dealId={deal?.id ?? optimisticLead.converted_deal_id}
+            clientName={optimisticLead.name}
+            clientPhone={optimisticLead.phone}
+            linked={proposedProperties}
+            inventory={inventory}
+            agents={agents}
+            defaultAgentId={optimisticLead.assigned_to ?? userId}
+            canEdit={canEdit}
+            canCreateProperty={canManage}
+            defaultListingType={
+              optimisticLead.interest === "rent"
+                ? "rent"
+                : optimisticLead.interest === "off_plan"
+                  ? "off_plan"
+                  : "sale"
+            }
+          />
 
           <section className="rounded-[14px] border border-border bg-card px-[26px] py-6">
             <div className="mb-1">

@@ -834,6 +834,7 @@ export interface Database {
           dld_property_number: string | null;
           assigned_to: string | null;
           owner_id: string | null;
+          share_token: string | null;
           notes: string | null;
           created_by: string | null;
           created_at: string;
@@ -862,6 +863,7 @@ export interface Database {
           dld_property_number?: string | null;
           assigned_to?: string | null;
           owner_id?: string | null;
+          share_token?: string | null;
           notes?: string | null;
           created_by?: string | null;
         };
