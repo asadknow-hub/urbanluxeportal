@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef, useEffect, type ReactNode } from "react";
+import { useState, useTransition, useRef, useEffect, useId, cloneElement, isValidElement, type ReactElement, type ReactNode } from "react";
 import {
   Dialog,
   DialogContent,
@@ -49,6 +49,7 @@ export function DocumentUploadDialog({
   propertyId?: string | null;
   propertyChoices?: { id: string; label: string }[];
 }) {
+  const inputId = useId();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const [uploading, setUploading] = useState(false);
@@ -181,13 +182,28 @@ export function DocumentUploadDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) {
+          setUploadedFile(null);
+          setDragOver(false);
+          setForm({
+            name: "",
+            category: fixedCategory?.value ?? "",
+            entity_type: entityType ?? "",
+            expiry_date: "",
+            notes: "",
+          });
+          setLinkedPropertyId(propertyId ?? "");
+        }
+      }}
+    >
       <DialogTrigger
         render={(props) =>
-          trigger ? (
-            <button type="button" {...props} className="border-0 bg-transparent p-0 text-left">
-              {trigger}
-            </button>
+          trigger && isValidElement(trigger) ? (
+            cloneElement(trigger as ReactElement<Record<string, unknown>>, props as never)
           ) : (
             <Button {...props} variant={quiet ? "outline" : "default"} size={quiet ? "sm" : "default"}>
               <Upload className="mr-2 h-4 w-4" />
@@ -197,10 +213,10 @@ export function DocumentUploadDialog({
         }
       />
       <DialogContent
-        className="w-[95vw] max-w-lg overflow-hidden rounded-[14px] border border-border p-0 shadow-xl sm:max-w-lg"
+        className="!flex max-h-[90vh] w-[min(32rem,95vw)] flex-col gap-0 overflow-hidden rounded-[14px] border border-border p-0 shadow-xl sm:max-w-lg"
         closeClassName="text-white/70 hover:bg-white/10 hover:text-white"
       >
-        <div className="bg-primary px-6 py-5 text-center">
+        <div className="shrink-0 bg-primary px-6 py-5 text-center">
           <DialogHeader>
             <DialogTitle
               className="text-center text-[1.15rem] font-normal tracking-[0.12em] text-white uppercase"
@@ -210,17 +226,18 @@ export function DocumentUploadDialog({
             </DialogTitle>
           </DialogHeader>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-5 bg-card px-6 py-5">
+        <form onSubmit={handleSubmit} className="flex min-h-0 w-full flex-1 flex-col">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-card px-6 py-5">
           <input
             ref={inputRef}
             type="file"
             accept="image/*,.pdf,.docx,.xlsx"
             onChange={(e) => handleFileUpload(e.target.files?.[0] ?? null)}
             className="hidden"
-            id="doc-upload-input"
+            id={inputId}
           />
           <label
-            htmlFor="doc-upload-input"
+            htmlFor={inputId}
             onDragOver={(e) => {
               e.preventDefault();
               setDragOver(true);
@@ -231,11 +248,11 @@ export function DocumentUploadDialog({
               setDragOver(false);
               handleFileUpload(e.dataTransfer.files?.[0] ?? null);
             }}
-            className={`block cursor-pointer rounded-[10px] border-[1.5px] border-dashed px-4 py-8 text-center transition-colors ${
+            className={`flex min-h-[7.5rem] cursor-pointer flex-col items-center justify-center rounded-[10px] border-[1.5px] border-dashed px-4 py-5 text-center transition-colors ${
               dragOver ? "border-primary bg-accent" : "border-border hover:border-primary hover:bg-accent/60"
             }`}
           >
-            <span className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full border border-border bg-card">
+            <span className="mb-3 grid h-12 w-12 shrink-0 place-items-center rounded-full border border-border bg-card">
               {uploading ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : <Upload className="h-5 w-5 text-muted-foreground" />}
             </span>
             <span className="block text-sm font-semibold text-foreground">
@@ -244,18 +261,21 @@ export function DocumentUploadDialog({
             <span className="mt-1 block text-[0.76rem] text-muted-foreground">PDF, JPG, PNG, WebP, DOCX, XLSX · Max 20MB</span>
           </label>
 
-          {uploadedFile && (
-            <div className="flex items-center gap-3 rounded-[10px] border border-border bg-muted/50 p-3">
-              <FileCheck2 className="h-5 w-5 text-primary" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{uploadedFile.name}</p>
-                <p className="text-xs text-muted-foreground">{(uploadedFile.size / 1024).toFixed(0)} KB</p>
+          {/* Reserved slot so choosing a file does not stretch the dialog */}
+          <div aria-live="polite" className="min-h-[3.75rem]">
+            {uploadedFile ? (
+              <div className="flex h-[3.75rem] items-center gap-3 rounded-[10px] border border-border bg-muted/50 px-3">
+                <FileCheck2 className="h-5 w-5 shrink-0 text-primary" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{uploadedFile.name}</p>
+                  <p className="text-xs text-muted-foreground">{(uploadedFile.size / 1024).toFixed(0)} KB</p>
+                </div>
+                <button type="button" className="rounded-full p-1 text-muted-foreground hover:text-foreground" onClick={() => setUploadedFile(null)}>
+                  <X className="h-4 w-4" />
+                </button>
               </div>
-              <button type="button" className="rounded-full p-1 text-muted-foreground hover:text-foreground" onClick={() => setUploadedFile(null)}>
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          )}
+            ) : null}
+          </div>
 
           {fixedCategory ? (
             <div className="rounded-[10px] border border-border bg-muted/40 px-4 py-3">
@@ -289,11 +309,11 @@ export function DocumentUploadDialog({
           ) : null}
 
           <div className="space-y-2">
-            <Label htmlFor="doc_name" className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+            <Label htmlFor={`${inputId}-name`} className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
               Name *
             </Label>
             <Input
-              id="doc_name"
+              id={`${inputId}-name`}
               value={form.name}
               onChange={(e) => set("name", e.target.value)}
               required
@@ -303,85 +323,89 @@ export function DocumentUploadDialog({
           </div>
 
           {fixedCategory ? (
-            capture === "expiry" ? (
-              <div className="space-y-2">
-                <Label htmlFor="doc_expiry" className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                  Expiry date
-                </Label>
-                <Input
-                  id="doc_expiry"
-                  type="date"
-                  value={form.expiry_date}
-                  onChange={(e) => set("expiry_date", e.target.value)}
-                  className="h-11 rounded-[10px]"
-                />
-              </div>
-            ) : capture === "note" ? (
-              <div className="space-y-2">
-                <Label htmlFor="doc_notes" className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                  Note
-                </Label>
-                <Input
-                  id="doc_notes"
-                  value={form.notes}
-                  onChange={(e) => set("notes", e.target.value)}
-                  placeholder="e.g. Original at office"
-                  className="h-11 rounded-[10px]"
-                />
-              </div>
-            ) : null
-          ) : (
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Category *</Label>
-              <Select value={form.category || undefined} onValueChange={(v) => setCategory(v ?? "")}>
-                <SelectTrigger className="h-11 rounded-[10px]">
-                  <SelectValue placeholder="Choose category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categoryItems.map((c) => (
-                    <SelectItem key={c.value} value={c.value}>
-                      {c.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="min-h-[4.75rem]">
+              {capture === "expiry" ? (
+                <div className="space-y-2">
+                  <Label htmlFor={`${inputId}-expiry`} className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                    Expiry date
+                  </Label>
+                  <Input
+                    id={`${inputId}-expiry`}
+                    type="date"
+                    value={form.expiry_date}
+                    onChange={(e) => set("expiry_date", e.target.value)}
+                    className="h-11 rounded-[10px]"
+                  />
+                </div>
+              ) : capture === "note" ? (
+                <div className="space-y-2">
+                  <Label htmlFor={`${inputId}-notes`} className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                    Note
+                  </Label>
+                  <Input
+                    id={`${inputId}-notes`}
+                    value={form.notes}
+                    onChange={(e) => set("notes", e.target.value)}
+                    placeholder="e.g. Original at office"
+                    className="h-11 rounded-[10px]"
+                  />
+                </div>
+              ) : null}
             </div>
-            {capture === "expiry" ? (
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="doc_expiry" className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                  Expiry date
-                </Label>
-                <Input
-                  id="doc_expiry"
-                  type="date"
-                  value={form.expiry_date}
-                  onChange={(e) => set("expiry_date", e.target.value)}
-                  className="h-11 rounded-[10px]"
-                />
+                <Label className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Category *</Label>
+                <Select value={form.category || undefined} onValueChange={(v) => setCategory(v ?? "")}>
+                  <SelectTrigger className="h-11 rounded-[10px]">
+                    <SelectValue placeholder="Choose category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categoryItems.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>
+                        {c.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            ) : capture === "note" ? (
-              <div className="space-y-2">
-                <Label htmlFor="doc_notes" className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                  Note
-                </Label>
-                <Input
-                  id="doc_notes"
-                  value={form.notes}
-                  onChange={(e) => set("notes", e.target.value)}
-                  placeholder="e.g. Original at office"
-                  className="h-11 rounded-[10px]"
-                />
+              <div className="min-h-[4.75rem] space-y-2">
+                {capture === "expiry" ? (
+                  <>
+                    <Label htmlFor={`${inputId}-expiry`} className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                      Expiry date
+                    </Label>
+                    <Input
+                      id={`${inputId}-expiry`}
+                      type="date"
+                      value={form.expiry_date}
+                      onChange={(e) => set("expiry_date", e.target.value)}
+                      className="h-11 rounded-[10px]"
+                    />
+                  </>
+                ) : capture === "note" ? (
+                  <>
+                    <Label htmlFor={`${inputId}-notes`} className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                      Note
+                    </Label>
+                    <Input
+                      id={`${inputId}-notes`}
+                      value={form.notes}
+                      onChange={(e) => set("notes", e.target.value)}
+                      placeholder="e.g. Original at office"
+                      className="h-11 rounded-[10px]"
+                    />
+                  </>
+                ) : (
+                  <>
+                    <Label className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                      Extra
+                    </Label>
+                    <p className="flex h-11 items-center text-sm text-muted-foreground">Choose a category first</p>
+                  </>
+                )}
               </div>
-            ) : (
-              <div className="space-y-2">
-                <Label className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                  Extra
-                </Label>
-                <p className="flex h-11 items-center text-sm text-muted-foreground">Choose a category first</p>
-              </div>
-            )}
-          </div>
+            </div>
           )}
 
           {!entityType && (
@@ -401,8 +425,9 @@ export function DocumentUploadDialog({
               </Select>
             </div>
           )}
+          </div>
 
-          <div className="flex justify-end gap-3 border-t border-border pt-4">
+          <div className="flex shrink-0 justify-end gap-3 border-t border-border bg-card px-6 py-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} className="h-[42px] rounded-full px-6">
               Cancel
             </Button>

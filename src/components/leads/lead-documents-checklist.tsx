@@ -45,6 +45,31 @@ function fileStatus(doc: LeadDocument, cat: DocCategoryChoice): { label: string;
   return { label: "Uploaded", className: "bg-emerald-100 text-emerald-800" };
 }
 
+function nearestExpiryHint(docs: LeadDocument[], cat: DocCategoryChoice): string | null {
+  if (cat.capture !== "expiry") return null;
+  const dated = docs
+    .map((doc) => doc.expiry_date)
+    .filter((value): value is string => Boolean(value))
+    .sort((a, b) => a.localeCompare(b));
+  if (!dated[0]) return null;
+  return expiryDaysHint(dated[0]);
+}
+
+function scopeCompletedStyles(tone: "client" | "property") {
+  if (tone === "property") {
+    return {
+      card: "border-secondary/35 bg-secondary/8",
+      header: "border-b border-secondary/20 bg-secondary/15",
+      file: "bg-secondary/5",
+    };
+  }
+  return {
+    card: "border-primary/35 bg-primary/8",
+    header: "border-b border-primary/20 bg-primary/12",
+    file: "bg-primary/5",
+  };
+}
+
 function StatusPill({ label, className }: { label: string; className: string }) {
   return (
     <span className={cn("inline-flex rounded-full px-2.5 py-0.5 text-[0.72rem] font-semibold", className)}>
@@ -244,6 +269,9 @@ export function LeadDocumentsChecklist({
 
         <div className="divide-y divide-border/50">
           {scoped.map(({ cat, docs }) => {
+            const filledStyles = scopeCompletedStyles(tone);
+            const cardExpiry = nearestExpiryHint(docs, cat);
+
             if (docs.length === 0) {
               return (
                 <div key={cat.value} className="flex items-center justify-between gap-2 px-3 py-1.5 hover:bg-muted/30">
@@ -273,10 +301,26 @@ export function LeadDocumentsChecklist({
 
             return (
               <div key={cat.value} className="px-2 py-1.5">
-                <div className="overflow-hidden rounded-[10px] border border-border/80">
-                  <div className="flex items-center justify-between gap-2 bg-muted/50 px-2.5 py-1.5">
-                    <div className="flex min-w-0 items-center gap-2">
+                <div className={cn("overflow-hidden rounded-[10px] border", filledStyles.card)}>
+                  <div className={cn("flex items-center justify-between gap-2 px-2.5 py-1.5", filledStyles.header)}>
+                    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
                       <p className="truncate text-[0.84rem] font-semibold text-foreground">{cat.label}</p>
+                      {cardExpiry ? (
+                        <span
+                          className={cn(
+                            "text-[0.72rem] font-semibold tabular-nums",
+                            cardExpiry.startsWith("Expired") || cardExpiry === "Expires today"
+                              ? "text-red-700"
+                              : cardExpiry.includes("d left") && Number.parseInt(cardExpiry, 10) <= 30
+                                ? "text-amber-800"
+                                : tone === "property"
+                                  ? "text-secondary"
+                                  : "text-primary"
+                          )}
+                        >
+                          {cardExpiry}
+                        </span>
+                      ) : null}
                       <span className="text-[0.68rem] text-muted-foreground">
                         {docs.length} file{docs.length === 1 ? "" : "s"}
                       </span>
@@ -306,7 +350,7 @@ export function LeadDocumentsChecklist({
                   </div>
                   <div className="divide-y divide-border/40">
                     {docs.map((doc) => (
-                      <div key={doc.id} className="px-2.5 py-1.5">
+                      <div key={doc.id} className={cn("px-2.5 py-1.5", filledStyles.file)}>
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
                             <p className="truncate text-[0.82rem] font-medium text-foreground">{doc.name}</p>
