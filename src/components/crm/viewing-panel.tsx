@@ -11,7 +11,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { propertyLabel, VIEWING_OUTCOMES, VIEWING_STATUSES } from "@/lib/inventory";
 import { formatDateTime } from "@/lib/dates";
@@ -152,8 +151,10 @@ export function ViewingPanel({
             <div className="space-y-1.5">
               <Label>Agent</Label>
               <Select value={agentId || "none"} onValueChange={(v) => setAgentId(v === "none" ? "" : v ?? "")}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Agent" />
+                <SelectTrigger className="w-full min-w-0">
+                  <span className="truncate">
+                    {agentId ? agents.find((a) => a.id === agentId)?.full_name ?? "Agent" : "Unassigned"}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Unassigned</SelectItem>
@@ -169,8 +170,13 @@ export function ViewingPanel({
           <div className="space-y-1.5">
             <Label>Unit</Label>
             <Select value={propertyId || "none"} onValueChange={(v) => setPropertyId(v === "none" ? "" : v ?? "")}>
-              <SelectTrigger>
-                <SelectValue placeholder="Optional inventory unit" />
+              <SelectTrigger className="w-full min-w-0">
+                <span className="truncate">
+                  {(() => {
+                    const unit = properties.find((p) => p.id === propertyId);
+                    return unit ? propertyLabel(unit) : "No unit yet";
+                  })()}
+                </span>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">No unit yet</SelectItem>

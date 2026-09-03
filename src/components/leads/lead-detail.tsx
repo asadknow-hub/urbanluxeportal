@@ -80,6 +80,7 @@ import {
   Building2,
   Check,
   UserRound,
+  ChevronDown,
 } from "lucide-react";
 
 type Lead = {
@@ -157,18 +158,6 @@ function initials(name: string) {
 
 function emptyValue(text = "Not captured") {
   return <span className="text-[#B9B6AB]">{text}</span>;
-}
-
-function activityKind(type: string) {
-  if (type.includes("whatsapp")) return "WhatsApp";
-  if (type.includes("call") || type === "phone") return "Phone";
-  if (type.includes("email")) return "Email";
-  if (type.includes("follow_up")) return "Follow-up";
-  if (type.includes("stage")) return "Stage";
-  if (type.includes("viewing") || type.includes("calendar")) return "Calendar";
-  if (type === "note") return "Note";
-  if (type === "created" || type === "claimed" || type === "sla_reclaim") return "System";
-  return formatLabel(type);
 }
 
 function IconBtn({
@@ -461,11 +450,12 @@ export function LeadDetail({
   const [reasonDialog, setReasonDialog] = useState<{ stageId: string; stageName: string; kind: string } | null>(null);
   const [selectedReason, setSelectedReason] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [activityFilter, setActivityFilter] = useState("all");
-  const [noteDraft, setNoteDraft] = useState("");
+  const [activityFilter] = useState("all");
   const [leadPage, setLeadPage] = useState<LeadPageView>("overview");
   const [contactMethod, setContactMethod] = useState<"whatsapp" | "call" | "email" | "in_person" | null>(null);
   const [contactNote, setContactNote] = useState("");
+  const [contactHistoryOpen, setContactHistoryOpen] = useState(false);
+  const [activityExpanded, setActivityExpanded] = useState(false);
 
   const mergedDocuments = useMergedLeadDocuments(optimisticDocs, customerDocuments);
 
@@ -498,6 +488,18 @@ export function LeadDetail({
       ),
     [timelineItems]
   );
+  const importantActivity = useMemo(() => {
+    return timelineItems.filter((item) => {
+      const t = item.type.toLowerCase();
+      return (
+        t.includes("follow_up") ||
+        t.includes("viewing") ||
+        ["whatsapp", "call", "email", "in_person", "phone"].includes(t)
+      );
+    });
+  }, [timelineItems]);
+  const visibleContactAttempts = contactHistoryOpen ? contactAttempts : contactAttempts.slice(0, 3);
+  const visibleActivity = activityExpanded ? importantActivity : importantActivity.slice(0, 5);
   const viewingScheduled =
     currentStage?.name?.toLowerCase().includes("viewing") === true &&
     currentStage.name.toLowerCase().includes("scheduled");
@@ -524,20 +526,6 @@ export function LeadDetail({
       cancelled = true;
     };
   }, [activityFilter, optimisticLead.id]);
-
-  function loadMoreTimeline() {
-    if (!timelineCursor || timelineLoading) return;
-    setTimelineLoading(true);
-    void loadLeadTimelinePage(optimisticLead.id, timelineCursor, activityFilter).then((result) => {
-      if (result.ok) {
-        setTimelineItems((prev) => [...prev, ...result.items]);
-        setTimelineCursor(result.nextCursor);
-      } else {
-        toast.error(result.error ?? "Could not load more");
-      }
-      setTimelineLoading(false);
-    });
-  }
 
   function saveField(payload: Record<string, unknown>, nextState: Partial<Lead>, close = true) {
     setOptimisticLead((prev) => ({ ...prev, ...nextState }));
@@ -705,6 +693,26 @@ export function LeadDetail({
     return `Follow-up in ${days} days`;
   }
 
+  function highlightActivityTitle(item: LeadTimelineItem) {
+    const t = item.type.toLowerCase();
+    if (t.includes("follow_up")) {
+      if (t.includes("done") || t.includes("complete")) {
+        return `Follow-up completed on ${formatDateTime(item.occurred_at)}`;
+      }
+      return `Follow-up created on ${formatDateTime(item.occurred_at)}`;
+    }
+    if (t.includes("viewing")) {
+      if (t.includes("schedul") || t.includes("created") || t === "viewing") {
+        return `Viewing scheduled on ${formatDateTime(item.occurred_at)}`;
+      }
+      return item.summary || `Viewing updated on ${formatDateTime(item.occurred_at)}`;
+    }
+    if (["whatsapp", "call", "email", "in_person", "phone"].includes(t)) {
+      return item.summary || `${formatLabel(t === "in_person" ? "in person" : t)} contact attempt`;
+    }
+    return item.summary || formatLabel(item.type);
+  }
+
   function logContact(type: "call" | "whatsapp" | "email") {
     const summary =
       type === "call"
@@ -715,32 +723,6 @@ export function LeadDetail({
     startTransition(async () => {
       await addLeadActivity(optimisticLead.id, type, summary);
       router.refresh();
-    });
-  }
-
-  function saveNote() {
-    const text = noteDraft.trim();
-    if (!text) return;
-    const row: LeadTimelineItem = {
-      id: `opt_${Date.now()}`,
-      source: "activity",
-      type: "note",
-      summary: text,
-      occurred_at: new Date().toISOString(),
-      authorName: "You",
-      isSystem: false,
-    };
-    setTimelineItems((prev) => [row, ...prev]);
-    setActivityCount((n) => n + 1);
-    setNoteDraft("");
-    startTransition(async () => {
-      const result = await addLeadActivity(optimisticLead.id, "note", text);
-      if (result.ok) router.refresh();
-      else {
-        setTimelineItems(initialTimeline);
-        setActivityCount(initialActivityCount);
-        toast.error(result.error ?? "Failed");
-      }
     });
   }
 
@@ -1252,104 +1234,45 @@ export function LeadDetail({
           </section>
 
           <section className="rounded-[14px] border border-border bg-card px-[26px] py-6">
-            <div className="mb-1 flex items-baseline justify-between gap-3">
-              <div>
-                <h2 className="font-heading text-[1.12rem]" style={{ fontFamily: "var(--font-display), serif" }}>Activity</h2>
-                <p className="mt-0.5 text-[0.8rem] text-muted-foreground">
-                  {activityCount} activities · {timelineItems.length} shown
-                </p>
-              </div>
-              <select
-                className="h-8 rounded-lg border border-border bg-muted px-2 text-[0.8rem] text-muted-foreground"
-                value={activityFilter}
-                onChange={(e) => setActivityFilter(e.target.value)}
-              >
-                <option value="all">All activity</option>
-                <option value="call">Calls</option>
-                <option value="whatsapp">Messages</option>
-                <option value="note">Notes</option>
-                <option value="follow_up">Follow-ups</option>
-                <option value="system">System</option>
-              </select>
+            <div className="mb-1">
+              <h2 className="font-heading text-[1.12rem]" style={{ fontFamily: "var(--font-display), serif" }}>Activity</h2>
+              <p className="mt-0.5 text-[0.8rem] text-muted-foreground">
+                Follow-ups, viewings, and contact notes
+              </p>
             </div>
-            {canEdit && (
-              <div className="mt-3 mb-1 rounded-xl border border-border bg-muted/40 p-2.5">
-                <Textarea
-                  id="lead-note"
-                  rows={1}
-                  value={noteDraft}
-                  onChange={(e) => setNoteDraft(e.target.value)}
-                  placeholder="Write a note…"
-                  className="min-h-9 h-9 resize-none border-0 bg-transparent p-1 text-sm shadow-none focus-visible:ring-0"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                      e.preventDefault();
-                      saveNote();
-                    }
-                  }}
-                />
-                <div className="mt-2 flex justify-end">
-                  <button
-                    type="button"
-                    disabled={!noteDraft.trim() || pending}
-                    className="h-8 rounded-lg bg-primary px-3 text-[0.78rem] font-semibold text-white disabled:opacity-40"
-                    onClick={saveNote}
-                  >
-                    Add note
-                  </button>
-                </div>
-              </div>
-            )}
             <div className="relative mt-[14px] pl-[26px] before:absolute before:top-2 before:bottom-2 before:left-[7px] before:w-[1.5px] before:bg-border">
-              {timelineLoading && timelineItems.length === 0 ? (
+              {timelineLoading && importantActivity.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Loading timeline…</p>
-              ) : timelineItems.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No activity yet.</p>
+              ) : importantActivity.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No follow-ups, viewings, or contact attempts yet.</p>
               ) : (
-                timelineItems.map((a) => {
-                  const key =
-                    a.isSystem ||
-                    a.type.includes("follow_up") ||
-                    a.type.includes("stage") ||
-                    a.type.includes("viewing") ||
-                    a.type === "converted" ||
-                    a.type === "created" ||
-                    a.type === "claimed";
-                  return (
-                    <div key={a.id} className="relative pb-[22px] last:pb-1">
-                      <div className={`absolute top-1 -left-[26px] grid h-[15px] w-[15px] place-items-center rounded-full border-[1.5px] bg-card ${key ? "border-primary bg-accent" : "border-muted-foreground"}`}>
-                        <i className={`block h-[5px] w-[5px] rounded-full ${key ? "bg-secondary" : "bg-muted-foreground"}`} />
-                      </div>
-                      <div className="flex items-baseline justify-between gap-3">
-                        <span>
-                          <span className="text-[0.9rem] font-semibold">{a.summary?.slice(0, 48) || formatLabel(a.type)}</span>
-                          <span className="ml-2 text-[0.68rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">{activityKind(a.type)}</span>
-                        </span>
-                        <span className="shrink-0 text-[0.74rem] text-muted-foreground" title={formatDateTime(a.occurred_at)}>
-                          {shortTimeAgo(a.occurred_at)}
-                        </span>
-                      </div>
-                      {a.summary && a.summary.length > 48 ? (
-                        <p className="mt-1 max-w-[60ch] text-[0.85rem] leading-relaxed text-muted-foreground">{a.summary}</p>
-                      ) : null}
-                      {a.authorName && a.isSystem ? (
-                        <p className="mt-0.5 text-[0.72rem] text-muted-foreground">{a.authorName}</p>
-                      ) : null}
+                visibleActivity.map((a) => (
+                  <div key={a.id} className="relative pb-[18px] last:pb-1">
+                    <div className="absolute top-1 -left-[26px] grid h-[15px] w-[15px] place-items-center rounded-full border-[1.5px] border-primary bg-accent">
+                      <i className="block h-[5px] w-[5px] rounded-full bg-secondary" />
                     </div>
-                  );
-                })
+                    <p className="text-[0.9rem] font-semibold leading-snug text-foreground">
+                      {highlightActivityTitle(a)}
+                    </p>
+                    {a.summary &&
+                    !["whatsapp", "call", "email", "in_person", "phone"].includes(a.type) &&
+                    a.summary !== highlightActivityTitle(a) ? (
+                      <p className="mt-1 max-w-[60ch] text-[0.85rem] leading-relaxed text-muted-foreground">{a.summary}</p>
+                    ) : null}
+                  </div>
+                ))
               )}
             </div>
-            {timelineCursor && (
+            {importantActivity.length > 5 ? (
               <button
                 type="button"
-                className="mt-4 h-10 w-full rounded-[10px] border border-dashed border-border text-[0.83rem] font-semibold text-muted-foreground hover:border-muted-foreground hover:text-foreground disabled:opacity-50"
-                disabled={timelineLoading}
-                onClick={loadMoreTimeline}
+                className="mt-3 inline-flex h-9 w-full items-center justify-center gap-1 rounded-[10px] border border-dashed border-border text-[0.8rem] font-semibold text-muted-foreground hover:border-muted-foreground hover:text-foreground"
+                onClick={() => setActivityExpanded((v) => !v)}
               >
-                {timelineLoading ? "Loading…" : "Load more"}
+                {activityExpanded ? "Show less" : `Show ${importantActivity.length - 5} more`}
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${activityExpanded ? "rotate-180" : ""}`} />
               </button>
-            )}
+            ) : null}
           </section>
         </div>
 
@@ -1446,96 +1369,114 @@ export function LeadDetail({
               {contactAttempts.length === 0 ? (
                 <p className="text-[0.8rem] text-[#9a3412]/65">No attempts logged yet.</p>
               ) : (
-                <ul className="max-h-52 space-y-2 overflow-y-auto">
-                  {contactAttempts.slice(0, 12).map((item) => (
-                    <li key={item.id} className="rounded-lg border border-[#fed7aa] bg-white px-2.5 py-2">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <span className="text-[0.78rem] font-semibold capitalize text-[#9a3412]">
-                          {item.type === "in_person" ? "In person" : item.type}
-                        </span>
-                        <span className="shrink-0 text-[0.68rem] text-[#c2410c]/80" title={formatDateTime(item.occurred_at)}>
-                          {shortTimeAgo(item.occurred_at)}
-                        </span>
-                      </div>
-                      {item.summary ? (
-                        <p className="mt-0.5 text-[0.78rem] leading-snug text-foreground/80">{item.summary}</p>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  <ul className="space-y-2">
+                    {visibleContactAttempts.map((item) => (
+                      <li key={item.id} className="rounded-lg border border-[#fed7aa] bg-white px-2.5 py-2">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <span className="text-[0.78rem] font-semibold capitalize text-[#9a3412]">
+                            {item.type === "in_person" ? "In person" : item.type}
+                          </span>
+                          <span className="shrink-0 text-[0.68rem] text-[#c2410c]/80" title={formatDateTime(item.occurred_at)}>
+                            {shortTimeAgo(item.occurred_at)}
+                          </span>
+                        </div>
+                        {item.summary ? (
+                          <p className="mt-0.5 text-[0.78rem] leading-snug text-foreground/80">{item.summary}</p>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                  {contactAttempts.length > 3 ? (
+                    <button
+                      type="button"
+                      className="mt-2 inline-flex w-full items-center justify-center gap-1 text-[0.75rem] font-semibold text-[#c2410c] hover:text-[#9a3412]"
+                      onClick={() => setContactHistoryOpen((v) => !v)}
+                    >
+                      {contactHistoryOpen ? "Show less" : `Show ${contactAttempts.length - 3} more`}
+                      <ChevronDown className={`h-3.5 w-3.5 transition-transform ${contactHistoryOpen ? "rotate-180" : ""}`} />
+                    </button>
+                  ) : null}
+                </>
               )}
             </div>
           </section>
 
-          <section className="rounded-[14px] bg-primary px-[26px] py-6 text-primary-foreground">
-            <p className="mb-2.5 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-secondary">Next step</p>
-            <h2 className="font-heading text-[1.12rem] text-white" style={{ fontFamily: "var(--font-display), serif" }}>{followUpTitle()}</h2>
-            <p className="mt-1.5 mb-[18px] text-[0.92rem] leading-relaxed text-white">
-              {optimisticLead.next_follow_up_at ? (
-                <>
-                  <span className="font-mono text-[0.86rem] text-secondary">{formatDateTime(optimisticLead.next_follow_up_at)}</span>
-                  {isOverdue(optimisticLead.next_follow_up_at) ? ". This follow-up is overdue." : "."}
-                  {scheduledFollowUp?.notes ? (
-                    <span className="mt-2 block text-[0.88rem] text-white">{scheduledFollowUp.notes}</span>
-                  ) : null}
-                </>
-              ) : firstResponse?.tone === "overdue" ? (
-                <>First contact is overdue ({firstResponse.label}). Call or WhatsApp now or this lead returns to the pool.</>
-              ) : slaClock?.overdue ? (
-                <>This lead is past the {currentStage?.name} SLA ({slaClock.dayNum} of {slaClock.sla} days). Set a follow-up now.</>
+          <section className="overflow-hidden rounded-[14px] border border-[#d4c4a8] bg-[#fbf7f0]">
+            <div className="border-b border-[#eadfcb] bg-[#f3ead8] px-[22px] py-4">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#8a6a32]">Next step</p>
+              <h2 className="mt-1 font-heading text-[1.2rem] text-[#1f2933]" style={{ fontFamily: "var(--font-display), serif" }}>
+                {followUpTitle()}
+              </h2>
+              <p className="mt-1.5 text-[0.86rem] leading-relaxed text-[#4b5563]">
+                {optimisticLead.next_follow_up_at ? (
+                  <>
+                    <span className="font-medium text-[#1f2933]">{formatDateTime(optimisticLead.next_follow_up_at)}</span>
+                    {isOverdue(optimisticLead.next_follow_up_at) ? " · overdue" : ""}
+                    {scheduledFollowUp?.notes ? (
+                      <span className="mt-1 block text-[#4b5563]">{scheduledFollowUp.notes}</span>
+                    ) : null}
+                  </>
+                ) : firstResponse?.tone === "overdue" ? (
+                  <>First contact is overdue ({firstResponse.label}). Call or WhatsApp now.</>
+                ) : slaClock?.overdue ? (
+                  <>Past the {currentStage?.name} SLA ({slaClock.dayNum} of {slaClock.sla} days). Set a follow-up.</>
+                ) : (
+                  <>No follow-up yet. Pick a time so this lead does not go cold.</>
+                )}
+              </p>
+            </div>
+            <div className="px-[22px] py-4">
+              <div className="flex items-center gap-2.5 rounded-xl border border-[#eadfcb] bg-white px-3 py-2.5">
+                <div className="grid h-[36px] w-[36px] place-items-center rounded-full bg-[#EDEBF4] font-heading text-[0.78rem] text-secondary" style={{ fontFamily: "var(--font-display), serif" }}>
+                  {optimisticLead.assigned_to_profile ? initials(optimisticLead.assigned_to_profile.full_name) : "—"}
+                </div>
+                <div className="min-w-0 flex-1 leading-tight">
+                  <p className="text-[0.66rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Assigned agent</p>
+                  <b className="block text-[0.9rem] font-semibold text-foreground">{optimisticLead.assigned_to_profile?.full_name ?? "Unassigned"}</b>
+                  <span className="text-[0.72rem] capitalize text-muted-foreground">{optimisticLead.assigned_to_profile?.role ?? "No agent yet"}</span>
+                </div>
+                {canManage && (
+                  <Select value={optimisticLead.assigned_to ?? "unassigned"} onValueChange={(v) => handleAssign(v === "unassigned" ? null : v ?? null)}>
+                    <SelectTrigger className="h-8 w-auto border-border bg-muted px-2 text-[0.78rem] font-semibold text-foreground shadow-none">
+                      <span>Reassign</span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
+                      {agents.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>{a.full_name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+              {showFollowUpForm ? (
+                <div className="mt-3 space-y-2">
+                  <Input type="datetime-local" value={followUpDate} onChange={(e) => setFollowUpDate(e.target.value)} className="h-9 border-[#eadfcb] bg-white text-sm text-foreground" />
+                  <Input value={followUpNotes} onChange={(e) => setFollowUpNotes(e.target.value)} placeholder="What this is for — call, WhatsApp, viewing…" className="h-9 border-[#eadfcb] bg-white text-sm text-foreground" />
+                  <div className="flex gap-2">
+                    <button type="button" className="h-10 flex-1 rounded-[10px] bg-secondary text-[0.86rem] font-semibold text-white hover:bg-secondary/90" onClick={handleScheduleFollowUp} disabled={!followUpDate || pending}>Save</button>
+                    <button type="button" className="h-10 flex-1 rounded-[10px] border border-[#eadfcb] bg-white text-[0.86rem] font-semibold text-foreground" onClick={() => setShowFollowUpForm(false)}>Cancel</button>
+                  </div>
+                </div>
               ) : (
-                <>No follow-up is set — <b className="text-white">set one now</b>.</>
-              )}
-            </p>
-            <div className="flex items-center gap-2.5 rounded-xl border border-white/25 bg-white px-3 py-2.5 text-foreground">
-              <div className="grid h-[34px] w-[34px] place-items-center rounded-full bg-[#EDEBF4] font-heading text-[0.78rem] text-secondary" style={{ fontFamily: "var(--font-display), serif" }}>
-                {optimisticLead.assigned_to_profile ? initials(optimisticLead.assigned_to_profile.full_name) : "—"}
-              </div>
-              <div className="min-w-0 flex-1 leading-tight">
-                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Assigned agent</p>
-                <b className="block text-[0.9rem] font-semibold text-foreground">{optimisticLead.assigned_to_profile?.full_name ?? "Unassigned"}</b>
-                <span className="text-[0.72rem] capitalize text-muted-foreground">{optimisticLead.assigned_to_profile?.role ?? "No agent yet"}</span>
-              </div>
-              {canManage && (
-                <Select value={optimisticLead.assigned_to ?? "unassigned"} onValueChange={(v) => handleAssign(v === "unassigned" ? null : v ?? null)}>
-                  <SelectTrigger className="h-8 w-auto border-border bg-muted px-2 text-[0.78rem] font-semibold text-foreground shadow-none">
-                    <span>Reassign</span>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="unassigned">Unassigned</SelectItem>
-                    {agents.map((a) => (
-                      <SelectItem key={a.id} value={a.id}>{a.full_name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="mt-3 flex gap-2.5">
+                  <button type="button" className="inline-flex h-10 flex-1 items-center justify-center rounded-[10px] bg-secondary text-[0.86rem] font-semibold text-white hover:bg-secondary/90" onClick={() => setShowFollowUpForm(true)}>
+                    {optimisticLead.next_follow_up_at ? "Change follow-up" : "Set follow-up"}
+                  </button>
+                  {optimisticLead.next_follow_up_at ? (
+                    <button
+                      type="button"
+                      className="inline-flex h-10 flex-1 items-center justify-center rounded-[10px] border border-[#eadfcb] bg-white text-[0.86rem] font-semibold text-foreground hover:bg-[#f3ead8]"
+                      disabled={pending}
+                      onClick={handleMarkDone}
+                    >
+                      Mark done
+                    </button>
+                  ) : null}
+                </div>
               )}
             </div>
-            {showFollowUpForm ? (
-              <div className="mt-3 space-y-2">
-                <Input type="datetime-local" value={followUpDate} onChange={(e) => setFollowUpDate(e.target.value)} className="h-9 border-white/20 bg-white/5 text-xs text-white" />
-                <Input value={followUpNotes} onChange={(e) => setFollowUpNotes(e.target.value)} placeholder="What this is for — call, WhatsApp, viewing…" className="h-9 border-white/20 bg-white/5 text-xs text-white" />
-                <div className="flex gap-2">
-                  <button type="button" className="h-[42px] flex-1 rounded-[10px] bg-primary text-[0.88rem] font-semibold text-white" onClick={handleScheduleFollowUp} disabled={!followUpDate || pending}>Save</button>
-                  <button type="button" className="h-[42px] flex-1 rounded-[10px] border border-white/25 text-[0.88rem] font-semibold" onClick={() => setShowFollowUpForm(false)}>Cancel</button>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-3.5 flex gap-2.5">
-                <button type="button" className="inline-flex h-[42px] flex-1 items-center justify-center rounded-[10px] bg-secondary text-[0.88rem] font-semibold text-white hover:bg-secondary/90" onClick={() => setShowFollowUpForm(true)}>
-                  Set follow-up
-                </button>
-                {optimisticLead.next_follow_up_at ? (
-                  <button
-                    type="button"
-                    className="inline-flex h-[42px] flex-1 items-center justify-center rounded-[10px] border border-white/25 text-[0.88rem] font-semibold text-white/90 hover:border-white"
-                    disabled={pending}
-                    onClick={handleMarkDone}
-                  >
-                    Mark done
-                  </button>
-                ) : null}
-              </div>
-            )}
           </section>
 
           <div
