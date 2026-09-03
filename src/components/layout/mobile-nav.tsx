@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { BrandMark } from "@/components/layout/brand-mark";
 import { NAV_ICON_MAP } from "@/components/layout/nav-icons";
 
-export function MobileNav({ role }: { role: UserRole }) {
+export function MobileNav({ role, inverted = false }: { role: UserRole; inverted?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const items = NAV_ITEMS.filter((item) => item.roles.includes(role));
@@ -20,7 +20,11 @@ export function MobileNav({ role }: { role: UserRole }) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
-        className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground lg:hidden"
+        className={`relative z-10 flex h-9 w-9 items-center justify-center rounded-lg border lg:hidden ${
+          inverted
+            ? "border-white/25 bg-white/10 text-white hover:bg-white/15"
+            : "border-border bg-card text-foreground"
+        }`}
         aria-label="Open navigation"
       >
         <Menu className="h-4 w-4" />

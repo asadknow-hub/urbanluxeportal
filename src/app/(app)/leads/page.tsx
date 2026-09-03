@@ -5,7 +5,7 @@ import { LeadsTable, type LeadRow } from "@/components/leads/leads-table";
 import { LeadCreateDialog } from "@/components/leads/lead-create-dialog";
 import { LeadsAgentFilter } from "@/components/leads/leads-agent-filter";
 import Link from "next/link";
-import { KanbanSquare, List } from "lucide-react";
+import { KanbanSquare, List, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { groupLeadFieldOptions, type LeadFieldOption } from "@/lib/lead-field-options";
 import { sweepFirstResponseSla } from "@/server/first-response";
@@ -303,6 +303,15 @@ export default async function LeadsBoardPage({
               List
             </Link>
           </div>
+          {view === "list" ? (
+            <Link
+              href="/pipeline/completed"
+              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 text-xs font-medium text-emerald-800 hover:bg-emerald-100"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Deals completed
+            </Link>
+          ) : null}
           {user.role !== "agent" && (
             <LeadsAgentFilter agents={agents} assigned={params.assigned} />
           )}

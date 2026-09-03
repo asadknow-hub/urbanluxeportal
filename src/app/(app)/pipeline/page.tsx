@@ -3,6 +3,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PipelineBoard } from "@/components/pipeline/pipeline-board";
 import { formatAEDCompact } from "@/lib/money";
 import { DEAL_PIPELINE_STAGES, isDealOpen, normalizeDealStage } from "@/lib/deal-stages";
+import Link from "next/link";
+import { CheckCircle2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +36,7 @@ export default async function PipelinePage() {
 
   const allDeals = deals ?? [];
   const activeDeals = allDeals.filter((d) => isDealOpen(d.stage));
+  const closedCount = allDeals.filter((d) => normalizeDealStage(d.stage) === "closed").length;
   const totalPipeline = activeDeals.reduce((sum, d) => sum + (d.value ?? 0), 0);
   const weightedValue = activeDeals.reduce((sum, d) => {
     const stage = STAGES.find((s) => s.key === normalizeDealStage(d.stage));
@@ -46,6 +49,18 @@ export default async function PipelinePage() {
         <p className="text-sm text-muted-foreground">
           <span className="font-medium tabular-nums text-foreground">{activeDeals.length}</span> active deals
         </p>
+        <Link
+          href="/pipeline/completed"
+          className="inline-flex h-8 items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 text-xs font-medium text-emerald-800 hover:bg-emerald-100"
+        >
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          Deals completed
+          {closedCount > 0 ? (
+            <span className="rounded-full bg-emerald-700/10 px-1.5 py-px tabular-nums text-[10px]">
+              {closedCount}
+            </span>
+          ) : null}
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">

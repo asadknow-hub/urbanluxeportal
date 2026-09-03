@@ -43,7 +43,11 @@ export function isNavActive(pathname: string, href: string): boolean {
     return pathname.startsWith("/leads/");
   }
   if (href === "/deals" || href === "/pipeline") {
-    return pathname === "/deals" || pathname === "/pipeline" || pathname.startsWith("/pipeline/");
+    return (
+      pathname === "/deals" ||
+      pathname === "/pipeline" ||
+      (pathname.startsWith("/pipeline/") && !pathname.startsWith("/pipeline/completed"))
+    );
   }
   if (href === "/company-properties") {
     return pathname === "/company-properties" || pathname.startsWith("/company-properties/");
@@ -55,6 +59,85 @@ export function isNavActive(pathname: string, href: string): boolean {
     return pathname === "/settings" || (pathname.startsWith("/settings/") && !pathname.startsWith("/settings/leads"));
   }
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+export type SectionHeader = {
+  title: string;
+  /** Tailwind gradient stops after `bg-gradient-to-r` */
+  gradient: string;
+};
+
+const SECTION_GRADIENT: Record<string, string> = {
+  Workspace: "from-[#0b1d3d] via-[#1a4a7a] to-[#2563a8]",
+  CRM: "from-[#0b1d3d] via-[#14532d] to-[#1e7a4a]",
+  Inventory: "from-[#0b1d3d] via-[#1e3a5f] to-[#0e7490]",
+  System: "from-[#1e293b] via-[#334155] to-[#475569]",
+};
+
+const SECTION_OVERRIDES: Record<string, SectionHeader> = {
+  "/pipeline/completed": {
+    title: "Deals Completed",
+    gradient: "from-[#064e3b] via-[#047857] to-[#1e7a4a]",
+  },
+  "/settings/leads": {
+    title: "Lead Settings",
+    gradient: SECTION_GRADIENT.CRM,
+  },
+  "/settings/users": {
+    title: "Users",
+    gradient: SECTION_GRADIENT.System,
+  },
+  "/settings/email-templates": {
+    title: "Email Templates",
+    gradient: SECTION_GRADIENT.System,
+  },
+  "/leads/imports": {
+    title: "Lead Imports",
+    gradient: SECTION_GRADIENT.CRM,
+  },
+  "/leads/inflow": {
+    title: "Lead Inflow",
+    gradient: SECTION_GRADIENT.CRM,
+  },
+};
+
+function isRecordPathSegment(segment: string) {
+  return (
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(segment) ||
+    /^[0-9a-f]{32}$/i.test(segment)
+  );
+}
+
+/** List/section pages get a gradient hero title in the top bar; detail pages keep breadcrumbs. */
+export function sectionHeaderFor(pathname: string): SectionHeader | null {
+  const override = SECTION_OVERRIDES[pathname];
+  if (override) return override;
+
+  const navExact = NAV_ITEMS.find((item) => item.href === pathname);
+  if (navExact) {
+    return {
+      title: navExact.label,
+      gradient: SECTION_GRADIENT[navExact.group as keyof typeof SECTION_GRADIENT] ?? SECTION_GRADIENT.CRM,
+    };
+  }
+
+  // Sub-routes that are still section screens (not entity detail).
+  const parts = pathname.split("/").filter(Boolean);
+  if (parts.length >= 2 && !isRecordPathSegment(parts[parts.length - 1] ?? "")) {
+    const parent = [...NAV_ITEMS]
+      .sort((a, b) => b.href.length - a.href.length)
+      .find((item) => pathname.startsWith(`${item.href}/`) && item.href !== "/leads");
+    if (parent && pathname.startsWith("/settings/")) {
+      const tail = parts[parts.length - 1] ?? "";
+      const label = tail.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      return {
+        title: label,
+        gradient: SECTION_GRADIENT.System,
+      };
+    }
+  }
+
+  return null;
 }
 
 export function breadcrumbsFor(pathname: string): { label: string; href?: string }[] {
@@ -69,6 +152,10 @@ export function breadcrumbsFor(pathname: string): { label: string; href?: string
       { label: "CRM" },
       { label: "Pipeline", href: "/pipeline" },
     ];
+    if (parts[1] === "completed") {
+      crumbs.push({ label: "Completed" });
+      return crumbs;
+    }
     if (parts.length > 1) crumbs.push({ label: decodeURIComponent(parts[1]) });
     return crumbs;
   }
