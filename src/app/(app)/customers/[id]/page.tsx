@@ -4,8 +4,6 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatAED } from "@/lib/money";
 import { formatDate } from "@/lib/dates";
 import { getStatusColor } from "@/lib/status-colors";
-import { whatsappLink } from "@/lib/phone";
-import { ConversionPath } from "@/components/crm/conversion-path";
 import { FollowUpPanel } from "@/components/crm/follow-up-panel";
 import { customerStatusLabel } from "@/lib/customer-status";
 import { parsePaymentSnapshot, paymentSnapshotLines } from "@/lib/payment-snapshot";
@@ -15,22 +13,14 @@ import { formatPropertyLine } from "@/lib/deal-transaction";
 import { dealStageLabel, normalizeDealStage } from "@/lib/deal-stages";
 import { CustomerNewDealDialog } from "@/components/customers/customer-new-deal-dialog";
 import { CustomerConvertBanner } from "@/components/customers/customer-convert-banner";
-import { CustomerEditDialog } from "@/components/customers/customer-edit-dialog";
+import { CustomerContactCard } from "@/components/customers/customer-contact-card";
 import { PersonDocumentsKycSection } from "@/components/crm/person-documents-kyc-section";
 import { mergeKycPerson } from "@/lib/kyc-form";
 import { fetchMergedCustomerDocuments } from "@/lib/person-documents";
 import { leadDocChecklistCategories, type LeadFieldOption } from "@/lib/lead-field-options";
 import { canManageCrm } from "@/lib/permissions";
 import Link from "next/link";
-import {
-  Phone,
-  Mail,
-  MessageCircle,
-  MapPin,
-  User,
-  Building2,
-  ArrowLeft,
-} from "lucide-react";
+import { Building2, ArrowLeft } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -143,14 +133,16 @@ export default async function CustomerDetailPage({
   }
 
   const dealIds = (deals ?? []).map((deal) => deal.id);
-  const mergedDocuments = await fetchMergedCustomerDocuments(supabase, {
-    customerId: id,
-    leadId: customer.lead_id,
-    dealIds,
-  });
+  const [{ data: nationalityRows }, mergedDocuments] = await Promise.all([
+    supabase.from("lead_nationalities").select("name").order("name"),
+    fetchMergedCustomerDocuments(supabase, {
+      customerId: id,
+      leadId: customer.lead_id,
+      dealIds,
+    }),
+  ]);
   const kycPerson = mergeKycPerson(customer);
 
-  const waLink = whatsappLink(customer.phone);
   const leadContext = customer.lead_context as LeadContext | null;
   const statusColors = getStatusColor(customer.status);
   const customerTags = (customer.tags ?? []).filter(Boolean);
@@ -167,13 +159,6 @@ export default async function CustomerDetailPage({
         <ArrowLeft className="h-4 w-4" />
         Back to customers
       </Link>
-
-      <ConversionPath
-        current="customer"
-        lead={originatingLead ? { id: originatingLead.id, name: originatingLead.name } : null}
-        customer={{ id: customer.id, name: customer.name, status: customer.status }}
-        deal={deals?.[0] ? { id: deals[0].id, title: deals[0].title, stage: deals[0].stage } : null}
-      />
 
       {showConvertBanner && originatingLead ? (
         <CustomerConvertBanner
@@ -398,71 +383,26 @@ export default async function CustomerDetailPage({
         </div>
 
         <div className="space-y-4">
-          <div className="overflow-hidden rounded-[14px] border border-border bg-card p-4">
-            <div className="-mx-4 -mt-4 mb-4 h-0.5 bg-primary" />
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-foreground">Contact</h2>
-              <CustomerEditDialog
-                customer={{
-                  id: customer.id,
-                  type: customer.type as "individual" | "company",
-                  name: customer.name,
-                  phone: customer.phone,
-                  email: customer.email,
-                  nationality: customer.nationality,
-                  emirates_id: customer.emirates_id,
-                  passport_no: customer.passport_no,
-                  trn: customer.trn,
-                  address: customer.address,
-                  notes: customer.notes,
-                  assigned_to: customer.assigned_to,
-                }}
-                agents={agents ?? []}
-                canEdit={canEdit}
-              />
-            </div>
-            <div className="space-y-3 text-sm">
-              {customer.phone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <a href={`tel:${customer.phone}`} className="text-foreground hover:text-primary">
-                    {customer.phone}
-                  </a>
-                  {waLink && (
-                    <a
-                      href={waLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="ml-auto inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary"
-                    >
-                      <MessageCircle className="h-3 w-3" />
-                      WhatsApp
-                    </a>
-                  )}
-                </div>
-              )}
-              {customer.email && (
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <a href={`mailto:${customer.email}`} className="text-foreground hover:text-primary">
-                    {customer.email}
-                  </a>
-                </div>
-              )}
-              {customer.address && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-foreground">{customer.address}</span>
-                </div>
-              )}
-              {customer.assigned_to_profile && (
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-foreground">{customer.assigned_to_profile.full_name}</span>
-                </div>
-              )}
-            </div>
-          </div>
+          <CustomerContactCard
+            customer={{
+              id: customer.id,
+              type: customer.type as "individual" | "company",
+              name: customer.name,
+              phone: customer.phone,
+              email: customer.email,
+              nationality: customer.nationality,
+              emirates_id: customer.emirates_id,
+              passport_no: customer.passport_no,
+              trn: customer.trn,
+              address: customer.address,
+              notes: customer.notes,
+              assigned_to: customer.assigned_to,
+              assigned_to_profile: customer.assigned_to_profile,
+            }}
+            agents={agents ?? []}
+            canEdit={canEdit}
+            nationalities={(nationalityRows ?? []).map((row) => row.name)}
+          />
 
           <LeadContextPanel
             context={leadContext}

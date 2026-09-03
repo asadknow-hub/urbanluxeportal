@@ -87,6 +87,7 @@ type Lead = {
   name: string;
   phone: string | null;
   email: string | null;
+  call_numbers?: string[] | null;
   source: string;
   interest: string;
   budget_min: number | null;
@@ -828,9 +829,25 @@ export function LeadDetail({
                 <QuietSaveInput
                   value={optimisticLead.phone ?? ""}
                   disabled={!canEdit}
-                  placeholder="Add phone"
+                  placeholder="WhatsApp"
                   className="font-mono text-[0.82rem]"
                   onSave={(next) => saveField({ phone: next.trim() || null }, { phone: next.trim() || null })}
+                />
+              </span>
+              <span className="flex min-w-[12rem] items-center gap-1.5">
+                <Phone className="h-[15px] w-[15px] shrink-0 text-muted-foreground" />
+                <QuietSaveInput
+                  value={(optimisticLead.call_numbers ?? []).join(", ")}
+                  disabled={!canEdit}
+                  placeholder="Call numbers"
+                  className="font-mono text-[0.82rem]"
+                  onSave={(next) => {
+                    const nums = next
+                      .split(",")
+                      .map((n) => n.trim())
+                      .filter(Boolean);
+                    saveField({ call_numbers: nums }, { call_numbers: nums });
+                  }}
                 />
               </span>
               <span className="flex min-w-[14rem] flex-1 items-center gap-1.5">

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -27,13 +28,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createLead } from "@/server/leads";
+import { createLead, type ExistingCustomerMatch } from "@/server/leads";
 import { toast } from "sonner";
-import { ChevronDown, Loader2, Plus } from "lucide-react";
+import { ChevronDown, Loader2, Plus, X } from "lucide-react";
 
 type FormState = {
   name: string;
   phone: string;
+  call_numbers: string[];
   email: string;
   source: string;
   interest: string;
@@ -55,6 +57,7 @@ type FormState = {
 const EMPTY_FORM: FormState = {
   name: "",
   phone: "",
+  call_numbers: [],
   email: "",
   source: "",
   interest: "",
@@ -93,13 +96,56 @@ export function LeadCreateDialog({
   const router = useRouter();
   const groups = useMemo(() => leadCreateFieldGroups(), []);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [callDraft, setCallDraft] = useState("");
+  const [existingCustomer, setExistingCustomer] = useState<ExistingCustomerMatch | null>(null);
 
   useEffect(() => {
-    if (open) setForm(EMPTY_FORM);
+    if (open) {
+      setForm(EMPTY_FORM);
+      setCallDraft("");
+      setExistingCustomer(null);
+    }
   }, [open]);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function addCallNumber() {
+    const next = callDraft.trim();
+    if (!next) return;
+    if (form.call_numbers.includes(next) || form.phone.trim() === next) {
+      toast.error("Number already added");
+      return;
+    }
+    set("call_numbers", [...form.call_numbers, next]);
+    setCallDraft("");
+  }
+
+  function buildPayload(existingCustomerId?: string | null) {
+    const scoreOption = (fieldOptions.score ?? []).find((row) => row.value === form.score_band);
+    return {
+      name: form.name.trim(),
+      phone: form.phone.trim() || null,
+      call_numbers: form.call_numbers,
+      email: form.email.trim() || undefined,
+      existing_customer_id: existingCustomerId ?? null,
+      source: form.source,
+      interest: form.interest,
+      budget_min: form.budget_min ? Number(form.budget_min) * 100 : null,
+      budget_max: form.budget_max ? Number(form.budget_max) * 100 : null,
+      preferred_areas: form.preferred_areas,
+      notes: form.notes.trim() || null,
+      assigned_to: form.assigned_to === "unassigned" ? null : form.assigned_to,
+      nationality: form.nationality || null,
+      financing: form.financing || null,
+      timeframe: form.timeframe || null,
+      purpose: form.purpose || null,
+      bedrooms: form.bedrooms || null,
+      category: form.category || null,
+      tags: form.tags,
+      score: scoreOption ? scoreFromBand(scoreOption) : null,
+    };
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -121,34 +167,31 @@ export function LeadCreateDialog({
       return;
     }
 
-    const scoreOption = (fieldOptions.score ?? []).find((row) => row.value === form.score_band);
-
     startTransition(async () => {
-      const result = await createLead({
-        name: form.name.trim(),
-        phone: form.phone.trim() || null,
-        email: form.email.trim() || undefined,
-        source: form.source,
-        interest: form.interest,
-        budget_min: form.budget_min ? Number(form.budget_min) * 100 : null,
-        budget_max: form.budget_max ? Number(form.budget_max) * 100 : null,
-        preferred_areas: form.preferred_areas,
-        notes: form.notes.trim() || null,
-        assigned_to: form.assigned_to === "unassigned" ? null : form.assigned_to,
-        nationality: form.nationality || null,
-        financing: form.financing || null,
-        timeframe: form.timeframe || null,
-        purpose: form.purpose || null,
-        bedrooms: form.bedrooms || null,
-        category: form.category || null,
-        tags: form.tags,
-        score: scoreOption ? scoreFromBand(scoreOption) : null,
-      });
-      if (result.ok) {
+      const result = await createLead(buildPayload());
+      if (result.ok && result.data && "needsConfirm" in result.data && result.data.needsConfirm) {
+        setExistingCustomer(result.data.customer);
+        return;
+      }
+      if (result.ok && result.data && "id" in result.data) {
         toast.success("Lead created");
         setOpen(false);
-        if (result.data?.id) router.push(`/leads/${result.data.id}`);
-        else router.push("/leads");
+        router.push(`/leads/${result.data.id}`);
+      } else {
+        toast.error(result.error ?? "Failed to create lead");
+      }
+    });
+  }
+
+  function confirmLinkExisting() {
+    if (!existingCustomer) return;
+    startTransition(async () => {
+      const result = await createLead(buildPayload(existingCustomer.id));
+      if (result.ok && result.data && "id" in result.data) {
+        toast.success(`Lead created under ${existingCustomer.name}`);
+        setExistingCustomer(null);
+        setOpen(false);
+        router.push(`/leads/${result.data.id}`);
       } else {
         toast.error(result.error ?? "Failed to create lead");
       }
@@ -190,6 +233,52 @@ export function LeadCreateDialog({
             className="h-10"
           />
         </Field>
+      );
+    }
+    if (field.key === "call_numbers") {
+      return (
+        <div key={field.key} className="sm:col-span-2 space-y-1.5">
+          {label}
+          <div className="flex gap-2">
+            <Input
+              value={callDraft}
+              onChange={(e) => setCallDraft(e.target.value)}
+              placeholder="+971 4 123 4567 — dial number"
+              className="h-10"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addCallNumber();
+                }
+              }}
+            />
+            <Button type="button" variant="outline" className="h-10 shrink-0" onClick={addCallNumber}>
+              Add
+            </Button>
+          </div>
+          {form.call_numbers.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {form.call_numbers.map((num) => (
+                <span
+                  key={num}
+                  className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs"
+                >
+                  {num}
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-foreground"
+                    onClick={() => set("call_numbers", form.call_numbers.filter((n) => n !== num))}
+                    aria-label={`Remove ${num}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">Optional. Add one or more numbers for calling (not WhatsApp).</p>
+          )}
+        </div>
       );
     }
     if (field.key === "email") {
@@ -325,6 +414,7 @@ export function LeadCreateDialog({
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={(props) => (
@@ -394,6 +484,37 @@ export function LeadCreateDialog({
         </form>
       </DialogContent>
     </Dialog>
+
+      <Dialog open={!!existingCustomer} onOpenChange={(v) => !v && setExistingCustomer(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Owner already exists</DialogTitle>
+          </DialogHeader>
+          {existingCustomer ? (
+            <div className="space-y-3 text-sm">
+              <p className="text-muted-foreground">
+                A customer with this phone or email already exists. Create a new lead under the same owner?
+              </p>
+              <div className="rounded-[10px] border border-border bg-muted/30 p-3">
+                <p className="font-semibold text-foreground">{existingCustomer.name}</p>
+                <p className="mt-1 text-xs capitalize text-muted-foreground">{existingCustomer.status}</p>
+                {existingCustomer.phone ? <p className="mt-1 text-xs">{existingCustomer.phone}</p> : null}
+                {existingCustomer.email ? <p className="text-xs">{existingCustomer.email}</p> : null}
+              </div>
+            </div>
+          ) : null}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setExistingCustomer(null)}>
+              Cancel
+            </Button>
+            <Button type="button" disabled={pending} onClick={confirmLinkExisting}>
+              {pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Create lead under this owner
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

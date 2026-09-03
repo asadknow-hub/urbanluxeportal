@@ -138,6 +138,7 @@ export interface Database {
           name: string;
           phone: string | null;
           email: string | null;
+          call_numbers: string[];
           source: string;
           interest: string;
           budget_min: number | null;
@@ -180,6 +181,7 @@ export interface Database {
           name: string;
           phone?: string | null;
           email?: string | null;
+          call_numbers?: string[];
           source?: string;
           interest?: string;
           budget_min?: number | null;

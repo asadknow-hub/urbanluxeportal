@@ -17,6 +17,7 @@ export type LeadSnapshotField = {
 export const LEAD_SNAPSHOT_FIELDS: LeadSnapshotField[] = [
   { key: "name", label: "Name", kind: "text", group: "Contact" },
   { key: "phone", label: "WhatsApp", kind: "text", group: "Contact" },
+  { key: "call_numbers", label: "Call number", kind: "text", group: "Contact" },
   { key: "email", label: "Email", kind: "text", group: "Contact" },
   { key: "nationality", label: "Nationality", kind: "options", group: "Contact" },
   { key: "source", label: "Source", kind: "options", group: "Contact" },

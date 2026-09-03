@@ -39,6 +39,8 @@ const leadSchema = z.object({
   name: z.string().min(1, "Name is required"),
   phone: z.string().optional().nullable(),
   email: z.union([z.string().email(), z.literal(""), z.null()]).optional(),
+  call_numbers: z.array(z.string()).optional().default([]),
+  existing_customer_id: z.string().uuid().optional().nullable(),
   source: z.string().min(1, "Source is required"),
   interest: z.string().min(1, "Interest is required"),
   budget_min: z.number().optional().nullable(),
@@ -58,9 +60,19 @@ const leadSchema = z.object({
   score: z.number().min(0).max(100).optional().nullable(),
 });
 
+export type ExistingCustomerMatch = {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  status: string;
+};
+
 export async function createLead(
   input: z.infer<typeof leadSchema>
-): Promise<ActionResult<{ id: string }>> {
+): Promise<
+  ActionResult<{ id: string } | { needsConfirm: true; customer: ExistingCustomerMatch }>
+> {
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
@@ -71,25 +83,64 @@ export async function createLead(
     }
 
     const supabase = await createSupabaseServerClient();
+    const callNumbers = (parsed.data.call_numbers ?? [])
+      .map((n) => n.trim())
+      .filter(Boolean);
+    const phone = parsed.data.phone?.trim() || null;
+    const email = parsed.data.email?.trim() || null;
 
-    // Duplicate guard
-    if (parsed.data.phone || parsed.data.email) {
+    // If not confirming an existing owner, check customers for phone/email/call-number matches.
+    if (!parsed.data.existing_customer_id) {
+      const matchPhones = [phone, ...callNumbers].filter(Boolean) as string[];
+      let matchedCustomer: ExistingCustomerMatch | null = null;
+
+      for (const p of matchPhones) {
+        const { data } = await supabase
+          .from("customers")
+          .select("id, name, phone, email, status")
+          .eq("phone", p)
+          .is("deleted_at", null)
+          .limit(1)
+          .maybeSingle();
+        if (data) {
+          matchedCustomer = data;
+          break;
+        }
+      }
+
+      if (!matchedCustomer && email) {
+        const { data } = await supabase
+          .from("customers")
+          .select("id, name, phone, email, status")
+          .eq("email", email)
+          .is("deleted_at", null)
+          .limit(1)
+          .maybeSingle();
+        if (data) matchedCustomer = data;
+      }
+
+      if (matchedCustomer) {
+        return {
+          ok: true,
+          data: { needsConfirm: true, customer: matchedCustomer },
+        };
+      }
+    }
+
+    // Duplicate lead guard (same WhatsApp or email on another open lead)
+    if (phone || email) {
       let dupQuery = supabase
         .from("leads")
         .select("id, name, phone, email")
         .is("deleted_at", null)
         .limit(1);
-      if (parsed.data.phone) {
-        dupQuery = dupQuery.eq("phone", parsed.data.phone);
-      }
-      if (parsed.data.email) {
-        dupQuery = dupQuery.eq("email", parsed.data.email);
-      }
+      if (phone) dupQuery = dupQuery.eq("phone", phone);
+      else if (email) dupQuery = dupQuery.eq("email", email);
       const { data: dup } = await dupQuery.maybeSingle();
       if (dup) {
         return {
           ok: false,
-          error: `Duplicate lead found: ${dup.name} (${parsed.data.phone ?? parsed.data.email})`,
+          error: `Duplicate lead found: ${dup.name} (${phone ?? email})`,
         };
       }
     }
@@ -103,8 +154,10 @@ export async function createLead(
       .from("leads")
       .insert({
         name: parsed.data.name,
-        phone: parsed.data.phone || null,
-        email: parsed.data.email || null,
+        phone,
+        email,
+        call_numbers: callNumbers,
+        customer_id: parsed.data.existing_customer_id || null,
         source: parsed.data.source,
         interest: parsed.data.interest,
         budget_min: parsed.data.budget_min ?? null,
@@ -143,17 +196,23 @@ export async function createLead(
       action: "created",
     });
 
-    // Log lead event
     if (data) {
       await supabase.from("lead_events").insert({
         lead_id: data.id,
         kind: "created",
         actor_id: user.id,
-        payload: { source: parsed.data.source, stage: "New" },
+        payload: {
+          source: parsed.data.source,
+          stage: "New",
+          linked_customer_id: parsed.data.existing_customer_id ?? null,
+        },
       });
     }
 
     revalidatePath("/leads");
+    if (parsed.data.existing_customer_id) {
+      revalidatePath(`/customers/${parsed.data.existing_customer_id}`);
+    }
     return { ok: true, data: { id: data.id } };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
@@ -347,6 +406,7 @@ const leadUpdateSchema = z.object({
   name: z.string().min(1).optional(),
   phone: z.string().nullable().optional(),
   email: z.union([z.string().email(), z.literal(""), z.null()]).optional(),
+  call_numbers: z.array(z.string()).optional(),
   source: z.string().min(1).optional(),
   interest: z.string().min(1).optional(),
   budget_min: z.number().nullable().optional(),

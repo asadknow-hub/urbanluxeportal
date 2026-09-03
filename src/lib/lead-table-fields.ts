@@ -36,6 +36,7 @@ const LEAD_ROW_UDT = {
   name: "text",
   phone: "text",
   phone_norm: "text",
+  call_numbers: "_text",
   email: "text",
   email_norm: "text",
   nationality: "text",
