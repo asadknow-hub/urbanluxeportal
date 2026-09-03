@@ -1,9 +1,9 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { FileText, FolderOpen, Home } from "lucide-react";
+import { FileText, FolderOpen, Home, Images } from "lucide-react";
 
-export type PropertyPageView = "overview" | "documents" | "owner";
+export type PropertyPageView = "overview" | "photos" | "documents" | "owner";
 
 const TABS: {
   id: PropertyPageView;
@@ -18,6 +18,13 @@ const TABS: {
     icon: Home,
     active: "bg-primary text-primary-foreground border-primary shadow-md",
     idle: "border-primary/25 bg-primary/8 text-primary hover:bg-primary/12",
+  },
+  {
+    id: "photos",
+    label: "Photos",
+    icon: Images,
+    active: "bg-sky-700 text-white border-sky-700 shadow-md",
+    idle: "border-sky-700/25 bg-sky-700/8 text-sky-800 hover:bg-sky-700/12",
   },
   {
     id: "documents",
@@ -43,7 +50,7 @@ export function PropertyPageTabs({
   onChange: (view: PropertyPageView) => void;
 }) {
   return (
-    <nav aria-label="Property sections" className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+    <nav aria-label="Property sections" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
       {TABS.map((tab) => {
         const Icon = tab.icon;
         const active = value === tab.id;

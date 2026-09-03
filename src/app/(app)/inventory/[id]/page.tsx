@@ -5,6 +5,7 @@ import { canManageCrm } from "@/lib/permissions";
 import { PropertyDetailView } from "@/components/inventory/property-detail-view";
 import { groupLeadFieldOptions, leadDocChecklistCategories, type LeadFieldOption } from "@/lib/lead-field-options";
 import type { LeadDocument } from "@/components/leads/lead-documents";
+import { propertyMediaPublicUrl } from "@/server/property-media";
 
 export const dynamic = "force-dynamic";
 
@@ -18,28 +19,35 @@ export default async function InventoryDetailPage({
   const supabase = await createSupabaseServerClient();
   const { id } = await params;
 
-  const [{ data: property, error }, { data: fieldOptionRows }, { data: owners }, { data: agents }] = await Promise.all([
-    supabase
-      .from("properties")
-      .select(
-        `*,
+  const [{ data: property, error }, { data: fieldOptionRows }, { data: owners }, { data: agents }, { data: mediaRows }] =
+    await Promise.all([
+      supabase
+        .from("properties")
+        .select(
+          `*,
         developer:developers(id, name),
         project:projects(id, name, community),
         assigned_to_profile:profiles!properties_assigned_to_fkey(id, full_name),
         listings(*)`
-      )
-      .eq("id", id)
-      .is("deleted_at", null)
-      .single(),
-    supabase.from("lead_field_options").select("id, field_key, value, label, sort, extra").eq("field_key", "doc_category").order("sort"),
-    supabase.from("customers").select("id, name").is("deleted_at", null).order("name").limit(200),
-    supabase
-      .from("profiles")
-      .select("id, full_name")
-      .in("role", ["admin", "manager", "reception", "agent"])
-      .eq("is_active", true)
-      .order("full_name"),
-  ]);
+        )
+        .eq("id", id)
+        .is("deleted_at", null)
+        .single(),
+      supabase.from("lead_field_options").select("id, field_key, value, label, sort, extra").eq("field_key", "doc_category").order("sort"),
+      supabase.from("customers").select("id, name").is("deleted_at", null).order("name").limit(200),
+      supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("role", ["admin", "manager", "reception", "agent"])
+        .eq("is_active", true)
+        .order("full_name"),
+      supabase
+        .from("property_media")
+        .select("id, storage_path, caption, sort_order, kind, created_at")
+        .eq("property_id", id)
+        .is("deleted_at", null)
+        .order("sort_order"),
+    ]);
 
   if (error || !property) notFound();
 
@@ -59,8 +67,6 @@ export default async function InventoryDetailPage({
         .maybeSingle()
     : { data: null };
 
-  const owner = ownerRow;
-
   const { data: directDocs } = await supabase
     .from("documents")
     .select("id, name, storage_path, mime_type, category, expiry_date, notes, created_at, property_id, entity_type")
@@ -78,6 +84,16 @@ export default async function InventoryDetailPage({
     notes: doc.notes,
     created_at: doc.created_at,
     property_id: doc.property_id,
+  }));
+
+  const photos = (mediaRows ?? []).map((row) => ({
+    id: row.id,
+    storage_path: row.storage_path,
+    url: propertyMediaPublicUrl(row.storage_path),
+    caption: row.caption,
+    sort_order: row.sort_order,
+    kind: row.kind,
+    created_at: row.created_at,
   }));
 
   const grouped = groupLeadFieldOptions((fieldOptionRows ?? []) as LeadFieldOption[]);
@@ -107,9 +123,10 @@ export default async function InventoryDetailPage({
       project={project}
       agent={agent}
       agents={agents ?? []}
-      owner={owner}
+      owner={ownerRow}
       owners={owners ?? []}
       documents={documents}
+      photos={photos}
       categories={categories}
       canEdit={canManageCrm(user.role)}
     />

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PropertyPageTabs, type PropertyPageView } from "@/components/inventory/property-page-tabs";
+import { PropertyPhotosPanel, type PropertyPhoto } from "@/components/inventory/property-photos-panel";
 import { LeadDocumentsChecklist } from "@/components/leads/lead-documents-checklist";
 import { BlurSaveInput, HoverEditRow } from "@/components/leads/hover-edit-row";
 import type { LeadDocument } from "@/components/leads/lead-documents";
@@ -27,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import Image from "next/image";
 
 type Listing = {
   id: string;
@@ -73,6 +75,7 @@ export function PropertyDetailView({
   owner,
   owners,
   documents,
+  photos = [],
   categories,
   canEdit,
 }: {
@@ -85,6 +88,7 @@ export function PropertyDetailView({
   owner: { id: string; name: string; phone: string | null; email: string | null; nationality: string | null; status: string } | null;
   owners: { id: string; name: string }[];
   documents: LeadDocument[];
+  photos?: PropertyPhoto[];
   categories: DocCategoryChoice[];
   canEdit: boolean;
 }) {
@@ -169,6 +173,27 @@ export function PropertyDetailView({
             {formatPropertyType(optimistic.property_type)} · {optimistic.status.replace(/_/g, " ")}
             {listing ? ` · ${formatAED(listing.asking_price)}` : ""}
           </p>
+          {photos[0] ? (
+            <div className="relative mt-4 h-44 overflow-hidden rounded-[12px] border border-border sm:h-56">
+              <Image
+                src={photos[0].url}
+                alt={photos[0].caption || propertyLabel(optimistic)}
+                fill
+                className="object-cover"
+                sizes="(max-width: 1100px) 100vw, 1100px"
+                priority
+              />
+              {photos.length > 1 ? (
+                <button
+                  type="button"
+                  onClick={() => setPage("photos")}
+                  className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-1 text-xs font-semibold text-white hover:bg-black/75"
+                >
+                  {photos.length} photos
+                </button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -706,6 +731,10 @@ export function PropertyDetailView({
             )}
           </section>
         </div>
+      ) : null}
+
+      {page === "photos" ? (
+        <PropertyPhotosPanel propertyId={property.id} photos={photos} canEdit={canEdit} />
       ) : null}
 
       {page === "documents" ? (

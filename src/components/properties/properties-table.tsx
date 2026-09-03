@@ -48,6 +48,8 @@ export function PropertiesTable({
     const params = new URLSearchParams(searchParams.toString());
     if (value === "all" || !value) params.delete(key);
     else params.set(key, value);
+    // Keep closed-deals view when filtering from that tab.
+    if (!params.get("view")) params.set("view", "closed");
     router.push(`/company-properties?${params.toString()}`);
   }
 

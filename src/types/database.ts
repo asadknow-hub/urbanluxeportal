@@ -645,6 +645,31 @@ export interface Database {
         };
         Update: Partial<Database["public"]["Tables"]["customer_properties"]["Insert"]>;
       };
+      property_media: {
+        Row: {
+          id: string;
+          property_id: string;
+          storage_path: string;
+          kind: string;
+          caption: string | null;
+          sort_order: number;
+          uploaded_by: string | null;
+          created_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          property_id: string;
+          storage_path: string;
+          kind?: string;
+          caption?: string | null;
+          sort_order?: number;
+          uploaded_by?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["property_media"]["Insert"]> & {
+          deleted_at?: string | null;
+        };
+      };
       documents: {
         Row: {
           id: string;
