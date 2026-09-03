@@ -1552,7 +1552,9 @@ export function LeadDetail({
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Delete lead</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">Delete {optimisticLead.name}? This hides the lead from the pipeline.</p>
+          <p className="text-sm text-muted-foreground">
+            Delete {optimisticLead.name}? This permanently removes the lead and cannot be undone.
+          </p>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
             <Button variant="destructive" size="sm" disabled={pending} onClick={() => {

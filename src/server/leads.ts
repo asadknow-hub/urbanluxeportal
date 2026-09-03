@@ -1312,13 +1312,7 @@ export async function deleteLead(leadId: string): Promise<ActionResult> {
 
     const supabase = await createSupabaseServerClient();
 
-    const { error } = await supabase
-      .from("leads")
-      .update({
-        deleted_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", leadId);
+    const { error } = await supabase.from("leads").delete().eq("id", leadId);
 
     if (error) return { ok: false, error: error.message };
 

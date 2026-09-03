@@ -208,26 +208,40 @@ export default async function LeadsBoardPage({
     }
   }
   const duplicateLeadIds: string[] = [];
-  const sameOwnerLeadIds: string[] = [];
+  const sameOwnerNav: Record<string, { count: number; nextId: string }> = {};
   const seenDup = new Set<string>();
-  const seenSame = new Set<string>();
+
+  // Accidental dups: same phone/email but not all linked to one owner.
   for (const group of contactGroups.values()) {
     if (group.length < 2) continue;
     const ownerIds = new Set(group.map((row) => row.customer_id).filter(Boolean) as string[]);
     const allSameOwner =
       ownerIds.size === 1 && group.every((row) => row.customer_id && row.customer_id === [...ownerIds][0]);
-    if (allSameOwner) {
-      for (const row of group) {
-        if (seenSame.has(row.id)) continue;
-        seenSame.add(row.id);
-        sameOwnerLeadIds.push(row.id);
-      }
-      continue;
-    }
+    if (allSameOwner) continue;
     for (const row of group) {
       if (seenDup.has(row.id)) continue;
       seenDup.add(row.id);
       duplicateLeadIds.push(row.id);
+    }
+  }
+
+  // Same-owner multi-leads: count + next id (cycle by updated_at desc within board).
+  const byOwner = new Map<string, BoardLead[]>();
+  for (const lead of visibleLeads) {
+    if (!lead.customer_id) continue;
+    const list = byOwner.get(lead.customer_id) ?? [];
+    list.push(lead);
+    byOwner.set(lead.customer_id, list);
+  }
+  for (const group of byOwner.values()) {
+    if (group.length < 2) continue;
+    const ordered = [...group].sort(
+      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    );
+    for (let i = 0; i < ordered.length; i++) {
+      const current = ordered[i];
+      const next = ordered[(i + 1) % ordered.length];
+      sameOwnerNav[current.id] = { count: ordered.length, nextId: next.id };
     }
   }
 
@@ -315,7 +329,7 @@ export default async function LeadsBoardPage({
           stages={boardData?.stages ?? []}
           leads={boardData?.leads ?? []}
           duplicateLeadIds={duplicateLeadIds}
-          sameOwnerLeadIds={sameOwnerLeadIds}
+          sameOwnerNav={sameOwnerNav}
           userRole={user.role}
           fieldOptions={groupedOptions}
         />
