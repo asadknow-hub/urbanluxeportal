@@ -95,6 +95,7 @@ export default async function LeadDetailPage({
     { data: inventoryRows },
     { data: assignmentRows },
     timelineResult,
+    siblingLeads,
   ] = await Promise.all([
     supabase
       .from("lead_stages")
@@ -125,7 +126,7 @@ export default async function LeadDetailPage({
     personId
       ? supabase
           .from("customers")
-          .select("id, name, phone, email, status, nationality, emirates_id, passport_no, trn, address, kyc_form")
+          .select("id, name, phone, email, status, nationality, emirates_id, passport_no, trn, address, kyc_form, created_at")
           .eq("id", personId)
           .single()
       : Promise.resolve({ data: null, error: null }),
@@ -167,6 +168,14 @@ export default async function LeadDetailPage({
       .order("created_at", { ascending: false })
       .limit(30),
     getLeadTimelinePage(id, null, "all"),
+    personId
+      ? supabase
+          .from("leads")
+          .select("id", { count: "exact", head: true })
+          .eq("customer_id", personId)
+          .neq("id", id)
+          .is("deleted_at", null)
+      : Promise.resolve({ count: 0 }),
   ]);
 
   if (!timelineResult.ok) {
@@ -178,6 +187,12 @@ export default async function LeadDetailPage({
   }
 
   const person = personResult?.data ?? null;
+  const existingOwner =
+    (siblingLeads.count ?? 0) > 0 ||
+    Boolean(
+      person?.created_at &&
+        Date.parse(lead.created_at) - Date.parse(person.created_at) > 15_000
+    );
   const deal = dealResult?.data ?? null;
   const docCategories = leadDocChecklistCategories((fieldOptionRows ?? []) as LeadFieldOption[]);
   const customerDocuments = (customerDocsResult.data ?? []).map((doc) => ({
@@ -215,6 +230,7 @@ export default async function LeadDetailPage({
       fieldOptions={groupLeadFieldOptions((fieldOptionRows ?? []) as LeadFieldOption[])}
       followUps={followUpRows ?? []}
       customer={person}
+      existingOwner={existingOwner}
       personKyc={
         person
           ? {

@@ -367,6 +367,7 @@ export function LeadDetail({
   fieldOptions,
   followUps,
   customer,
+  existingOwner = false,
   personKyc,
   kycPerson,
   customerDocuments = [],
@@ -402,6 +403,7 @@ export function LeadDetail({
     passport_no?: string | null;
     trn?: string | null;
   } | null;
+  existingOwner?: boolean;
   personKyc?: PersonKycFields | null;
   kycPerson?: KycPersonRecord | null;
 /** @deprecated Pass customerDocuments instead. */
@@ -769,6 +771,13 @@ export function LeadDetail({
                 {optimisticLead.name}
               </button>
             )}
+            {existingOwner && customer ? (
+              <p className="mb-2 text-[0.78rem] font-medium text-secondary">
+                Already existing customer
+                {customer.name ? ` · ${customer.name}` : ""}
+                {customer.nationality ? ` · ${customer.nationality}` : ""}
+              </p>
+            ) : null}
             <div className="flex flex-wrap items-center gap-x-[22px] gap-y-2 text-[0.86rem] text-muted-foreground">
               <FloatPicker
                 disabled={!canEdit}
@@ -1031,38 +1040,52 @@ export function LeadDetail({
               <div className="flex min-w-0 flex-col gap-5">
               <SnapshotBlock title="Contact">
                 <LedgerRow label="Name" overlay>
-                  <QuietSaveInput
-                    value={optimisticLead.name}
-                    disabled={!canEdit}
-                    onSave={(next) => {
-                      if (!next.trim()) return;
-                      saveField({ name: next.trim() }, { name: next.trim() });
-                    }}
-                  />
+                  <div>
+                    <QuietSaveInput
+                      value={optimisticLead.name}
+                      disabled={!canEdit}
+                      onSave={(next) => {
+                        if (!next.trim()) return;
+                        saveField({ name: next.trim() }, { name: next.trim() });
+                      }}
+                    />
+                    {existingOwner && customer ? (
+                      <p className="px-1 text-[0.7rem] font-medium text-secondary">
+                        Already existing customer: {customer.name}
+                      </p>
+                    ) : null}
+                  </div>
                 </LedgerRow>
                 <LedgerRow label="Nationality" overlay>
-                  <FloatPicker
-                    disabled={!canEdit}
-                    className="w-[18rem] p-2"
-                    trigger={
-                      <span className="block px-1 py-0.5 text-[0.86rem]">
-                        {optimisticLead.nationality || emptyValue()}
-                      </span>
-                    }
-                  >
-                    {(close) => (
-                      <NationalityPicker
-                        value={optimisticLead.nationality ?? ""}
-                        options={nationalities}
-                        autoFocus
-                        onCancel={close}
-                        onChange={(next) => {
-                          saveField({ nationality: next || null }, { nationality: next || null });
-                          close();
-                        }}
-                      />
-                    )}
-                  </FloatPicker>
+                  <div>
+                    <FloatPicker
+                      disabled={!canEdit}
+                      className="w-[18rem] p-2"
+                      trigger={
+                        <span className="block px-1 py-0.5 text-[0.86rem]">
+                          {optimisticLead.nationality || emptyValue()}
+                        </span>
+                      }
+                    >
+                      {(close) => (
+                        <NationalityPicker
+                          value={optimisticLead.nationality ?? ""}
+                          options={nationalities}
+                          autoFocus
+                          onCancel={close}
+                          onChange={(next) => {
+                            saveField({ nationality: next || null }, { nationality: next || null });
+                            close();
+                          }}
+                        />
+                      )}
+                    </FloatPicker>
+                    {existingOwner && customer ? (
+                      <p className="px-1 text-[0.7rem] font-medium text-secondary">
+                        Already existing customer: {customer.nationality?.trim() || "nationality not on file"}
+                      </p>
+                    ) : null}
+                  </div>
                 </LedgerRow>
                 <LedgerRow label="Source" overlay>
                   <ChoicePicker

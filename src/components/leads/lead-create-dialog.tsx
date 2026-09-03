@@ -346,6 +346,11 @@ export function LeadCreateDialog({
             placeholder="Full name"
             className={lockedInputClass(locked)}
           />
+          {liveMatch ? (
+            <p className="mt-1 text-[0.72rem] font-medium text-secondary">
+              Already existing customer: {liveMatch.name}
+            </p>
+          ) : null}
         </Field>
       );
     }
@@ -435,6 +440,11 @@ export function LeadCreateDialog({
             locked={locked}
             onChange={(next) => set("nationality", next)}
           />
+          {liveMatch ? (
+            <p className="mt-1 text-[0.72rem] font-medium text-secondary">
+              Already existing customer: {liveMatch.nationality?.trim() || "nationality not on file"}
+            </p>
+          ) : null}
         </Field>
       );
     }
