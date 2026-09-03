@@ -5,6 +5,8 @@ export const HUMAN_LEAD_ACTIVITY_TYPES = [
   "call",
   "whatsapp",
   "email",
+  "phone",
+  "in_person",
   "follow_up_done",
   "follow_up_scheduled",
 ] as const;
