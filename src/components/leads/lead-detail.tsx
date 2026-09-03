@@ -701,6 +701,32 @@ export function LeadDetail({
     return `Follow-up in ${days} days`;
   }
 
+  function activityKindLabel(item: LeadTimelineItem) {
+    const t = item.type.toLowerCase();
+    if (t.includes("follow_up")) {
+      if (t.includes("done") || t.includes("complete")) return "Follow-up completed";
+      return "Follow-up created";
+    }
+    if (t.includes("viewing")) {
+      if (t.includes("schedul") || t.includes("created") || t === "viewing") return "Viewing scheduled";
+      return "Viewing updated";
+    }
+    if (t === "in_person") return "In person";
+    if (["whatsapp", "call", "email", "phone"].includes(t)) return formatLabel(t);
+    return formatLabel(item.type);
+  }
+
+  function activityDetail(item: LeadTimelineItem) {
+    const t = item.type.toLowerCase();
+    if (["whatsapp", "call", "email", "in_person", "phone"].includes(t)) {
+      return item.summary && item.summary !== highlightActivityTitle(item) ? item.summary : null;
+    }
+    if (t.includes("follow_up") || t.includes("viewing")) {
+      return item.summary && item.summary !== activityKindLabel(item) ? item.summary : null;
+    }
+    return item.summary || null;
+  }
+
   function highlightActivityTitle(item: LeadTimelineItem) {
     const t = item.type.toLowerCase();
     if (t.includes("follow_up")) {
@@ -1285,46 +1311,68 @@ export function LeadDetail({
             }
           />
 
-          <section className="rounded-[14px] border border-border bg-card px-[26px] py-6">
-            <div className="mb-1">
-              <h2 className="font-heading text-[1.12rem]" style={{ fontFamily: "var(--font-display), serif" }}>Activity</h2>
-              <p className="mt-0.5 text-[0.8rem] text-muted-foreground">
+          <section className="overflow-hidden rounded-[14px] border border-primary/25 bg-card">
+            <div className="bg-primary px-[22px] py-3.5 text-white">
+              <h2 className="font-heading text-[1.12rem] text-white" style={{ fontFamily: "var(--font-display), serif" }}>
+                Activity
+              </h2>
+              <p className="mt-0.5 text-[0.8rem] text-white/70">
                 Follow-ups, viewings, and contact notes
               </p>
             </div>
-            <div className="relative mt-[14px] pl-[26px] before:absolute before:top-2 before:bottom-2 before:left-[7px] before:w-[1.5px] before:bg-border">
+            <div className="bg-primary/5 px-[22px] py-4">
               {timelineLoading && importantActivity.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Loading timeline…</p>
               ) : importantActivity.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No follow-ups, viewings, or contact attempts yet.</p>
+                <p className="rounded-[12px] border border-dashed border-primary/20 bg-white/70 px-4 py-6 text-center text-sm text-muted-foreground">
+                  No follow-ups, viewings, or contact attempts yet.
+                </p>
               ) : (
-                visibleActivity.map((a) => (
-                  <div key={a.id} className="relative pb-[18px] last:pb-1">
-                    <div className="absolute top-1 -left-[26px] grid h-[15px] w-[15px] place-items-center rounded-full border-[1.5px] border-primary bg-accent">
-                      <i className="block h-[5px] w-[5px] rounded-full bg-secondary" />
-                    </div>
-                    <p className="text-[0.9rem] font-semibold leading-snug text-foreground">
-                      {highlightActivityTitle(a)}
-                    </p>
-                    {a.summary &&
-                    !["whatsapp", "call", "email", "in_person", "phone"].includes(a.type) &&
-                    a.summary !== highlightActivityTitle(a) ? (
-                      <p className="mt-1 max-w-[60ch] text-[0.85rem] leading-relaxed text-muted-foreground">{a.summary}</p>
-                    ) : null}
-                  </div>
-                ))
+                <ul className="space-y-2">
+                  {visibleActivity.map((a) => {
+                    const detail = activityDetail(a);
+                    return (
+                      <li
+                        key={a.id}
+                        className="rounded-[12px] border border-primary/15 bg-white px-3 py-2.5"
+                      >
+                        <div className="flex items-baseline justify-between gap-3">
+                          <p className="text-[0.9rem] font-semibold text-foreground">
+                            {activityKindLabel(a)}
+                          </p>
+                          <time
+                            className="shrink-0 text-[0.72rem] tabular-nums text-primary/80"
+                            dateTime={a.occurred_at}
+                            title={formatDateTime(a.occurred_at)}
+                          >
+                            {formatDateTime(a.occurred_at)}
+                          </time>
+                        </div>
+                        <p className="mt-0.5 text-[0.72rem] text-muted-foreground" title={formatDateTime(a.occurred_at)}>
+                          {shortTimeAgo(a.occurred_at)}
+                          {a.authorName ? ` · ${a.authorName}` : ""}
+                        </p>
+                        {detail ? (
+                          <p className="mt-1.5 max-w-[60ch] text-[0.82rem] leading-relaxed text-muted-foreground">
+                            {detail}
+                          </p>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
               )}
+              {importantActivity.length > 5 ? (
+                <button
+                  type="button"
+                  className="mt-3 inline-flex h-9 w-full items-center justify-center gap-1 rounded-[10px] border border-dashed border-primary/25 text-[0.8rem] font-semibold text-primary/80 hover:border-primary/50 hover:text-primary"
+                  onClick={() => setActivityExpanded((v) => !v)}
+                >
+                  {activityExpanded ? "Show less" : `Show ${importantActivity.length - 5} more`}
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${activityExpanded ? "rotate-180" : ""}`} />
+                </button>
+              ) : null}
             </div>
-            {importantActivity.length > 5 ? (
-              <button
-                type="button"
-                className="mt-3 inline-flex h-9 w-full items-center justify-center gap-1 rounded-[10px] border border-dashed border-border text-[0.8rem] font-semibold text-muted-foreground hover:border-muted-foreground hover:text-foreground"
-                onClick={() => setActivityExpanded((v) => !v)}
-              >
-                {activityExpanded ? "Show less" : `Show ${importantActivity.length - 5} more`}
-                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${activityExpanded ? "rotate-180" : ""}`} />
-              </button>
-            ) : null}
           </section>
         </div>
 

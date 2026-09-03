@@ -190,20 +190,20 @@ export function LeadProposedPropertySection({
   }
 
   return (
-    <section className="rounded-[14px] border border-border bg-card px-[26px] py-6">
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+    <section className="overflow-hidden rounded-[14px] border border-secondary/30 bg-card">
+      <div className="flex flex-wrap items-start justify-between gap-3 bg-secondary px-[22px] py-3.5 text-white">
         <div className="min-w-0">
           <h2
-            className="flex items-center gap-2 font-heading text-[1.12rem]"
+            className="flex items-center gap-2 font-heading text-[1.12rem] text-white"
             style={{ fontFamily: "var(--font-display), serif" }}
           >
-            <Building2 className="h-4 w-4 text-primary" />
+            <Building2 className="h-4 w-4 text-white/90" />
             Proposed property
           </h2>
-          <p className="mt-1 text-sm text-foreground">
+          <p className="mt-1 text-sm text-white/90">
             Do you have a property to connect that you are proposing?
           </p>
-          <p className="mt-0.5 text-[0.8rem] text-muted-foreground">
+          <p className="mt-0.5 text-[0.8rem] text-white/65">
             Link from inventory or create a new Buy / Rent / Off-plan file, then share a public link with the client.
           </p>
         </div>
@@ -212,7 +212,13 @@ export function LeadProposedPropertySection({
             <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
               <DialogTrigger
                 render={(props) => (
-                  <Button {...props} type="button" size="sm" variant="outline" className="gap-1.5">
+                  <Button
+                    {...props}
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    className="gap-1.5 border-0 bg-white/20 text-white hover:bg-white/30"
+                  >
                     <Link2 className="h-3.5 w-3.5" />
                     From inventory
                   </Button>
@@ -284,7 +290,11 @@ export function LeadProposedPropertySection({
                   }
                 }}
                 trigger={
-                  <Button type="button" size="sm" className="gap-1.5">
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="gap-1.5 border-0 bg-white text-secondary hover:bg-white/90"
+                  >
                     <Plus className="h-3.5 w-3.5" />
                     Create new
                   </Button>
@@ -295,8 +305,9 @@ export function LeadProposedPropertySection({
         ) : null}
       </div>
 
+      <div className="bg-secondary/5 px-[22px] py-5">
       {linked.length === 0 ? (
-        <p className="rounded-[12px] border border-dashed border-border bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
+        <p className="rounded-[12px] border border-dashed border-secondary/25 bg-white/70 px-4 py-8 text-center text-sm text-muted-foreground">
           No proposed property yet.
         </p>
       ) : (
@@ -312,10 +323,10 @@ export function LeadProposedPropertySection({
             return (
               <li
                 key={row.id}
-                className="flex items-center justify-between gap-3 rounded-[12px] border border-border bg-background/60 px-3 py-3"
+                className="flex items-center justify-between gap-3 rounded-[12px] border border-secondary/20 bg-white px-3 py-3"
               >
                 <div className="min-w-0">
-                  <Link href={`/inventory/${row.property_id}`} className="text-sm font-medium hover:text-primary">
+                  <Link href={`/inventory/${row.property_id}`} className="text-sm font-medium hover:text-secondary">
                     {label}
                   </Link>
                   <p className="text-xs capitalize text-muted-foreground">
@@ -327,7 +338,7 @@ export function LeadProposedPropertySection({
                 <div className="flex shrink-0 items-center gap-1">
                   <DropdownMenu>
                     <DropdownMenuTrigger
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary/10 hover:text-secondary disabled:opacity-50"
                       disabled={busy}
                       aria-label="Share property"
                     >
@@ -361,6 +372,7 @@ export function LeadProposedPropertySection({
           })}
         </ul>
       )}
+      </div>
     </section>
   );
 }
