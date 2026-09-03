@@ -28,9 +28,6 @@ type CategoryGroup = {
   docs: LeadDocument[];
 };
 
-const ROW_GRID =
-  "grid grid-cols-[minmax(140px,1.3fr)_6.5rem_8.5rem_8.5rem_minmax(80px,1fr)_minmax(260px,auto)] items-center gap-x-3";
-
 function expiryDaysHint(date: string | null | undefined): string | null {
   if (!date) return null;
   const days = differenceInCalendarDays(parseISO(date), new Date());
@@ -65,51 +62,6 @@ function StatusPill({ label, className }: { label: string; className: string }) 
     <span className={cn("inline-flex rounded-full px-2.5 py-0.5 text-[0.72rem] font-semibold", className)}>
       {label}
     </span>
-  );
-}
-
-function FileRowCells({
-  doc,
-  cat,
-}: {
-  doc: LeadDocument;
-  cat: DocCategoryChoice;
-}) {
-  const status = fileStatus(doc, cat);
-  const expiryHint = doc.expiry_date ? expiryDaysHint(doc.expiry_date) : null;
-
-  return (
-    <>
-      <div className="min-w-0">
-        <p className="truncate font-medium text-foreground">{doc.name}</p>
-      </div>
-      <StatusPill label={status.label} className={status.className} />
-      <span className="font-mono text-[0.76rem] text-foreground">{formatDateTime(doc.created_at)}</span>
-      <div className="text-[0.82rem]">
-        {cat.capture === "expiry" ? (
-          doc.expiry_date ? (
-            <div>
-              <span className="font-mono text-[0.76rem] text-foreground">{formatDate(doc.expiry_date)}</span>
-              {expiryHint ? (
-                <span
-                  className={cn(
-                    "mt-0.5 block text-[0.72rem]",
-                    expiryHint.startsWith("Expired") ? "text-destructive" : "text-muted-foreground"
-                  )}
-                >
-                  {expiryHint}
-                </span>
-              ) : null}
-            </div>
-          ) : (
-            <span className="italic text-muted-foreground">No date set</span>
-          )
-        ) : (
-          "—"
-        )}
-      </div>
-      <span className="truncate text-muted-foreground">{doc.notes?.trim() || "—"}</span>
-    </>
   );
 }
 
@@ -253,12 +205,154 @@ export function LeadDocumentsChecklist({
     );
   }
 
-  return (
-    <div className={cn(embedded ? "" : "overflow-hidden rounded-[14px] border border-border bg-card")}>
+  const clientGroups = useMemo(
+    () => groups.filter((g) => (g.cat.scope ?? "individual") === "individual"),
+    [groups]
+  );
+  const propertyGroups = useMemo(
+    () => groups.filter((g) => (g.cat.scope ?? "individual") === "property"),
+    [groups]
+  );
+  const showSplit = clientGroups.length > 0 && propertyGroups.length > 0;
+
+  function renderScopeColumn(title: string, scoped: CategoryGroup[], tone: "client" | "property") {
+    if (scoped.length === 0) return null;
+    return (
       <div
         className={cn(
-          "flex flex-wrap items-center justify-between gap-3 px-4 py-3",
-          embedded ? "px-0 pt-0" : "border-b border-border"
+          "overflow-hidden rounded-[14px] border border-border bg-card",
+          showSplit ? "min-w-0" : ""
+        )}
+      >
+        <div
+          className={cn(
+            "border-b border-border px-4 py-3",
+            tone === "client" ? "bg-primary/5" : "bg-secondary/10"
+          )}
+        >
+          <h3
+            className="font-heading text-[1.02rem] text-foreground"
+            style={{ fontFamily: "var(--font-display), serif" }}
+          >
+            {title}
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            {scoped.filter((g) => g.docs.length > 0).length} of {scoped.length} categories have files
+          </p>
+        </div>
+        <div className="divide-y divide-border/60">
+          {scoped.map(({ cat, docs }) => {
+            const headerStatus = docStatus(docs[0], cat);
+            if (docs.length === 0) {
+              return (
+                <div key={cat.value} className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/20">
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground">{cat.label}</p>
+                    <StatusPill label="Not uploaded" className="mt-1 bg-muted text-muted-foreground" />
+                  </div>
+                  {canEdit ? (
+                    <DocumentUploadDialog
+                      entityType={uploadEntityType}
+                      entityId={uploadEntityId}
+                      fixedCategory={cat}
+                      propertyId={cat.scope === "property" ? defaultPropertyId : null}
+                      propertyChoices={cat.scope === "property" ? propertyChoices : []}
+                      onSaved={(d) => onDocumentSaved?.(d as LeadDocument | undefined)}
+                      trigger={
+                        <Button type="button" size="sm" variant="outline" className="h-7 gap-1 px-2 text-xs">
+                          <Plus className="h-3 w-3" />
+                          Add
+                        </Button>
+                      }
+                    />
+                  ) : (
+                    <span className="text-xs italic text-muted-foreground">—</span>
+                  )}
+                </div>
+              );
+            }
+
+            return (
+              <div key={cat.value} className="p-3">
+                <div className="overflow-hidden rounded-[12px] border border-primary/30 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2 bg-primary px-3 py-2.5 text-primary-foreground">
+                    <div className="min-w-0">
+                      <p className="font-heading text-[0.95rem] font-semibold" style={{ fontFamily: "var(--font-display), serif" }}>
+                        {cat.label}
+                      </p>
+                      <p className="text-[0.7rem] text-white/65">
+                        {docs.length} file{docs.length === 1 ? "" : "s"}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusPill label={headerStatus.label} className={headerStatus.className} />
+                      {canEdit ? (
+                        <DocumentUploadDialog
+                          entityType={uploadEntityType}
+                          entityId={uploadEntityId}
+                          fixedCategory={cat}
+                          propertyId={cat.scope === "property" ? defaultPropertyId : null}
+                          propertyChoices={cat.scope === "property" ? propertyChoices : []}
+                          onSaved={(d) => onDocumentSaved?.(d as LeadDocument | undefined)}
+                          trigger={
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="secondary"
+                              className="h-7 gap-1 border-0 bg-secondary px-2 text-xs text-secondary-foreground hover:bg-secondary/90"
+                            >
+                              <Plus className="h-3 w-3" />
+                              Add
+                            </Button>
+                          }
+                        />
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="divide-y divide-border/70 bg-card">
+                    {docs.map((doc, idx) => (
+                      <div
+                        key={doc.id}
+                        className={cn(
+                          "space-y-2 px-3 py-3",
+                          idx % 2 === 0 ? "bg-emerald-50/40" : "bg-white"
+                        )}
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="truncate font-medium text-foreground">{doc.name}</p>
+                            <p className="mt-0.5 font-mono text-[0.72rem] text-muted-foreground">
+                              {formatDateTime(doc.created_at)}
+                            </p>
+                          </div>
+                          <StatusPill label={fileStatus(doc, cat).label} className={fileStatus(doc, cat).className} />
+                        </div>
+                        {(cat.capture === "expiry" && doc.expiry_date) || (cat.capture === "note" && doc.notes) ? (
+                          <p className="text-[0.78rem] text-muted-foreground">
+                            {cat.capture === "expiry" && doc.expiry_date
+                              ? `Expiry ${formatDate(doc.expiry_date)}${expiryDaysHint(doc.expiry_date) ? ` · ${expiryDaysHint(doc.expiry_date)}` : ""}`
+                              : doc.notes}
+                          </p>
+                        ) : null}
+                        <FileActions doc={doc} cat={cat} compact />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn(embedded ? "" : "space-y-4")}>
+      <div
+        className={cn(
+          "flex flex-wrap items-center justify-between gap-3",
+          embedded ? "" : "rounded-[14px] border border-border bg-card px-4 py-3"
         )}
       >
         {!embedded ? (
@@ -293,127 +387,15 @@ export function LeadDocumentsChecklist({
         ) : null}
       </div>
 
-      <div className="hidden border-b border-border bg-muted/40 px-4 py-2.5 text-[0.7rem] font-semibold uppercase tracking-wide text-muted-foreground lg:grid lg:grid-cols-[minmax(140px,1.3fr)_6.5rem_8.5rem_8.5rem_minmax(80px,1fr)_minmax(260px,auto)] lg:gap-x-3">
-        <span>Document</span>
-        <span>Status</span>
-        <span>Uploaded</span>
-        <span>Expiry</span>
-        <span>Notes</span>
-        <span className="text-right">Actions</span>
-      </div>
-
-      <div className="overflow-x-auto">
-      <div className="min-w-[980px] divide-y divide-border/60">
-        {(["individual", "property"] as const).map((scope) => {
-          const scoped = groups.filter((g) => (g.cat.scope ?? "individual") === scope);
-          if (scoped.length === 0) return null;
-          return (
-            <div key={scope}>
-              <div className="bg-muted/50 px-4 py-2 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                {scope === "property" ? "Property documents" : "Individual documents"}
-              </div>
-              {scoped.map(({ cat, docs }) => {
-          const headerStatus = docStatus(docs[0], cat);
-
-          if (docs.length === 0) {
-            return (
-              <div key={cat.value} className={cn(ROW_GRID, "px-4 py-3 hover:bg-muted/20")}>
-                <p className="font-medium text-foreground">{cat.label}</p>
-                <StatusPill label="Not uploaded" className="bg-muted text-muted-foreground" />
-                <span className="text-muted-foreground">—</span>
-                <span className="text-muted-foreground">—</span>
-                <span className="text-muted-foreground">—</span>
-                <div className="flex justify-end">
-                  {canEdit ? (
-                    <DocumentUploadDialog
-                      entityType={uploadEntityType}
-                      entityId={uploadEntityId}
-                      fixedCategory={cat}
-                      propertyId={cat.scope === "property" ? defaultPropertyId : null}
-                      propertyChoices={cat.scope === "property" ? propertyChoices : []}
-                      onSaved={(d) => onDocumentSaved?.(d as LeadDocument | undefined)}
-                      trigger={
-                        <Button type="button" size="sm" variant="outline" className="h-7 gap-1 px-2 text-xs">
-                          <Plus className="h-3 w-3" />
-                          Add new
-                        </Button>
-                      }
-                    />
-                  ) : (
-                    <span className="text-xs italic text-muted-foreground">—</span>
-                  )}
-                </div>
-              </div>
-            );
-          }
-
-          return (
-            <div key={cat.value} className="px-4 py-3">
-              <div className="overflow-hidden rounded-[12px] border border-primary/30 shadow-sm">
-                <div className="flex flex-wrap items-center justify-between gap-3 bg-primary px-4 py-3 text-primary-foreground">
-                  <div className="min-w-0">
-                    <p className="font-heading text-[1rem] font-semibold" style={{ fontFamily: "var(--font-display), serif" }}>
-                      {cat.label}
-                    </p>
-                    <p className="text-[0.72rem] text-white/65">
-                      {docs.length} file{docs.length === 1 ? "" : "s"} uploaded
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <StatusPill label={headerStatus.label} className={headerStatus.className} />
-                    {canEdit ? (
-                      <DocumentUploadDialog
-                        entityType={uploadEntityType}
-                        entityId={uploadEntityId}
-                        fixedCategory={cat}
-                        propertyId={cat.scope === "property" ? defaultPropertyId : null}
-                        propertyChoices={cat.scope === "property" ? propertyChoices : []}
-                        onSaved={(d) => onDocumentSaved?.(d as LeadDocument | undefined)}
-                        trigger={
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="secondary"
-                            className="h-7 gap-1 border-0 bg-secondary px-2.5 text-xs text-secondary-foreground hover:bg-secondary/90"
-                          >
-                            <Plus className="h-3 w-3" />
-                            Add new
-                          </Button>
-                        }
-                      />
-                    ) : null}
-                  </div>
-                </div>
-
-                <div className="divide-y divide-border/70 bg-card">
-                  {docs.map((doc, idx) => (
-                    <div
-                      key={doc.id}
-                      className={cn(
-                        ROW_GRID,
-                        "gap-y-2 px-4 py-3",
-                        idx % 2 === 0 ? "bg-emerald-50/40" : "bg-white"
-                      )}
-                    >
-                      <FileRowCells doc={doc} cat={cat} />
-                      <FileActions doc={doc} cat={cat} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          );
-              })}
-            </div>
-          );
-        })}
-      </div>
+      <div className={cn("grid gap-4", showSplit ? "lg:grid-cols-2" : "grid-cols-1")}>
+        {renderScopeColumn("Client docs", clientGroups, "client")}
+        {renderScopeColumn("Property docs", propertyGroups, "property")}
       </div>
 
       {sourcesHint ? (
-        <p className="border-t border-border px-4 py-2 text-xs text-muted-foreground">{sourcesHint}</p>
+        <p className="px-1 text-xs text-muted-foreground">{sourcesHint}</p>
       ) : customerId ? (
-        <p className="border-t border-border px-4 py-2 text-xs text-muted-foreground">
+        <p className="px-1 text-xs text-muted-foreground">
           ID documents on the person profile are included in the KYC tab and customer record.
         </p>
       ) : null}

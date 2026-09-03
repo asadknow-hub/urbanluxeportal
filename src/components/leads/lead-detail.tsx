@@ -970,10 +970,12 @@ export function LeadDetail({
         </div>
 
         {pipelineStages.length > 0 && (
-          <div className="relative border-t border-border/80 px-6 pb-2 pt-8 md:px-8">
-            <div className="relative h-[5px] rounded-full bg-border">
-              <div className="absolute inset-y-0 left-0 rounded-full bg-primary" style={{ width: `${fillPct}%` }} />
-              <div className="absolute inset-0">
+          <div className="relative border-t border-border/80 px-6 pb-12 pt-8 md:px-8">
+            <div className="relative">
+              <div className="relative h-[5px] rounded-full bg-border">
+                <div className="absolute inset-y-0 left-0 rounded-full bg-primary" style={{ width: `${fillPct}%` }} />
+              </div>
+              <div className="absolute inset-x-0 top-0 h-[5px]">
                 {pipelineStages.map((stage, idx) => {
                   const lastIdx = pipelineStages.length - 1;
                   const left = lastIdx <= 0 ? 0 : (idx / lastIdx) * 100;
@@ -988,12 +990,12 @@ export function LeadDetail({
                       disabled={!canEdit || pending}
                       onClick={() => handleStageChange(stage.id)}
                       aria-label={stage.name}
-                      className={`group absolute top-1/2 z-10 flex min-h-8 min-w-8 -translate-y-1/2 flex-col justify-center ${
+                      className={`group absolute top-1/2 z-10 flex -translate-y-1/2 flex-col items-center ${
                         isFirst
-                          ? "left-0 items-start"
+                          ? "left-0 translate-x-0 items-start"
                           : isLast
-                            ? "right-0 items-end"
-                            : "items-center -translate-x-1/2"
+                            ? "right-0 translate-x-0 items-end"
+                            : "-translate-x-1/2"
                       }`}
                       style={isFirst || isLast ? undefined : { left: `${left}%` }}
                     >
@@ -1011,9 +1013,11 @@ export function LeadDetail({
                         }
                       />
                       <span
-                        className={`absolute top-3.5 whitespace-nowrap text-[0.72rem] font-medium tracking-wide group-hover:opacity-0 ${
+                        className={`pointer-events-none absolute top-[18px] max-w-[7.5rem] text-center text-[0.68rem] font-medium leading-tight tracking-wide group-hover:opacity-0 ${
+                          isFirst ? "left-0 text-left" : isLast ? "right-0 text-right" : "left-1/2 -translate-x-1/2"
+                        } ${
                           isCurrent
-                            ? "top-[18px] text-[0.7rem] font-bold uppercase tracking-[0.08em] text-secondary"
+                            ? "font-bold uppercase tracking-[0.08em] text-secondary"
                             : isDone
                               ? "text-muted-foreground"
                               : "hidden text-muted-foreground md:block"
@@ -1026,7 +1030,6 @@ export function LeadDetail({
                 })}
               </div>
             </div>
-            <div className="h-8" />
           </div>
         )}
       </section>
