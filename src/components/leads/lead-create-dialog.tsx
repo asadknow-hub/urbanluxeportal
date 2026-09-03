@@ -323,13 +323,13 @@ export function LeadCreateDialog({
       <Label
         className={cn(
           "text-[0.68rem] font-semibold uppercase tracking-[0.1em]",
-          locked ? "text-secondary" : "text-muted-foreground"
+          locked ? "text-secondary" : requiredMark(field.key) ? "text-red-700" : "text-muted-foreground"
         )}
       >
         <span className="inline-flex items-center gap-1">
           {locked ? <Lock className="h-3 w-3" /> : null}
           {field.label}
-          {requiredMark(field.key) ? <span className="ml-0.5 text-primary">*</span> : null}
+          {requiredMark(field.key) ? <span className="ml-0.5 text-red-600">*</span> : null}
         </span>
       </Label>
     );
@@ -562,7 +562,8 @@ export function LeadCreateDialog({
             New lead
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
-            Fields and lists come from Lead Settings. Name, WhatsApp, source, and interest are required.
+            Fields and lists come from Lead Settings.{" "}
+            <span className="font-medium text-red-600">Name, WhatsApp, source, and interest</span> are required.
           </p>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="scrollbar-gold max-h-[min(72vh,40rem)] space-y-5 overflow-y-auto px-6 py-5">

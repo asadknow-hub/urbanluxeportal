@@ -68,8 +68,8 @@ export default async function LeadsBoardPage({
     let query = supabase
       .from("leads")
       .select(
-        `id, name, phone, email, interest, budget_min, budget_max, preferred_areas,
-         stage_id, assigned_to, next_follow_up_at, created_at, updated_at, last_activity_at, stage_entered_at, tags,
+         `id, name, phone, email, interest, budget_min, budget_max, preferred_areas,
+         stage_id, assigned_to, customer_id, next_follow_up_at, created_at, updated_at, last_activity_at, stage_entered_at, tags,
          first_response_due_at, first_responded_at, first_response_minutes,
          assigned_to_profile:profiles!leads_assigned_to_fkey(id, full_name, avatar_url)`,
         { count: "exact" }
@@ -191,21 +191,45 @@ export default async function LeadsBoardPage({
   const nationalityNames = (nationalitiesResult.data ?? []).map((row) => row.name);
   const visibleLeads = boardData?.leads ?? [];
   const normalize = (value: string | null) => (value ?? "").trim().toLowerCase();
-  const phoneCounts = new Map<string, number>();
-  const emailCounts = new Map<string, number>();
+
+  /** Accidental dups only — same phone/email but not intentionally linked to the same owner. */
+  const contactGroups = new Map<string, { id: string; customer_id: string | null }[]>();
   for (const lead of visibleLeads) {
     const phone = normalize(lead.phone);
     const email = normalize(lead.email);
-    if (phone) phoneCounts.set(phone, (phoneCounts.get(phone) ?? 0) + 1);
-    if (email) emailCounts.set(email, (emailCounts.get(email) ?? 0) + 1);
+    const keys = [
+      phone ? `p:${phone}` : null,
+      email ? `e:${email}` : null,
+    ].filter(Boolean) as string[];
+    for (const key of keys) {
+      const list = contactGroups.get(key) ?? [];
+      list.push({ id: lead.id, customer_id: lead.customer_id ?? null });
+      contactGroups.set(key, list);
+    }
   }
-  const duplicateLeadIds = visibleLeads
-    .filter((lead) => {
-      const phone = normalize(lead.phone);
-      const email = normalize(lead.email);
-      return (phone && (phoneCounts.get(phone) ?? 0) > 1) || (email && (emailCounts.get(email) ?? 0) > 1);
-    })
-    .map((lead) => lead.id);
+  const duplicateLeadIds: string[] = [];
+  const sameOwnerLeadIds: string[] = [];
+  const seenDup = new Set<string>();
+  const seenSame = new Set<string>();
+  for (const group of contactGroups.values()) {
+    if (group.length < 2) continue;
+    const ownerIds = new Set(group.map((row) => row.customer_id).filter(Boolean) as string[]);
+    const allSameOwner =
+      ownerIds.size === 1 && group.every((row) => row.customer_id && row.customer_id === [...ownerIds][0]);
+    if (allSameOwner) {
+      for (const row of group) {
+        if (seenSame.has(row.id)) continue;
+        seenSame.add(row.id);
+        sameOwnerLeadIds.push(row.id);
+      }
+      continue;
+    }
+    for (const row of group) {
+      if (seenDup.has(row.id)) continue;
+      seenDup.add(row.id);
+      duplicateLeadIds.push(row.id);
+    }
+  }
 
   const buildBoardLimitHref = () => {
     const current = boardData?.boardLimit ?? BOARD_LIMIT_DEFAULT;
@@ -291,6 +315,7 @@ export default async function LeadsBoardPage({
           stages={boardData?.stages ?? []}
           leads={boardData?.leads ?? []}
           duplicateLeadIds={duplicateLeadIds}
+          sameOwnerLeadIds={sameOwnerLeadIds}
           userRole={user.role}
           fieldOptions={groupedOptions}
         />

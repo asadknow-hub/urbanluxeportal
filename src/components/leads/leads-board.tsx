@@ -49,6 +49,7 @@ export type BoardLead = {
   preferred_areas: string[] | null;
   stage_id: string | null;
   assigned_to: string | null;
+  customer_id?: string | null;
   next_follow_up_at: string | null;
   created_at: string;
   updated_at: string;
@@ -60,6 +61,7 @@ export type BoardLead = {
   first_responded_at?: string | null;
   first_response_minutes?: number | null;
   duplicate?: boolean;
+  sameOwner?: boolean;
 };
 
 const COLOR_MAP: Record<string, { bg: string; border: string; text: string; dot: string; header: string }> = {
@@ -138,7 +140,20 @@ function LeadCard({
         </Link>
         <div className="flex shrink-0 items-center gap-1">
           {lead.duplicate && (
-            <span className="rounded bg-red-50 px-1 py-px text-[10px] font-medium text-red-700">Dup</span>
+            <span
+              title="Same phone or email as another lead that is not linked to the same owner"
+              className="rounded bg-red-50 px-1 py-px text-[10px] font-medium text-red-700"
+            >
+              Dup
+            </span>
+          )}
+          {lead.sameOwner && !lead.duplicate && (
+            <span
+              title="Another open lead is linked to the same owner (e.g. Sell + Rent)"
+              className="rounded bg-sky-50 px-1 py-px text-[10px] font-medium text-sky-700"
+            >
+              Same
+            </span>
           )}
           {firstResponse && (
             <span
@@ -428,11 +443,13 @@ export function LeadsBoard({
   stages,
   leads,
   duplicateLeadIds = [],
+  sameOwnerLeadIds = [],
   fieldOptions = {},
 }: {
   stages: LeadStage[];
   leads: BoardLead[];
   duplicateLeadIds?: string[];
+  sameOwnerLeadIds?: string[];
   userRole: string;
   fieldOptions?: Record<string, LeadFieldOption[]>;
 }) {
@@ -449,6 +466,7 @@ export function LeadsBoard({
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
   const duplicateSet = useMemo(() => new Set(duplicateLeadIds), [duplicateLeadIds]);
+  const sameOwnerSet = useMemo(() => new Set(sameOwnerLeadIds), [sameOwnerLeadIds]);
 
   // Group leads by stage
   const leadsByStage = useMemo(() => {
@@ -541,6 +559,7 @@ export function LeadsBoard({
                 ...lead,
                 tags: lead.tags ?? [],
                 duplicate: duplicateSet.has(lead.id),
+                sameOwner: sameOwnerSet.has(lead.id),
               }))}
               fieldOptions={fieldOptions}
             />

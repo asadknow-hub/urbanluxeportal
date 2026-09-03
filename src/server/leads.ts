@@ -241,6 +241,23 @@ export async function createLead(
     // Linking an existing owner: fill blank fields only — never overwrite nationality/KYC.
     await ensurePersonForLead(data.id, user.id, supabase, linkingExisting ? "fill" : "overwrite");
 
+    // Older open leads with the same contact but no customer_id → attach to this owner
+    // so Sell + Rent under one person are not flagged as accidental duplicates.
+    if (linkingExisting && parsed.data.existing_customer_id) {
+      let orphanQuery = supabase
+        .from("leads")
+        .update({
+          customer_id: parsed.data.existing_customer_id,
+          updated_at: new Date().toISOString(),
+        })
+        .is("customer_id", null)
+        .is("deleted_at", null)
+        .neq("id", data.id);
+      if (phone) orphanQuery = orphanQuery.eq("phone", phone);
+      else if (email) orphanQuery = orphanQuery.eq("email", email);
+      if (phone || email) await orphanQuery;
+    }
+
     await logActivity({
       actorId: user.id,
       entityType: "lead",
