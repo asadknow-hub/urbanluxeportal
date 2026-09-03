@@ -114,18 +114,18 @@ export function ViewingPanel({
   }
 
   return (
-    <section className="rounded-[14px] border border-border bg-card px-[26px] py-6">
+    <section className="rounded-[14px] border border-[#c4b5fd] bg-[#f5f3ff] px-[26px] py-6">
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <div>
-          <h2 className="font-heading text-[1.12rem]" style={{ fontFamily: "var(--font-display), serif" }}>
+          <h2 className="font-heading text-[1.12rem] text-[#5b21b6]" style={{ fontFamily: "var(--font-display), serif" }}>
             Viewings
           </h2>
-          <p className="mt-0.5 text-[0.8rem] text-muted-foreground">
+          <p className="mt-0.5 text-[0.8rem] text-[#6d28d9]/80">
             {upcoming.length} upcoming · {viewings.length} total
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/viewings" className="text-xs text-muted-foreground hover:text-foreground">
+          <Link href="/viewings" className="text-xs text-[#6d28d9] hover:text-[#4c1d95]">
             Calendar
           </Link>
           {canEdit ? (
@@ -138,7 +138,7 @@ export function ViewingPanel({
       </div>
 
       {open && canEdit ? (
-        <form onSubmit={handleSchedule} className="mb-4 space-y-3 rounded-[12px] border border-border bg-muted/30 p-3">
+        <form onSubmit={handleSchedule} className="mb-4 space-y-3 rounded-[12px] border border-[#ddd6fe] bg-white p-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>When</Label>
@@ -209,7 +209,7 @@ export function ViewingPanel({
       ) : (
         <div className="space-y-3">
           {viewings.map((row) => (
-            <div key={row.id} className="rounded-[12px] border border-border/70 px-3 py-2.5">
+            <div key={row.id} className="rounded-[12px] border border-[#ddd6fe] bg-white px-3 py-2.5">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <p className="text-sm font-medium text-foreground">{formatDateTime(row.scheduled_at)}</p>

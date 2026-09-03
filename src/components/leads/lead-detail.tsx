@@ -74,12 +74,12 @@ import {
   Mail,
   MessageCircle,
   MoreHorizontal,
-  Loader2,
   Upload,
   ArrowRight,
   MapPin,
   Building2,
   Check,
+  UserRound,
 } from "lucide-react";
 
 type Lead = {
@@ -491,6 +491,17 @@ export function LeadDetail({
   );
   const firstResponse = firstResponseClock(optimisticLead);
   const scheduledFollowUp = optimisticFollowUps.find((row) => row.status === "scheduled") ?? null;
+  const contactAttempts = useMemo(
+    () =>
+      timelineItems.filter((item) =>
+        ["whatsapp", "call", "email", "in_person", "phone"].includes(item.type)
+      ),
+    [timelineItems]
+  );
+  const viewingScheduled =
+    currentStage?.name?.toLowerCase().includes("viewing") === true &&
+    currentStage.name.toLowerCase().includes("scheduled");
+  const contactedStage = currentStage?.name?.toLowerCase().includes("contacted") === true;
 
   useEffect(() => {
     if (skipFilterFetch.current) {
@@ -944,6 +955,20 @@ export function LeadDetail({
                 </Link>
               )}
             </div>
+            <div className="mt-1 space-y-0.5 text-right text-[0.72rem] leading-snug text-muted-foreground">
+              <p>
+                Lead created{" "}
+                <span className="font-medium text-foreground" title={formatDateTime(optimisticLead.created_at)}>
+                  {formatDate(optimisticLead.created_at)}
+                </span>
+              </p>
+              <p>
+                Last updated{" "}
+                <span className="font-medium text-foreground" title={formatDateTime(optimisticLead.updated_at)}>
+                  {timeAgo(optimisticLead.updated_at)}
+                </span>
+              </p>
+            </div>
           </div>
         </div>
 
@@ -965,8 +990,8 @@ export function LeadDetail({
                       type="button"
                       disabled={!canEdit || pending}
                       onClick={() => handleStageChange(stage.id)}
-                      title={stage.name}
-                      className={`group absolute top-1/2 flex -translate-y-1/2 flex-col ${
+                      aria-label={stage.name}
+                      className={`group absolute top-1/2 z-10 flex min-h-8 min-w-8 -translate-y-1/2 flex-col justify-center ${
                         isFirst
                           ? "left-0 items-start"
                           : isLast
@@ -975,18 +1000,21 @@ export function LeadDetail({
                       }`}
                       style={isFirst || isLast ? undefined : { left: `${left}%` }}
                     >
-                      {isDone && <Check className="absolute -top-5 h-[13px] w-[13px] text-primary" />}
-                      {/* Tooltip on hover */}
-                      <span className="pointer-events-none absolute -top-7 hidden whitespace-nowrap rounded bg-foreground px-2 py-0.5 text-[0.65rem] font-medium text-background shadow group-hover:block">
-                        {stage.name}
-                      </span>
-                      {isCurrent ? (
-                        <span className="h-[13px] w-[13px] rotate-45 rounded-[2px] bg-primary shadow-[0_0_0_5px_var(--accent)]" />
-                      ) : (
-                        <span className={`h-3 w-[1.5px] ${isDone ? "bg-primary" : "bg-[#C9C6BB]"}`} />
+                      {isDone && (
+                        <Check className="pointer-events-none absolute -top-5 h-[13px] w-[13px] text-primary group-hover:opacity-0" />
                       )}
                       <span
-                        className={`absolute top-3.5 whitespace-nowrap text-[0.72rem] font-medium tracking-wide ${
+                        aria-hidden
+                        className={
+                          isCurrent
+                            ? "h-[13px] w-[13px] rotate-45 rounded-[2px] border-2 border-primary bg-primary shadow-[0_0_0_5px_var(--accent)] transition-all duration-200 group-hover:bg-transparent group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.9),0_0_18px_6px_rgba(37,99,235,0.65)]"
+                            : `h-3 w-[1.5px] rotate-0 rounded-none border-0 bg-[#C9C6BB] transition-all duration-200 group-hover:h-[13px] group-hover:w-[13px] group-hover:rotate-45 group-hover:rounded-[2px] group-hover:border-2 group-hover:border-primary group-hover:bg-transparent group-hover:shadow-[0_0_0_3px_rgba(255,255,255,0.9),0_0_16px_6px_rgba(37,99,235,0.6)] ${
+                                isDone ? "bg-primary group-hover:border-primary" : "bg-[#C9C6BB]"
+                              }`
+                        }
+                      />
+                      <span
+                        className={`absolute top-3.5 whitespace-nowrap text-[0.72rem] font-medium tracking-wide group-hover:opacity-0 ${
                           isCurrent
                             ? "top-[18px] text-[0.7rem] font-bold uppercase tracking-[0.08em] text-secondary"
                             : isDone
@@ -1328,20 +1356,27 @@ export function LeadDetail({
         <div className="flex flex-col gap-[18px]">
           <section
             id="contact-attempts-section"
-            className={`rounded-[14px] border bg-card px-[26px] py-6 transition-shadow ${
-              currentStage?.name?.toLowerCase().includes("contacted")
-                ? "border-primary ring-2 ring-primary/30"
-                : "border-border"
+            className={`rounded-[14px] border px-[26px] py-6 text-[#7c2d12] transition-shadow ${
+              contactedStage
+                ? "border-[#ea580c] bg-[#fff7ed] ring-2 ring-[#fb923c]/40"
+                : "border-[#fdba74] bg-[#fff7ed]"
             }`}
           >
-            <h2 className="font-heading text-[1.12rem]" style={{ fontFamily: "var(--font-display), serif" }}>Contact Attempts</h2>
-            <p className="mt-1 mb-4 text-[0.78rem] text-muted-foreground">Log how you reached out to this lead.</p>
+            <div className="mb-3 flex items-baseline justify-between gap-3">
+              <h2 className="font-heading text-[1.12rem] text-[#9a3412]" style={{ fontFamily: "var(--font-display), serif" }}>
+                Contact Attempts
+              </h2>
+              <span className="rounded-full bg-[#ea580c] px-2.5 py-0.5 text-[0.72rem] font-bold tabular-nums text-white">
+                {contactAttempts.length}
+              </span>
+            </div>
+            <p className="mb-4 text-[0.78rem] text-[#9a3412]/75">Log how you reached out to this lead.</p>
             <div className="flex gap-2">
               {([
                 { key: "whatsapp" as const, label: "WhatsApp", icon: <MessageCircle className="h-5 w-5" /> },
                 { key: "call" as const, label: "Call", icon: <Phone className="h-5 w-5" /> },
                 { key: "email" as const, label: "Email", icon: <Mail className="h-5 w-5" /> },
-                { key: "in_person" as const, label: "In Person", icon: <Building2 className="h-5 w-5" /> },
+                { key: "in_person" as const, label: "In Person", icon: <UserRound className="h-5 w-5" /> },
               ]).map((m) => (
                 <button
                   key={m.key}
@@ -1350,8 +1385,8 @@ export function LeadDetail({
                   onClick={() => setContactMethod(contactMethod === m.key ? null : m.key)}
                   className={`grid h-11 w-11 place-items-center rounded-[10px] border transition-colors ${
                     contactMethod === m.key
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
+                      ? "border-[#ea580c] bg-[#ea580c] text-white"
+                      : "border-[#fdba74] bg-white text-[#c2410c] hover:border-[#ea580c] hover:bg-[#ffedd5]"
                   }`}
                 >
                   {m.icon}
@@ -1363,11 +1398,11 @@ export function LeadDetail({
               value={contactNote}
               onChange={(e) => setContactNote(e.target.value)}
               placeholder="What happened? e.g. Left voicemail, scheduled callback…"
-              className="mt-3 min-h-[60px] resize-none text-sm"
+              className="mt-3 min-h-[60px] resize-none border-[#fdba74] bg-white text-sm text-foreground"
             />
             <Button
               size="sm"
-              className="mt-3 w-full"
+              className="mt-3 w-full bg-[#ea580c] text-white hover:bg-[#c2410c]"
               disabled={!contactMethod || pending}
               onClick={() => {
                 if (!contactMethod) return;
@@ -1375,6 +1410,20 @@ export function LeadDetail({
                 const summary = contactNote.trim()
                   ? `${label}: ${contactNote.trim()}`
                   : `${label} contact attempt`;
+                const now = new Date().toISOString();
+                setTimelineItems((prev) => [
+                  {
+                    id: `opt_ca_${Date.now()}`,
+                    source: "activity",
+                    type: contactMethod,
+                    summary,
+                    occurred_at: now,
+                    authorName: "You",
+                    isSystem: false,
+                  },
+                  ...prev,
+                ]);
+                setActivityCount((n) => n + 1);
                 startTransition(async () => {
                   const result = await addLeadActivity(optimisticLead.id, contactMethod, summary);
                   if (result.ok) {
@@ -1383,6 +1432,8 @@ export function LeadDetail({
                     setContactNote("");
                     router.refresh();
                   } else {
+                    setTimelineItems(initialTimeline);
+                    setActivityCount(initialActivityCount);
                     toast.error(result.error ?? "Failed");
                   }
                 });
@@ -1390,18 +1441,42 @@ export function LeadDetail({
             >
               Save
             </Button>
+            <div className="mt-4 border-t border-[#fdba74] pt-3">
+              <p className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#9a3412]/70">History</p>
+              {contactAttempts.length === 0 ? (
+                <p className="text-[0.8rem] text-[#9a3412]/65">No attempts logged yet.</p>
+              ) : (
+                <ul className="max-h-52 space-y-2 overflow-y-auto">
+                  {contactAttempts.slice(0, 12).map((item) => (
+                    <li key={item.id} className="rounded-lg border border-[#fed7aa] bg-white px-2.5 py-2">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="text-[0.78rem] font-semibold capitalize text-[#9a3412]">
+                          {item.type === "in_person" ? "In person" : item.type}
+                        </span>
+                        <span className="shrink-0 text-[0.68rem] text-[#c2410c]/80" title={formatDateTime(item.occurred_at)}>
+                          {shortTimeAgo(item.occurred_at)}
+                        </span>
+                      </div>
+                      {item.summary ? (
+                        <p className="mt-0.5 text-[0.78rem] leading-snug text-foreground/80">{item.summary}</p>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </section>
 
           <section className="rounded-[14px] bg-primary px-[26px] py-6 text-primary-foreground">
             <p className="mb-2.5 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-secondary">Next step</p>
             <h2 className="font-heading text-[1.12rem] text-white" style={{ fontFamily: "var(--font-display), serif" }}>{followUpTitle()}</h2>
-            <p className="mt-1.5 mb-[18px] text-[0.92rem] leading-relaxed text-white/80">
+            <p className="mt-1.5 mb-[18px] text-[0.92rem] leading-relaxed text-white">
               {optimisticLead.next_follow_up_at ? (
                 <>
                   <span className="font-mono text-[0.86rem] text-secondary">{formatDateTime(optimisticLead.next_follow_up_at)}</span>
                   {isOverdue(optimisticLead.next_follow_up_at) ? ". This follow-up is overdue." : "."}
                   {scheduledFollowUp?.notes ? (
-                    <span className="mt-2 block text-[0.88rem] text-white/90">{scheduledFollowUp.notes}</span>
+                    <span className="mt-2 block text-[0.88rem] text-white">{scheduledFollowUp.notes}</span>
                   ) : null}
                 </>
               ) : firstResponse?.tone === "overdue" ? (
@@ -1412,17 +1487,18 @@ export function LeadDetail({
                 <>No follow-up is set — <b className="text-white">set one now</b>.</>
               )}
             </p>
-            <div className="flex items-center gap-2.5 border-t border-white/12 py-3">
-              <div className="grid h-[34px] w-[34px] place-items-center rounded-full bg-secondary/20 font-heading text-[0.78rem] text-secondary" style={{ fontFamily: "var(--font-display), serif" }}>
+            <div className="flex items-center gap-2.5 rounded-xl border border-white/25 bg-white px-3 py-2.5 text-foreground">
+              <div className="grid h-[34px] w-[34px] place-items-center rounded-full bg-[#EDEBF4] font-heading text-[0.78rem] text-secondary" style={{ fontFamily: "var(--font-display), serif" }}>
                 {optimisticLead.assigned_to_profile ? initials(optimisticLead.assigned_to_profile.full_name) : "—"}
               </div>
               <div className="min-w-0 flex-1 leading-tight">
-                <b className="block text-[0.86rem] font-semibold text-white">{optimisticLead.assigned_to_profile?.full_name ?? "Unassigned"}</b>
-                <span className="text-[0.72rem] uppercase tracking-wide text-white/55">{optimisticLead.assigned_to_profile?.role ?? "Agent"}</span>
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Assigned agent</p>
+                <b className="block text-[0.9rem] font-semibold text-foreground">{optimisticLead.assigned_to_profile?.full_name ?? "Unassigned"}</b>
+                <span className="text-[0.72rem] capitalize text-muted-foreground">{optimisticLead.assigned_to_profile?.role ?? "No agent yet"}</span>
               </div>
               {canManage && (
                 <Select value={optimisticLead.assigned_to ?? "unassigned"} onValueChange={(v) => handleAssign(v === "unassigned" ? null : v ?? null)}>
-                  <SelectTrigger className="h-auto border-0 bg-transparent p-0 text-[0.78rem] font-semibold text-secondary shadow-none">
+                  <SelectTrigger className="h-8 w-auto border-border bg-muted px-2 text-[0.78rem] font-semibold text-foreground shadow-none">
                     <span>Reassign</span>
                   </SelectTrigger>
                   <SelectContent>
@@ -1462,7 +1538,10 @@ export function LeadDetail({
             )}
           </section>
 
-          <div id="viewings-section">
+          <div
+            id="viewings-section"
+            className={viewingScheduled ? "rounded-[14px] ring-2 ring-[#7c3aed]/40" : undefined}
+          >
             <ViewingPanel
               leadId={optimisticLead.id}
               dealId={optimisticLead.converted_deal_id}
