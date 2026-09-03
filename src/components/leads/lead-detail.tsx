@@ -717,34 +717,12 @@ export function LeadDetail({
   }
 
   function activityDetail(item: LeadTimelineItem) {
-    const t = item.type.toLowerCase();
-    if (["whatsapp", "call", "email", "in_person", "phone"].includes(t)) {
-      return item.summary && item.summary !== highlightActivityTitle(item) ? item.summary : null;
-    }
-    if (t.includes("follow_up") || t.includes("viewing")) {
-      return item.summary && item.summary !== activityKindLabel(item) ? item.summary : null;
-    }
-    return item.summary || null;
-  }
-
-  function highlightActivityTitle(item: LeadTimelineItem) {
-    const t = item.type.toLowerCase();
-    if (t.includes("follow_up")) {
-      if (t.includes("done") || t.includes("complete")) {
-        return `Follow-up completed on ${formatDateTime(item.occurred_at)}`;
-      }
-      return `Follow-up created on ${formatDateTime(item.occurred_at)}`;
-    }
-    if (t.includes("viewing")) {
-      if (t.includes("schedul") || t.includes("created") || t === "viewing") {
-        return `Viewing scheduled on ${formatDateTime(item.occurred_at)}`;
-      }
-      return item.summary || `Viewing updated on ${formatDateTime(item.occurred_at)}`;
-    }
-    if (["whatsapp", "call", "email", "in_person", "phone"].includes(t)) {
-      return item.summary || `${formatLabel(t === "in_person" ? "in person" : t)} contact attempt`;
-    }
-    return item.summary || formatLabel(item.type);
+    if (!item.summary?.trim()) return null;
+    const kind = activityKindLabel(item);
+    const summary = item.summary.trim();
+    if (summary === kind) return null;
+    if (summary.toLowerCase() === `${kind.toLowerCase()} contact attempt`) return null;
+    return summary;
   }
 
   function logContact(type: "call" | "whatsapp" | "email") {
