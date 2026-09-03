@@ -36,18 +36,6 @@ function expiryDaysHint(date: string | null | undefined): string | null {
   return `${days}d left`;
 }
 
-function docStatus(doc: LeadDocument | undefined, cat: DocCategoryChoice): { label: string; className: string } {
-  if (!doc) {
-    return { label: "Not uploaded", className: "bg-white/15 text-white/90" };
-  }
-  if (cat.capture === "expiry" && doc.expiry_date) {
-    const days = differenceInCalendarDays(parseISO(doc.expiry_date), new Date());
-    if (days < 0) return { label: "Expired", className: "bg-red-500/20 text-red-100" };
-    if (days <= 30) return { label: "Expiring soon", className: "bg-amber-400/25 text-amber-100" };
-  }
-  return { label: "Uploaded", className: "bg-emerald-500/20 text-emerald-100" };
-}
-
 function fileStatus(doc: LeadDocument, cat: DocCategoryChoice): { label: string; className: string } {
   if (cat.capture === "expiry" && doc.expiry_date) {
     const days = differenceInCalendarDays(parseISO(doc.expiry_date), new Date());
@@ -116,11 +104,6 @@ export function LeadDocumentsChecklist({
     }));
   }, [categories, documents]);
 
-  const categoriesWithDocs = useMemo(
-    () => groups.filter((g) => g.docs.length > 0).length,
-    [groups]
-  );
-
   function openInTab(doc: LeadDocument) {
     startTransition(async () => {
       const result = await getSignedUrl(doc.storage_path);
@@ -170,34 +153,32 @@ export function LeadDocumentsChecklist({
     });
   }
 
-  function FileActions({ doc, cat, compact = false }: { doc: LeadDocument; cat: DocCategoryChoice; compact?: boolean }) {
-    const btn = compact ? "h-7 gap-1 px-2 text-xs" : "h-7 gap-1 px-2.5 text-xs";
+  function FileActions({ doc, cat }: { doc: LeadDocument; cat: DocCategoryChoice }) {
     return (
-      <div className="flex flex-wrap justify-end gap-1">
-        <Button type="button" size="sm" variant="outline" className={btn} onClick={() => setPreview(doc)}>
+      <div className="flex flex-wrap justify-end gap-0.5">
+        <Button type="button" size="sm" variant="ghost" className="h-6 gap-1 px-1.5 text-[0.68rem]" onClick={() => setPreview(doc)}>
           <Eye className="h-3 w-3" />
           Preview
         </Button>
-        <Button type="button" size="sm" variant="outline" className={btn} onClick={() => openInTab(doc)}>
+        <Button type="button" size="sm" variant="ghost" className="h-6 gap-1 px-1.5 text-[0.68rem]" onClick={() => openInTab(doc)}>
           <ExternalLink className="h-3 w-3" />
           Open
         </Button>
         {canEdit ? (
           <>
-            <Button type="button" size="sm" variant="outline" className={btn} onClick={() => openEdit(doc, cat)}>
+            <Button type="button" size="sm" variant="ghost" className="h-6 gap-1 px-1.5 text-[0.68rem]" onClick={() => openEdit(doc, cat)}>
               <Pencil className="h-3 w-3" />
               Edit
             </Button>
             <Button
               type="button"
               size="sm"
-              variant="outline"
-              className={cn(btn, "text-destructive hover:bg-destructive/10 hover:text-destructive")}
+              variant="ghost"
+              className="h-6 gap-1 px-1.5 text-[0.68rem] text-destructive hover:bg-destructive/10 hover:text-destructive"
               disabled={pending}
               onClick={() => removeDoc(doc)}
             >
               <Trash2 className="h-3 w-3" />
-              Delete
             </Button>
           </>
         ) : null}
@@ -217,38 +198,58 @@ export function LeadDocumentsChecklist({
 
   function renderScopeColumn(title: string, scoped: CategoryGroup[], tone: "client" | "property") {
     if (scoped.length === 0) return null;
+    const filled = scoped.filter((g) => g.docs.length > 0).length;
     return (
-      <div
-        className={cn(
-          "overflow-hidden rounded-[14px] border border-border bg-card",
-          showSplit ? "min-w-0" : ""
-        )}
-      >
+      <div className={cn("overflow-hidden rounded-[14px] border border-border bg-card", showSplit && "min-w-0")}>
         <div
           className={cn(
-            "border-b border-border px-4 py-3",
-            tone === "client" ? "bg-primary/5" : "bg-secondary/10"
+            "flex items-center justify-between gap-2 px-3 py-2.5 text-white",
+            tone === "client" ? "bg-primary" : "bg-secondary"
           )}
         >
-          <h3
-            className="font-heading text-[1.02rem] text-foreground"
-            style={{ fontFamily: "var(--font-display), serif" }}
-          >
-            {title}
-          </h3>
-          <p className="text-xs text-muted-foreground">
-            {scoped.filter((g) => g.docs.length > 0).length} of {scoped.length} categories have files
-          </p>
+          <div className="min-w-0">
+            <h3 className="font-heading text-[1rem] leading-tight" style={{ fontFamily: "var(--font-display), serif" }}>
+              {title}
+            </h3>
+            <p className="text-[0.68rem] text-white/70">
+              {filled} of {scoped.length} have files
+            </p>
+          </div>
+          {canEdit ? (
+            <DocumentUploadDialog
+              entityType={uploadEntityType}
+              entityId={uploadEntityId}
+              categories={scoped.map((g) => g.cat)}
+              propertyId={tone === "property" ? defaultPropertyId : null}
+              propertyChoices={tone === "property" ? propertyChoices : []}
+              onSaved={(doc) => onDocumentSaved?.(doc as LeadDocument | undefined)}
+              trigger={
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className={cn(
+                    "h-7 gap-1 border-0 px-2 text-xs shrink-0",
+                    tone === "client"
+                      ? "bg-white/15 text-white hover:bg-white/25"
+                      : "bg-white/20 text-white hover:bg-white/30"
+                  )}
+                >
+                  <Upload className="h-3 w-3" />
+                  Upload
+                </Button>
+              }
+            />
+          ) : null}
         </div>
-        <div className="divide-y divide-border/60">
+
+        <div className="divide-y divide-border/50">
           {scoped.map(({ cat, docs }) => {
-            const headerStatus = docStatus(docs[0], cat);
             if (docs.length === 0) {
               return (
-                <div key={cat.value} className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/20">
-                  <div className="min-w-0">
-                    <p className="font-medium text-foreground">{cat.label}</p>
-                    <StatusPill label="Not uploaded" className="mt-1 bg-muted text-muted-foreground" />
+                <div key={cat.value} className="flex items-center justify-between gap-2 px-3 py-1.5 hover:bg-muted/30">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <p className="truncate text-[0.84rem] font-medium text-foreground">{cat.label}</p>
+                    <StatusPill label="Missing" className="bg-muted text-muted-foreground" />
                   </div>
                   {canEdit ? (
                     <DocumentUploadDialog
@@ -259,33 +260,32 @@ export function LeadDocumentsChecklist({
                       propertyChoices={cat.scope === "property" ? propertyChoices : []}
                       onSaved={(d) => onDocumentSaved?.(d as LeadDocument | undefined)}
                       trigger={
-                        <Button type="button" size="sm" variant="outline" className="h-7 gap-1 px-2 text-xs">
+                        <Button type="button" size="sm" variant="ghost" className="h-6 gap-1 px-1.5 text-[0.68rem]">
                           <Plus className="h-3 w-3" />
                           Add
                         </Button>
                       }
                     />
-                  ) : (
-                    <span className="text-xs italic text-muted-foreground">—</span>
-                  )}
+                  ) : null}
                 </div>
               );
             }
 
             return (
-              <div key={cat.value} className="p-3">
-                <div className="overflow-hidden rounded-[12px] border border-primary/30 shadow-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-2 bg-primary px-3 py-2.5 text-primary-foreground">
-                    <div className="min-w-0">
-                      <p className="font-heading text-[0.95rem] font-semibold" style={{ fontFamily: "var(--font-display), serif" }}>
-                        {cat.label}
-                      </p>
-                      <p className="text-[0.7rem] text-white/65">
+              <div key={cat.value} className="px-2 py-1.5">
+                <div className="overflow-hidden rounded-[10px] border border-border/80">
+                  <div className="flex items-center justify-between gap-2 bg-muted/50 px-2.5 py-1.5">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <p className="truncate text-[0.84rem] font-semibold text-foreground">{cat.label}</p>
+                      <span className="text-[0.68rem] text-muted-foreground">
                         {docs.length} file{docs.length === 1 ? "" : "s"}
-                      </p>
+                      </span>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <StatusPill label={headerStatus.label} className={headerStatus.className} />
+                    <div className="flex items-center gap-1">
+                      <StatusPill
+                        label={fileStatus(docs[0], cat).label}
+                        className={fileStatus(docs[0], cat).className}
+                      />
                       {canEdit ? (
                         <DocumentUploadDialog
                           entityType={uploadEntityType}
@@ -295,12 +295,7 @@ export function LeadDocumentsChecklist({
                           propertyChoices={cat.scope === "property" ? propertyChoices : []}
                           onSaved={(d) => onDocumentSaved?.(d as LeadDocument | undefined)}
                           trigger={
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="secondary"
-                              className="h-7 gap-1 border-0 bg-secondary px-2 text-xs text-secondary-foreground hover:bg-secondary/90"
-                            >
+                            <Button type="button" size="sm" variant="ghost" className="h-6 gap-1 px-1.5 text-[0.68rem]">
                               <Plus className="h-3 w-3" />
                               Add
                             </Button>
@@ -309,32 +304,24 @@ export function LeadDocumentsChecklist({
                       ) : null}
                     </div>
                   </div>
-                  <div className="divide-y divide-border/70 bg-card">
-                    {docs.map((doc, idx) => (
-                      <div
-                        key={doc.id}
-                        className={cn(
-                          "space-y-2 px-3 py-3",
-                          idx % 2 === 0 ? "bg-emerald-50/40" : "bg-white"
-                        )}
-                      >
-                        <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="divide-y divide-border/40">
+                    {docs.map((doc) => (
+                      <div key={doc.id} className="px-2.5 py-1.5">
+                        <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="truncate font-medium text-foreground">{doc.name}</p>
-                            <p className="mt-0.5 font-mono text-[0.72rem] text-muted-foreground">
+                            <p className="truncate text-[0.82rem] font-medium text-foreground">{doc.name}</p>
+                            <p className="text-[0.68rem] text-muted-foreground">
                               {formatDateTime(doc.created_at)}
+                              {cat.capture === "expiry" && doc.expiry_date
+                                ? ` · Exp ${formatDate(doc.expiry_date)}${expiryDaysHint(doc.expiry_date) ? ` (${expiryDaysHint(doc.expiry_date)})` : ""}`
+                                : cat.capture === "note" && doc.notes
+                                  ? ` · ${doc.notes}`
+                                  : ""}
                             </p>
                           </div>
                           <StatusPill label={fileStatus(doc, cat).label} className={fileStatus(doc, cat).className} />
                         </div>
-                        {(cat.capture === "expiry" && doc.expiry_date) || (cat.capture === "note" && doc.notes) ? (
-                          <p className="text-[0.78rem] text-muted-foreground">
-                            {cat.capture === "expiry" && doc.expiry_date
-                              ? `Expiry ${formatDate(doc.expiry_date)}${expiryDaysHint(doc.expiry_date) ? ` · ${expiryDaysHint(doc.expiry_date)}` : ""}`
-                              : doc.notes}
-                          </p>
-                        ) : null}
-                        <FileActions doc={doc} cat={cat} compact />
+                        <FileActions doc={doc} cat={cat} />
                       </div>
                     ))}
                   </div>
@@ -348,45 +335,7 @@ export function LeadDocumentsChecklist({
   }
 
   return (
-    <div className={cn(embedded ? "" : "space-y-4")}>
-      <div
-        className={cn(
-          "flex flex-wrap items-center justify-between gap-3",
-          embedded ? "" : "rounded-[14px] border border-border bg-card px-4 py-3"
-        )}
-      >
-        {!embedded ? (
-          <div>
-            <h2 className="font-heading text-[1.05rem]" style={{ fontFamily: "var(--font-display), serif" }}>
-              Documents
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              {categoriesWithDocs} of {categories.length} categories have files
-            </p>
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground">
-            {categoriesWithDocs} of {categories.length} categories have files
-          </p>
-        )}
-        {canEdit ? (
-          <DocumentUploadDialog
-            entityType={uploadEntityType}
-            entityId={uploadEntityId}
-            categories={categories}
-            propertyId={defaultPropertyId}
-            propertyChoices={propertyChoices}
-            onSaved={(doc) => onDocumentSaved?.(doc as LeadDocument | undefined)}
-            trigger={
-              <Button size="sm" variant="outline" className="gap-1.5">
-                <Upload className="h-3.5 w-3.5" />
-                Upload
-              </Button>
-            }
-          />
-        ) : null}
-      </div>
-
+    <div className="space-y-4">
       <div className={cn("grid gap-4", showSplit ? "lg:grid-cols-2" : "grid-cols-1")}>
         {renderScopeColumn("Client docs", clientGroups, "client")}
         {renderScopeColumn("Property docs", propertyGroups, "property")}

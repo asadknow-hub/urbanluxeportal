@@ -970,12 +970,12 @@ export function LeadDetail({
         </div>
 
         {pipelineStages.length > 0 && (
-          <div className="relative border-t border-border/80 px-6 pb-12 pt-8 md:px-8">
+          <div className="relative border-t border-border/80 px-6 pb-12 pt-10 md:px-8">
             <div className="relative">
               <div className="relative h-[5px] rounded-full bg-border">
                 <div className="absolute inset-y-0 left-0 rounded-full bg-primary" style={{ width: `${fillPct}%` }} />
               </div>
-              <div className="absolute inset-x-0 top-0 h-[5px]">
+              <div className="pointer-events-none absolute inset-x-0 top-1/2 h-12 -translate-y-1/2">
                 {pipelineStages.map((stage, idx) => {
                   const lastIdx = pipelineStages.length - 1;
                   const left = lastIdx <= 0 ? 0 : (idx / lastIdx) * 100;
@@ -990,17 +990,17 @@ export function LeadDetail({
                       disabled={!canEdit || pending}
                       onClick={() => handleStageChange(stage.id)}
                       aria-label={stage.name}
-                      className={`group absolute top-1/2 z-10 flex -translate-y-1/2 flex-col items-center ${
+                      className={`pointer-events-auto group absolute top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center ${
                         isFirst
-                          ? "left-0 translate-x-0 items-start"
+                          ? "left-0 translate-x-0 justify-start"
                           : isLast
-                            ? "right-0 translate-x-0 items-end"
+                            ? "right-0 translate-x-0 justify-end"
                             : "-translate-x-1/2"
                       }`}
                       style={isFirst || isLast ? undefined : { left: `${left}%` }}
                     >
                       {isDone && (
-                        <Check className="pointer-events-none absolute -top-5 h-[13px] w-[13px] text-primary group-hover:opacity-0" />
+                        <Check className="pointer-events-none absolute -top-1 h-[13px] w-[13px] text-primary group-hover:opacity-0" />
                       )}
                       <span
                         aria-hidden
@@ -1013,7 +1013,7 @@ export function LeadDetail({
                         }
                       />
                       <span
-                        className={`pointer-events-none absolute top-[18px] max-w-[7.5rem] text-center text-[0.68rem] font-medium leading-tight tracking-wide group-hover:opacity-0 ${
+                        className={`pointer-events-none absolute top-[calc(100%-6px)] max-w-[7.5rem] text-center text-[0.68rem] font-medium leading-tight tracking-wide group-hover:opacity-0 ${
                           isFirst ? "left-0 text-left" : isLast ? "right-0 text-right" : "left-1/2 -translate-x-1/2"
                         } ${
                           isCurrent
