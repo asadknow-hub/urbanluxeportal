@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { kycStatusLabel, kycStatusTone, type KycStatus } from "@/lib/kyc";
+import { kycStatusLabel, type KycStatus } from "@/lib/kyc";
 import { formatPropertyType, propertyLabel } from "@/lib/inventory";
 import { formatAED } from "@/lib/money";
 import { whatsappLink } from "@/lib/phone";
@@ -233,7 +233,8 @@ export function DealPropertyClientPanel({
     { label: "Emirates ID", value: clientEid },
     { label: "Passport", value: clientPassport },
     { label: "TRN", value: clientTrn },
-  ].filter((row) => Boolean(row.value?.trim()));
+    kycStatus ? { label: "KYC", value: kycStatusLabel(kycStatus) } : null,
+  ].filter((row): row is { label: string; value: string } => Boolean(row?.value?.trim()));
 
   const listingTypeLabel =
     property?.listing_type === "sale"
@@ -300,19 +301,6 @@ export function DealPropertyClientPanel({
                           Deal snapshot
                         </span>
                       )}
-                      {kycStatus ? (
-                        <span
-                          className={
-                            kycStatusTone(kycStatus) === "success"
-                              ? "inline-flex rounded-full bg-emerald-600 px-2.5 py-0.5 text-[0.72rem] font-semibold text-white"
-                              : kycStatusTone(kycStatus) === "amber"
-                                ? "inline-flex rounded-full bg-amber-500 px-2.5 py-0.5 text-[0.72rem] font-semibold text-white"
-                                : "inline-flex rounded-full bg-slate-500 px-2.5 py-0.5 text-[0.72rem] font-semibold text-white"
-                          }
-                        >
-                          KYC {kycStatusLabel(kycStatus)}
-                        </span>
-                      ) : null}
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
@@ -355,7 +343,19 @@ export function DealPropertyClientPanel({
                         <dt className="text-[0.68rem] font-semibold uppercase tracking-wide text-muted-foreground">
                           {row.label}
                         </dt>
-                        <dd className="truncate text-sm text-foreground">{row.value}</dd>
+                        <dd
+                          className={
+                            row.label === "KYC" && kycStatus === "complete"
+                              ? "truncate text-sm font-medium text-emerald-700"
+                              : row.label === "KYC" && kycStatus === "in_progress"
+                                ? "truncate text-sm font-medium text-amber-700"
+                                : row.label === "KYC"
+                                  ? "truncate text-sm font-medium text-muted-foreground"
+                                  : "truncate text-sm text-foreground"
+                          }
+                        >
+                          {row.value}
+                        </dd>
                       </div>
                     ))}
                   </dl>
