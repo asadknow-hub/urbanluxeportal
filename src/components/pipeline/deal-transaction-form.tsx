@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import type { ComponentType, ReactNode } from "react";
-import { assignDeal, updateDeal, updateDealTransaction } from "@/server/deals";
+import { useRouter } from "next/navigation";
+import { updateDeal, updateDealTransaction } from "@/server/deals";
 import {
   PAYMENT_METHODS,
   dealReadyToFinalize,
+  type DealFinalizePerson,
   type DealPaymentScheduleEntry,
 } from "@/lib/deal-transaction";
 import { isDealClosed, isDealLost } from "@/lib/deal-stages";
@@ -25,6 +27,7 @@ export type DealTransactionDeal = {
   expected_close_date?: string | null;
   ejari_no?: string | null;
   payment_schedule?: unknown;
+  property_id?: string | null;
   property_title: string | null;
   property_community: string | null;
   property_building: string | null;
@@ -51,7 +54,52 @@ function emptyPlaceholder(text = "Not captured") {
 }
 
 function filsToAed(fils: number | null) {
-  return fils != null && fils > 0 ? String(fils / 100) : "";
+  return fils != null ? String(fils / 100) : "";
+}
+
+function applyTxPatch(
+  current: DealTransactionDeal,
+  patch: Parameters<typeof updateDealTransaction>[1]
+): DealTransactionDeal {
+  return {
+    ...current,
+    ...patch,
+    payment_deposit:
+      patch.payment_deposit !== undefined
+        ? patch.payment_deposit != null
+          ? Math.round(patch.payment_deposit * 100)
+          : null
+        : current.payment_deposit,
+    payment_balance:
+      patch.payment_balance !== undefined
+        ? patch.payment_balance != null
+          ? Math.round(patch.payment_balance * 100)
+          : null
+        : current.payment_balance,
+  } as DealTransactionDeal;
+}
+
+function applyDealPatch(
+  current: DealTransactionDeal,
+  patch: Parameters<typeof updateDeal>[1]
+): DealTransactionDeal {
+  return {
+    ...current,
+    ...patch,
+    value: patch.value !== undefined ? Math.round(patch.value * 100) : current.value,
+    commission_amount:
+      patch.commission_amount !== undefined
+        ? patch.commission_amount != null
+          ? Math.round(patch.commission_amount * 100)
+          : null
+        : current.commission_amount,
+    agency_commission_amount:
+      patch.agency_commission_amount !== undefined
+        ? patch.agency_commission_amount != null
+          ? Math.round(patch.agency_commission_amount * 100)
+          : null
+        : current.agency_commission_amount,
+  } as DealTransactionDeal;
 }
 
 function parsePaymentSchedule(raw: unknown): DealPaymentScheduleEntry[] {
@@ -79,16 +127,19 @@ type ScheduleDraftRow = {
 export function DealTransactionForm({
   deal,
   canEdit,
-  canManage,
-  agents,
+  canManage: _canManage,
+  agents: _agents,
   documents = [],
+  person = null,
 }: {
   deal: DealTransactionDeal;
   canEdit: boolean;
   canManage: boolean;
   agents: { id: string; full_name: string; role: string }[];
-  documents?: { category: string }[];
+  documents?: { category: string; name?: string; notes?: string | null }[];
+  person?: DealFinalizePerson | null;
 }) {
+  const router = useRouter();
   const [draft, setDraft] = useState(deal);
   const [pending, startTransition] = useTransition();
   const serverDealRef = useRef(deal);
@@ -100,37 +151,22 @@ export function DealTransactionForm({
 
   const locked = !!draft.finalized_at || isDealClosed(draft.stage);
   const editable = canEdit && !locked;
-  const assigned = agents.find((a) => a.id === draft.assigned_to);
-  const readiness = dealReadyToFinalize(draft, documents);
+  const readiness = dealReadyToFinalize(draft, documents, person);
 
   function rollback() {
     setDraft(serverDealRef.current);
   }
 
   function saveTx(patch: Parameters<typeof updateDealTransaction>[1]) {
-    const prev = draft;
-    setDraft((current) => ({
-      ...current,
-      ...patch,
-      payment_deposit:
-        patch.payment_deposit !== undefined
-          ? patch.payment_deposit != null
-            ? Math.round(patch.payment_deposit * 100)
-            : null
-          : current.payment_deposit,
-      payment_balance:
-        patch.payment_balance !== undefined
-          ? patch.payment_balance != null
-            ? Math.round(patch.payment_balance * 100)
-            : null
-          : current.payment_balance,
-    }));
+    const nextDraft = applyTxPatch(draft, patch);
+    setDraft(nextDraft);
 
     startTransition(async () => {
       const result = await updateDealTransaction(deal.id, patch);
       if (result.ok) {
         if (patch.payment_schedule !== undefined) toast.success("Payment schedule saved");
-        serverDealRef.current = { ...prev, ...patch } as DealTransactionDeal;
+        serverDealRef.current = nextDraft;
+        router.refresh();
       } else {
         rollback();
         toast.error(result.error ?? "Could not save");
@@ -139,29 +175,14 @@ export function DealTransactionForm({
   }
 
   function saveDeal(patch: Parameters<typeof updateDeal>[1]) {
-    const prev = draft;
-    setDraft((current) => ({
-      ...current,
-      ...patch,
-      value: patch.value !== undefined ? Math.round(patch.value * 100) : current.value,
-      commission_amount:
-        patch.commission_amount !== undefined
-          ? patch.commission_amount != null
-            ? Math.round(patch.commission_amount * 100)
-            : null
-          : current.commission_amount,
-      agency_commission_amount:
-        patch.agency_commission_amount !== undefined
-          ? patch.agency_commission_amount != null
-            ? Math.round(patch.agency_commission_amount * 100)
-            : null
-          : current.agency_commission_amount,
-    }));
+    const nextDraft = applyDealPatch(draft, patch);
+    setDraft(nextDraft);
 
     startTransition(async () => {
       const result = await updateDeal(deal.id, patch);
       if (result.ok) {
-        serverDealRef.current = { ...prev, ...patch } as DealTransactionDeal;
+        serverDealRef.current = nextDraft;
+        router.refresh();
       } else {
         rollback();
         toast.error(result.error ?? "Could not save");
@@ -261,9 +282,7 @@ export function DealTransactionForm({
                 onSave={(v) => {
                   const next = v.trim() ? Number(v) : null;
                   const current =
-                    draft.payment_deposit != null && draft.payment_deposit > 0
-                      ? draft.payment_deposit / 100
-                      : null;
+                    draft.payment_deposit != null ? draft.payment_deposit / 100 : null;
                   if (next === current) return;
                   saveTx({ payment_deposit: next });
                 }}
@@ -279,9 +298,7 @@ export function DealTransactionForm({
                 onSave={(v) => {
                   const next = v.trim() ? Number(v) : null;
                   const current =
-                    draft.payment_balance != null && draft.payment_balance > 0
-                      ? draft.payment_balance / 100
-                      : null;
+                    draft.payment_balance != null ? draft.payment_balance / 100 : null;
                   if (next === current) return;
                   saveTx({ payment_balance: next });
                 }}
@@ -317,41 +334,28 @@ export function DealTransactionForm({
             <LedgerRow label="Agency commission">
               <QuietSaveInput
                 type="number"
-                value={draft.agency_commission_amount ? String(draft.agency_commission_amount / 100) : ""}
+                value={
+                  draft.agency_commission_amount != null
+                    ? String(draft.agency_commission_amount / 100)
+                    : ""
+                }
                 disabled={!editable}
                 placeholder={
-                  draft.agency_commission_rate != null && draft.value > 0 && !draft.agency_commission_amount
+                  draft.agency_commission_rate != null &&
+                  draft.value > 0 &&
+                  draft.agency_commission_amount == null
                     ? `Est. ${formatAED(Math.round((draft.value * draft.agency_commission_rate) / 100)).replace("AED ", "")}`
                     : emptyPlaceholder("0")
                 }
                 suffix="AED"
                 onSave={(v) => {
                   const next = v.trim() ? Number(v) : null;
-                  const current = draft.agency_commission_amount ? draft.agency_commission_amount / 100 : null;
+                  const current =
+                    draft.agency_commission_amount != null
+                      ? draft.agency_commission_amount / 100
+                      : null;
                   if (next === current) return;
                   saveDeal({ agency_commission_amount: next });
-                }}
-              />
-            </LedgerRow>
-            <LedgerRow label="Agent">
-              <QuietSelect
-                value={draft.assigned_to ?? ""}
-                disabled={!canManage || locked}
-                placeholder="Unassigned"
-                options={agents.map((a) => ({ value: a.id, label: a.full_name }))}
-                onChange={(v) => {
-                  const next = v || null;
-                  if ((draft.assigned_to ?? null) === next) return;
-                  setDraft((current) => ({ ...current, assigned_to: next }));
-                  startTransition(async () => {
-                    const result = await assignDeal(deal.id, next);
-                    if (result.ok) {
-                      serverDealRef.current = { ...serverDealRef.current, assigned_to: next };
-                    } else {
-                      rollback();
-                      toast.error(result.error ?? "Could not assign");
-                    }
-                  });
                 }}
               />
             </LedgerRow>
@@ -372,29 +376,26 @@ export function DealTransactionForm({
             <LedgerRow label="Agent commission">
               <QuietSaveInput
                 type="number"
-                value={draft.commission_amount ? String(draft.commission_amount / 100) : ""}
+                value={
+                  draft.commission_amount != null ? String(draft.commission_amount / 100) : ""
+                }
                 disabled={!editable}
                 placeholder={
-                  draft.commission_rate != null && draft.value > 0 && !draft.commission_amount
+                  draft.commission_rate != null && draft.value > 0 && draft.commission_amount == null
                     ? `Est. ${formatAED(Math.round((draft.value * draft.commission_rate) / 100)).replace("AED ", "")}`
                     : emptyPlaceholder("0")
                 }
                 suffix="AED"
                 onSave={(v) => {
                   const next = v.trim() ? Number(v) : null;
-                  const current = draft.commission_amount ? draft.commission_amount / 100 : null;
+                  const current =
+                    draft.commission_amount != null ? draft.commission_amount / 100 : null;
                   if (next === current) return;
                   saveDeal({ commission_amount: next });
                 }}
               />
             </LedgerRow>
           </FieldGrid>
-          {assigned && draft.commission_amount ? (
-            <p className="mt-2 rounded-md bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-              {assigned.full_name} · {formatAED(draft.commission_amount)}
-              {draft.commission_rate != null ? ` (${draft.commission_rate}%)` : ""}
-            </p>
-          ) : null}
         </PaymentGroup>
 
         <PaymentScheduleEditor
@@ -527,7 +528,7 @@ function PaymentScheduleEditor({
     parsed.length
       ? parsed.map((row) => ({
           label: row.label,
-          amount: row.amount_fils > 0 ? String(row.amount_fils / 100) : "",
+          amount: row.amount_fils != null ? String(row.amount_fils / 100) : "",
           due_date: row.due_date?.slice(0, 10) ?? "",
           status: row.status ?? "pending",
         }))

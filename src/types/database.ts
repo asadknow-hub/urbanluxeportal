@@ -621,12 +621,14 @@ export interface Database {
           agency_commission_rate: number | null;
           acquired_at: string;
           created_at: string;
+          property_id: string | null;
         };
         Insert: {
           id?: string;
           customer_id: string;
           deal_id?: string | null;
           deal_type?: string;
+          property_id?: string | null;
           property_title: string;
           property_community?: string | null;
           property_building?: string | null;

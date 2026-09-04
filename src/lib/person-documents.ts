@@ -47,19 +47,40 @@ async function fetchEntityDocuments(
   return (data ?? []) as PersonDocumentRow[];
 }
 
-/** Merged deal view: lead + deal + customer references, deduped by storage_path. */
+async function fetchPropertyDocuments(
+  supabase: SupabaseClient,
+  propertyId: string
+): Promise<PersonDocumentRow[]> {
+  const { data } = await supabase
+    .from("documents")
+    .select(DOC_SELECT)
+    .is("deleted_at", null)
+    .or(
+      `property_id.eq.${propertyId},and(entity_type.eq.property,entity_id.eq.${propertyId})`
+    )
+    .order("created_at", { ascending: false });
+  return (data ?? []) as PersonDocumentRow[];
+}
+
+/** Merged deal view: lead + deal + customer + confirmed property, deduped by storage_path. */
 export async function fetchMergedDealDocuments(
   supabase: SupabaseClient,
-  deal: { id: string; lead_id: string | null; customer_id: string | null }
+  deal: {
+    id: string;
+    lead_id: string | null;
+    customer_id: string | null;
+    property_id?: string | null;
+  }
 ): Promise<PersonDocumentRow[]> {
-  const [leadDocs, dealDocs, customerDocs] = await Promise.all([
+  const [leadDocs, dealDocs, customerDocs, propertyDocs] = await Promise.all([
     deal.lead_id ? fetchEntityDocuments(supabase, "lead", deal.lead_id) : Promise.resolve([]),
     fetchEntityDocuments(supabase, "deal", deal.id),
     deal.customer_id
       ? fetchEntityDocuments(supabase, "customer", deal.customer_id)
       : Promise.resolve([]),
+    deal.property_id ? fetchPropertyDocuments(supabase, deal.property_id) : Promise.resolve([]),
   ]);
-  return mergePersonDocumentsByStoragePath(leadDocs, dealDocs, customerDocs);
+  return mergePersonDocumentsByStoragePath(leadDocs, dealDocs, customerDocs, propertyDocs);
 }
 
 /** Merged customer view: lead + deals + customer, deduped by storage_path. */

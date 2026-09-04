@@ -203,8 +203,6 @@ export default async function DealDetailPage({
   const confirmedPropertyId =
     deal.property_id ??
     shortlist.find((row) => row.role === "confirmed")?.property_id ??
-    shortlist.find((row) => row.role === "offered")?.property_id ??
-    shortlist[0]?.property_id ??
     null;
 
   const [{ data: confirmedPropertyRow }, { data: propertyDocuments }] = await Promise.all([
@@ -278,7 +276,7 @@ export default async function DealDetailPage({
 
   const dealForUi = {
     ...deal,
-    property_id: deal.property_id ?? confirmedPropertyId,
+    property_id: deal.property_id ?? null,
     assigned_to_profile: assignedProfile,
     lead: leadJoin,
     customer: person

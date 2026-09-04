@@ -717,6 +717,9 @@ export async function convertLead(
     };
 
     const confirmedPropertyId = options.property_id?.trim() || null;
+    if (!confirmedPropertyId) {
+      return { ok: false, error: "Select a confirmed inventory property before converting" };
+    }
 
     const { data: deal, error: dealError } = await supabase
       .from("deals")
@@ -754,16 +757,18 @@ export async function convertLead(
       .single();
     if (dealError) return { ok: false, error: dealError.message };
 
-    if (confirmedPropertyId) {
-      await supabase.from("deal_properties").upsert(
-        {
-          deal_id: deal.id,
-          property_id: confirmedPropertyId,
-          role: "confirmed",
-          created_by: user.id,
-        },
-        { onConflict: "deal_id,property_id" }
-      );
+    const { error: dealPropertyError } = await supabase.from("deal_properties").upsert(
+      {
+        deal_id: deal.id,
+        property_id: confirmedPropertyId,
+        role: "confirmed",
+        created_by: user.id,
+      },
+      { onConflict: "deal_id,property_id" }
+    );
+    if (dealPropertyError) {
+      await supabase.from("deals").delete().eq("id", deal.id);
+      return { ok: false, error: dealPropertyError.message };
     }
 
     if (personId) {

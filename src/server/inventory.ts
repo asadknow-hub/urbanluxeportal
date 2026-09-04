@@ -516,14 +516,10 @@ export async function applyInventoryPropertyToDeal(
       property_ref:
         property.title_deed_number || property.oqood_number || property.dld_property_number || property.property_code,
       property_snapshot: snapshot,
+      property_id: propertyId,
     });
 
     if (!result.ok) return result;
-
-    await supabase
-      .from("deals")
-      .update({ property_id: propertyId, updated_at: new Date().toISOString() })
-      .eq("id", dealId);
 
     // Demote any prior confirmed row, then upsert this unit as confirmed.
     await supabase
@@ -564,12 +560,29 @@ export async function removeDealProperty(dealId: string, propertyId: string): Pr
     const denied = await assertCanMutateDeal(dealId, user);
     if (denied) return { ok: false, error: denied };
     const supabase = await createSupabaseServerClient();
+
+    const { data: deal } = await supabase
+      .from("deals")
+      .select("property_id")
+      .eq("id", dealId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
     const { error } = await supabase
       .from("deal_properties")
       .delete()
       .eq("deal_id", dealId)
       .eq("property_id", propertyId);
     if (error) return { ok: false, error: error.message };
+
+    if (deal?.property_id === propertyId) {
+      const { error: clearError } = await supabase
+        .from("deals")
+        .update({ property_id: null, updated_at: new Date().toISOString() })
+        .eq("id", dealId);
+      if (clearError) return { ok: false, error: clearError.message };
+    }
+
     revalidatePath(`/pipeline/${dealId}`);
     return { ok: true };
   } catch (err) {

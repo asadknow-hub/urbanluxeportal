@@ -90,7 +90,9 @@ export async function updateDealStage(
 
     const { data: deal, error: fetchError } = await supabase
       .from("deals")
-      .select("id, assigned_to, stage, value, lead_id, customer_id, property_title, buyer_name, kyc_emirates_id, kyc_passport_no, finalized_at")
+      .select(
+        "id, assigned_to, stage, value, lead_id, customer_id, property_id, property_title, buyer_name, kyc_nationality, kyc_emirates_id, kyc_passport_no, kyc_trn, finalized_at"
+      )
       .eq("id", parsed.data.id)
       .is("deleted_at", null)
       .single();
@@ -108,13 +110,24 @@ export async function updateDealStage(
     let customerId: string | undefined = deal.customer_id ?? undefined;
 
     if (parsed.data.stage === "closed") {
+      const person = deal.customer_id
+        ? (
+            await supabase
+              .from("customers")
+              .select("name, nationality, emirates_id, passport_no, trn")
+              .eq("id", deal.customer_id)
+              .maybeSingle()
+          ).data
+        : null;
+
       const mergedDocuments = await fetchMergedDealDocuments(supabase, {
         id: parsed.data.id,
         lead_id: deal.lead_id,
         customer_id: deal.customer_id,
+        property_id: deal.property_id,
       });
 
-      const readiness = dealReadyToFinalize(deal, mergedDocuments);
+      const readiness = dealReadyToFinalize(deal, mergedDocuments, person);
       if (!readiness.ok) {
         return {
           ok: false,
@@ -367,6 +380,19 @@ export async function updateDeal(
 
     const supabase = await createSupabaseServerClient();
 
+    const { data: existing } = await supabase
+      .from("deals")
+      .select("assigned_to, finalized_at")
+      .eq("id", dealId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (!existing) return { ok: false, error: "Deal not found" };
+    if (existing.finalized_at) return { ok: false, error: "Deal is already finalized" };
+
+    const canEdit = canManageCrm(user.role) || existing.assigned_to === user.id;
+    if (!canEdit) return { ok: false, error: "Not authorized" };
+
     const updateData: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
     };
@@ -398,7 +424,7 @@ export async function updateDeal(
 
 export async function updateDealTransaction(
   dealId: string,
-  input: DealTransactionInput
+  input: DealTransactionInput & { property_id?: string | null }
 ): Promise<ActionResult> {
   try {
     const user = await getCurrentUser();
@@ -408,7 +434,7 @@ export async function updateDealTransaction(
 
     const { data: deal } = await supabase
       .from("deals")
-      .select("assigned_to, stage, finalized_at, customer_id")
+      .select("assigned_to, stage, finalized_at, customer_id, property_id")
       .eq("id", dealId)
       .is("deleted_at", null)
       .single();
@@ -445,8 +471,29 @@ export async function updateDealTransaction(
       "buyer_email",
     ];
 
+    const propertyFields = new Set([
+      "property_title",
+      "property_community",
+      "property_building",
+      "property_unit",
+      "property_ref",
+      "property_type",
+      "property_snapshot",
+    ]);
+    let touchedPropertySnapshot = false;
+
     for (const key of fields) {
-      if (input[key] !== undefined) updateData[key] = input[key];
+      if (input[key] !== undefined) {
+        updateData[key] = input[key];
+        if (propertyFields.has(key)) touchedPropertySnapshot = true;
+      }
+    }
+
+    // Inventory apply passes property_id explicitly. Free-text snapshot edits clear a stale FK.
+    if (input.property_id !== undefined) {
+      updateData.property_id = input.property_id;
+    } else if (touchedPropertySnapshot && deal.property_id) {
+      updateData.property_id = null;
     }
     if (input.payment_deposit !== undefined) {
       updateData.payment_deposit = input.payment_deposit != null ? Math.round(input.payment_deposit * 100) : null;

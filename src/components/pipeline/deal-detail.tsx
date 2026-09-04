@@ -255,7 +255,15 @@ export function DealDetail({
     return list;
   }, [agents, deal.assigned_to, deal.assigned_to_profile]);
 
-  const finalizeReadiness = dealReadyToFinalize(deal, mergedDocuments);
+  const finalizePerson = {
+    name: deal.customer?.name ?? deal.lead?.name ?? null,
+    nationality: deal.customer?.nationality ?? null,
+    emirates_id: deal.customer?.emirates_id ?? null,
+    passport_no: deal.customer?.passport_no ?? null,
+    trn: deal.customer?.trn ?? null,
+  };
+
+  const finalizeReadiness = dealReadyToFinalize(deal, mergedDocuments, finalizePerson);
   const clientKyc = personKycReadiness(
     {
       nationality: deal.customer?.nationality ?? deal.kyc_nationality,
@@ -276,13 +284,13 @@ export function DealDetail({
       setClosedOpen(true);
       return;
     }
-    toast.success(`Deal moved to ${STAGES.find((s) => s.key === newStage)?.label}`);
     startTransition(async () => {
       const result = await updateDealStage({
         id: deal.id,
         stage: newStage as "new" | "negotiations" | "contract" | "closed" | "lost",
       });
       if (result.ok) {
+        toast.success(`Deal moved to ${STAGES.find((s) => s.key === newStage)?.label}`);
         router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
@@ -335,10 +343,10 @@ export function DealDetail({
     if (!activityText.trim()) return;
     const text = activityText;
     setActivityText("");
-    toast.success("Activity logged");
     startTransition(async () => {
       const result = await addDealActivity(deal.id, activityType, text);
       if (result.ok) {
+        toast.success("Activity logged");
         router.refresh();
       } else {
         toast.error(result.error ?? "Failed");
@@ -500,7 +508,8 @@ export function DealDetail({
             canEdit={canEdit}
             canManage={canManage}
             agents={agentOptions}
-            documents={documents}
+            documents={mergedDocuments}
+            person={finalizePerson}
           />
 
           <MatchPanel matches={matches} dealId={deal.id} canEdit={canEdit} />
