@@ -214,7 +214,8 @@ export function DealTransactionForm({
                 type="number"
                 value={draft.value ? String(draft.value / 100) : ""}
                 disabled={!editable}
-                placeholder={emptyPlaceholder("AED")}
+                placeholder={emptyPlaceholder("0")}
+                suffix="AED"
                 onSave={(v) => {
                   const next = v.trim() ? Number(v) : 0;
                   if (next === draft.value / 100) return;
@@ -255,7 +256,8 @@ export function DealTransactionForm({
                 type="number"
                 value={filsToAed(draft.payment_deposit)}
                 disabled={!editable}
-                placeholder={emptyPlaceholder("AED")}
+                placeholder={emptyPlaceholder("0")}
+                suffix="AED"
                 onSave={(v) => {
                   const next = v.trim() ? Number(v) : null;
                   const current =
@@ -272,7 +274,8 @@ export function DealTransactionForm({
                 type="number"
                 value={filsToAed(draft.payment_balance)}
                 disabled={!editable}
-                placeholder={emptyPlaceholder("AED")}
+                placeholder={emptyPlaceholder("0")}
+                suffix="AED"
                 onSave={(v) => {
                   const next = v.trim() ? Number(v) : null;
                   const current =
@@ -302,7 +305,8 @@ export function DealTransactionForm({
                 type="number"
                 value={draft.agency_commission_rate != null ? String(draft.agency_commission_rate) : ""}
                 disabled={!editable}
-                placeholder={emptyPlaceholder("%")}
+                placeholder={emptyPlaceholder("0")}
+                suffix="%"
                 onSave={(v) => {
                   const next = v.trim() ? Number(v) : null;
                   if (next === (draft.agency_commission_rate ?? null)) return;
@@ -318,8 +322,9 @@ export function DealTransactionForm({
                 placeholder={
                   draft.agency_commission_rate != null && draft.value > 0 && !draft.agency_commission_amount
                     ? `Est. ${formatAED(Math.round((draft.value * draft.agency_commission_rate) / 100)).replace("AED ", "")}`
-                    : emptyPlaceholder("AED")
+                    : emptyPlaceholder("0")
                 }
+                suffix="AED"
                 onSave={(v) => {
                   const next = v.trim() ? Number(v) : null;
                   const current = draft.agency_commission_amount ? draft.agency_commission_amount / 100 : null;
@@ -355,7 +360,8 @@ export function DealTransactionForm({
                 type="number"
                 value={draft.commission_rate != null ? String(draft.commission_rate) : ""}
                 disabled={!editable}
-                placeholder={emptyPlaceholder("%")}
+                placeholder={emptyPlaceholder("0")}
+                suffix="%"
                 onSave={(v) => {
                   const next = v.trim() ? Number(v) : null;
                   if (next === (draft.commission_rate ?? null)) return;
@@ -371,8 +377,9 @@ export function DealTransactionForm({
                 placeholder={
                   draft.commission_rate != null && draft.value > 0 && !draft.commission_amount
                     ? `Est. ${formatAED(Math.round((draft.value * draft.commission_rate) / 100)).replace("AED ", "")}`
-                    : emptyPlaceholder("AED")
+                    : emptyPlaceholder("0")
                 }
+                suffix="AED"
                 onSave={(v) => {
                   const next = v.trim() ? Number(v) : null;
                   const current = draft.commission_amount ? draft.commission_amount / 100 : null;
@@ -460,12 +467,14 @@ function QuietSaveInput({
   type = "text",
   disabled,
   placeholder,
+  suffix,
   onSave,
 }: {
   value: string;
   type?: string;
   disabled?: boolean;
   placeholder?: string;
+  suffix?: string;
   onSave: (next: string) => void;
 }) {
   const [local, setLocal] = useState(value);
@@ -475,25 +484,32 @@ function QuietSaveInput({
   }, [value]);
 
   return (
-    <input
-      type={type}
-      value={local}
-      disabled={disabled}
-      placeholder={placeholder}
-      className="h-7 w-full rounded-md bg-transparent px-1 text-[0.86rem] text-foreground outline-none placeholder:text-[#B9B6AB] hover:bg-muted/70 focus:bg-muted/80 disabled:cursor-default"
-      onChange={(e) => setLocal(e.target.value)}
-      onBlur={(e) => {
-        if (e.target.value.trim() === value.trim()) return;
-        onSave(e.target.value);
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
-        if (e.key === "Escape") {
-          setLocal(value);
-          e.currentTarget.blur();
-        }
-      }}
-    />
+    <div className="flex min-w-0 items-center gap-1.5">
+      <input
+        type={type}
+        value={local}
+        disabled={disabled}
+        placeholder={placeholder}
+        className="h-7 min-w-0 flex-1 rounded-md bg-transparent px-1 text-[0.86rem] text-foreground outline-none placeholder:text-[#B9B6AB] hover:bg-muted/70 focus:bg-muted/80 disabled:cursor-default"
+        onChange={(e) => setLocal(e.target.value)}
+        onBlur={(e) => {
+          if (e.target.value.trim() === value.trim()) return;
+          onSave(e.target.value);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
+          if (e.key === "Escape") {
+            setLocal(value);
+            e.currentTarget.blur();
+          }
+        }}
+      />
+      {suffix ? (
+        <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[0.68rem] font-semibold uppercase tracking-wide text-muted-foreground">
+          {suffix}
+        </span>
+      ) : null}
+    </div>
   );
 }
 

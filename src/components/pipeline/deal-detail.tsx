@@ -40,6 +40,7 @@ import type { InventoryMatch } from "@/lib/match-inventory";
 import type { LeadContext } from "@/lib/lead-flow";
 import { dealReadyToFinalize, formatPropertyLine, PAYMENT_METHODS } from "@/lib/deal-transaction";
 import { formatPropertyType, propertyLabel } from "@/lib/inventory";
+import { personKycReadiness } from "@/lib/kyc";
 import {
   DEAL_PIPELINE_STAGES,
   dealStageLabel,
@@ -255,6 +256,15 @@ export function DealDetail({
   }, [agents, deal.assigned_to, deal.assigned_to_profile]);
 
   const finalizeReadiness = dealReadyToFinalize(deal, mergedDocuments);
+  const clientKyc = personKycReadiness(
+    {
+      nationality: deal.customer?.nationality ?? deal.kyc_nationality,
+      emirates_id: deal.customer?.emirates_id ?? deal.kyc_emirates_id,
+      passport_no: deal.customer?.passport_no ?? deal.kyc_passport_no,
+      trn: deal.customer?.trn ?? deal.kyc_trn,
+    },
+    mergedDocuments
+  );
 
   function handleStageChange(newStage: string) {
     if (newStage === currentStageKey) return;
@@ -352,13 +362,18 @@ export function DealDetail({
             >
               {deal.title}
             </h1>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${colors.bg} ${colors.text}`}>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span
+                className={`inline-flex items-center rounded-full px-3 py-1 text-[0.82rem] font-semibold ${colors.bg} ${colors.text}`}
+              >
                 {dealStageLabel(deal.stage)}
               </span>
-              <span className="text-xs capitalize text-muted-foreground">{deal.deal_type.replace(/_/g, " ")}</span>
-              <span className="text-xs text-muted-foreground">·</span>
-              <span className="text-sm font-semibold text-foreground">{formatAED(deal.value)}</span>
+              <span className="inline-flex items-center rounded-full bg-secondary px-3 py-1 text-[0.82rem] font-semibold capitalize text-white">
+                {deal.deal_type.replace(/_/g, " ")}
+              </span>
+              <span className="inline-flex items-center rounded-full bg-primary px-3 py-1 text-[0.88rem] font-semibold tabular-nums text-white">
+                {formatAED(deal.value)}
+              </span>
             </div>
           </div>
         </div>
@@ -474,6 +489,7 @@ export function DealDetail({
             trn: deal.kyc_trn,
           }}
           ejariNo={deal.ejari_no}
+          kycStatus={clientKyc.status}
           canEdit={canEdit && !deal.finalized_at}
         />
 

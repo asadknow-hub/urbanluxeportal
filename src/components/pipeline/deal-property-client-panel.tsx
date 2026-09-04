@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { kycStatusLabel, kycStatusTone, type KycStatus } from "@/lib/kyc";
 import { formatPropertyType, propertyLabel } from "@/lib/inventory";
 import { formatAED } from "@/lib/money";
 import { whatsappLink } from "@/lib/phone";
@@ -92,6 +93,7 @@ export function DealPropertyClientPanel({
   client,
   fallbackBuyer,
   ejariNo,
+  kycStatus,
   canEdit,
 }: {
   dealId: string;
@@ -108,6 +110,7 @@ export function DealPropertyClientPanel({
     trn: string | null;
   } | null;
   ejariNo?: string | null;
+  kycStatus?: KycStatus;
   canEdit: boolean;
 }) {
   const router = useRouter();
@@ -287,15 +290,30 @@ export function DealPropertyClientPanel({
                     <p className="text-sm font-semibold text-foreground">
                       {client?.name ?? fallbackBuyer?.name}
                     </p>
-                    {client?.status ? (
-                      <span className="mt-1 inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[0.68rem] font-medium capitalize text-primary">
-                        {client.status}
-                      </span>
-                    ) : (
-                      <span className="mt-1 inline-flex rounded-full bg-muted px-2 py-0.5 text-[0.68rem] font-medium text-muted-foreground">
-                        Deal snapshot
-                      </span>
-                    )}
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                      {client?.status ? (
+                        <span className="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[0.68rem] font-medium capitalize text-primary">
+                          {client.status}
+                        </span>
+                      ) : (
+                        <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[0.68rem] font-medium text-muted-foreground">
+                          Deal snapshot
+                        </span>
+                      )}
+                      {kycStatus ? (
+                        <span
+                          className={
+                            kycStatusTone(kycStatus) === "success"
+                              ? "inline-flex rounded-full bg-emerald-600 px-2.5 py-0.5 text-[0.72rem] font-semibold text-white"
+                              : kycStatusTone(kycStatus) === "amber"
+                                ? "inline-flex rounded-full bg-amber-500 px-2.5 py-0.5 text-[0.72rem] font-semibold text-white"
+                                : "inline-flex rounded-full bg-slate-500 px-2.5 py-0.5 text-[0.72rem] font-semibold text-white"
+                          }
+                        >
+                          KYC {kycStatusLabel(kycStatus)}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                   <div className="flex items-center gap-1">
                     {clientPhone ? (
