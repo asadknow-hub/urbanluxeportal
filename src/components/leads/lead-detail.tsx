@@ -485,9 +485,6 @@ export function LeadDetail({
         terminalReason
       )
     : null;
-  const waLink = whatsappLink(contactPhone);
-  const mailLink = contactEmail ? `mailto:${contactEmail}` : null;
-  const phoneHref = telLink(contactPhone);
   const canManage = canManageCrm(userRole);
   const canEdit = canManage || userRole === "agent";
   /** Owner identity — locked when this lead sits under an already existing customer. */
@@ -502,6 +499,9 @@ export function LeadDetail({
     existingOwner && customer
       ? (customer.nationality ?? optimisticLead.nationality)
       : optimisticLead.nationality;
+  const waLink = whatsappLink(contactPhone);
+  const mailLink = contactEmail ? `mailto:${contactEmail}` : null;
+  const phoneHref = telLink(contactPhone);
   const score = optimisticLead.score ?? 0;
   const scoreBand = scoreBandForValue(fieldOptions.score, score);
   const scoreLegend = (fieldOptions.score ?? []).map((row) => row.label).join(" · ");
