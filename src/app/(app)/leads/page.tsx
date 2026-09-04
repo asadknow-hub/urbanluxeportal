@@ -105,6 +105,7 @@ export default async function LeadsBoardPage({
       .from("leads")
       .select(BOARD_SELECT, { count: "exact" })
       .is("deleted_at", null)
+      .neq("status", "converted")
       .order("updated_at", { ascending: false })
       .limit(boardLimit);
 
@@ -128,9 +129,11 @@ export default async function LeadsBoardPage({
     if (error) console.error("[leads-board] query error:", error.message);
 
     const rows = (leads ?? []) as unknown as BoardLeadQueryRow[];
+    /** Completed (won/converted) leads live on Deals Completed — hide that column here. */
+    const boardStages = ((stages ?? []) as unknown as LeadStage[]).filter((s) => s.kind !== "won");
 
     return {
-      stages: (stages ?? []) as unknown as LeadStage[],
+      stages: boardStages,
       /** Full rows kept server-side for dup calc; stripped before client render. */
       queryRows: rows,
       leads: rows.map(stripBoardContactFields),
@@ -148,6 +151,7 @@ export default async function LeadsBoardPage({
       .from("leads")
       .select(LIST_SELECT, { count: "exact" })
       .is("deleted_at", null)
+      .neq("status", "converted")
       .order("created_at", { ascending: false });
 
     query = applyAgentScope(query);
@@ -233,7 +237,7 @@ export default async function LeadsBoardPage({
     }
   }
   const duplicateLeadIds: string[] = [];
-  const sameOwnerNav: Record<string, { count: number; nextId: string }> = {};
+  const sameOwnerNav: Record<string, { count: number }> = {};
   const seenDup = new Set<string>();
 
   // Accidental dups: same phone/email but not all linked to one owner.
@@ -250,7 +254,7 @@ export default async function LeadsBoardPage({
     }
   }
 
-  // Same-owner multi-leads: count + next id (cycle by updated_at desc within board).
+  // Same-owner multi-leads: badge count only (not a nav link).
   const byOwner = new Map<string, BoardLead[]>();
   for (const lead of visibleLeads) {
     if (!lead.customer_id) continue;
@@ -260,13 +264,8 @@ export default async function LeadsBoardPage({
   }
   for (const group of byOwner.values()) {
     if (group.length < 2) continue;
-    const ordered = [...group].sort(
-      (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-    );
-    for (let i = 0; i < ordered.length; i++) {
-      const current = ordered[i];
-      const next = ordered[(i + 1) % ordered.length];
-      sameOwnerNav[current.id] = { count: ordered.length, nextId: next.id };
+    for (const lead of group) {
+      sameOwnerNav[lead.id] = { count: group.length };
     }
   }
 
@@ -328,15 +327,13 @@ export default async function LeadsBoardPage({
               List
             </Link>
           </div>
-          {view === "list" ? (
-            <Link
-              href="/pipeline/completed"
-              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 text-xs font-medium text-emerald-800 hover:bg-emerald-100"
-            >
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              Deals completed
-            </Link>
-          ) : null}
+          <Link
+            href="/pipeline/completed"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 text-xs font-medium text-emerald-800 hover:bg-emerald-100"
+          >
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            Deals completed
+          </Link>
           {user.role !== "agent" && (
             <LeadsAgentFilter agents={agents} assigned={params.assigned} />
           )}

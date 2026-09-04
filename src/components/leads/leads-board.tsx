@@ -60,7 +60,6 @@ export type BoardLead = {
   first_response_minutes?: number | null;
   duplicate?: boolean;
   sameOwnerCount?: number;
-  sameOwnerNextId?: string | null;
 };
 
 /** Server-only fields used for dup detection; never pass to the client board. */
@@ -152,16 +151,13 @@ function LeadCard({
               Dup
             </span>
           )}
-          {lead.sameOwnerCount && lead.sameOwnerCount > 1 && lead.sameOwnerNextId && !lead.duplicate ? (
-            <Link
-              href={`/leads/${lead.sameOwnerNextId}`}
-              prefetch
-              title={`${lead.sameOwnerCount} leads under the same owner — click for the next one`}
-              className="rounded bg-sky-50 px-1 py-px text-[10px] font-medium tabular-nums text-sky-700 hover:bg-sky-100 hover:underline"
-              onClick={(e) => e.stopPropagation()}
+          {lead.sameOwnerCount && lead.sameOwnerCount > 1 && !lead.duplicate ? (
+            <span
+              title={`${lead.sameOwnerCount} open leads under the same owner (${lead.name})`}
+              className="cursor-default rounded bg-sky-50 px-1 py-px text-[10px] font-medium tabular-nums text-sky-700"
             >
               {lead.sameOwnerCount}
-            </Link>
+            </span>
           ) : null}
           {firstResponse && (
             <span
@@ -457,7 +453,7 @@ export function LeadsBoard({
   stages: LeadStage[];
   leads: BoardLead[];
   duplicateLeadIds?: string[];
-  sameOwnerNav?: Record<string, { count: number; nextId: string }>;
+  sameOwnerNav?: Record<string, { count: number }>;
   userRole: string;
   fieldOptions?: Record<string, LeadFieldOption[]>;
 }) {
@@ -570,7 +566,6 @@ export function LeadsBoard({
                   tags: lead.tags ?? [],
                   duplicate: duplicateSet.has(lead.id),
                   sameOwnerCount: nav?.count,
-                  sameOwnerNextId: nav?.nextId ?? null,
                 };
               })}
               fieldOptions={fieldOptions}
