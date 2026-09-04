@@ -23,9 +23,13 @@ import {
 } from "@/components/ui/select";
 import { getStatusColor } from "@/lib/status-colors";
 import { formatAED } from "@/lib/money";
-import { formatDate, timeAgo } from "@/lib/dates";
+import { formatDate, formatDateTime, timeAgo } from "@/lib/dates";
 import { LeadContextPanel } from "@/components/crm/lead-context-panel";
 import { FollowUpPanel } from "@/components/crm/follow-up-panel";
+import {
+  ContactAttemptsPanel,
+  isContactAttemptType,
+} from "@/components/crm/contact-attempts-panel";
 import { DealTransactionForm } from "@/components/pipeline/deal-transaction-form";
 import {
   DealPropertyClientPanel,
@@ -69,6 +73,8 @@ import {
   User,
   Building2,
   FolderOpen,
+  GitBranch,
+  PenLine,
 } from "lucide-react";
 
 const STAGES = DEAL_PIPELINE_STAGES;
@@ -362,7 +368,7 @@ export function DealDetail({
           <div className="grid h-14 w-14 shrink-0 place-items-center rounded-[10px] border border-border bg-[#EDEBF4] text-[#4C4470]">
             <Briefcase className="h-6 w-6" />
           </div>
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Deal</p>
             <h1
               className="font-heading text-[1.85rem] leading-tight text-foreground"
@@ -382,6 +388,30 @@ export function DealDetail({
               <span className="inline-flex items-center rounded-full bg-primary px-3 py-1 text-[0.88rem] font-semibold tabular-nums text-white">
                 {formatAED(deal.value)}
               </span>
+              {deal.lead_id ? (
+                <span className="inline-flex items-center gap-1 rounded-full border border-teal-200 bg-teal-50 px-3 py-1 text-[0.78rem] font-semibold text-teal-800">
+                  <GitBranch className="h-3.5 w-3.5" />
+                  From lead
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[0.78rem] font-semibold text-slate-700">
+                  <PenLine className="h-3.5 w-3.5" />
+                  Manual
+                </span>
+              )}
+            </div>
+            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              <span title={formatDateTime(deal.created_at)}>
+                Created {formatDate(deal.created_at, "dd MMM yyyy, HH:mm")}
+              </span>
+              <span title={formatDateTime(deal.updated_at)}>
+                Updated {formatDate(deal.updated_at, "dd MMM yyyy, HH:mm")}
+              </span>
+              {deal.lead_id ? (
+                <Link href={`/leads/${deal.lead_id}`} className="font-medium text-primary hover:underline">
+                  Open source lead
+                </Link>
+              ) : null}
             </div>
           </div>
         </div>
@@ -523,7 +553,7 @@ export function DealDetail({
               <div className="mb-4 flex gap-2">
                 <Select value={activityType} onValueChange={(v) => setActivityType(v ?? "note")}>
                   <SelectTrigger className="w-32">
-                    <SelectValue />
+                    <span className="capitalize">{activityType.replace(/_/g, " ")}</span>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="note">Note</SelectItem>
@@ -572,6 +602,19 @@ export function DealDetail({
         </div>
 
         <div className="space-y-4">
+          <ContactAttemptsPanel
+            canEdit={canEdit && !deal.finalized_at}
+            items={activities
+              .filter((act) => isContactAttemptType(act.type))
+              .map((act) => ({
+                id: act.id,
+                type: act.type,
+                summary: act.summary,
+                occurred_at: act.occurred_at,
+              }))}
+            onSave={(type, summary) => addDealActivity(deal.id, type, summary)}
+          />
+
           <div className="overflow-hidden rounded-[14px] border border-border bg-card shadow-sm">
             <div className="border-b border-border bg-muted/40 px-4 py-3">
               <h2 className="text-sm font-semibold text-foreground">Assigned agent</h2>
@@ -593,10 +636,14 @@ export function DealDetail({
                 </div>
                 <div className="min-w-0 flex-1 leading-tight">
                   <b className="block truncate text-[0.9rem] font-semibold text-foreground">
-                    {deal.assigned_to_profile?.full_name ?? "Unassigned"}
+                    {deal.assigned_to_profile?.full_name ??
+                      agentOptions.find((a) => a.id === deal.assigned_to)?.full_name ??
+                      "Unassigned"}
                   </b>
                   <span className="text-[0.72rem] capitalize text-muted-foreground">
-                    {deal.assigned_to_profile?.role ?? "No agent yet"}
+                    {deal.assigned_to_profile?.role ??
+                      agentOptions.find((a) => a.id === deal.assigned_to)?.role ??
+                      "No agent yet"}
                   </span>
                 </div>
               </div>
@@ -618,7 +665,13 @@ export function DealDetail({
                     }}
                   >
                     <SelectTrigger className="h-8 w-full text-[0.78rem]">
-                      <SelectValue placeholder="Reassign" />
+                      <span className="truncate">
+                        {deal.assigned_to
+                          ? agentOptions.find((a) => a.id === deal.assigned_to)?.full_name ??
+                            deal.assigned_to_profile?.full_name ??
+                            "Reassign"
+                          : "Unassigned"}
+                      </span>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="unassigned">Unassigned</SelectItem>
