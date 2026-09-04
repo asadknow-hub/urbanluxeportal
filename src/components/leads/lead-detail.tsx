@@ -129,8 +129,8 @@ type Lead = {
     full_name: string;
     avatar_url: string | null;
     role: string;
-    email: string | null;
-    phone: string | null;
+    email?: string | null;
+    phone?: string | null;
   } | null;
 };
 

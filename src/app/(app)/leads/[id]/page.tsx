@@ -246,7 +246,25 @@ export default async function LeadDetailPage({
 
   return (
     <LeadDetail
-      lead={lead}
+      lead={{
+        ...lead,
+        assigned_to_profile: firstRel(
+          lead.assigned_to_profile as
+            | {
+                id: string;
+                full_name: string;
+                avatar_url: string | null;
+                role: string;
+              }
+            | {
+                id: string;
+                full_name: string;
+                avatar_url: string | null;
+                role: string;
+              }[]
+            | null
+        ),
+      }}
       initialTimeline={timelineResult.items}
       initialTimelineCursor={timelineResult.nextCursor}
       activityCount={timelineResult.activityCount}
