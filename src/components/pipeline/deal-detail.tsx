@@ -52,7 +52,7 @@ import { canManageCrm } from "@/lib/permissions";
 import type { DocCategoryChoice } from "@/lib/lead-field-options";
 import type { KycPersonRecord } from "@/lib/kyc-form";
 import type { LeadDocument } from "@/components/leads/lead-documents";
-import { updateDealStage, addDealActivity } from "@/server/deals";
+import { updateDealStage, addDealActivity, assignDeal } from "@/server/deals";
 import { toast } from "sonner";
 import {
   Phone,
@@ -507,16 +507,6 @@ export function DealDetail({
 
           <DealShortlist dealId={deal.id} items={shortlist} properties={inventory} canEdit={canEdit} />
 
-          <ViewingPanel
-            leadId={deal.lead_id}
-            dealId={deal.id}
-            viewings={viewings}
-            properties={inventory}
-            agents={agents}
-            defaultAgentId={deal.assigned_to}
-            canEdit={canEdit}
-          />
-
           <div className="overflow-hidden rounded-[14px] border border-border bg-card p-5">
             <div className="-mx-5 -mt-5 mb-4 h-0.5 bg-primary" />
             <h2 className="mb-4 text-sm font-semibold text-foreground">Activity timeline</h2>
@@ -573,11 +563,67 @@ export function DealDetail({
         </div>
 
         <div className="space-y-4">
-          <LeadContextPanel
-            context={deal.lead_context}
-            leadHref={deal.lead_id ? `/leads/${deal.lead_id}` : deal.lead ? `/leads/${deal.lead.id}` : undefined}
-            variant="compact"
-          />
+          <div className="overflow-hidden rounded-[14px] border border-border bg-card shadow-sm">
+            <div className="border-b border-border bg-muted/40 px-4 py-3">
+              <h2 className="text-sm font-semibold text-foreground">Assigned agent</h2>
+            </div>
+            <div className="px-4 py-3">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#EDEBF4] font-heading text-[0.78rem] text-secondary"
+                  style={{ fontFamily: "var(--font-display), serif" }}
+                >
+                  {deal.assigned_to_profile
+                    ? deal.assigned_to_profile.full_name
+                        .split(/\s+/)
+                        .filter(Boolean)
+                        .slice(0, 2)
+                        .map((part) => part[0]?.toUpperCase() ?? "")
+                        .join("") || "—"
+                    : "—"}
+                </div>
+                <div className="min-w-0 flex-1 leading-tight">
+                  <b className="block truncate text-[0.9rem] font-semibold text-foreground">
+                    {deal.assigned_to_profile?.full_name ?? "Unassigned"}
+                  </b>
+                  <span className="text-[0.72rem] capitalize text-muted-foreground">
+                    {deal.assigned_to_profile?.role ?? "No agent yet"}
+                  </span>
+                </div>
+              </div>
+              {canManage ? (
+                <div className="mt-3">
+                  <Select
+                    value={deal.assigned_to ?? "unassigned"}
+                    onValueChange={(v) => {
+                      const next = v === "unassigned" ? null : v ?? null;
+                      startTransition(async () => {
+                        const result = await assignDeal(deal.id, next);
+                        if (result.ok) {
+                          toast.success(next ? "Agent assigned" : "Agent cleared");
+                          router.refresh();
+                        } else {
+                          toast.error(result.error ?? "Could not assign");
+                        }
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="h-8 w-full text-[0.78rem]">
+                      <SelectValue placeholder="Reassign" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
+                      {agentOptions.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>
+                          {a.full_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : null}
+            </div>
+          </div>
 
           {leadFollowUp ? (
             <FollowUpPanel
@@ -587,7 +633,31 @@ export function DealDetail({
               scheduledNotes={leadFollowUp.scheduledNotes}
               canEdit={canEdit}
             />
+          ) : deal.lead_id ? (
+            <FollowUpPanel
+              leadId={deal.lead_id}
+              leadName={deal.lead?.name ?? "Lead"}
+              nextFollowUpAt={null}
+              scheduledNotes={null}
+              canEdit={canEdit}
+            />
           ) : null}
+
+          <ViewingPanel
+            leadId={deal.lead_id}
+            dealId={deal.id}
+            viewings={viewings}
+            properties={inventory}
+            agents={agents}
+            defaultAgentId={deal.assigned_to}
+            canEdit={canEdit}
+          />
+
+          <LeadContextPanel
+            context={deal.lead_context}
+            leadHref={deal.lead_id ? `/leads/${deal.lead_id}` : deal.lead ? `/leads/${deal.lead.id}` : undefined}
+            variant="compact"
+          />
         </div>
       </div>
       </div>

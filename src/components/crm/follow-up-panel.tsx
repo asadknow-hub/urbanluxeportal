@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,13 @@ export function FollowUpPanel({
   const [draftDate, setDraftDate] = useState(toDatetimeLocal(nextFollowUpAt));
   const [draftNotes, setDraftNotes] = useState(scheduledNotes ?? "");
 
+  useEffect(() => {
+    setFollowUpAt(nextFollowUpAt);
+    setNotes(scheduledNotes ?? "");
+    setDraftDate(toDatetimeLocal(nextFollowUpAt));
+    setDraftNotes(scheduledNotes ?? "");
+  }, [nextFollowUpAt, scheduledNotes]);
+
   const overdue = followUpAt ? isOverdue(followUpAt) : false;
 
   function handleSchedule() {
@@ -75,71 +82,86 @@ export function FollowUpPanel({
   }
 
   return (
-    <div className="overflow-hidden rounded-[14px] border border-border bg-primary p-4 text-primary-foreground">
-      <div className="mb-3 flex items-center justify-between gap-2">
+    <div className="overflow-hidden rounded-[14px] border border-primary/20 bg-primary text-primary-foreground shadow-sm">
+      <div className="flex items-center justify-between gap-2 border-b border-white/15 px-4 py-3">
         <div className="flex items-center gap-2">
-          <CalendarClock className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-semibold text-[#F4F2EA]">Follow-up</h2>
+          <CalendarClock className="h-4 w-4 text-white" />
+          <h2 className="text-sm font-semibold text-white">Follow-up</h2>
         </div>
-        <Link href={`/leads/${leadId}`} className="text-xs font-medium text-primary hover:underline">
-          {leadName ?? "Lead"}
+        <Link
+          href={`/leads/${leadId}`}
+          className="truncate text-xs font-medium text-white/80 hover:text-white hover:underline"
+        >
+          {leadName ?? "Open lead"}
         </Link>
       </div>
 
-      {followUpAt ? (
-        <div className="space-y-2 text-sm">
-          <p className={overdue ? "font-medium text-red-300" : "text-[#D8D5C8]"}>
-            {overdue ? "Overdue — " : "Scheduled for "}
-            <span className="font-mono text-primary">{formatDateTime(followUpAt)}</span>
+      <div className="space-y-3 px-4 py-3">
+        {followUpAt ? (
+          <div className="space-y-2 text-sm">
+            <p className={overdue ? "font-medium text-red-200" : "text-white/85"}>
+              {overdue ? "Overdue — " : "Scheduled for "}
+              <span className="font-mono text-white">{formatDateTime(followUpAt)}</span>
+            </p>
+            {notes ? <p className="text-[0.84rem] text-white/80">{notes}</p> : null}
+            {canEdit ? (
+              <div className="flex flex-wrap gap-2 pt-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white"
+                  onClick={() => {
+                    setDraftDate(toDatetimeLocal(followUpAt));
+                    setDraftNotes(notes);
+                    setShowForm(true);
+                  }}
+                  disabled={pending}
+                >
+                  Reschedule
+                </Button>
+                <Button
+                  size="sm"
+                  className="h-8 border-0 bg-white text-primary hover:bg-white/90"
+                  onClick={handleComplete}
+                  disabled={pending}
+                >
+                  {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}
+                  Done
+                </Button>
+              </div>
+            ) : null}
+          </div>
+        ) : (
+          <p className="text-sm text-white/75">
+            No follow-up set{canEdit ? " — schedule the next touchpoint." : "."}
           </p>
-          {notes ? <p className="text-[0.88rem] text-white/90">{notes}</p> : null}
-          {canEdit && (
-            <div className="flex gap-2 pt-1">
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-8 border-white/20 bg-transparent text-white hover:bg-white/10"
-                onClick={() => {
-                  setDraftDate(toDatetimeLocal(followUpAt));
-                  setDraftNotes(notes);
-                  setShowForm(true);
-                }}
-                disabled={pending}
-              >
-                Reschedule
-              </Button>
-              <Button size="sm" className="h-8" onClick={handleComplete} disabled={pending}>
-                {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="mr-1 h-4 w-4" />}
-                Done
-              </Button>
-            </div>
-          )}
-        </div>
-      ) : (
-        <p className="text-sm text-[#D8D5C8]">
-          No follow-up set{canEdit ? " — schedule the next touchpoint." : "."}
-        </p>
-      )}
+        )}
 
-      {canEdit && (showForm || !followUpAt) && (
-        <div className="mt-3 space-y-2 border-t border-white/12 pt-3">
-          <Input
-            type="datetime-local"
-            value={draftDate}
-            onChange={(e) => setDraftDate(e.target.value)}
-            className="h-9 border-white/20 bg-white/5 text-xs text-white"
-          />
-          <Input
-            value={draftNotes}
-            onChange={(e) => setDraftNotes(e.target.value)}
-            placeholder="Call, WhatsApp, viewing…"
-            className="h-9 border-white/20 bg-white/5 text-xs text-white"
-          />
-          <Button size="sm" className="w-full" onClick={handleSchedule} disabled={pending || !draftDate}>
-            {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save follow-up"}
-          </Button>
-        </div>
-      )}
+        {canEdit && (showForm || !followUpAt) ? (
+          <div className="space-y-2 border-t border-white/15 pt-3">
+            <Input
+              type="datetime-local"
+              value={draftDate}
+              onChange={(e) => setDraftDate(e.target.value)}
+              className="h-9 border-white/20 bg-white/10 text-xs text-white placeholder:text-white/50"
+            />
+            <Input
+              value={draftNotes}
+              onChange={(e) => setDraftNotes(e.target.value)}
+              placeholder="Call, WhatsApp, viewing…"
+              className="h-9 border-white/20 bg-white/10 text-xs text-white placeholder:text-white/50"
+            />
+            <Button
+              size="sm"
+              className="w-full border-0 bg-white text-primary hover:bg-white/90"
+              onClick={handleSchedule}
+              disabled={pending || !draftDate}
+            >
+              {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save follow-up"}
+            </Button>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
