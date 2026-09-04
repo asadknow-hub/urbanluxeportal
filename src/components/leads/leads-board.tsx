@@ -20,12 +20,19 @@ import { updateLeadStage, createLeadStage, updateLeadStageName, deleteLeadStage 
 import { cn } from "@/lib/utils";
 import { formatAEDRange } from "@/lib/money";
 import { firstResponseClock } from "@/lib/lead-sla";
-import { optionLabel, type LeadFieldOption } from "@/lib/lead-field-options";
+import { choiceItems, optionLabel, type LeadFieldOption } from "@/lib/lead-field-options";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export type LeadStage = {
   id: string;
@@ -221,15 +228,18 @@ function DraggableLeadCard({
   lead,
   stage,
   fieldOptions,
+  dragDisabled,
 }: {
   lead: BoardLead;
   stage: LeadStage;
   fieldOptions?: Record<string, LeadFieldOption[]>;
+  dragDisabled?: boolean;
 }) {
   const router = useRouter();
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: lead.id,
     data: { lead, stageId: stage.id },
+    disabled: dragDisabled,
   });
   const dragStartPos = useRef<{ x: number; y: number } | null>(null);
 
@@ -252,12 +262,14 @@ function DraggableLeadCard({
     <div
       ref={setNodeRef}
       {...attributes}
-      {...listeners}
+      {...(dragDisabled ? {} : listeners)}
       onPointerDown={(e) => {
-        listeners?.onPointerDown?.(e);
+        if (!dragDisabled) listeners?.onPointerDown?.(e);
         handlePointerDown(e);
       }}
       onClick={handleClick}
+      className={dragDisabled ? "cursor-pointer" : undefined}
+      title={dragDisabled ? "Claim this lead before moving it on the board" : undefined}
     >
       <LeadCard lead={lead} stage={stage} isDragging={isDragging} fieldOptions={fieldOptions} />
     </div>
@@ -269,11 +281,13 @@ function StageColumn({
   leads,
   roundedStart,
   fieldOptions,
+  agentClaimFirst,
 }: {
   stage: LeadStage;
   leads: BoardLead[];
   roundedStart?: boolean;
   fieldOptions?: Record<string, LeadFieldOption[]>;
+  agentClaimFirst?: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.id });
   const color = getColor(stage.color);
@@ -363,7 +377,13 @@ function StageColumn({
           </div>
         )}
         {leads.map((lead) => (
-          <DraggableLeadCard key={lead.id} lead={lead} stage={stage} fieldOptions={fieldOptions} />
+          <DraggableLeadCard
+            key={lead.id}
+            lead={lead}
+            stage={stage}
+            fieldOptions={fieldOptions}
+            dragDisabled={agentClaimFirst && !lead.assigned_to}
+          />
         ))}
       </div>
       
@@ -448,6 +468,7 @@ export function LeadsBoard({
   leads,
   duplicateLeadIds = [],
   sameOwnerNav = {},
+  userRole,
   fieldOptions = {},
 }: {
   stages: LeadStage[];
@@ -460,7 +481,16 @@ export function LeadsBoard({
   const router = useRouter();
   const [activeLead, setActiveLead] = useState<{ lead: BoardLead; stage: LeadStage } | null>(null);
   const [optimisticLeads, setOptimisticLeads] = useState(leads);
-  
+  const [reasonDialog, setReasonDialog] = useState<{
+    leadId: string;
+    fromStageId: string | null;
+    stageId: string;
+    stageName: string;
+    kind: "lost" | "junk";
+  } | null>(null);
+  const [selectedReason, setSelectedReason] = useState("");
+  const [reasonPending, setReasonPending] = useState(false);
+
   const [addStageOpen, setAddStageOpen] = useState(false);
   const [newStageName, setNewStageName] = useState("");
   const [newStageColor, setNewStageColor] = useState("blue");
@@ -471,6 +501,7 @@ export function LeadsBoard({
   );
   const duplicateSet = useMemo(() => new Set(duplicateLeadIds), [duplicateLeadIds]);
   const sameOwnerMap = useMemo(() => sameOwnerNav, [sameOwnerNav]);
+  const agentClaimFirst = userRole === "agent";
 
   // Group leads by stage
   const leadsByStage = useMemo(() => {
@@ -507,28 +538,78 @@ export function LeadsBoard({
     const leadId = active.id as string;
     const targetStageId = over.id as string;
 
-    // Find the lead and its current stage
     const lead = optimisticLeads.find((l) => l.id === leadId);
     if (!lead) return;
-    if (lead.stage_id === targetStageId) return; // no change
+    if (lead.stage_id === targetStageId) return;
 
-    // Optimistic update
+    if (agentClaimFirst && !lead.assigned_to) {
+      toast.error("Claim this lead before moving it on the board");
+      return;
+    }
+
+    const targetStage = stages.find((s) => s.id === targetStageId);
+    if (!targetStage) return;
+
+    if (targetStage.kind === "won") {
+      toast.error("Open the lead and use Convert to complete it");
+      return;
+    }
+
+    if (targetStage.kind === "lost" || targetStage.kind === "junk") {
+      setReasonDialog({
+        leadId,
+        fromStageId: lead.stage_id,
+        stageId: targetStageId,
+        stageName: targetStage.name,
+        kind: targetStage.kind,
+      });
+      setSelectedReason("");
+      return;
+    }
+
     setOptimisticLeads((prev) =>
       prev.map((l) => (l.id === leadId ? { ...l, stage_id: targetStageId } : l))
     );
 
-    // Server action
     const result = await updateLeadStage(leadId, targetStageId);
     if (result.ok) {
       router.refresh();
     } else {
-      // Revert on failure
       setOptimisticLeads((prev) =>
         prev.map((l) => (l.id === leadId ? { ...l, stage_id: lead.stage_id } : l))
       );
       toast.error(result.error ?? "Failed to move lead");
     }
-  }, [optimisticLeads, router]);
+  }, [optimisticLeads, router, stages, agentClaimFirst]);
+
+  async function handleReasonConfirm() {
+    if (!reasonDialog || !selectedReason) return;
+
+    setReasonPending(true);
+    setOptimisticLeads((prev) =>
+      prev.map((l) =>
+        l.id === reasonDialog.leadId ? { ...l, stage_id: reasonDialog.stageId } : l
+      )
+    );
+    const extra =
+      reasonDialog.kind === "lost"
+        ? { lost_reason: selectedReason }
+        : { junk_reason: selectedReason };
+    const result = await updateLeadStage(reasonDialog.leadId, reasonDialog.stageId, extra);
+    setReasonPending(false);
+    if (result.ok) {
+      setReasonDialog(null);
+      setSelectedReason("");
+      router.refresh();
+    } else {
+      setOptimisticLeads((prev) =>
+        prev.map((l) =>
+          l.id === reasonDialog.leadId ? { ...l, stage_id: reasonDialog.fromStageId } : l
+        )
+      );
+      toast.error(result.error ?? "Failed to move lead");
+    }
+  }
   
   const handleCreateStage = async () => {
     if (!newStageName.trim()) return;
@@ -559,6 +640,7 @@ export function LeadsBoard({
               key={stage.id}
               stage={stage}
               roundedStart={index === 0}
+              agentClaimFirst={agentClaimFirst}
               leads={(leadsByStage[stage.id] ?? []).map((lead) => {
                 const nav = sameOwnerMap[lead.id];
                 return {
@@ -592,6 +674,56 @@ export function LeadsBoard({
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      <Dialog
+        open={reasonDialog !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setReasonDialog(null);
+            setSelectedReason("");
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Move to {reasonDialog?.stageName}</DialogTitle>
+          </DialogHeader>
+          <Select value={selectedReason} onValueChange={(v) => setSelectedReason(v ?? "")}>
+            <SelectTrigger className="h-9">
+              <SelectValue placeholder="Select a reason" />
+            </SelectTrigger>
+            <SelectContent>
+              {(reasonDialog?.kind === "junk"
+                ? choiceItems(fieldOptions.junk_reason)
+                : choiceItems(fieldOptions.lost_reason)
+              ).map((reason) => (
+                <SelectItem key={reason.value} value={reason.value}>
+                  {reason.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setReasonDialog(null);
+                setSelectedReason("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleReasonConfirm}
+              disabled={!selectedReason || reasonPending}
+            >
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       {/* Create Stage Dialog */}
       <Dialog open={addStageOpen} onOpenChange={setAddStageOpen}>

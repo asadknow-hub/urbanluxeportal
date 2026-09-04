@@ -33,10 +33,14 @@ export default async function LeadDetailPage({
   const { data: lead, error } = await supabase
     .from("leads")
     .select(
-      `*,
-      assigned_to_profile:profiles!leads_assigned_to_fkey(id, full_name, avatar_url, role),
-      created_by_profile:profiles!leads_created_by_fkey(id, full_name)
-      `
+      `id, name, phone, email, call_numbers, source, interest, budget_min, budget_max,
+       preferred_areas, notes, status, score, assigned_to, next_follow_up_at,
+       lost_reason, junk_reason, converted_customer_id, converted_deal_id, customer_id,
+       created_at, updated_at, last_activity_at, stage_entered_at, stage_id,
+       first_response_due_at, first_responded_at, first_response_minutes,
+       nationality, financing, timeframe, purpose, bedrooms, category, tags,
+       assigned_to_profile:profiles!leads_assigned_to_fkey(id, full_name, avatar_url, role),
+       created_by_profile:profiles!leads_created_by_fkey(id, full_name)`
     )
     .eq("id", id)
     .single();

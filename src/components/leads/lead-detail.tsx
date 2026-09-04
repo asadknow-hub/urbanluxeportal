@@ -65,6 +65,7 @@ import {
 } from "@/lib/lead-field-options";
 import {
   assignLead,
+  claimLead,
   scheduleFollowUp,
   completeFollowUp,
   updateLead,
@@ -486,7 +487,8 @@ export function LeadDetail({
       )
     : null;
   const canManage = canManageCrm(userRole);
-  const canEdit = canManage || userRole === "agent";
+  const needsClaim = userRole === "agent" && !optimisticLead.assigned_to;
+  const canEdit = (canManage || userRole === "agent") && !needsClaim;
   /** Owner identity — locked when this lead sits under an already existing customer. */
   const canEditContact = canEdit && !existingOwner;
   const contactName =
@@ -579,6 +581,22 @@ export function LeadDetail({
       else {
         setOptimisticLead(lead);
         toast.error(result.error ?? "Failed");
+      }
+    });
+  }
+
+  function handleClaim() {
+    startTransition(async () => {
+      const result = await claimLead(optimisticLead.id);
+      if (result.ok) {
+        toast.success("Lead claimed");
+        setOptimisticLead((prev) => ({
+          ...prev,
+          assigned_to: userId,
+        }));
+        router.refresh();
+      } else {
+        toast.error(result.error ?? "Could not claim lead");
       }
     });
   }
@@ -865,6 +883,14 @@ export function LeadDetail({
                 {customer.nationality ? ` · ${customer.nationality}` : ""}
               </p>
             ) : null}
+            {needsClaim ? (
+              <div className="mb-3 flex flex-wrap items-center gap-2 rounded-[10px] border border-amber-200 bg-amber-50 px-3 py-2 text-[0.82rem] text-amber-950">
+                <span className="min-w-0 flex-1">Unassigned pool lead — claim it before editing or moving stages.</span>
+                <Button size="sm" className="shrink-0" disabled={pending} onClick={handleClaim}>
+                  Claim lead
+                </Button>
+              </div>
+            ) : null}
             <div className="flex flex-wrap items-center gap-x-[22px] gap-y-2 text-[0.86rem] text-muted-foreground">
               <FloatPicker
                 disabled={!canEdit}
@@ -1000,6 +1026,7 @@ export function LeadDetail({
               </DropdownMenu>
             </div>
             <div className="flex flex-wrap gap-2.5">
+              {canEdit ? (
               <DocumentUploadDialog
                 entityType="lead"
                 entityId={optimisticLead.id}
@@ -1014,6 +1041,7 @@ export function LeadDetail({
                   </span>
                 }
               />
+              ) : null}
               {deal ? (
                 <Link
                   href={`/pipeline/${deal.id}`}
@@ -1021,7 +1049,7 @@ export function LeadDetail({
                 >
                   Open deal <ArrowRight className="h-4 w-4" />
                 </Link>
-              ) : (
+              ) : canEdit ? (
                 <button
                   type="button"
                   onClick={() => setConverting(true)}
@@ -1029,7 +1057,7 @@ export function LeadDetail({
                 >
                   Convert to deal <ArrowRight className="h-4 w-4" />
                 </button>
-              )}
+              ) : null}
               {customer?.status === "active" && (
                 <Link
                   href={`/customers/${customer.id}`}
