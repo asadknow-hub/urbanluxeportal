@@ -35,6 +35,8 @@ import {
 
 export type ConvertLeadInput = DealTransactionInput & {
   dealTitle?: string;
+  /** Deal value in fils. Falls back to lead budget when omitted. */
+  dealValue?: number | null;
 };
 
 export type ActionResult<T = unknown> = {
@@ -694,17 +696,22 @@ export async function convertLead(
       suggestedPropertyTitle(lead) ||
       null;
     const title = options.dealTitle?.trim() || propertyTitle || lead.name;
-    const valueFils = lead.budget_max ?? lead.budget_min ?? 0;
+    const valueFils =
+      options.dealValue != null && Number.isFinite(options.dealValue) && options.dealValue > 0
+        ? Math.round(options.dealValue)
+        : (lead.budget_max ?? lead.budget_min ?? 0);
     const propertyCommunity =
       options.property_community?.trim() || lead.preferred_areas?.[0] || null;
 
     const propertySnapshot = {
-      bedrooms: lead.bedrooms ?? null,
+      bedrooms: options.property_snapshot?.bedrooms ?? lead.bedrooms ?? null,
+      size_sqft: options.property_snapshot?.size_sqft ?? null,
+      furnishing: options.property_snapshot?.furnishing ?? null,
       category: lead.category ?? null,
       purpose: lead.purpose ?? null,
       timeframe: lead.timeframe ?? null,
       preferred_areas: lead.preferred_areas ?? null,
-      notes: lead.notes ?? null,
+      notes: options.property_snapshot?.notes ?? lead.notes ?? null,
     };
 
     const { data: deal, error: dealError } = await supabase
@@ -735,6 +742,7 @@ export async function convertLead(
         property_building: options.property_building?.trim() || null,
         property_unit: options.property_unit?.trim() || null,
         property_ref: options.property_ref?.trim() || null,
+        property_type: options.property_type?.trim() || null,
         property_snapshot: propertySnapshot,
       })
       .select("id")

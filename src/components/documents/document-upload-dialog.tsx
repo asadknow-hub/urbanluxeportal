@@ -100,6 +100,10 @@ export function DocumentUploadDialog({
     }
   }, [open, fixedCategory]);
 
+  useEffect(() => {
+    if (open) setLinkedPropertyId(propertyId ?? "");
+  }, [open, propertyId]);
+
   function set<K extends keyof typeof form>(key: K, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { DocumentUploadDialog } from "@/components/documents/document-upload-dialog";
 import { DocumentPreviewDialog } from "@/components/documents/document-preview-dialog";
@@ -20,7 +20,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { ExternalLink, Eye, Loader2, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink, Eye, Loader2, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 type CategoryGroup = {
@@ -113,6 +113,28 @@ export function LeadDocumentsChecklist({
   const [editName, setEditName] = useState("");
   const [editExpiry, setEditExpiry] = useState("");
   const [editNotes, setEditNotes] = useState("");
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(defaultPropertyId ?? null);
+
+  useEffect(() => {
+    const ids = propertyChoices.map((p) => p.id);
+    if (ids.length === 0) {
+      setSelectedPropertyId(null);
+      return;
+    }
+    setSelectedPropertyId((prev) => {
+      if (prev && ids.includes(prev)) return prev;
+      if (defaultPropertyId && ids.includes(defaultPropertyId)) return defaultPropertyId;
+      return ids[0] ?? null;
+    });
+  }, [propertyChoices, defaultPropertyId]);
+
+  const selectedPropertyIndex = useMemo(() => {
+    if (!selectedPropertyId) return -1;
+    return propertyChoices.findIndex((p) => p.id === selectedPropertyId);
+  }, [propertyChoices, selectedPropertyId]);
+
+  const selectedPropertyLabel =
+    propertyChoices.find((p) => p.id === selectedPropertyId)?.label ?? null;
 
   const groups = useMemo((): CategoryGroup[] => {
     const sorted = [...categories].sort((a, b) => {
@@ -121,13 +143,19 @@ export function LeadDocumentsChecklist({
       return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
     });
 
-    return sorted.map((cat) => ({
-      cat,
-      docs: documents
+    return sorted.map((cat) => {
+      const isPropertyScope = (cat.scope ?? "individual") === "property";
+      const docs = documents
         .filter((d) => normalizeDocCategory(d.category) === cat.value)
-        .sort((a, b) => b.created_at.localeCompare(a.created_at)),
-    }));
-  }, [categories, documents]);
+        .filter((d) => {
+          if (!isPropertyScope) return true;
+          if (!selectedPropertyId) return true;
+          return d.property_id === selectedPropertyId;
+        })
+        .sort((a, b) => b.created_at.localeCompare(a.created_at));
+      return { cat, docs };
+    });
+  }, [categories, documents, selectedPropertyId]);
 
   function openInTab(doc: LeadDocument) {
     startTransition(async () => {
@@ -224,6 +252,10 @@ export function LeadDocumentsChecklist({
   function renderScopeColumn(title: string, scoped: CategoryGroup[], tone: "client" | "property") {
     if (scoped.length === 0) return null;
     const filled = scoped.filter((g) => g.docs.length > 0).length;
+    const activePropertyId = tone === "property" ? selectedPropertyId : null;
+    const showPropertySlider = tone === "property" && propertyChoices.length > 1;
+    const showPropertyEmpty = tone === "property" && propertyChoices.length === 0;
+
     return (
       <div className={cn("overflow-hidden rounded-[14px] border border-border bg-card", showSplit && "min-w-0")}>
         <div
@@ -237,15 +269,17 @@ export function LeadDocumentsChecklist({
               {title}
             </h3>
             <p className="text-[0.68rem] text-white/70">
-              {filled} of {scoped.length} have files
+              {showPropertyEmpty
+                ? "Propose a property to attach docs"
+                : `${filled} of ${scoped.length} have files`}
             </p>
           </div>
-          {canEdit ? (
+          {canEdit && !showPropertyEmpty ? (
             <DocumentUploadDialog
               entityType={uploadEntityType}
               entityId={uploadEntityId}
               categories={scoped.map((g) => g.cat)}
-              propertyId={tone === "property" ? defaultPropertyId : null}
+              propertyId={activePropertyId}
               propertyChoices={tone === "property" ? propertyChoices : []}
               onSaved={(doc) => onDocumentSaved?.(doc as LeadDocument | undefined)}
               trigger={
@@ -267,6 +301,73 @@ export function LeadDocumentsChecklist({
           ) : null}
         </div>
 
+        {showPropertySlider ? (
+          <div className="flex items-center gap-2 border-b border-border/60 bg-secondary/10 px-2 py-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-8 w-8 shrink-0 p-0"
+              disabled={selectedPropertyIndex <= 0}
+              onClick={() => {
+                const prev = propertyChoices[selectedPropertyIndex - 1];
+                if (prev) setSelectedPropertyId(prev.id);
+              }}
+              aria-label="Previous proposed property"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <div className="min-w-0 flex-1 text-center">
+              <p className="truncate text-[0.82rem] font-semibold text-foreground">
+                {selectedPropertyLabel}
+              </p>
+              <p className="text-[0.68rem] tabular-nums text-muted-foreground">
+                {selectedPropertyIndex + 1} of {propertyChoices.length} proposed
+              </p>
+              <div className="mt-1.5 flex items-center justify-center gap-1.5">
+                {propertyChoices.map((choice, index) => (
+                  <button
+                    key={choice.id}
+                    type="button"
+                    aria-label={`Show docs for ${choice.label}`}
+                    className={cn(
+                      "h-1.5 rounded-full transition-all",
+                      index === selectedPropertyIndex
+                        ? "w-5 bg-secondary"
+                        : "w-1.5 bg-secondary/35 hover:bg-secondary/55"
+                    )}
+                    onClick={() => setSelectedPropertyId(choice.id)}
+                  />
+                ))}
+              </div>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-8 w-8 shrink-0 p-0"
+              disabled={selectedPropertyIndex < 0 || selectedPropertyIndex >= propertyChoices.length - 1}
+              onClick={() => {
+                const next = propertyChoices[selectedPropertyIndex + 1];
+                if (next) setSelectedPropertyId(next.id);
+              }}
+              aria-label="Next proposed property"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : tone === "property" && selectedPropertyLabel ? (
+          <div className="border-b border-border/60 bg-secondary/10 px-3 py-2">
+            <p className="truncate text-[0.82rem] font-semibold text-foreground">{selectedPropertyLabel}</p>
+            <p className="text-[0.68rem] text-muted-foreground">Proposed property</p>
+          </div>
+        ) : null}
+
+        {showPropertyEmpty ? (
+          <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+            Link a proposed property on Overview, then upload title deed, floor plan, and other unit docs here.
+          </p>
+        ) : (
         <div className="divide-y divide-border/50">
           {scoped.map(({ cat, docs }) => {
             const filledStyles = scopeCompletedStyles(tone);
@@ -284,7 +385,7 @@ export function LeadDocumentsChecklist({
                       entityType={uploadEntityType}
                       entityId={uploadEntityId}
                       fixedCategory={cat}
-                      propertyId={cat.scope === "property" ? defaultPropertyId : null}
+                      propertyId={cat.scope === "property" ? activePropertyId : null}
                       propertyChoices={cat.scope === "property" ? propertyChoices : []}
                       onSaved={(d) => onDocumentSaved?.(d as LeadDocument | undefined)}
                       trigger={
@@ -335,7 +436,7 @@ export function LeadDocumentsChecklist({
                           entityType={uploadEntityType}
                           entityId={uploadEntityId}
                           fixedCategory={cat}
-                          propertyId={cat.scope === "property" ? defaultPropertyId : null}
+                          propertyId={cat.scope === "property" ? activePropertyId : null}
                           propertyChoices={cat.scope === "property" ? propertyChoices : []}
                           onSaved={(d) => onDocumentSaved?.(d as LeadDocument | undefined)}
                           trigger={
@@ -374,6 +475,7 @@ export function LeadDocumentsChecklist({
             );
           })}
         </div>
+        )}
       </div>
     );
   }

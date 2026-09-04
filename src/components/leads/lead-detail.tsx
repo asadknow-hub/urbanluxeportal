@@ -1822,11 +1822,19 @@ export function LeadDetail({
           onDocumentUpdated={(doc) => {
             setOptimisticDocs((prev) => prev.map((d) => (d.id === doc.id ? doc : d)));
           }}
-          propertyChoices={inventory.map((unit) => ({
-            id: unit.id,
-            label: [unit.property_code, unit.community, unit.building_name, unit.unit_number].filter(Boolean).join(" · "),
-          }))}
-          defaultPropertyId={viewings.find((row) => row.property_id)?.property_id ?? null}
+          propertyChoices={proposedProperties
+            .map((row) => {
+              const unit = row.property;
+              if (!unit) return null;
+              return {
+                id: row.property_id,
+                label: [unit.property_code, unit.community, unit.building_name, unit.unit_number]
+                  .filter(Boolean)
+                  .join(" · "),
+              };
+            })
+            .filter((row): row is { id: string; label: string } => Boolean(row))}
+          defaultPropertyId={proposedProperties.find((row) => row.property_id)?.property_id ?? null}
         />
       ) : null}
 
@@ -1854,6 +1862,7 @@ export function LeadDetail({
       <ConvertLeadDialog
         open={converting}
         onOpenChange={setConverting}
+        proposedProperties={proposedProperties}
         lead={{
           id: optimisticLead.id,
           name: optimisticLead.name,
