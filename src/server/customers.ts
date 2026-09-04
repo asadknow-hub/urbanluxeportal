@@ -23,6 +23,7 @@ const customerSchema = z.object({
   passport_no: z.string().optional().nullable(),
   trn: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
+  call_numbers: z.array(z.string()).optional(),
   tags: z.array(z.string()).optional().default([]),
   notes: z.string().optional().nullable(),
   assigned_to: z.string().min(1).optional().nullable(),
@@ -54,6 +55,7 @@ export async function createCustomer(
         passport_no: parsed.data.passport_no || null,
         trn: parsed.data.trn || null,
         address: parsed.data.address || null,
+        call_numbers: (parsed.data.call_numbers ?? []).map((n) => n.trim()).filter(Boolean),
         tags: parsed.data.tags,
         notes: parsed.data.notes || null,
         assigned_to: parsed.data.assigned_to || null,
@@ -89,12 +91,17 @@ export async function updateCustomer(
 
     const supabase = await createSupabaseServerClient();
 
+    const updatePayload: Record<string, unknown> = {
+      ...input,
+      updated_at: new Date().toISOString(),
+    };
+    if (input.call_numbers !== undefined) {
+      updatePayload.call_numbers = input.call_numbers.map((n) => n.trim()).filter(Boolean);
+    }
+
     const { error } = await supabase
       .from("customers")
-      .update({
-        ...input,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq("id", id);
 
     if (error) return { ok: false, error: error.message };

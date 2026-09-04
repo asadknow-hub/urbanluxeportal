@@ -265,6 +265,7 @@ export async function ensurePersonForLead(
         nationality: lead.nationality,
         notes: lead.notes,
         tags: lead.tags ?? [],
+        call_numbers: (lead.call_numbers ?? []).map((n) => n.trim()).filter(Boolean),
         assigned_to: lead.assigned_to,
         lead_id: leadId,
         status: "lead",
@@ -304,7 +305,7 @@ async function syncWorkingPerson(
   if (!lead.customer_id) return;
   const { data: person } = await supabase
     .from("customers")
-    .select("id, status, name, phone, email, nationality, notes, tags, assigned_to")
+    .select("id, status, name, phone, email, nationality, notes, tags, assigned_to, call_numbers")
     .eq("id", lead.customer_id)
     .maybeSingle();
   if (!person || !isWorkingCustomerStatus(person.status)) return;
@@ -314,6 +315,9 @@ async function syncWorkingPerson(
     updated_at: new Date().toISOString(),
   };
 
+  const leadCallNumbers = (lead.call_numbers ?? []).map((n: string) => n.trim()).filter(Boolean);
+  const personCallNumbers = (person.call_numbers ?? []).map((n: string) => n.trim()).filter(Boolean);
+
   if (mode === "fill") {
     // Linking a new lead under an existing owner — never wipe established KYC/contact.
     if (!person.phone?.trim() && lead.phone?.trim()) update.phone = lead.phone.trim();
@@ -322,6 +326,9 @@ async function syncWorkingPerson(
     if (!person.notes?.trim() && lead.notes?.trim()) update.notes = lead.notes.trim();
     if ((!person.tags || person.tags.length === 0) && lead.tags?.length) update.tags = lead.tags;
     if (!person.assigned_to && lead.assigned_to) update.assigned_to = lead.assigned_to;
+    if (personCallNumbers.length === 0 && leadCallNumbers.length > 0) {
+      update.call_numbers = leadCallNumbers;
+    }
   } else {
     // Primary working lead still drives contact name/assignment, but never null-wipe
     // or clobber established owner nationality (KYC lives on the customer).
@@ -334,6 +341,10 @@ async function syncWorkingPerson(
     if (lead.notes !== null && lead.notes !== undefined) update.notes = lead.notes;
     if (lead.tags) update.tags = lead.tags;
     if (lead.assigned_to !== undefined) update.assigned_to = lead.assigned_to;
+    if (leadCallNumbers.length > 0) {
+      const merged = Array.from(new Set([...personCallNumbers, ...leadCallNumbers]));
+      update.call_numbers = merged;
+    }
   }
 
   if (Object.keys(update).length <= 2) {

@@ -36,6 +36,7 @@ export type CustomerEditData = {
   trn: string | null;
   address: string | null;
   notes: string | null;
+  call_numbers?: string[];
   assigned_to: string | null;
 };
 
@@ -62,6 +63,7 @@ export function CustomerEditDialog({
     trn: customer.trn ?? "",
     address: customer.address ?? "",
     notes: customer.notes ?? "",
+    call_numbers: (customer.call_numbers ?? []).join(", "),
     assigned_to: customer.assigned_to ?? "",
   });
 
@@ -78,6 +80,7 @@ export function CustomerEditDialog({
       trn: customer.trn ?? "",
       address: customer.address ?? "",
       notes: customer.notes ?? "",
+      call_numbers: (customer.call_numbers ?? []).join(", "),
       assigned_to: customer.assigned_to ?? "",
     });
   }, [open, customer]);
@@ -102,6 +105,10 @@ export function CustomerEditDialog({
         trn: form.trn || null,
         address: form.address || null,
         notes: form.notes || null,
+        call_numbers: form.call_numbers
+          .split(/[,;\n]+/)
+          .map((n) => n.trim())
+          .filter(Boolean),
         assigned_to: form.assigned_to || null,
       });
       if (result.ok) {
@@ -167,6 +174,16 @@ export function CustomerEditDialog({
                 onChange={(e) => set("email", e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="cust-call-numbers">Other numbers</Label>
+            <Input
+              id="cust-call-numbers"
+              value={form.call_numbers}
+              onChange={(e) => set("call_numbers", e.target.value)}
+              placeholder="Comma-separated"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

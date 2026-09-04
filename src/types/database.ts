@@ -473,6 +473,7 @@ export interface Database {
           passport_no: string | null;
           trn: string | null;
           address: string | null;
+          call_numbers: string[];
           tags: string[] | null;
           notes: string | null;
           assigned_to: string | null;
@@ -497,6 +498,7 @@ export interface Database {
           passport_no?: string | null;
           trn?: string | null;
           address?: string | null;
+          call_numbers?: string[];
           tags?: string[] | null;
           notes?: string | null;
           assigned_to?: string | null;

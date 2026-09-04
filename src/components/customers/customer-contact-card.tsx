@@ -4,8 +4,10 @@ import { useEffect, useState, useTransition } from "react";
 import { updateCustomer } from "@/server/customers";
 import { whatsappLink } from "@/lib/phone";
 import { toast } from "sonner";
-import { Mail, MapPin, MessageCircle, Phone, User } from "lucide-react";
+import { Mail, MapPin, MessageCircle, Phone, Plus, User, X } from "lucide-react";
 import { CustomerEditDialog } from "@/components/customers/customer-edit-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type ContactCustomer = {
   id: string;
@@ -19,6 +21,7 @@ type ContactCustomer = {
   trn: string | null;
   address: string | null;
   notes: string | null;
+  call_numbers: string[];
   assigned_to: string | null;
   assigned_to_profile: { id: string; full_name: string } | null;
 };
@@ -38,7 +41,9 @@ export function CustomerContactCard({
     phone: customer.phone ?? "",
     email: customer.email ?? "",
     nationality: customer.nationality ?? "",
+    call_numbers: customer.call_numbers ?? [],
   });
+  const [callDraft, setCallDraft] = useState("");
   const [pending, startTransition] = useTransition();
   const waLink = whatsappLink(draft.phone || null);
 
@@ -47,10 +52,16 @@ export function CustomerContactCard({
       phone: customer.phone ?? "",
       email: customer.email ?? "",
       nationality: customer.nationality ?? "",
+      call_numbers: customer.call_numbers ?? [],
     });
-  }, [customer.phone, customer.email, customer.nationality]);
+  }, [customer.phone, customer.email, customer.nationality, customer.call_numbers]);
 
-  function saveField(patch: { phone?: string | null; email?: string | null; nationality?: string | null }) {
+  function saveField(patch: {
+    phone?: string | null;
+    email?: string | null;
+    nationality?: string | null;
+    call_numbers?: string[];
+  }) {
     if (!canEdit) return;
     startTransition(async () => {
       const result = await updateCustomer(customer.id, {
@@ -63,10 +74,30 @@ export function CustomerContactCard({
           phone: customer.phone ?? "",
           email: customer.email ?? "",
           nationality: customer.nationality ?? "",
+          call_numbers: customer.call_numbers ?? [],
         });
         toast.error(result.error ?? "Could not save");
       }
     });
+  }
+
+  function addCallNumber() {
+    const next = callDraft.trim();
+    if (!next) return;
+    if (draft.call_numbers.includes(next) || draft.phone.trim() === next) {
+      setCallDraft("");
+      return;
+    }
+    const call_numbers = [...draft.call_numbers, next];
+    setDraft((d) => ({ ...d, call_numbers }));
+    setCallDraft("");
+    saveField({ call_numbers });
+  }
+
+  function removeCallNumber(num: string) {
+    const call_numbers = draft.call_numbers.filter((n) => n !== num);
+    setDraft((d) => ({ ...d, call_numbers }));
+    saveField({ call_numbers });
   }
 
   return (
@@ -87,6 +118,7 @@ export function CustomerContactCard({
             trn: customer.trn,
             address: customer.address,
             notes: customer.notes,
+            call_numbers: customer.call_numbers,
             assigned_to: customer.assigned_to,
           }}
           agents={agents}
@@ -120,6 +152,72 @@ export function CustomerContactCard({
             saveField({ phone: next });
           }}
         />
+
+        <div className="border-b border-border/60 py-2.5">
+          <div className="flex items-start gap-2">
+            <Phone className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                Other numbers
+              </p>
+              {draft.call_numbers.length > 0 ? (
+                <ul className="mt-1.5 space-y-1.5">
+                  {draft.call_numbers.map((num) => {
+                    const link = whatsappLink(num);
+                    return (
+                      <li key={num} className="flex items-center gap-2">
+                        <span className="min-w-0 flex-1 text-foreground">{num}</span>
+                        {link ? (
+                          <a
+                            href={link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
+                          >
+                            <MessageCircle className="h-3 w-3" />
+                            WhatsApp
+                          </a>
+                        ) : null}
+                        {canEdit ? (
+                          <button
+                            type="button"
+                            onClick={() => removeCallNumber(num)}
+                            className="rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-destructive"
+                            aria-label={`Remove ${num}`}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className="mt-0.5 text-muted-foreground">—</p>
+              )}
+              {canEdit ? (
+                <div className="mt-2 flex gap-2">
+                  <Input
+                    value={callDraft}
+                    placeholder="Add number"
+                    className="h-8"
+                    onChange={(e) => setCallDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addCallNumber();
+                      }
+                    }}
+                  />
+                  <Button type="button" size="sm" variant="outline" className="h-8 shrink-0" onClick={addCallNumber}>
+                    <Plus className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
         <ContactEditRow
           icon={Mail}
           label="Email"

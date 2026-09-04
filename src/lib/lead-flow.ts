@@ -62,7 +62,7 @@ export type FieldMapping = {
 export const FIELD_MAPPINGS: FieldMapping[] = [
   { leadField: "name", label: "Name", customer: "copy", deal: "copy", notes: "Person SoT; mirrored to all linked leads" },
   { leadField: "phone", label: "WhatsApp", customer: "copy", deal: "copy", notes: "Person SoT; mirrored to linked leads" },
-  { leadField: "call_numbers", label: "Call numbers", customer: "—", deal: "—", notes: "Lead-only dial list; used for owner matching against customer phone" },
+  { leadField: "call_numbers", label: "Call numbers", customer: "copy", deal: "—", notes: "Dial list; copied to person on sync / close" },
   { leadField: "email", label: "Email", customer: "copy", deal: "copy", notes: "Person SoT; mirrored to linked leads" },
   { leadField: "nationality", label: "Nationality", customer: "copy", deal: "copy", notes: "Person/KYC SoT; mirrored both ways for open leads" },
   { leadField: "notes", label: "Notes", customer: "copy", deal: "—", notes: "Merged into customer notes while status is working" },
