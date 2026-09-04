@@ -20,14 +20,12 @@ export const NAV_GROUPS = [
 ] as const;
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "Workspace" },
   { label: "Staff", href: "/team", icon: "UsersRound", roles: ["admin", "manager", "reception"], group: "Workspace" },
   { label: "Lead Settings", href: "/settings/leads", icon: "Settings2", roles: ["admin", "manager", "reception"], group: "CRM" },
+  { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
   { label: "Leads", href: "/leads", icon: "Users", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
   { label: "Follow-ups", href: "/leads/followups", icon: "CalendarClock", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
-  { label: "Viewings", href: "/viewings", icon: "Calendar", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
   { label: "Deals", href: "/pipeline", icon: "KanbanSquare", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
-  { label: "Reports", href: "/reports", icon: "BarChart3", roles: ["admin", "manager", "reception", "accountant"], group: "CRM" },
   { label: "Customers", href: "/customers", icon: "Contact", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
   { label: "Properties", href: "/company-properties", icon: "Home", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "CRM" },
   { label: "Inventory", href: "/inventory", icon: "Building2", roles: ["admin", "manager", "reception", "agent", "accountant"], group: "Inventory" },
@@ -41,6 +39,17 @@ export function isNavActive(pathname: string, href: string): boolean {
       return false;
     }
     return pathname.startsWith("/leads/");
+  }
+  if (href === "/leads/followups") {
+    return (
+      pathname === "/leads/followups" ||
+      pathname.startsWith("/leads/followups/") ||
+      pathname === "/viewings" ||
+      pathname.startsWith("/viewings/")
+    );
+  }
+  if (href === "/dashboard") {
+    return pathname === "/dashboard" || pathname === "/reports" || pathname.startsWith("/reports/");
   }
   if (href === "/deals" || href === "/pipeline") {
     return (
@@ -97,6 +106,18 @@ const SECTION_OVERRIDES: Record<string, SectionHeader> = {
   },
   "/leads/inflow": {
     title: "Lead Inflow",
+    gradient: SECTION_GRADIENT.CRM,
+  },
+  "/leads/followups": {
+    title: "Follow-ups",
+    gradient: SECTION_GRADIENT.CRM,
+  },
+  "/viewings": {
+    title: "Follow-ups",
+    gradient: SECTION_GRADIENT.CRM,
+  },
+  "/reports": {
+    title: "Dashboard",
     gradient: SECTION_GRADIENT.CRM,
   },
 };

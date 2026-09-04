@@ -2,6 +2,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { DashboardView } from "@/components/dashboard/dashboard-view";
 import { sweepFirstResponseSla } from "@/server/first-response";
+import { fetchAgentPerformanceReport, fetchSourceFunnelReport } from "@/server/reports";
+import { can } from "@/lib/permissions";
 import { addDays, startOfDay } from "date-fns";
 import { propertyLabel } from "@/lib/inventory";
 
@@ -12,6 +14,7 @@ export default async function DashboardPage() {
   if (!user) throw new Error("User not found");
   const supabase = await createSupabaseServerClient();
   const isAgent = user.role === "agent";
+  const showReports = can(user.role, "dashboard_full");
   await sweepFirstResponseSla(supabase);
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
@@ -82,6 +85,8 @@ export default async function DashboardPage() {
     customersResult,
     overdueFollowupsResult,
     firstResponseOverdueResult,
+    sourceFunnel,
+    agentPerformance,
   ] = await Promise.all([
     dealsQuery,
     supabase
@@ -95,6 +100,8 @@ export default async function DashboardPage() {
     customersQuery,
     overdueFollowupsQuery,
     firstResponseOverdueQuery,
+    showReports ? fetchSourceFunnelReport() : Promise.resolve([]),
+    showReports ? fetchAgentPerformanceReport() : Promise.resolve([]),
   ]);
 
   const dayStart = startOfDay(new Date());
@@ -147,7 +154,7 @@ export default async function DashboardPage() {
       id: row.id,
       scheduled_at: row.scheduled_at,
       title: lead?.name ?? deal?.title ?? "Viewing",
-      href: row.lead_id ? `/leads/${row.lead_id}` : row.deal_id ? `/pipeline/${row.deal_id}` : "/viewings",
+      href: row.lead_id ? `/leads/${row.lead_id}` : row.deal_id ? `/pipeline/${row.deal_id}` : "/leads/followups",
       unit: unit ? propertyLabel(unit) : "No unit",
     };
   });
@@ -168,6 +175,8 @@ export default async function DashboardPage() {
       activities={(activityResult.data ?? []) as never}
       followUps={followupsResult.data ?? []}
       todayViewings={todayViewings}
+      sourceFunnel={showReports ? sourceFunnel : undefined}
+      agentPerformance={showReports ? agentPerformance : undefined}
     />
   );
 }

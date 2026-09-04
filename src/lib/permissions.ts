@@ -120,9 +120,6 @@ export function canAccessRoute(role: UserRole | null | undefined, path: string):
   if (!role) return false;
   if (isRemovedRoute(path)) return false;
 
-  if (path.startsWith("/reports")) {
-    return can(role, "dashboard_full");
-  }
   if (path.startsWith("/settings/leads")) {
     return canManageCrm(role);
   }

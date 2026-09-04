@@ -135,7 +135,7 @@ export function ViewingPanel({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/viewings" className="text-xs text-[#6d28d9] hover:text-[#4c1d95]">
+          <Link href="/leads/followups" className="text-xs text-[#6d28d9] hover:text-[#4c1d95]">
             Calendar
           </Link>
           {canEdit ? (

@@ -27,6 +27,7 @@ function revalidateViewing(leadId?: string | null, dealId?: string | null) {
   revalidatePath("/pipeline");
   revalidatePath("/inventory");
   revalidatePath("/viewings");
+  revalidatePath("/leads/followups");
   revalidatePath("/dashboard");
   if (leadId) revalidatePath(`/leads/${leadId}`);
   if (dealId) revalidatePath(`/pipeline/${dealId}`);

@@ -6,8 +6,10 @@ import { PageHeader } from "@/components/primitives/page-header";
 import { StatCard } from "@/components/primitives/stat-card";
 import { SectionCard } from "@/components/primitives/section-card";
 import { EmptyState } from "@/components/primitives/empty-state";
+import { ReportsView } from "@/components/reports/reports-view";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { AgentPerformanceRow, SourceFunnelRow } from "@/server/reports";
 
 type Activity = {
   id: string;
@@ -43,6 +45,8 @@ export function DashboardView({
   activities,
   followUps,
   todayViewings = [],
+  sourceFunnel,
+  agentPerformance,
 }: {
   fullName: string;
   pipelineValue: number;
@@ -55,12 +59,16 @@ export function DashboardView({
   activities: Activity[];
   followUps: FollowUp[];
   todayViewings?: TodayViewing[];
+  sourceFunnel?: SourceFunnelRow[];
+  agentPerformance?: AgentPerformanceRow[];
 }) {
+  const showReports = Boolean(sourceFunnel && agentPerformance);
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Dashboard"
-        description={`Welcome back, ${fullName}. CRM pipeline and follow-ups for today.`}
+        description={`Welcome back, ${fullName}. Pipeline health, schedule, and agency performance.`}
         actions={
           <>
             <Link href="/leads" className={cn(buttonVariants({ size: "sm" }))}>
@@ -69,14 +77,8 @@ export function DashboardView({
             <Link href="/leads/followups" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
               Follow-ups
             </Link>
-            <Link href="/viewings" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
-              Viewings
-            </Link>
             <Link href="/deals" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
               Deals
-            </Link>
-            <Link href="/reports" className={cn(buttonVariants({ size: "sm", variant: "outline" }))}>
-              Reports
             </Link>
           </>
         }
@@ -109,6 +111,10 @@ export function DashboardView({
         <StatCard label="Customers" value={String(customersCount)} href="/customers" />
       </div>
 
+      {showReports ? (
+        <ReportsView sourceFunnel={sourceFunnel!} agentPerformance={agentPerformance!} />
+      ) : null}
+
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <SectionCard title="Recent activity" className="lg:col-span-2">
           {activities.length === 0 ? (
@@ -138,8 +144,8 @@ export function DashboardView({
           <SectionCard
             title="Today's viewings"
             action={
-              <Link href="/viewings" className="text-xs font-medium text-muted-foreground hover:text-foreground">
-                Calendar
+              <Link href="/leads/followups" className="text-xs font-medium text-muted-foreground hover:text-foreground">
+                Schedule
               </Link>
             }
           >
@@ -167,35 +173,35 @@ export function DashboardView({
             )}
           </SectionCard>
 
-        <SectionCard
-          title="Upcoming follow-ups"
-          action={
-            <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground">
-              {followUps.length}
-            </span>
-          }
-        >
-          {followUps.length === 0 ? (
-            <EmptyState title="No scheduled follow-ups" className="border-0" />
-          ) : (
-            <ul className="space-y-2 p-3">
-              {followUps.map((lead) => (
-                <li key={lead.id}>
-                  <Link
-                    href={`/leads/${lead.id}`}
-                    className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-muted/60"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{lead.name}</p>
-                      <p className="text-[11px] text-muted-foreground">{formatDate(lead.next_follow_up_at)}</p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </SectionCard>
+          <SectionCard
+            title="Upcoming follow-ups"
+            action={
+              <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground">
+                {followUps.length}
+              </span>
+            }
+          >
+            {followUps.length === 0 ? (
+              <EmptyState title="No scheduled follow-ups" className="border-0" />
+            ) : (
+              <ul className="space-y-2 p-3">
+                {followUps.map((lead) => (
+                  <li key={lead.id}>
+                    <Link
+                      href={`/leads/${lead.id}`}
+                      className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-muted/60"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{lead.name}</p>
+                        <p className="text-[11px] text-muted-foreground">{formatDate(lead.next_follow_up_at)}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </SectionCard>
         </div>
       </div>
     </div>
