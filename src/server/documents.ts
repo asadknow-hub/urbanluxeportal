@@ -110,7 +110,19 @@ const documentSchema = z.object({
 
 export async function createDocument(
   input: z.infer<typeof documentSchema>
-): Promise<ActionResult<{ id: string; name: string; storage_path: string; mime_type: string; category: string; expiry_date: string | null; notes: string | null; created_at: string }>> {
+): Promise<
+  ActionResult<{
+    id: string;
+    name: string;
+    storage_path: string;
+    mime_type: string;
+    category: string;
+    expiry_date: string | null;
+    notes: string | null;
+    created_at: string;
+    property_id: string | null;
+  }>
+> {
   try {
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
@@ -130,6 +142,11 @@ export async function createDocument(
 
     const supabase = await createSupabaseServerClient();
 
+    const propertyId =
+      parsed.data.property_id ||
+      (parsed.data.entity_type === "property" ? parsed.data.entity_id : null) ||
+      null;
+
     const { data, error } = await supabase
       .from("documents")
       .insert({
@@ -140,15 +157,12 @@ export async function createDocument(
         category: normalizeDocCategory(parsed.data.category),
         entity_type: parsed.data.entity_type || null,
         entity_id: parsed.data.entity_id || null,
-        property_id:
-          parsed.data.property_id ||
-          (parsed.data.entity_type === "property" ? parsed.data.entity_id : null) ||
-          null,
+        property_id: propertyId,
         expiry_date: parsed.data.expiry_date || null,
         notes: parsed.data.notes?.trim() || null,
         uploaded_by: user.id,
       })
-      .select("id, name, storage_path, mime_type, category, expiry_date, notes, created_at")
+      .select("id, name, storage_path, mime_type, category, expiry_date, notes, created_at, property_id")
       .single();
 
     if (error) return { ok: false, error: error.message };
@@ -170,8 +184,8 @@ export async function createDocument(
     }
 
     revalidateDocumentPaths(parsed.data.entity_type, parsed.data.entity_id);
-    if (parsed.data.property_id) revalidatePath(`/inventory/${parsed.data.property_id}`);
-    return { ok: true, data: data };
+    if (propertyId) revalidatePath(`/inventory/${propertyId}`);
+    return { ok: true, data };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };
   }

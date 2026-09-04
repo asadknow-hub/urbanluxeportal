@@ -43,7 +43,17 @@ export function DocumentUploadDialog({
   entityId?: string;
   quiet?: boolean;
   trigger?: ReactNode;
-  onSaved?: (doc?: { id: string; name: string; storage_path: string; mime_type: string; category: string; expiry_date: string | null; notes: string | null; created_at: string }) => void;
+  onSaved?: (doc?: {
+    id: string;
+    name: string;
+    storage_path: string;
+    mime_type: string;
+    category: string;
+    expiry_date: string | null;
+    notes: string | null;
+    created_at: string;
+    property_id?: string | null;
+  }) => void;
   categories?: DocCategoryChoice[];
   /** When set, category is fixed — no dropdown; expiry/note shown alone. */
   fixedCategory?: DocCategoryChoice;
@@ -299,19 +309,25 @@ export function DocumentUploadDialog({
           {(fixedCategory?.scope === "property" || categoryItems.find((c) => c.value === form.category)?.scope === "property") && propertyChoices.length > 0 ? (
             <div className="space-y-2">
               <Label className="text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Property</Label>
-              <Select value={linkedPropertyId || "none"} onValueChange={(v) => setLinkedPropertyId(v === "none" ? "" : v ?? "")}>
-                <SelectTrigger className="h-11 rounded-[10px]">
-                  <span className="truncate">
-                    {propertyChoices.find((p) => p.id === linkedPropertyId)?.label ?? "Select property"}
-                  </span>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Not linked yet</SelectItem>
-                  {propertyChoices.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {propertyId && propertyChoices.some((p) => p.id === propertyId) ? (
+                <div className="rounded-[10px] border border-border bg-muted/40 px-3 py-2.5 text-sm font-medium text-foreground">
+                  {propertyChoices.find((p) => p.id === propertyId)?.label}
+                </div>
+              ) : (
+                <Select value={linkedPropertyId || "none"} onValueChange={(v) => setLinkedPropertyId(v === "none" ? "" : v ?? "")}>
+                  <SelectTrigger className="h-11 rounded-[10px]">
+                    <span className="truncate">
+                      {propertyChoices.find((p) => p.id === linkedPropertyId)?.label ?? "Select property"}
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Not linked yet</SelectItem>
+                    {propertyChoices.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           ) : null}
 

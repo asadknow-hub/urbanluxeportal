@@ -4,16 +4,47 @@ import { LeadDetail } from "@/components/leads/lead-detail";
 import { groupLeadFieldOptions, leadDocChecklistCategories, type LeadFieldOption } from "@/lib/lead-field-options";
 import { isExistingOwnerPerson } from "@/lib/lead-owner";
 import { matchesForRequirement, INVENTORY_MATCH_SELECT } from "@/lib/match-inventory";
+import { mergePersonDocumentsByStoragePath } from "@/lib/person-documents";
 import { getLeadTimelinePage } from "@/server/lead-timeline";
 import { ensurePersonForLead } from "@/server/people";
 import { mergeKycPerson } from "@/lib/kyc-form";
 import { redirect } from "next/navigation";
+import type { LeadDocument } from "@/components/leads/lead-documents";
 
 export const dynamic = "force-dynamic";
 
 function firstRel<T>(value: T | T[] | null | undefined): T | null {
   if (!value) return null;
   return Array.isArray(value) ? value[0] ?? null : value;
+}
+
+function toLeadDocument(doc: {
+  id: string;
+  name: string;
+  storage_path: string;
+  mime_type: string;
+  category: string;
+  expiry_date?: string | null;
+  notes?: string | null;
+  created_at: string;
+  property_id?: string | null;
+  entity_type?: string | null;
+  entity_id?: string | null;
+}): LeadDocument {
+  return {
+    id: doc.id,
+    name: doc.name,
+    storage_path: doc.storage_path,
+    mime_type: doc.mime_type,
+    category: doc.category,
+    expiry_date: doc.expiry_date ?? null,
+    notes: doc.notes ?? null,
+    created_at: doc.created_at,
+    property_id:
+      doc.property_id ??
+      (doc.entity_type === "property" ? doc.entity_id : null) ??
+      null,
+  };
 }
 
 export default async function LeadDetailPage({
@@ -196,16 +227,31 @@ export default async function LeadDetailPage({
   });
   const deal = dealResult?.data ?? null;
   const docCategories = leadDocChecklistCategories((fieldOptionRows ?? []) as LeadFieldOption[]);
-  const customerDocuments = (customerDocsResult.data ?? []).map((doc) => ({
-    id: doc.id,
-    name: doc.name,
-    storage_path: doc.storage_path,
-    mime_type: doc.mime_type,
-    category: doc.category,
-    expiry_date: doc.expiry_date,
-    notes: doc.notes,
-    created_at: doc.created_at,
-  }));
+  const customerDocuments = (customerDocsResult.data ?? []).map(toLeadDocument);
+
+  const proposedPropertyIds = [
+    ...new Set((proposedPropertyRows ?? []).map((row) => row.property_id).filter(Boolean)),
+  ] as string[];
+
+  const { data: proposedPropertyDocs } =
+    proposedPropertyIds.length > 0
+      ? await supabase
+          .from("documents")
+          .select(
+            "id, name, storage_path, mime_type, category, expiry_date, notes, created_at, property_id, entity_type, entity_id"
+          )
+          .is("deleted_at", null)
+          .or(
+            `property_id.in.(${proposedPropertyIds.join(",")}),and(entity_type.eq.property,entity_id.in.(${proposedPropertyIds.join(",")}))`
+          )
+          .order("created_at", { ascending: false })
+      : { data: [] as const };
+
+  const leadDocuments = mergePersonDocumentsByStoragePath(
+    (documents ?? []).map(toLeadDocument),
+    (proposedPropertyDocs ?? []).map(toLeadDocument)
+  );
+
   const matches = matchesForRequirement(
     {
       preferred_areas: lead.preferred_areas,
@@ -290,7 +336,7 @@ export default async function LeadDetailPage({
       customerDocuments={customerDocuments}
       kycDocCategories={docCategories}
       deal={deal}
-      documents={documents ?? []}
+      documents={leadDocuments}
       viewings={viewingRows ?? []}
       inventory={inventoryRows ?? []}
       proposedProperties={proposedProperties}

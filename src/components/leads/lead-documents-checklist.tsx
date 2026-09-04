@@ -149,13 +149,16 @@ export function LeadDocumentsChecklist({
         .filter((d) => normalizeDocCategory(d.category) === cat.value)
         .filter((d) => {
           if (!isPropertyScope) return true;
-          if (!selectedPropertyId) return true;
-          return d.property_id === selectedPropertyId;
+          if (!selectedPropertyId) return !d.property_id;
+          // Exact property match; unscoped legacy property docs appear on the first proposed unit only.
+          if (d.property_id === selectedPropertyId) return true;
+          if (!d.property_id && selectedPropertyIndex <= 0) return true;
+          return false;
         })
         .sort((a, b) => b.created_at.localeCompare(a.created_at));
       return { cat, docs };
     });
-  }, [categories, documents, selectedPropertyId]);
+  }, [categories, documents, selectedPropertyId, selectedPropertyIndex]);
 
   function openInTab(doc: LeadDocument) {
     startTransition(async () => {

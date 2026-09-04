@@ -339,8 +339,14 @@ export function LeadKycPage({
 export function useMergedPersonDocuments(...sources: LeadDocument[][]) {
   return useMemo(
     () => mergePersonDocumentsByStoragePath(...sources),
+    // Include fields that affect checklist filtering / display, not only id+path.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- flatten source arrays for stable deps
-    sources.flatMap((batch) => batch.map((doc) => `${doc.id}:${doc.storage_path}`))
+    sources.flatMap((batch) =>
+      batch.map(
+        (doc) =>
+          `${doc.id}:${doc.storage_path}:${doc.property_id ?? ""}:${doc.category}:${doc.expiry_date ?? ""}:${doc.notes ?? ""}:${doc.name}`
+      )
+    )
   );
 }
 
