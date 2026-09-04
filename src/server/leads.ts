@@ -23,6 +23,7 @@ import type { DealTransactionInput } from "@/lib/deal-transaction";
 import { canManageCrm } from "@/lib/permissions";
 import { leadStatusForStageKind, resolveDefaultLeadStageId } from "@/lib/lead-stages";
 import { HUMAN_LEAD_ACTIVITY_TYPES } from "@/lib/lead-sla";
+import { isExistingOwnerPerson, ownerLockedFieldsInPatch } from "@/lib/lead-owner";
 import {
   ensurePersonForLead,
   findCustomerByContact,
@@ -526,6 +527,40 @@ export async function updateLead(
     const now = new Date().toISOString();
     const supabase = await createSupabaseServerClient();
 
+    const lockedAttempt = ownerLockedFieldsInPatch(patch);
+    if (lockedAttempt.length > 0) {
+      const { data: leadRow } = await supabase
+        .from("leads")
+        .select("id, created_at, customer_id")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (leadRow?.customer_id) {
+        const [{ count: siblingCount }, { data: person }] = await Promise.all([
+          supabase
+            .from("leads")
+            .select("id", { count: "exact", head: true })
+            .eq("customer_id", leadRow.customer_id)
+            .neq("id", id)
+            .is("deleted_at", null),
+          supabase.from("customers").select("created_at").eq("id", leadRow.customer_id).maybeSingle(),
+        ]);
+
+        if (
+          isExistingOwnerPerson({
+            leadCreatedAt: leadRow.created_at,
+            personCreatedAt: person?.created_at,
+            siblingLeadCount: siblingCount ?? 0,
+          })
+        ) {
+          return {
+            ok: false,
+            error: "Name, phone, email, and nationality are locked for an already existing customer. Edit them on the customer record.",
+          };
+        }
+      }
+    }
+
     const { error } = await supabase
       .from("leads")
       .update({
@@ -539,7 +574,8 @@ export async function updateLead(
 
     await ensurePersonForLead(id, user.id, supabase);
 
-    // Nationality SoT for KYC is the person; snapshot edits must mirror both ways.
+    // Nationality SoT for KYC is the person; snapshot edits must mirror both ways
+    // (only for first-opportunity leads — existing owners are rejected above).
     if (Object.prototype.hasOwnProperty.call(patch, "nationality")) {
       const { data: leadRow } = await supabase
         .from("leads")
@@ -683,6 +719,16 @@ export async function convertLead(
       .select("id")
       .single();
     if (dealError) return { ok: false, error: dealError.message };
+
+    if (personId) {
+      await supabase
+        .from("customers")
+        .update({
+          lead_context: leadContext,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", personId);
+    }
 
     const { data: convertedStage } = await supabase
       .from("lead_stages")

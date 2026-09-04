@@ -29,12 +29,20 @@ const OPTION_COPY: Record<string, string> = {
   purpose: "This list powers Purpose on add lead and lead detail.",
   timeframe: "This list powers Timeframe on add lead and lead detail.",
   financing: "This list powers Financing on add lead and lead detail.",
-  budget: "Budget bands set min and max on the lead when an agent picks one.",
+  budget: "Budget bands set min and max on the lead when an agent picks one. Stored as budget_min / budget_max fils.",
   doc_category: "This list powers the category dropdown when uploading a document. Each category asks for either an expiry date (passport, visa) or a note (invoice, title deed).",
   tags: "This list powers Tags on lead detail. Agents pick from here instead of typing free text.",
   score: "Score bands label the 0–100 score on lead detail. Set min and max for each band.",
   lost_reason: "Shown when a lead is moved to a lost stage.",
   junk_reason: "Shown when a lead is moved to a junk stage.",
+};
+
+const FREE_TEXT_COPY: Record<string, string> = {
+  name: "Free-text on the lead. For already existing customers this is locked — edit the person record instead.",
+  phone: "WhatsApp number on the lead (also mirrored to the person). Locked for already existing customers.",
+  call_numbers: "Lead-only dial list (comma-separated). Used to match existing owners against customer WhatsApp/phone. Not stored on the person.",
+  email: "Email on the lead (mirrored to the person). Locked for already existing customers.",
+  notes: "Free-text notes on this opportunity. Synced to the person while their status is still working.",
 };
 
 export function LeadFieldsWorkspace({
@@ -121,7 +129,10 @@ export function LeadFieldsWorkspace({
             agents={agents}
           />
         ) : selected ? (
-          <LeadFieldDetailPlaceholder field={toTableField(selected)} />
+          <LeadFieldDetailPlaceholder
+            field={toTableField(selected)}
+            description={FREE_TEXT_COPY[selectedKey]}
+          />
         ) : null}
       </div>
     </div>

@@ -217,7 +217,7 @@ function FloatPicker({
   const [open, setOpen] = useState(false);
   return (
     <Popover open={open} onOpenChange={setOpen} modal={false}>
-      <PopoverTrigger disabled={disabled} className="rounded-md text-left hover:bg-muted/70 disabled:cursor-default">
+      <PopoverTrigger disabled={disabled} className="rounded-md text-left hover:bg-muted/70 disabled:cursor-default disabled:hover:bg-transparent">
         {trigger}
       </PopoverTrigger>
       <PopoverContent className={className}>{children(() => setOpen(false))}</PopoverContent>
@@ -260,7 +260,7 @@ function QuietSaveInput({
       defaultValue={value}
       disabled={disabled}
       placeholder={placeholder}
-      className={`h-7 w-full rounded-md bg-transparent px-1 text-[0.86rem] text-foreground outline-none placeholder:text-[#B9B6AB] hover:bg-muted/70 focus:bg-muted/80 disabled:cursor-default ${className ?? ""}`}
+      className={`h-7 w-full rounded-md bg-transparent px-1 text-[0.86rem] text-foreground outline-none placeholder:text-[#B9B6AB] hover:bg-muted/70 focus:bg-muted/80 disabled:cursor-default disabled:hover:bg-transparent disabled:focus:bg-transparent ${className ?? ""}`}
       onBlur={(e) => {
         if (e.target.value.trim() === value.trim()) return;
         onSave(e.target.value);
@@ -485,11 +485,23 @@ export function LeadDetail({
         terminalReason
       )
     : null;
-  const waLink = whatsappLink(optimisticLead.phone);
-  const mailLink = optimisticLead.email ? `mailto:${optimisticLead.email}` : null;
-  const phoneHref = telLink(optimisticLead.phone);
+  const waLink = whatsappLink(contactPhone);
+  const mailLink = contactEmail ? `mailto:${contactEmail}` : null;
+  const phoneHref = telLink(contactPhone);
   const canManage = canManageCrm(userRole);
   const canEdit = canManage || userRole === "agent";
+  /** Owner identity — locked when this lead sits under an already existing customer. */
+  const canEditContact = canEdit && !existingOwner;
+  const contactName =
+    existingOwner && customer?.name?.trim() ? customer.name.trim() : optimisticLead.name;
+  const contactPhone =
+    existingOwner && customer ? (customer.phone ?? optimisticLead.phone) : optimisticLead.phone;
+  const contactEmail =
+    existingOwner && customer ? (customer.email ?? optimisticLead.email) : optimisticLead.email;
+  const contactNationality =
+    existingOwner && customer
+      ? (customer.nationality ?? optimisticLead.nationality)
+      : optimisticLead.nationality;
   const score = optimisticLead.score ?? 0;
   const scoreBand = scoreBandForValue(fieldOptions.score, score);
   const scoreLegend = (fieldOptions.score ?? []).map((row) => row.label).join(" · ");
@@ -769,10 +781,10 @@ export function LeadDetail({
   function logContact(type: "call" | "whatsapp" | "email") {
     const summary =
       type === "call"
-        ? `Called ${optimisticLead.phone}`
+        ? `Called ${contactPhone}`
         : type === "whatsapp"
-          ? `WhatsApp ${optimisticLead.phone}`
-          : `Emailed ${optimisticLead.email}`;
+          ? `WhatsApp ${contactPhone}`
+          : `Emailed ${contactEmail}`;
     startTransition(async () => {
       const result = await addLeadActivity(optimisticLead.id, type, summary);
       if (result.ok) router.refresh();
@@ -787,7 +799,7 @@ export function LeadDetail({
           <div className="relative grid h-[84px] w-[84px] shrink-0 place-items-center rounded-md border-[1.5px] border-primary bg-accent">
             <span className="absolute inset-[5px] rounded-[3px] border border-primary/35" />
             <span className="font-heading text-[1.8rem] tracking-wide text-secondary" style={{ fontFamily: "var(--font-display), serif" }}>
-              {initials(optimisticLead.name)}
+              {initials(contactName)}
             </span>
           </div>
 
@@ -826,9 +838,9 @@ export function LeadDetail({
                 {terminalReasonLabel}
               </div>
             ) : null}
-            {editing === "name" ? (
+            {editing === "name" && canEditContact ? (
               <BlurSaveInput
-                value={optimisticLead.name}
+                value={contactName}
                 onCancel={() => setEditing(null)}
                 onSave={(next) => {
                   if (!next.trim()) return setEditing(null);
@@ -838,17 +850,17 @@ export function LeadDetail({
             ) : (
               <button
                 type="button"
-                disabled={!canEdit}
+                disabled={!canEditContact}
                 onClick={() => setEditing("name")}
                 className="mb-2.5 text-left font-heading text-[2.1rem] leading-[1.05] font-normal tracking-tight text-foreground disabled:cursor-default md:text-[2.35rem]"
                 style={{ fontFamily: "var(--font-display), serif" }}
               >
-                {optimisticLead.name}
+                {contactName}
               </button>
             )}
             {existingOwner && customer ? (
               <p className="mb-2 text-[0.78rem] font-medium text-secondary">
-                Already existing customer
+                Already existing customer — name, phone, email &amp; nationality are locked
                 {customer.name ? ` · ${customer.name}` : ""}
                 {customer.nationality ? ` · ${customer.nationality}` : ""}
               </p>
@@ -922,10 +934,10 @@ export function LeadDetail({
               <span className="flex min-w-[10rem] items-center gap-1.5">
                 <Phone className="h-[15px] w-[15px] shrink-0" />
                 <QuietSaveInput
-                  value={optimisticLead.phone ?? ""}
-                  disabled={!canEdit}
+                  value={contactPhone ?? ""}
+                  disabled={!canEditContact}
                   placeholder="WhatsApp"
-                  className="font-mono text-[0.82rem]"
+                  className={`font-mono text-[0.82rem]${!canEditContact ? " text-secondary" : ""}`}
                   onSave={(next) => saveField({ phone: next.trim() || null }, { phone: next.trim() || null })}
                 />
               </span>
@@ -949,9 +961,10 @@ export function LeadDetail({
                 <Mail className="h-[15px] w-[15px] shrink-0" />
                 <QuietSaveInput
                   type="email"
-                  value={optimisticLead.email ?? ""}
-                  disabled={!canEdit}
+                  value={contactEmail ?? ""}
+                  disabled={!canEditContact}
                   placeholder="Add email"
+                  className={!canEditContact ? "text-secondary" : undefined}
                   onSave={(next) => saveField({ email: next.trim() || null }, { email: next.trim() || null })}
                 />
               </span>
@@ -1125,8 +1138,9 @@ export function LeadDetail({
                 <LedgerRow label="Name" overlay>
                   <div>
                     <QuietSaveInput
-                      value={optimisticLead.name}
-                      disabled={!canEdit}
+                      value={contactName}
+                      disabled={!canEditContact}
+                      className={!canEditContact ? "text-secondary font-medium" : undefined}
                       onSave={(next) => {
                         if (!next.trim()) return;
                         saveField({ name: next.trim() }, { name: next.trim() });
@@ -1134,7 +1148,7 @@ export function LeadDetail({
                     />
                     {existingOwner && customer ? (
                       <p className="px-1 text-[0.7rem] font-medium text-secondary">
-                        Already existing customer: {customer.name}
+                        Locked to customer: {customer.name}
                       </p>
                     ) : null}
                   </div>
@@ -1142,17 +1156,17 @@ export function LeadDetail({
                 <LedgerRow label="Nationality" overlay>
                   <div>
                     <FloatPicker
-                      disabled={!canEdit}
+                      disabled={!canEditContact}
                       className="w-[18rem] p-2"
                       trigger={
-                        <span className="block px-1 py-0.5 text-[0.86rem]">
-                          {optimisticLead.nationality || emptyValue()}
+                        <span className={`block px-1 py-0.5 text-[0.86rem]${!canEditContact ? " font-medium text-secondary" : ""}`}>
+                          {contactNationality || emptyValue()}
                         </span>
                       }
                     >
                       {(close) => (
                         <NationalityPicker
-                          value={optimisticLead.nationality ?? ""}
+                          value={contactNationality ?? ""}
                           options={nationalities}
                           autoFocus
                           onCancel={close}
@@ -1165,7 +1179,7 @@ export function LeadDetail({
                     </FloatPicker>
                     {existingOwner && customer ? (
                       <p className="px-1 text-[0.7rem] font-medium text-secondary">
-                        Already existing customer: {customer.nationality?.trim() || "nationality not on file"}
+                        Locked to customer: {customer.nationality?.trim() || "nationality not on file"}
                       </p>
                     ) : null}
                   </div>
@@ -1342,8 +1356,8 @@ export function LeadDetail({
           <LeadProposedPropertySection
             leadId={optimisticLead.id}
             dealId={deal?.id ?? optimisticLead.converted_deal_id}
-            clientName={optimisticLead.name}
-            clientPhone={optimisticLead.phone}
+            clientName={contactName}
+            clientPhone={contactPhone}
             linked={proposedProperties}
             inventory={inventory}
             agents={agents}

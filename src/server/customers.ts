@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/auth";
 import { logActivity } from "@/lib/activity-log";
 import { revalidatePath } from "next/cache";
+import { mirrorPersonIdentityToLeads } from "@/server/people";
 
 export type ActionResult<T = unknown> = {
   ok: boolean;
@@ -97,6 +98,20 @@ export async function updateCustomer(
       .eq("id", id);
 
     if (error) return { ok: false, error: error.message };
+
+    const identityPatch: {
+      name?: string | null;
+      phone?: string | null;
+      email?: string | null;
+      nationality?: string | null;
+    } = {};
+    if (input.name !== undefined) identityPatch.name = input.name;
+    if (input.phone !== undefined) identityPatch.phone = input.phone;
+    if (input.email !== undefined) identityPatch.email = input.email || null;
+    if (input.nationality !== undefined) identityPatch.nationality = input.nationality;
+    if (Object.keys(identityPatch).length > 0) {
+      await mirrorPersonIdentityToLeads(supabase, id, identityPatch);
+    }
 
     const dealKyc: Record<string, unknown> = {};
     if (input.nationality !== undefined) dealKyc.kyc_nationality = input.nationality;

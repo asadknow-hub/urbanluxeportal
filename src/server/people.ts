@@ -10,6 +10,7 @@ type LeadRow = {
   name: string;
   phone: string | null;
   email: string | null;
+  call_numbers: string[] | null;
   nationality: string | null;
   notes: string | null;
   tags: string[] | null;
@@ -136,11 +137,36 @@ async function loadLead(supabase: CrmDb, leadId: string) {
   const { data } = await supabase
     .from("leads")
     .select(
-      "id, name, phone, email, nationality, notes, tags, assigned_to, customer_id, converted_customer_id, created_by, status"
+      "id, name, phone, email, call_numbers, nationality, notes, tags, assigned_to, customer_id, converted_customer_id, created_by, status"
     )
     .eq("id", leadId)
     .maybeSingle();
   return data as LeadRow | null;
+}
+
+/**
+ * Keep lead contact snapshots aligned with the person SoT
+ * (name / WhatsApp / email / nationality). Call numbers stay lead-only.
+ */
+export async function mirrorPersonIdentityToLeads(
+  supabase: CrmDb,
+  customerId: string,
+  patch: {
+    name?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    nationality?: string | null;
+  }
+) {
+  const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (patch.name !== undefined && patch.name?.trim()) update.name = patch.name.trim();
+  if (patch.phone !== undefined) update.phone = patch.phone;
+  if (patch.email !== undefined) update.email = patch.email;
+  if (patch.nationality !== undefined) update.nationality = patch.nationality;
+
+  if (Object.keys(update).length <= 1) return;
+
+  await supabase.from("leads").update(update).eq("customer_id", customerId).is("deleted_at", null);
 }
 
 /**
@@ -168,6 +194,11 @@ export async function ensurePersonForLead(
       .from("leads")
       .update({ customer_id: lead.converted_customer_id, updated_at: new Date().toISOString() })
       .eq("id", leadId);
+    await syncWorkingPerson(
+      supabase,
+      { ...lead, customer_id: lead.converted_customer_id },
+      "fill"
+    );
     return lead.converted_customer_id;
   }
 
@@ -185,6 +216,7 @@ export async function ensurePersonForLead(
     const matched = await findCustomerByContact(supabase, {
       phone: lead.phone,
       email: lead.email,
+      callNumbers: lead.call_numbers,
     });
     personId = matched?.customer.id ?? null;
   }

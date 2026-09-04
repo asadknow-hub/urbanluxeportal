@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { LeadDetail } from "@/components/leads/lead-detail";
 import { groupLeadFieldOptions, leadDocChecklistCategories, type LeadFieldOption } from "@/lib/lead-field-options";
+import { isExistingOwnerPerson } from "@/lib/lead-owner";
 import { matchesForRequirement, INVENTORY_MATCH_SELECT } from "@/lib/match-inventory";
 import { getLeadTimelinePage } from "@/server/lead-timeline";
 import { ensurePersonForLead } from "@/server/people";
@@ -184,12 +185,11 @@ export default async function LeadDetailPage({
   }
 
   const person = personResult?.data ?? null;
-  const existingOwner =
-    (siblingLeads.count ?? 0) > 0 ||
-    Boolean(
-      person?.created_at &&
-        Date.parse(lead.created_at) - Date.parse(person.created_at) > 15_000
-    );
+  const existingOwner = isExistingOwnerPerson({
+    leadCreatedAt: lead.created_at,
+    personCreatedAt: person?.created_at,
+    siblingLeadCount: siblingLeads.count ?? 0,
+  });
   const deal = dealResult?.data ?? null;
   const docCategories = leadDocChecklistCategories((fieldOptionRows ?? []) as LeadFieldOption[]);
   const customerDocuments = (customerDocsResult.data ?? []).map((doc) => ({

@@ -10,6 +10,7 @@ import { individualKycFormSchema, mergeKycPerson, type KycPersonRecord } from "@
 import { generateIndividualKycPdf, kycPdfFileName } from "@/lib/kyc-pdf";
 import { canonicalDocumentPath } from "@/lib/document-storage";
 import { createDocument } from "@/server/documents";
+import { mirrorPersonIdentityToLeads } from "@/server/people";
 
 const personKycSchema = z.object({
   nationality: z.string().optional().nullable(),
@@ -99,11 +100,10 @@ export async function updatePersonKyc(
     const { error } = await supabase.from("customers").update(patch).eq("id", customerId);
     if (error) return { ok: false, error: error.message };
 
-    if (leadId && parsed.data.nationality !== undefined) {
-      await supabase
-        .from("leads")
-        .update({ nationality: parsed.data.nationality || null, updated_at: new Date().toISOString() })
-        .eq("id", leadId);
+    if (parsed.data.nationality !== undefined) {
+      await mirrorPersonIdentityToLeads(supabase, customerId, {
+        nationality: parsed.data.nationality || null,
+      });
     }
 
     const dealKyc: Record<string, unknown> = {};
@@ -168,11 +168,10 @@ export async function updatePersonKycForm(
     const { error } = await gate.supabase.from("customers").update(patch).eq("id", customerId);
     if (error) return { ok: false, error: error.message };
 
-    if (leadId && parsed.data.nationality !== undefined) {
-      await gate.supabase
-        .from("leads")
-        .update({ nationality: parsed.data.nationality || null, updated_at: new Date().toISOString() })
-        .eq("id", leadId);
+    if (parsed.data.nationality !== undefined) {
+      await mirrorPersonIdentityToLeads(gate.supabase, customerId, {
+        nationality: parsed.data.nationality || null,
+      });
     }
 
     const dealKyc: Record<string, unknown> = {};

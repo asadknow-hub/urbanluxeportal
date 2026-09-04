@@ -1,5 +1,6 @@
 import type { Database } from "@/types/database";
 import type { LeadTableColumn } from "@/server/lead-areas";
+import { LEAD_OPTION_FIELD_KEYS } from "@/lib/lead-field-options";
 
 type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
 
@@ -11,23 +12,14 @@ export type LeadTableField = {
   configurable: boolean;
 };
 
-/** Fields whose option lists are managed in Lead Settings → Fields. */
-export const CONFIGURABLE_LEAD_FIELDS = new Set([
+/**
+ * Fields with managed option lists in Lead Settings → Fields.
+ * Keep in sync with `LEAD_OPTION_FIELD_KEYS` plus areas/nationalities catalogs.
+ */
+export const CONFIGURABLE_LEAD_FIELDS = new Set<string>([
+  ...LEAD_OPTION_FIELD_KEYS,
   "preferred_areas",
   "nationality",
-  "source",
-  "interest",
-  "category",
-  "bedrooms",
-  "purpose",
-  "budget",
-  "financing",
-  "timeframe",
-  "doc_category",
-  "tags",
-  "score",
-  "lost_reason",
-  "junk_reason",
 ]);
 
 /** Live `leads` columns after dropping silent/unused fields. */
@@ -102,7 +94,11 @@ function prettyType(column: LeadTableColumn) {
 }
 
 function groupFor(key: string) {
-  if (["id", "name", "phone", "phone_norm", "email", "email_norm", "nationality"].includes(key)) return "Identity";
+  if (
+    ["id", "name", "phone", "phone_norm", "call_numbers", "email", "email_norm", "nationality"].includes(key)
+  ) {
+    return "Identity";
+  }
   if (["source"].includes(key)) return "Origin";
   if (
     [
@@ -124,7 +120,17 @@ function groupFor(key: string) {
   if (["stage_id", "status", "assigned_to", "score", "next_follow_up_at", "lost_reason", "junk_reason"].includes(key)) {
     return "Pipeline";
   }
-  if (["converted_customer_id", "converted_deal_id"].includes(key)) return "Conversion";
+  if (
+    [
+      "first_response_due_at",
+      "first_responded_at",
+      "first_response_minutes",
+      "first_response_breached_at",
+    ].includes(key)
+  ) {
+    return "SLA";
+  }
+  if (["converted_customer_id", "converted_deal_id", "customer_id"].includes(key)) return "Conversion";
   return "System";
 }
 
