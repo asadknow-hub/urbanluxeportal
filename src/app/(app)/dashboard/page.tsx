@@ -4,10 +4,26 @@ import { DashboardView } from "@/components/dashboard/dashboard-view";
 import { sweepFirstResponseSla } from "@/server/first-response";
 import { fetchAgentPerformanceReport, fetchSourceFunnelReport } from "@/server/reports";
 import { can } from "@/lib/permissions";
+import { agentLeadScopeOr } from "@/lib/postgrest-filter";
 import { addDays, startOfDay } from "date-fns";
 import { propertyLabel } from "@/lib/inventory";
 
 export const dynamic = "force-dynamic";
+
+type StageJoin = {
+  kind: string;
+  stale_after_days: number | null;
+} | null;
+
+function firstRel<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null;
+  return Array.isArray(value) ? value[0] ?? null : value;
+}
+
+function isOpenStage(stage: StageJoin) {
+  if (!stage) return true;
+  return stage.kind !== "won" && stage.kind !== "lost" && stage.kind !== "junk";
+}
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -25,10 +41,11 @@ export default async function DashboardPage() {
     .is("deleted_at", null)
     .in("stage", ["new", "negotiations", "contract", "inquiry", "viewing", "offer", "negotiation"]);
 
-  let openLeadsQuery = supabase
+  let leadStatsQuery = supabase
     .from("leads")
-    .select("id", { count: "exact", head: true })
-    .is("deleted_at", null);
+    .select("assigned_to, stage_entered_at, stage:lead_stages(kind, stale_after_days)")
+    .is("deleted_at", null)
+    .limit(5000);
 
   let newLeadsQuery = supabase
     .from("leads")
@@ -43,7 +60,7 @@ export default async function DashboardPage() {
     .is("deleted_at", null)
     .gte("next_follow_up_at", now.toISOString())
     .order("next_follow_up_at", { ascending: true })
-    .limit(10);
+    .limit(8);
 
   let overdueFollowupsQuery = supabase
     .from("leads")
@@ -65,44 +82,70 @@ export default async function DashboardPage() {
     .select("id", { count: "exact", head: true })
     .is("deleted_at", null);
 
+  let inventoryQuery = supabase
+    .from("properties")
+    .select("id", { count: "exact", head: true })
+    .is("deleted_at", null);
+
   if (isAgent) {
     dealsQuery = dealsQuery.eq("assigned_to", user.id);
-    const mineOrPool = `assigned_to.eq.${user.id},assigned_to.is.null`;
-    openLeadsQuery = openLeadsQuery.or(mineOrPool);
-    newLeadsQuery = newLeadsQuery.or(mineOrPool);
-    followupsQuery = followupsQuery.or(mineOrPool);
-    overdueFollowupsQuery = overdueFollowupsQuery.or(mineOrPool);
-    firstResponseOverdueQuery = firstResponseOverdueQuery.or(mineOrPool);
-    customersQuery = customersQuery.or(mineOrPool);
+    const scope = agentLeadScopeOr(user.id, user.team_id);
+    leadStatsQuery = leadStatsQuery.or(scope);
+    newLeadsQuery = newLeadsQuery.or(scope);
+    followupsQuery = followupsQuery.or(scope);
+    overdueFollowupsQuery = overdueFollowupsQuery.or(scope);
+    firstResponseOverdueQuery = firstResponseOverdueQuery.or(scope);
+    customersQuery = customersQuery.or(`assigned_to.eq.${user.id},assigned_to.is.null`);
   }
 
   const [
     dealsResult,
+    leadStatsResult,
     activityResult,
     followupsResult,
     newLeadsResult,
-    openLeadsResult,
     customersResult,
+    inventoryResult,
     overdueFollowupsResult,
     firstResponseOverdueResult,
     sourceFunnel,
     agentPerformance,
   ] = await Promise.all([
     dealsQuery,
+    leadStatsQuery,
     supabase
       .from("activity_log")
       .select("*, actor:profiles!activity_log_actor_id_fkey(full_name)")
       .order("created_at", { ascending: false })
-      .limit(15),
+      .limit(10),
     followupsQuery,
     newLeadsQuery,
-    openLeadsQuery,
     customersQuery,
+    inventoryQuery,
     overdueFollowupsQuery,
     firstResponseOverdueQuery,
     showReports ? fetchSourceFunnelReport() : Promise.resolve([]),
     showReports ? fetchAgentPerformanceReport() : Promise.resolve([]),
   ]);
+
+  const openLeadRows = (leadStatsResult.data ?? []).filter((row) => {
+    const stage = firstRel(row.stage as StageJoin | StageJoin[]);
+    return isOpenStage(stage);
+  });
+
+  let leadsTotal = 0;
+  let leadsAssigned = 0;
+  let leadsUnassigned = 0;
+  let leadsStale = 0;
+  for (const row of openLeadRows) {
+    leadsTotal += 1;
+    if (row.assigned_to) leadsAssigned += 1;
+    else leadsUnassigned += 1;
+    const stage = firstRel(row.stage as StageJoin | StageJoin[]);
+    if (!stage?.stale_after_days || !row.stage_entered_at) continue;
+    const elapsedMs = now.getTime() - new Date(row.stage_entered_at).getTime();
+    if (elapsedMs > stage.stale_after_days * 24 * 60 * 60 * 1000) leadsStale += 1;
+  }
 
   const dayStart = startOfDay(new Date());
   const dayEnd = addDays(dayStart, 1);
@@ -121,11 +164,6 @@ export default async function DashboardPage() {
     .limit(8);
   if (isAgent) todayViewingsQuery = todayViewingsQuery.eq("agent_id", user.id);
   const todayViewingsResult = await todayViewingsQuery;
-
-  function firstRel<T>(value: T | T[] | null | undefined): T | null {
-    if (!value) return null;
-    return Array.isArray(value) ? value[0] ?? null : value;
-  }
 
   const todayViewings = (todayViewingsResult.data ?? []).map((row) => {
     const lead = firstRel(row.lead as { name: string } | { name: string }[] | null);
@@ -168,8 +206,12 @@ export default async function DashboardPage() {
       pipelineValue={pipelineValue}
       activeDealCount={activeDeals.length}
       newLeadsCount={newLeadsResult.count ?? 0}
-      openLeadsCount={openLeadsResult.count ?? 0}
+      leadsTotal={leadsTotal}
+      leadsAssigned={leadsAssigned}
+      leadsUnassigned={leadsUnassigned}
+      leadsStale={leadsStale}
       customersCount={customersResult.count ?? 0}
+      inventoryCount={inventoryResult.count ?? 0}
       overdueFollowUpsCount={overdueFollowupsResult.count ?? 0}
       firstResponseOverdueCount={firstResponseOverdueResult.count ?? 0}
       activities={(activityResult.data ?? []) as never}
