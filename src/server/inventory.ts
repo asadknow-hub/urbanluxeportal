@@ -488,7 +488,7 @@ export async function applyInventoryPropertyToDeal(
     const { data: property, error } = await supabase
       .from("properties")
       .select(
-        "property_code, community, building_name, unit_number, bedrooms, bua_sqft, title_deed_number, oqood_number, dld_property_number, notes"
+        "property_code, community, building_name, unit_number, property_type, bedrooms, bua_sqft, title_deed_number, oqood_number, dld_property_number, notes"
       )
       .eq("id", propertyId)
       .is("deleted_at", null)
@@ -512,12 +512,36 @@ export async function applyInventoryPropertyToDeal(
       property_community: property.community,
       property_building: property.building_name,
       property_unit: property.unit_number,
+      property_type: property.property_type,
       property_ref:
         property.title_deed_number || property.oqood_number || property.dld_property_number || property.property_code,
       property_snapshot: snapshot,
     });
 
     if (!result.ok) return result;
+
+    await supabase
+      .from("deals")
+      .update({ property_id: propertyId, updated_at: new Date().toISOString() })
+      .eq("id", dealId);
+
+    // Demote any prior confirmed row, then upsert this unit as confirmed.
+    await supabase
+      .from("deal_properties")
+      .update({ role: "shortlisted" })
+      .eq("deal_id", dealId)
+      .eq("role", "confirmed")
+      .neq("property_id", propertyId);
+
+    await supabase.from("deal_properties").upsert(
+      {
+        deal_id: dealId,
+        property_id: propertyId,
+        role: "confirmed",
+        created_by: user.id,
+      },
+      { onConflict: "deal_id,property_id" }
+    );
 
     await supabase.from("deal_activities").insert({
       deal_id: dealId,

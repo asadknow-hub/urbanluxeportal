@@ -534,6 +534,7 @@ export interface Database {
           property_ref: string | null;
           property_type: string | null;
           property_snapshot: Record<string, unknown> | null;
+          property_id: string | null;
           agency_commission_amount: number | null;
           agency_commission_rate: number | null;
           payment_method: string | null;
@@ -577,6 +578,7 @@ export interface Database {
           property_ref?: string | null;
           property_type?: string | null;
           property_snapshot?: Record<string, unknown> | null;
+          property_id?: string | null;
           agency_commission_amount?: number | null;
           agency_commission_rate?: number | null;
           payment_method?: string | null;

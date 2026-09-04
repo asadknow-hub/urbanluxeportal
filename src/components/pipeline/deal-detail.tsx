@@ -27,6 +27,11 @@ import { formatDate, timeAgo } from "@/lib/dates";
 import { LeadContextPanel } from "@/components/crm/lead-context-panel";
 import { FollowUpPanel } from "@/components/crm/follow-up-panel";
 import { DealTransactionForm } from "@/components/pipeline/deal-transaction-form";
+import {
+  DealPropertyClientPanel,
+  type DealClientProfile,
+  type DealConfirmedProperty,
+} from "@/components/pipeline/deal-property-client-panel";
 import { PersonDocumentsKycSection } from "@/components/crm/person-documents-kyc-section";
 import { DealShortlist, type DealPropertyRow } from "@/components/pipeline/deal-shortlist";
 import { ViewingPanel, type ViewingRow, type InventoryChoice } from "@/components/crm/viewing-panel";
@@ -55,7 +60,6 @@ import {
   UserCog,
   Activity,
   Loader2,
-  ExternalLink,
   Briefcase,
   Home,
   Tag,
@@ -100,6 +104,7 @@ type Deal = {
   lead_id: string | null;
   lead_context: LeadContext | null;
   finalized_at: string | null;
+  property_id: string | null;
   property_title: string | null;
   property_community: string | null;
   property_building: string | null;
@@ -129,6 +134,9 @@ type Deal = {
     nationality: string | null;
     status: string;
     lead_id: string | null;
+    emirates_id?: string | null;
+    passport_no?: string | null;
+    trn?: string | null;
     assigned_to_profile: { id: string; full_name: string } | null;
   } | null;
   assigned_to_profile: {
@@ -167,6 +175,7 @@ export function DealDetail({
   docCategories = [],
   kycPerson = null,
   personCustomerId = null,
+  confirmedProperty = null,
   viewings,
   inventory,
   shortlist,
@@ -192,6 +201,7 @@ export function DealDetail({
   docCategories?: DocCategoryChoice[];
   kycPerson?: KycPersonRecord | null;
   personCustomerId?: string | null;
+  confirmedProperty?: DealConfirmedProperty | null;
   viewings: ViewingRow[];
   inventory: InventoryChoice[];
   shortlist: DealPropertyRow[];
@@ -426,6 +436,39 @@ export function DealDetail({
         canEdit={canEdit && !deal.finalized_at}
         sourcesHint="Includes files from the linked lead, person profile, and this deal. New uploads here attach to the deal."
         overview={
+      <div className="space-y-4">
+        <DealPropertyClientPanel
+          dealId={deal.id}
+          property={confirmedProperty}
+          inventory={inventory}
+          client={
+            deal.customer
+              ? ({
+                  id: deal.customer.id,
+                  name: deal.customer.name,
+                  phone: deal.customer.phone,
+                  email: deal.customer.email,
+                  nationality: deal.customer.nationality,
+                  status: deal.customer.status,
+                  emirates_id: deal.customer.emirates_id ?? null,
+                  passport_no: deal.customer.passport_no ?? null,
+                  trn: deal.customer.trn ?? null,
+                } satisfies DealClientProfile)
+              : null
+          }
+          fallbackBuyer={{
+            name: deal.buyer_name,
+            phone: deal.buyer_phone,
+            email: deal.buyer_email,
+            nationality: deal.kyc_nationality,
+            emirates_id: deal.kyc_emirates_id,
+            passport_no: deal.kyc_passport_no,
+            trn: deal.kyc_trn,
+          }}
+          ejariNo={deal.ejari_no}
+          canEdit={canEdit && !deal.finalized_at}
+        />
+
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_360px]">
         <div className="space-y-4">
           <DealTransactionForm
@@ -506,21 +549,6 @@ export function DealDetail({
         </div>
 
         <div className="space-y-4">
-          {deal.customer ? (
-            <div className="overflow-hidden rounded-[14px] border border-border bg-[#1B2430] p-4 text-[#E8E4DC]">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold">Customer</h2>
-                <Link href={`/customers/${deal.customer.id}`} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                  Profile <ExternalLink className="h-3 w-3" />
-                </Link>
-              </div>
-              <p className="font-medium">{deal.customer.name}</p>
-              <span className="mt-1 inline-flex rounded-full bg-white/10 px-2 py-0.5 text-xs capitalize">
-                {deal.customer.status}
-              </span>
-            </div>
-          ) : null}
-
           <LeadContextPanel
             context={deal.lead_context}
             leadHref={deal.lead_id ? `/leads/${deal.lead_id}` : deal.lead ? `/leads/${deal.lead.id}` : undefined}
@@ -537,6 +565,7 @@ export function DealDetail({
             />
           ) : null}
         </div>
+      </div>
       </div>
         }
       />

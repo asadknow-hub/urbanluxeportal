@@ -104,6 +104,7 @@ export function ConvertLeadDialog({
     const payload: ConvertLeadInput = {
       dealTitle: title,
       dealValue: aedToFils(amountNum),
+      property_id: selected.property_id,
       property_title: title,
       property_community: unit.community,
       property_building: unit.building_name,

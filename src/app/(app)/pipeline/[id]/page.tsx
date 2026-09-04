@@ -170,9 +170,95 @@ export default async function DealDetailPage({
     documents ?? []
   );
 
+  const shortlist = (shortlistRows ?? []).map((row) => ({
+    ...row,
+    property: Array.isArray(row.property) ? row.property[0] ?? null : row.property,
+  }));
+
+  const confirmedPropertyId =
+    deal.property_id ??
+    shortlist.find((row) => row.role === "confirmed")?.property_id ??
+    shortlist.find((row) => row.role === "offered")?.property_id ??
+    shortlist[0]?.property_id ??
+    null;
+
+  const { data: confirmedPropertyRow } = confirmedPropertyId
+    ? await supabase
+        .from("properties")
+        .select(
+          `id, property_code, community, building_name, unit_number, property_type, bedrooms,
+           listings(asking_price, listing_type)`
+        )
+        .eq("id", confirmedPropertyId)
+        .is("deleted_at", null)
+        .maybeSingle()
+    : { data: null };
+
+  const confirmedListings = confirmedPropertyRow
+    ? Array.isArray(confirmedPropertyRow.listings)
+      ? confirmedPropertyRow.listings
+      : []
+    : [];
+  const confirmedListing = confirmedListings[0] ?? null;
+  const confirmedProperty = confirmedPropertyRow
+    ? {
+        id: confirmedPropertyRow.id,
+        property_code: confirmedPropertyRow.property_code,
+        community: confirmedPropertyRow.community,
+        building_name: confirmedPropertyRow.building_name,
+        unit_number: confirmedPropertyRow.unit_number,
+        property_type: confirmedPropertyRow.property_type,
+        bedrooms: confirmedPropertyRow.bedrooms,
+        asking_price: confirmedListing?.asking_price ?? null,
+        listing_type: confirmedListing?.listing_type ?? null,
+      }
+    : null;
+
+  const customerFromJoin = deal.customer
+    ? Array.isArray(deal.customer)
+      ? deal.customer[0] ?? null
+      : deal.customer
+    : null;
+  const assignedProfile = deal.assigned_to_profile
+    ? Array.isArray(deal.assigned_to_profile)
+      ? deal.assigned_to_profile[0] ?? null
+      : deal.assigned_to_profile
+    : null;
+  const leadJoin = deal.lead
+    ? Array.isArray(deal.lead)
+      ? deal.lead[0] ?? null
+      : deal.lead
+    : null;
+
+  const dealForUi = {
+    ...deal,
+    property_id: deal.property_id ?? confirmedPropertyId,
+    assigned_to_profile: assignedProfile,
+    lead: leadJoin,
+    customer: person
+      ? {
+          id: person.id,
+          name: person.name,
+          phone: person.phone,
+          email: person.email,
+          nationality: person.nationality,
+          status: person.status,
+          lead_id: customerFromJoin?.lead_id ?? null,
+          emirates_id: person.emirates_id ?? null,
+          passport_no: person.passport_no ?? null,
+          trn: person.trn ?? null,
+          assigned_to_profile: customerFromJoin?.assigned_to_profile
+            ? Array.isArray(customerFromJoin.assigned_to_profile)
+              ? customerFromJoin.assigned_to_profile[0] ?? null
+              : customerFromJoin.assigned_to_profile
+            : null,
+        }
+      : null,
+  };
+
   return (
     <DealDetail
-      deal={deal}
+      deal={dealForUi}
       activities={activities ?? []}
       agents={agents ?? []}
       documents={documents ?? []}
@@ -189,6 +275,7 @@ export default async function DealDetailPage({
       docCategories={docCategories}
       kycPerson={kycPerson}
       personCustomerId={person?.id ?? null}
+      confirmedProperty={confirmedProperty}
       viewings={viewingRows ?? []}
       inventory={inventoryRows ?? []}
       matches={matchesForRequirement(
@@ -202,10 +289,7 @@ export default async function DealDetailPage({
         },
         inventoryRows ?? []
       )}
-      shortlist={(shortlistRows ?? []).map((row) => ({
-        ...row,
-        property: Array.isArray(row.property) ? row.property[0] : row.property,
-      }))}
+      shortlist={shortlist}
       userRole={user.role}
       userId={user.id}
       leadFollowUp={leadFollowUp}

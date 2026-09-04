@@ -10,9 +10,8 @@ import {
 } from "@/lib/deal-transaction";
 import { isDealClosed, isDealLost } from "@/lib/deal-stages";
 import { formatAED } from "@/lib/money";
-import { PROPERTY_TYPES } from "@/lib/inventory";
 import { toast } from "sonner";
-import { Building2, CreditCard, Plus, Trash2, UserRound } from "lucide-react";
+import { CreditCard, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export type DealTransactionDeal = {
@@ -206,125 +205,6 @@ export function DealTransactionForm({
           Before marking closed: complete {readiness.missing.join(", ")}.
         </div>
       )}
-
-      <Section icon={Building2} title="Property details">
-        <LedgerRow label="Title">
-          <QuietSaveInput
-            value={draft.property_title ?? ""}
-            disabled={!editable}
-            placeholder={emptyPlaceholder("Property title")}
-            onSave={(v) => saveText("property_title", v)}
-          />
-        </LedgerRow>
-        <LedgerRow label="Type">
-          <QuietSelect
-            value={draft.property_type ?? ""}
-            disabled={!editable}
-            placeholder="Select type"
-            options={PROPERTY_TYPES.map((t) => ({ value: t.value, label: t.label }))}
-            onChange={(v) => saveSelect("property_type", v || null)}
-          />
-        </LedgerRow>
-        <LedgerRow label="Community">
-          <QuietSaveInput
-            value={draft.property_community ?? ""}
-            disabled={!editable}
-            placeholder={emptyPlaceholder()}
-            onSave={(v) => saveText("property_community", v)}
-          />
-        </LedgerRow>
-        <LedgerRow label="Building">
-          <QuietSaveInput
-            value={draft.property_building ?? ""}
-            disabled={!editable}
-            placeholder={emptyPlaceholder()}
-            onSave={(v) => saveText("property_building", v)}
-          />
-        </LedgerRow>
-        <LedgerRow label="Unit">
-          <QuietSaveInput
-            value={draft.property_unit ?? ""}
-            disabled={!editable}
-            placeholder={emptyPlaceholder()}
-            onSave={(v) => saveText("property_unit", v)}
-          />
-        </LedgerRow>
-        <LedgerRow label="Reference">
-          <QuietSaveInput
-            value={draft.property_ref ?? ""}
-            disabled={!editable}
-            placeholder={emptyPlaceholder("Permit / ref no.")}
-            onSave={(v) => saveText("property_ref", v)}
-          />
-        </LedgerRow>
-        <LedgerRow label="Ejari no.">
-          <QuietSaveInput
-            value={draft.ejari_no ?? ""}
-            disabled={!editable}
-            placeholder={emptyPlaceholder("Rental Ejari")}
-            onSave={(v) => saveText("ejari_no", v)}
-          />
-        </LedgerRow>
-      </Section>
-
-      <Section icon={UserRound} title="Customer details">
-        <LedgerRow label="Name">
-          <QuietSaveInput
-            value={draft.buyer_name ?? ""}
-            disabled={!editable}
-            placeholder={emptyPlaceholder("Buyer name")}
-            onSave={(v) => saveText("buyer_name", v)}
-          />
-        </LedgerRow>
-        <LedgerRow label="Phone">
-          <QuietSaveInput
-            value={draft.buyer_phone ?? ""}
-            disabled={!editable}
-            placeholder={emptyPlaceholder()}
-            onSave={(v) => saveText("buyer_phone", v)}
-          />
-        </LedgerRow>
-        <LedgerRow label="Email">
-          <QuietSaveInput
-            value={draft.buyer_email ?? ""}
-            disabled={!editable}
-            placeholder={emptyPlaceholder()}
-            onSave={(v) => saveText("buyer_email", v)}
-          />
-        </LedgerRow>
-        <LedgerRow label="Nationality">
-          <QuietSaveInput
-            value={draft.kyc_nationality ?? ""}
-            disabled={!editable}
-            placeholder={emptyPlaceholder()}
-            onSave={(v) => saveText("kyc_nationality", v)}
-          />
-        </LedgerRow>
-        <LedgerRow label="Emirates ID">
-          <QuietSaveInput
-            value={draft.kyc_emirates_id ?? ""}
-            disabled={!editable}
-            placeholder={emptyPlaceholder()}
-            onSave={(v) => saveText("kyc_emirates_id", v)}
-          />
-        </LedgerRow>
-        <LedgerRow label="Passport">
-          <QuietSaveInput
-            value={draft.kyc_passport_no ?? ""}
-            disabled={!editable}
-            placeholder={emptyPlaceholder()}
-            onSave={(v) => saveText("kyc_passport_no", v)}
-          />
-        </LedgerRow>
-        <LedgerRow label="TRN">
-          <QuietSaveInput
-            value={draft.kyc_trn ?? ""}
-            disabled={!editable}
-            placeholder={emptyPlaceholder()}
-            onSave={(v) => saveText("kyc_trn", v)}
-          />
-        </LedgerRow>
-      </Section>
 
       <Section icon={CreditCard} title="Payment">
         <PaymentGroup title="Deal terms">

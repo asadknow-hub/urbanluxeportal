@@ -37,6 +37,8 @@ export type ConvertLeadInput = DealTransactionInput & {
   dealTitle?: string;
   /** Deal value in fils. Falls back to lead budget when omitted. */
   dealValue?: number | null;
+  /** Confirmed inventory property for the deal. */
+  property_id?: string | null;
 };
 
 export type ActionResult<T = unknown> = {
@@ -714,6 +716,8 @@ export async function convertLead(
       notes: options.property_snapshot?.notes ?? lead.notes ?? null,
     };
 
+    const confirmedPropertyId = options.property_id?.trim() || null;
+
     const { data: deal, error: dealError } = await supabase
       .from("deals")
       .insert({
@@ -737,6 +741,7 @@ export async function convertLead(
         kyc_emirates_id: options.kyc_emirates_id?.trim() || personKyc?.emirates_id || null,
         kyc_passport_no: options.kyc_passport_no?.trim() || personKyc?.passport_no || null,
         kyc_trn: options.kyc_trn?.trim() || personKyc?.trn || null,
+        property_id: confirmedPropertyId,
         property_title: propertyTitle,
         property_community: propertyCommunity,
         property_building: options.property_building?.trim() || null,
@@ -748,6 +753,18 @@ export async function convertLead(
       .select("id")
       .single();
     if (dealError) return { ok: false, error: dealError.message };
+
+    if (confirmedPropertyId) {
+      await supabase.from("deal_properties").upsert(
+        {
+          deal_id: deal.id,
+          property_id: confirmedPropertyId,
+          role: "confirmed",
+          created_by: user.id,
+        },
+        { onConflict: "deal_id,property_id" }
+      );
+    }
 
     if (personId) {
       await supabase
