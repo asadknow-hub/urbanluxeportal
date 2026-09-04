@@ -1,6 +1,11 @@
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { LeadsBoard, type BoardLead, type LeadStage } from "@/components/leads/leads-board";
+import {
+  LeadsBoard,
+  type BoardLead,
+  type BoardLeadQueryRow,
+  type LeadStage,
+} from "@/components/leads/leads-board";
 import { LeadsTable, type LeadRow } from "@/components/leads/leads-table";
 import { LeadCreateDialog } from "@/components/leads/lead-create-dialog";
 import { LeadsAgentFilter } from "@/components/leads/leads-agent-filter";
@@ -8,6 +13,7 @@ import Link from "next/link";
 import { KanbanSquare, List, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { groupLeadFieldOptions, type LeadFieldOption } from "@/lib/lead-field-options";
+import { agentLeadScopeOr, ilikeOrFilter } from "@/lib/postgrest-filter";
 import { sweepFirstResponseSla } from "@/server/first-response";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +23,28 @@ const LIST_PAGE_SIZE = 50;
 const BOARD_LIMIT_DEFAULT = 200;
 const BOARD_LIMIT_STEP = 200;
 const BOARD_LIMIT_MAX = 1000;
+
+/** Columns the list UI actually renders — no notes / nationality / call dumps. */
+const LIST_SELECT = `
+  id, name, phone, email, source, interest, budget_min, budget_max, status, score,
+  next_follow_up_at, assigned_to, created_at, stage_id,
+  first_response_due_at, first_responded_at, first_response_minutes,
+  assigned_to_profile:profiles!leads_assigned_to_fkey(id, full_name, avatar_url)
+`.replace(/\s+/g, " ").trim();
+
+/** Board card fields + phone/email for server-side dup calc only. */
+const BOARD_SELECT = `
+  id, name, phone, email, interest, budget_min, budget_max, preferred_areas,
+  stage_id, assigned_to, customer_id, next_follow_up_at, created_at, updated_at,
+  last_activity_at, stage_entered_at, tags,
+  first_response_due_at, first_responded_at, first_response_minutes,
+  assigned_to_profile:profiles!leads_assigned_to_fkey(id, full_name, avatar_url)
+`.replace(/\s+/g, " ").trim();
+
+function stripBoardContactFields(row: BoardLeadQueryRow): BoardLead {
+  const { phone: _phone, email: _email, ...lead } = row;
+  return lead;
+}
 
 export default async function LeadsBoardPage({
   searchParams,
@@ -57,7 +85,15 @@ export default async function LeadsBoardPage({
     return `/leads?${query.toString()}`;
   };
 
-  const commonSelect = `*, assigned_to_profile:profiles!leads_assigned_to_fkey(id, full_name, avatar_url)`;
+  const applyAgentScope = <T extends { or: (filters: string) => T }>(query: T) => {
+    if (user.role !== "agent") return query;
+    return query.or(agentLeadScopeOr(user.id, user.team_id));
+  };
+
+  const applySearch = <T extends { or: (filters: string) => T }>(query: T) => {
+    const filter = ilikeOrFilter(["name", "phone", "email"], params.q);
+    return filter ? query.or(filter) : query;
+  };
 
   const fetchBoardData = async () => {
     const boardLimit = Math.min(
@@ -67,20 +103,12 @@ export default async function LeadsBoardPage({
 
     let query = supabase
       .from("leads")
-      .select(
-         `id, name, phone, email, interest, budget_min, budget_max, preferred_areas,
-         stage_id, assigned_to, customer_id, next_follow_up_at, created_at, updated_at, last_activity_at, stage_entered_at, tags,
-         first_response_due_at, first_responded_at, first_response_minutes,
-         assigned_to_profile:profiles!leads_assigned_to_fkey(id, full_name, avatar_url)`,
-        { count: "exact" }
-      )
+      .select(BOARD_SELECT, { count: "exact" })
       .is("deleted_at", null)
       .order("updated_at", { ascending: false })
       .limit(boardLimit);
 
-    if (user.role === "agent") {
-      query = query.or(`assigned_to.eq.${user.id},assigned_to.is.null`);
-    }
+    query = applyAgentScope(query);
 
     if (params.assigned && params.assigned !== "all") {
       if (params.assigned === "unassigned") {
@@ -89,10 +117,7 @@ export default async function LeadsBoardPage({
         query = query.eq("assigned_to", params.assigned);
       }
     }
-    if (params.q) {
-      query = query.or(`name.ilike.%${params.q}%,phone.ilike.%${params.q}%,email.ilike.%${params.q}%`);
-    }
-
+    query = applySearch(query);
     query = applySlaFilter(query);
 
     const [{ data: stages }, { data: leads, error, count }] = await Promise.all([
@@ -102,9 +127,13 @@ export default async function LeadsBoardPage({
 
     if (error) console.error("[leads-board] query error:", error.message);
 
+    const rows = (leads ?? []) as unknown as BoardLeadQueryRow[];
+
     return {
       stages: (stages ?? []) as unknown as LeadStage[],
-      leads: (leads ?? []) as unknown as BoardLead[],
+      /** Full rows kept server-side for dup calc; stripped before client render. */
+      queryRows: rows,
+      leads: rows.map(stripBoardContactFields),
       count: count ?? 0,
       boardLimit,
     };
@@ -117,13 +146,11 @@ export default async function LeadsBoardPage({
 
     let query = supabase
       .from("leads")
-      .select(commonSelect, { count: "exact" })
+      .select(LIST_SELECT, { count: "exact" })
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
-    if (user.role === "agent") {
-      query = query.or(`assigned_to.eq.${user.id},assigned_to.is.null`);
-    }
+    query = applyAgentScope(query);
 
     if (params.source && params.source !== "all") {
       query = query.eq("source", params.source);
@@ -138,10 +165,7 @@ export default async function LeadsBoardPage({
     if (params.stage && params.stage !== "all") {
       query = query.eq("stage_id", params.stage);
     }
-    if (params.q) {
-      query = query.or(`name.ilike.%${params.q}%,phone.ilike.%${params.q}%,email.ilike.%${params.q}%`);
-    }
-
+    query = applySearch(query);
     query = applySlaFilter(query);
 
     const [{ data: leads, error, count }, { data: agents }, { data: stages }] = await Promise.all([
@@ -190,11 +214,12 @@ export default async function LeadsBoardPage({
   const areaNames = (areasResult.data ?? []).map((row) => row.name);
   const nationalityNames = (nationalitiesResult.data ?? []).map((row) => row.name);
   const visibleLeads = boardData?.leads ?? [];
+  const queryRows = boardData?.queryRows ?? [];
   const normalize = (value: string | null) => (value ?? "").trim().toLowerCase();
 
   /** Accidental dups only — same phone/email but not intentionally linked to the same owner. */
   const contactGroups = new Map<string, { id: string; customer_id: string | null }[]>();
-  for (const lead of visibleLeads) {
+  for (const lead of queryRows) {
     const phone = normalize(lead.phone);
     const email = normalize(lead.email);
     const keys = [

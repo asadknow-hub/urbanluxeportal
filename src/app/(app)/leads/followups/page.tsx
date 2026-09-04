@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { FollowUpsView, type FollowUpLead, type FollowUpStage, type FollowUpAgent } from "@/components/leads/follow-ups-view";
+import { agentLeadScopeOr } from "@/lib/postgrest-filter";
 import { CalendarClock } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ export default async function FollowUpsPage() {
         .limit(500);
 
       if (user.role === "agent") {
-        query = query.or(`assigned_to.eq.${user.id},assigned_to.is.null`);
+        query = query.or(agentLeadScopeOr(user.id, user.team_id));
       }
 
       return await query;

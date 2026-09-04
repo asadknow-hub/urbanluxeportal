@@ -41,8 +41,6 @@ export type LeadStage = {
 export type BoardLead = {
   id: string;
   name: string;
-  phone: string | null;
-  email: string | null;
   interest: string | null;
   budget_min: number | null;
   budget_max: number | null;
@@ -63,6 +61,12 @@ export type BoardLead = {
   duplicate?: boolean;
   sameOwnerCount?: number;
   sameOwnerNextId?: string | null;
+};
+
+/** Server-only fields used for dup detection; never pass to the client board. */
+export type BoardLeadQueryRow = BoardLead & {
+  phone: string | null;
+  email: string | null;
 };
 
 const COLOR_MAP: Record<string, { bg: string; border: string; text: string; dot: string; header: string }> = {
