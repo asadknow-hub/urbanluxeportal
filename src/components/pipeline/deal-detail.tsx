@@ -39,7 +39,7 @@ import { MatchPanel } from "@/components/crm/match-panel";
 import type { InventoryMatch } from "@/lib/match-inventory";
 import type { LeadContext } from "@/lib/lead-flow";
 import { dealReadyToFinalize, formatPropertyLine, PAYMENT_METHODS } from "@/lib/deal-transaction";
-import { formatPropertyType } from "@/lib/inventory";
+import { formatPropertyType, propertyLabel } from "@/lib/inventory";
 import {
   DEAL_PIPELINE_STAGES,
   dealStageLabel,
@@ -196,6 +196,7 @@ export function DealDetail({
     expiry_date: string | null;
     notes: string | null;
     created_at: string;
+    property_id?: string | null;
   }[];
   mergedDocuments?: LeadDocument[];
   docCategories?: DocCategoryChoice[];
@@ -431,10 +432,17 @@ export function DealDetail({
           expiry_date: doc.expiry_date ?? null,
           notes: doc.notes ?? null,
           created_at: doc.created_at,
+          property_id: doc.property_id ?? null,
         }))}
         categories={docCategories}
         canEdit={canEdit && !deal.finalized_at}
-        sourcesHint="Includes files from the linked lead, person profile, and this deal. New uploads here attach to the deal."
+        propertyChoices={
+          confirmedProperty
+            ? [{ id: confirmedProperty.id, label: propertyLabel(confirmedProperty) }]
+            : []
+        }
+        defaultPropertyId={confirmedProperty?.id ?? deal.property_id ?? null}
+        sourcesHint="Includes files from the linked lead, person profile, confirmed property, and this deal. New uploads here attach to the deal."
         overview={
       <div className="space-y-4">
         <DealPropertyClientPanel

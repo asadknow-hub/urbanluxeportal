@@ -20,6 +20,8 @@ export function PersonDocumentsKycSection({
   canEdit,
   sourcesHint,
   overview,
+  propertyChoices = [],
+  defaultPropertyId = null,
 }: {
   uploadEntityType: string;
   uploadEntityId: string;
@@ -32,6 +34,8 @@ export function PersonDocumentsKycSection({
   canEdit: boolean;
   sourcesHint?: string;
   overview: React.ReactNode;
+  propertyChoices?: { id: string; label: string }[];
+  defaultPropertyId?: string | null;
 }) {
   const router = useRouter();
   const [page, setPage] = useState<LeadPageView>("overview");
@@ -56,6 +60,8 @@ export function PersonDocumentsKycSection({
           categories={categories}
           canEdit={canEdit}
           sourcesHint={sourcesHint}
+          propertyChoices={propertyChoices}
+          defaultPropertyId={defaultPropertyId}
           onDocumentSaved={(doc) => {
             if (doc) setOptimisticDocs((prev) => [{ ...doc, category: doc.category || "other" }, ...prev]);
             router.refresh();

@@ -232,146 +232,28 @@ export function DealPropertyClientPanel({
     { label: "TRN", value: clientTrn },
   ].filter((row) => Boolean(row.value?.trim()));
 
+  const listingTypeLabel =
+    property?.listing_type === "sale"
+      ? "Sale"
+      : property?.listing_type === "rent"
+        ? "Rent"
+        : property?.listing_type === "off_plan"
+          ? "Off-plan"
+          : property?.listing_type
+            ? property.listing_type.replace(/_/g, " ")
+            : null;
+
+  const listingTypePillClass =
+    property?.listing_type === "rent"
+      ? "bg-sky-100 text-sky-900"
+      : property?.listing_type === "off_plan"
+        ? "bg-violet-100 text-violet-900"
+        : "bg-emerald-100 text-emerald-900";
+
   return (
     <>
       <div className="grid gap-4 lg:grid-cols-2">
-        <section className="overflow-hidden rounded-[14px] border border-secondary/30 bg-card">
-          <div className="flex items-center justify-between gap-2 bg-secondary px-4 py-3 text-white">
-            <div className="min-w-0">
-              <h2
-                className="flex items-center gap-2 font-heading text-[1.05rem] text-white"
-                style={{ fontFamily: "var(--font-display), serif" }}
-              >
-                <Building2 className="h-4 w-4 text-white/90" />
-                Property details
-              </h2>
-              <p className="mt-0.5 text-[0.72rem] text-white/70">Confirmed inventory unit</p>
-            </div>
-            {property && canEdit ? (
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                className="h-8 gap-1.5 border-0 bg-white/20 text-white hover:bg-white/30"
-                onClick={() => setPickerOpen(true)}
-              >
-                <RefreshCw className="h-3.5 w-3.5" />
-                Change
-              </Button>
-            ) : null}
-          </div>
-
-          <div className="bg-secondary/5 px-4 py-4">
-            {!property ? (
-              <div className="rounded-[12px] border border-dashed border-secondary/25 bg-white/70 px-4 py-8 text-center">
-                <p className="text-sm text-muted-foreground">No inventory property linked yet.</p>
-                {canEdit ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="mt-3 gap-1.5"
-                    onClick={() => setPickerOpen(true)}
-                  >
-                    <Building2 className="h-3.5 w-3.5" />
-                    Choose from inventory
-                  </Button>
-                ) : null}
-              </div>
-            ) : (
-              <div className="rounded-[12px] border border-secondary/20 bg-white px-3 py-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <Link
-                      href={`/inventory/${property.id}`}
-                      className="text-sm font-semibold text-foreground hover:text-secondary"
-                    >
-                      {propertyLabel(property)}
-                    </Link>
-                    <p className="mt-0.5 text-xs capitalize text-muted-foreground">
-                      {formatPropertyType(property.property_type)}
-                      {property.bedrooms != null ? ` · ${property.bedrooms} bed` : ""}
-                      {property.asking_price != null && property.asking_price > 0
-                        ? ` · ${formatAED(property.asking_price)}`
-                        : ""}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-0.5">
-                    <Link
-                      href={`/inventory/${property.id}`}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary/10 hover:text-secondary"
-                      aria-label="Edit property in inventory"
-                      title="Edit in inventory"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Link>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary/10 hover:text-secondary disabled:opacity-50"
-                        disabled={sharing}
-                        aria-label="Share property"
-                      >
-                        {sharing ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Share2 className="h-4 w-4" />
-                        )}
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-52">
-                        <DropdownMenuItem onClick={() => void copyShareLink()}>
-                          <Copy className="mr-2 h-4 w-4" />
-                          Copy public link
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => void shareOnWhatsApp()}>
-                          <MessageCircle className="mr-2 h-4 w-4" />
-                          WhatsApp to client
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    {canEdit ? (
-                      <button
-                        type="button"
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary/10 hover:text-secondary"
-                        aria-label="Change property"
-                        title="Change property"
-                        onClick={() => setPickerOpen(true)}
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-
-                {canEdit ? (
-                  <div className="mt-3 space-y-1.5 border-t border-border/60 pt-3">
-                    <Label htmlFor="deal-ejari" className="text-[0.68rem] font-semibold uppercase tracking-wide text-muted-foreground">
-                      Ejari no.
-                    </Label>
-                    <Input
-                      id="deal-ejari"
-                      value={ejari}
-                      disabled={pending}
-                      onChange={(e) => setEjari(e.target.value)}
-                      onBlur={saveEjari}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.currentTarget.blur();
-                        }
-                      }}
-                      placeholder="Rental Ejari"
-                      className="h-9"
-                    />
-                  </div>
-                ) : ejariNo ? (
-                  <p className="mt-3 border-t border-border/60 pt-3 text-xs text-muted-foreground">
-                    Ejari: <span className="font-medium text-foreground">{ejariNo}</span>
-                  </p>
-                ) : null}
-              </div>
-            )}
-          </div>
-        </section>
-
-        <section className="overflow-hidden rounded-[14px] border border-primary/25 bg-card">
+        <section className="overflow-hidden rounded-[14px] border border-primary/25 bg-card shadow-sm">
           <div className="flex items-center justify-between gap-2 bg-primary px-4 py-3 text-white">
             <div className="min-w-0">
               <h2
@@ -399,7 +281,7 @@ export function DealPropertyClientPanel({
                 No client linked yet.
               </p>
             ) : (
-              <div className="rounded-[12px] border border-primary/15 bg-white px-3 py-3">
+              <div className="rounded-[12px] border border-primary/15 bg-white px-3 py-3 shadow-sm">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-foreground">
@@ -461,6 +343,153 @@ export function DealPropertyClientPanel({
                   </dl>
                 ) : null}
               </div>
+            )}
+          </div>
+        </section>
+
+        <section className="overflow-hidden rounded-[14px] border border-secondary/35 bg-card shadow-sm">
+          <div className="flex items-center justify-between gap-2 bg-secondary px-4 py-3 text-white">
+            <div className="min-w-0">
+              <h2
+                className="flex items-center gap-2 font-heading text-[1.05rem] text-white"
+                style={{ fontFamily: "var(--font-display), serif" }}
+              >
+                <Building2 className="h-4 w-4 text-white/90" />
+                Property details
+              </h2>
+              <p className="mt-0.5 text-[0.72rem] text-white/70">Confirmed inventory unit</p>
+            </div>
+            {property && canEdit ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                className="h-8 gap-1.5 border-0 bg-white/20 text-white hover:bg-white/30"
+                onClick={() => setPickerOpen(true)}
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Change
+              </Button>
+            ) : null}
+          </div>
+
+          <div className="bg-secondary/8 px-4 py-4">
+            {!property ? (
+              <div className="rounded-[12px] border border-dashed border-secondary/30 bg-white px-4 py-8 text-center shadow-sm">
+                <p className="text-sm text-muted-foreground">No inventory property linked yet.</p>
+                {canEdit ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="mt-3 gap-1.5"
+                    onClick={() => setPickerOpen(true)}
+                  >
+                    <Building2 className="h-3.5 w-3.5" />
+                    Choose from inventory
+                  </Button>
+                ) : null}
+              </div>
+            ) : (
+              <article className="rounded-[14px] border border-secondary/25 bg-white p-4 shadow-[0_8px_24px_-12px_rgba(28,36,52,0.35)]">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 space-y-2.5">
+                    <Link
+                      href={`/inventory/${property.id}`}
+                      className="block text-[0.95rem] font-semibold leading-snug text-foreground hover:text-secondary"
+                    >
+                      {propertyLabel(property)}
+                    </Link>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {listingTypeLabel ? (
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-1 text-[0.78rem] font-semibold capitalize ${listingTypePillClass}`}
+                        >
+                          {listingTypeLabel}
+                        </span>
+                      ) : null}
+                      {property.asking_price != null && property.asking_price > 0 ? (
+                        <span className="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-[0.78rem] font-semibold tabular-nums text-amber-950">
+                          {formatAED(property.asking_price)}
+                        </span>
+                      ) : null}
+                      <span className="inline-flex rounded-full bg-muted px-2.5 py-1 text-[0.78rem] font-medium capitalize text-muted-foreground">
+                        {formatPropertyType(property.property_type)}
+                        {property.bedrooms != null ? ` · ${property.bedrooms} bed` : ""}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-0.5 rounded-[10px] border border-border/70 bg-muted/30 p-0.5">
+                    <Link
+                      href={`/inventory/${property.id}`}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-white hover:text-secondary"
+                      aria-label="Edit property in inventory"
+                      title="Edit in inventory"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Link>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-white hover:text-secondary disabled:opacity-50"
+                        disabled={sharing}
+                        aria-label="Share property"
+                      >
+                        {sharing ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Share2 className="h-4 w-4" />
+                        )}
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-52">
+                        <DropdownMenuItem onClick={() => void copyShareLink()}>
+                          <Copy className="mr-2 h-4 w-4" />
+                          Copy public link
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => void shareOnWhatsApp()}>
+                          <MessageCircle className="mr-2 h-4 w-4" />
+                          WhatsApp to client
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    {canEdit ? (
+                      <button
+                        type="button"
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-white hover:text-secondary"
+                        aria-label="Change property"
+                        title="Change property"
+                        onClick={() => setPickerOpen(true)}
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+
+                {canEdit ? (
+                  <div className="mt-4 space-y-1.5 border-t border-border/60 pt-3">
+                    <Label htmlFor="deal-ejari" className="text-[0.68rem] font-semibold uppercase tracking-wide text-muted-foreground">
+                      Ejari no.
+                    </Label>
+                    <Input
+                      id="deal-ejari"
+                      value={ejari}
+                      disabled={pending}
+                      onChange={(e) => setEjari(e.target.value)}
+                      onBlur={saveEjari}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.currentTarget.blur();
+                        }
+                      }}
+                      placeholder="Rental Ejari"
+                      className="h-9"
+                    />
+                  </div>
+                ) : ejariNo ? (
+                  <p className="mt-4 border-t border-border/60 pt-3 text-xs text-muted-foreground">
+                    Ejari: <span className="font-medium text-foreground">{ejariNo}</span>
+                  </p>
+                ) : null}
+              </article>
             )}
           </div>
         </section>

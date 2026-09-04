@@ -3,12 +3,43 @@ import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { DealDetail } from "@/components/pipeline/deal-detail";
 import { leadDocChecklistCategories, type LeadFieldOption } from "@/lib/lead-field-options";
+import { propertyLabel } from "@/lib/inventory";
 import { matchesForRequirement, INVENTORY_MATCH_SELECT } from "@/lib/match-inventory";
 import { ensurePersonForLead } from "@/server/people";
 import { mergeKycPerson } from "@/lib/kyc-form";
 import { mergePersonDocumentsByStoragePath } from "@/lib/person-documents";
+import type { LeadDocument } from "@/components/leads/lead-documents";
 
 export const dynamic = "force-dynamic";
+
+function toLeadDocument(doc: {
+  id: string;
+  name: string;
+  storage_path: string;
+  mime_type: string;
+  category: string;
+  expiry_date?: string | null;
+  notes?: string | null;
+  created_at: string;
+  property_id?: string | null;
+  entity_type?: string | null;
+  entity_id?: string | null;
+}): LeadDocument {
+  return {
+    id: doc.id,
+    name: doc.name,
+    storage_path: doc.storage_path,
+    mime_type: doc.mime_type,
+    category: doc.category,
+    expiry_date: doc.expiry_date ?? null,
+    notes: doc.notes ?? null,
+    created_at: doc.created_at,
+    property_id:
+      doc.property_id ??
+      (doc.entity_type === "property" ? doc.entity_id : null) ??
+      null,
+  };
+}
 
 export default async function DealDetailPage({
   params,
@@ -164,12 +195,6 @@ export default async function DealDetailPage({
   const person = personResult?.data ?? deal.customer ?? null;
   const kycPerson = person ? mergeKycPerson(person) : null;
 
-  const mergedDocuments = mergePersonDocumentsByStoragePath(
-    leadDocuments ?? [],
-    customerDocuments ?? [],
-    documents ?? []
-  );
-
   const shortlist = (shortlistRows ?? []).map((row) => ({
     ...row,
     property: Array.isArray(row.property) ? row.property[0] ?? null : row.property,
@@ -182,17 +207,38 @@ export default async function DealDetailPage({
     shortlist[0]?.property_id ??
     null;
 
-  const { data: confirmedPropertyRow } = confirmedPropertyId
-    ? await supabase
-        .from("properties")
-        .select(
-          `id, property_code, community, building_name, unit_number, property_type, bedrooms,
-           listings(asking_price, listing_type)`
-        )
-        .eq("id", confirmedPropertyId)
-        .is("deleted_at", null)
-        .maybeSingle()
-    : { data: null };
+  const [{ data: confirmedPropertyRow }, { data: propertyDocuments }] = await Promise.all([
+    confirmedPropertyId
+      ? supabase
+          .from("properties")
+          .select(
+            `id, property_code, community, building_name, unit_number, property_type, bedrooms,
+             listings(asking_price, listing_type)`
+          )
+          .eq("id", confirmedPropertyId)
+          .is("deleted_at", null)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    confirmedPropertyId
+      ? supabase
+          .from("documents")
+          .select(
+            "id, name, storage_path, mime_type, category, expiry_date, notes, created_at, property_id, entity_type, entity_id"
+          )
+          .is("deleted_at", null)
+          .or(
+            `property_id.eq.${confirmedPropertyId},and(entity_type.eq.property,entity_id.eq.${confirmedPropertyId})`
+          )
+          .order("created_at", { ascending: false })
+      : Promise.resolve({ data: [] as const }),
+  ]);
+
+  const mergedDocuments = mergePersonDocumentsByStoragePath(
+    (leadDocuments ?? []).map(toLeadDocument),
+    (customerDocuments ?? []).map(toLeadDocument),
+    (documents ?? []).map(toLeadDocument),
+    (propertyDocuments ?? []).map(toLeadDocument)
+  );
 
   const confirmedListings = confirmedPropertyRow
     ? Array.isArray(confirmedPropertyRow.listings)
@@ -262,16 +308,7 @@ export default async function DealDetailPage({
       activities={activities ?? []}
       agents={agents ?? []}
       documents={documents ?? []}
-      mergedDocuments={mergedDocuments.map((doc) => ({
-        id: doc.id,
-        name: doc.name,
-        storage_path: doc.storage_path,
-        mime_type: doc.mime_type,
-        category: doc.category,
-        expiry_date: doc.expiry_date,
-        notes: doc.notes,
-        created_at: doc.created_at,
-      }))}
+      mergedDocuments={mergedDocuments}
       docCategories={docCategories}
       kycPerson={kycPerson}
       personCustomerId={person?.id ?? null}
