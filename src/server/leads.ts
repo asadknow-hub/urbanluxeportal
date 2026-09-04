@@ -311,6 +311,14 @@ export async function updateLeadStage(
     if (stageError || !stage) return { ok: false, error: "Stage not found" };
     if (!lead) return { ok: false, error: "Lead not found" };
 
+    // Won/completed only via convertLead (creates the deal). Board hides won for the same reason.
+    if (stage.kind === "won") {
+      return {
+        ok: false,
+        error: "Complete this lead via Convert — moving to a won stage alone is not allowed",
+      };
+    }
+
     // Check required fields (use the already-fetched full lead)
     const requiredFields = (stage.required_fields as string[]) ?? [];
     if (requiredFields.length > 0) {
@@ -367,8 +375,8 @@ export async function updateLeadStage(
 
     // Map stage kind to legacy status for backward compat
     // Only use stage.kind (dynamic, DB-driven) — never match on stage names
-    if (stage.kind === "won") updateData.status = "converted";
-    else if (stage.kind === "lost" || stage.kind === "junk") updateData.status = "unqualified";
+    // (won is rejected above — convertLead owns status=converted)
+    if (stage.kind === "lost" || stage.kind === "junk") updateData.status = "unqualified";
     else if (stage.kind === "open") {
       updateData.status = leadStatusForStageKind(stage.kind, stage.sort);
     }
@@ -483,7 +491,6 @@ const leadUpdateSchema = z.object({
   budget_max: z.number().nullable().optional(),
   preferred_areas: z.array(z.string()).optional(),
   notes: z.string().nullable().optional(),
-  assigned_to: z.string().nullable().optional(),
   next_follow_up_at: z.string().nullable().optional(),
   stage_id: z.string().nullable().optional(),
   nationality: z.string().nullable().optional(),
@@ -526,6 +533,20 @@ export async function updateLead(
 
     const now = new Date().toISOString();
     const supabase = await createSupabaseServerClient();
+
+    if (Object.prototype.hasOwnProperty.call(patch, "stage_id") && patch.stage_id) {
+      const { data: targetStage } = await supabase
+        .from("lead_stages")
+        .select("kind")
+        .eq("id", patch.stage_id as string)
+        .maybeSingle();
+      if (targetStage?.kind === "won") {
+        return {
+          ok: false,
+          error: "Complete this lead via Convert — moving to a won stage alone is not allowed",
+        };
+      }
+    }
 
     const lockedAttempt = ownerLockedFieldsInPatch(patch);
     if (lockedAttempt.length > 0) {
@@ -1320,6 +1341,15 @@ export async function snoozeFollowUp(
   }
 }
 
+const LEAD_STATUS_VALUES = new Set([
+  "new",
+  "contacted",
+  "qualified",
+  "proposal",
+  "negotiation",
+  "unqualified",
+]);
+
 export async function updateLeadStatus(
   leadId: string,
   status: string
@@ -1328,7 +1358,17 @@ export async function updateLeadStatus(
     const user = await getCurrentUser();
     if (!user) return { ok: false, error: "Unauthorized" };
 
-    if (!status.trim()) {
+    const next = status.trim();
+    if (!next) {
+      return { ok: false, error: "Invalid status" };
+    }
+    if (next === "converted") {
+      return {
+        ok: false,
+        error: "Use Convert to complete a lead — status cannot be set to converted directly",
+      };
+    }
+    if (!LEAD_STATUS_VALUES.has(next)) {
       return { ok: false, error: "Invalid status" };
     }
 
@@ -1337,7 +1377,7 @@ export async function updateLeadStatus(
     const { error } = await supabase
       .from("leads")
       .update({
-        status,
+        status: next,
         updated_at: new Date().toISOString(),
       })
       .eq("id", leadId);
@@ -1347,7 +1387,7 @@ export async function updateLeadStatus(
     await supabase.from("lead_activities").insert({
       lead_id: leadId,
       type: "status_change",
-      summary: `Status changed to ${status}`,
+      summary: `Status changed to ${next}`,
       created_by: user.id,
     });
 
@@ -1356,7 +1396,7 @@ export async function updateLeadStatus(
       entityType: "lead",
       entityId: leadId,
       action: "status_changed",
-      diff: { status },
+      diff: { status: next },
     });
 
     revalidatePath("/leads");

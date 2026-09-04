@@ -2,6 +2,7 @@
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isWorkingCustomerStatus } from "@/lib/customer-status";
+import { isExistingOwnerPerson } from "@/lib/lead-owner";
 import { normalizePhoneDigits, phonesLikelyMatch } from "@/lib/phone";
 import type { CrmDb } from "@/server/routing";
 
@@ -18,6 +19,7 @@ type LeadRow = {
   customer_id: string | null;
   converted_customer_id: string | null;
   created_by: string | null;
+  created_at: string;
   status: string;
 };
 
@@ -137,11 +139,41 @@ async function loadLead(supabase: CrmDb, leadId: string) {
   const { data } = await supabase
     .from("leads")
     .select(
-      "id, name, phone, email, call_numbers, nationality, notes, tags, assigned_to, customer_id, converted_customer_id, created_by, status"
+      "id, name, phone, email, call_numbers, nationality, notes, tags, assigned_to, customer_id, converted_customer_id, created_by, created_at, status"
     )
     .eq("id", leadId)
     .maybeSingle();
   return data as LeadRow | null;
+}
+
+/** Prefer fill-only identity sync when this lead sits under an already existing customer. */
+async function resolvePersonSyncMode(
+  supabase: CrmDb,
+  lead: LeadRow,
+  requested: "overwrite" | "fill"
+): Promise<"overwrite" | "fill"> {
+  if (requested === "fill" || !lead.customer_id) return requested === "fill" ? "fill" : "overwrite";
+
+  const [{ count: siblingCount }, { data: person }] = await Promise.all([
+    supabase
+      .from("leads")
+      .select("id", { count: "exact", head: true })
+      .eq("customer_id", lead.customer_id)
+      .neq("id", lead.id)
+      .is("deleted_at", null),
+    supabase.from("customers").select("created_at").eq("id", lead.customer_id).maybeSingle(),
+  ]);
+
+  if (
+    isExistingOwnerPerson({
+      leadCreatedAt: lead.created_at,
+      personCreatedAt: person?.created_at,
+      siblingLeadCount: siblingCount ?? 0,
+    })
+  ) {
+    return "fill";
+  }
+  return "overwrite";
 }
 
 /**
@@ -185,7 +217,8 @@ export async function ensurePersonForLead(
   if (!lead) return null;
 
   if (lead.customer_id) {
-    await syncWorkingPerson(supabase, lead, linkMode);
+    const mode = await resolvePersonSyncMode(supabase, lead, linkMode);
+    await syncWorkingPerson(supabase, lead, mode);
     return lead.customer_id;
   }
 

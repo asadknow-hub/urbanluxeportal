@@ -8,12 +8,16 @@ import { ensurePersonForLead } from "@/server/people";
 // Accepts lead data from external sources (website forms, portals, etc.)
 // Protected by API key header: x-api-key
 
-const LEAD_API_KEY = process.env.LEAD_API_KEY ?? "urbanluxe-lead-api-key";
-
 export async function POST(req: NextRequest) {
   try {
+    const configuredKey = process.env.LEAD_API_KEY?.trim();
+    if (!configuredKey) {
+      console.error("[leads/webhook] LEAD_API_KEY is not configured");
+      return NextResponse.json({ error: "Lead webhook is not configured" }, { status: 503 });
+    }
+
     const apiKey = req.headers.get("x-api-key");
-    if (apiKey !== LEAD_API_KEY) {
+    if (!apiKey || apiKey !== configuredKey) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -26,19 +30,34 @@ export async function POST(req: NextRequest) {
 
     const source = typeof body.source === "string" && body.source.trim() ? body.source.trim() : "website";
     const interest = typeof body.interest === "string" && body.interest.trim() ? body.interest.trim() : "buy";
+    const phone = typeof body.phone === "string" && body.phone.trim() ? body.phone.trim() : null;
+    const email = typeof body.email === "string" && body.email.trim() ? body.email.trim() : null;
 
     const supabase = createSupabaseServiceClient();
 
-    // Duplicate guard — check phone or email
-    if (body.phone || body.email) {
-      let dupQuery = supabase
-        .from("leads")
-        .select("id, name")
-        .is("deleted_at", null)
-        .limit(1);
-      if (body.phone) dupQuery = dupQuery.eq("phone", body.phone);
-      if (body.email) dupQuery = dupQuery.eq("email", body.email);
-      const { data: dup } = await dupQuery.maybeSingle();
+    // Duplicate guard — phone OR email (same contact = same lead)
+    if (phone || email) {
+      let dup: { id: string; name: string } | null = null;
+      if (phone) {
+        const { data } = await supabase
+          .from("leads")
+          .select("id, name")
+          .is("deleted_at", null)
+          .eq("phone", phone)
+          .limit(1)
+          .maybeSingle();
+        dup = data;
+      }
+      if (!dup && email) {
+        const { data } = await supabase
+          .from("leads")
+          .select("id, name")
+          .is("deleted_at", null)
+          .eq("email", email)
+          .limit(1)
+          .maybeSingle();
+        dup = data;
+      }
       if (dup) {
         return NextResponse.json(
           { ok: true, message: "Duplicate lead — already exists", id: dup.id },
@@ -47,14 +66,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Insert lead
+    // Insert lead — assignee comes from routing only (ignore body.assigned_to)
     const defaultStageId = await resolveDefaultLeadStageId(supabase);
     const { data, error } = await supabase
       .from("leads")
       .insert({
         name: body.name,
-        phone: body.phone || null,
-        email: body.email || null,
+        phone,
+        email,
         source,
         interest,
         budget_min: body.budget_min ? Math.round(Number(body.budget_min) * 100) : null,
@@ -65,7 +84,7 @@ export async function POST(req: NextRequest) {
         stage_id: defaultStageId,
         stage_entered_at: new Date().toISOString(),
         last_activity_at: new Date().toISOString(),
-        assigned_to: body.assigned_to || null,
+        assigned_to: null,
       })
       .select("id")
       .single();
@@ -75,14 +94,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const assignedTo = await applyLeadRouting(
-      supabase,
-      data.id,
-      body.assigned_to || null,
-      "webhook",
-      null,
-      source
-    );
+    const assignedTo = await applyLeadRouting(supabase, data.id, null, "webhook", null, source);
     await ensurePersonForLead(data.id, null, supabase);
 
     await supabase.from("lead_activities").insert({
@@ -101,7 +113,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET /api/leads/webhook — health check
+// GET /api/leads/webhook — health check (does not reveal whether a key is configured)
 export async function GET() {
   return NextResponse.json({ ok: true, endpoint: "/api/leads/webhook" });
 }

@@ -22,6 +22,7 @@ export default async function FollowUpsPage() {
            stage:lead_stages(id, name, color, kind)`
         )
         .is("deleted_at", null)
+        .neq("status", "converted")
         .not("next_follow_up_at", "is", null)
         .order("next_follow_up_at", { ascending: true })
         .limit(500);
