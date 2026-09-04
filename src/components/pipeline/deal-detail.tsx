@@ -604,6 +604,10 @@ export function DealDetail({
         <div className="space-y-4">
           <ContactAttemptsPanel
             canEdit={canEdit && !deal.finalized_at}
+            title="Record working"
+            description="Log calls, WhatsApp, email, and in-person work on this deal."
+            emptyLabel="Nothing recorded yet."
+            successToast="Working recorded"
             items={activities
               .filter((act) => isContactAttemptType(act.type))
               .map((act) => ({

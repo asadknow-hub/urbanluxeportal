@@ -33,11 +33,19 @@ export function ContactAttemptsPanel({
   items,
   onSave,
   highlight = false,
+  title = "Contact Attempts",
+  description = "Log how you reached out on this deal.",
+  emptyLabel = "No attempts logged yet.",
+  successToast = "Contact attempt logged",
 }: {
   canEdit: boolean;
   items: ContactAttemptItem[];
   onSave: (type: string, summary: string) => Promise<{ ok: boolean; error?: string }>;
   highlight?: boolean;
+  title?: string;
+  description?: string;
+  emptyLabel?: string;
+  successToast?: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -69,13 +77,13 @@ export function ContactAttemptsPanel({
           className="font-heading text-[1.12rem] text-[#9a3412]"
           style={{ fontFamily: "var(--font-display), serif" }}
         >
-          Contact Attempts
+          {title}
         </h2>
         <span className="rounded-full bg-[#ea580c] px-2.5 py-0.5 text-[0.72rem] font-bold tabular-nums text-white">
           {attempts.length}
         </span>
       </div>
-      <p className="mb-4 text-[0.78rem] text-[#9a3412]/75">Log how you reached out on this deal.</p>
+      <p className="mb-4 text-[0.78rem] text-[#9a3412]/75">{description}</p>
 
       {canEdit ? (
         <>
@@ -133,7 +141,7 @@ export function ContactAttemptsPanel({
               startTransition(async () => {
                 const result = await onSave(contactMethod, summary);
                 if (result.ok) {
-                  toast.success("Contact attempt logged");
+                  toast.success(successToast);
                   setContactMethod(null);
                   setContactNote("");
                   setOptimistic(null);
@@ -155,7 +163,7 @@ export function ContactAttemptsPanel({
           History
         </p>
         {attempts.length === 0 ? (
-          <p className="text-[0.8rem] text-[#9a3412]/65">No attempts logged yet.</p>
+          <p className="text-[0.8rem] text-[#9a3412]/65">{emptyLabel}</p>
         ) : (
           <>
             <ul className="space-y-2">

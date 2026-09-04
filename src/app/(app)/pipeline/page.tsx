@@ -1,8 +1,10 @@
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { PipelineBoard } from "@/components/pipeline/pipeline-board";
+import { DealCreateDialog } from "@/components/pipeline/deal-create-dialog";
 import { formatAEDCompact } from "@/lib/money";
 import { DEAL_PIPELINE_STAGES, isDealOpen, normalizeDealStage } from "@/lib/deal-stages";
+import { canManageCrm } from "@/lib/permissions";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 
@@ -43,24 +45,63 @@ export default async function PipelinePage() {
     return sum + (d.value ?? 0) * (stage?.weight ?? 0);
   }, 0);
 
+  const canCreateDeal = user.role !== "accountant";
+  let customers: { id: string; name: string; phone: string | null }[] = [];
+  let agents: { id: string; full_name: string; role: string }[] = [];
+
+  if (canCreateDeal) {
+    let customersQuery = supabase
+      .from("customers")
+      .select("id, name, phone")
+      .is("deleted_at", null)
+      .order("name")
+      .limit(500);
+    if (user.role === "agent") {
+      customersQuery = customersQuery.or(`assigned_to.eq.${user.id},assigned_to.is.null`);
+    }
+    const [{ data: customerRows }, { data: agentRows }] = await Promise.all([
+      customersQuery,
+      canManageCrm(user.role)
+        ? supabase
+            .from("profiles")
+            .select("id, full_name, role")
+            .in("role", ["admin", "manager", "reception", "agent"])
+            .eq("is_active", true)
+            .order("full_name")
+        : Promise.resolve({ data: [] as { id: string; full_name: string; role: string }[] }),
+    ]);
+    customers = customerRows ?? [];
+    agents = agentRows ?? [];
+  }
+
   return (
     <div className="mx-auto flex max-w-[1600px] flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
           <span className="font-medium tabular-nums text-foreground">{activeDeals.length}</span> active deals
         </p>
-        <Link
-          href="/pipeline/completed"
-          className="inline-flex h-8 items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 text-xs font-medium text-emerald-800 hover:bg-emerald-100"
-        >
-          <CheckCircle2 className="h-3.5 w-3.5" />
-          Deals completed
-          {closedCount > 0 ? (
-            <span className="rounded-full bg-emerald-700/10 px-1.5 py-px tabular-nums text-[10px]">
-              {closedCount}
-            </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/pipeline/completed"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 text-xs font-medium text-emerald-800 hover:bg-emerald-100"
+          >
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            Deals completed
+            {closedCount > 0 ? (
+              <span className="rounded-full bg-emerald-700/10 px-1.5 py-px tabular-nums text-[10px]">
+                {closedCount}
+              </span>
+            ) : null}
+          </Link>
+          {canCreateDeal ? (
+            <DealCreateDialog
+              customers={customers}
+              agents={agents}
+              currentUserId={user.id}
+              canAssign={canManageCrm(user.role)}
+            />
           ) : null}
-        </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
