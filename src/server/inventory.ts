@@ -103,10 +103,12 @@ async function resolveProject(
   return data?.id ?? null;
 }
 
-function revalidateInventory(id?: string) {
+function revalidateInventory(id?: string, ownerId?: string | null) {
   revalidatePath("/inventory");
   revalidatePath("/company-properties");
   if (id) revalidatePath(`/inventory/${id}`);
+  if (ownerId) revalidatePath(`/customers/${ownerId}`);
+  revalidatePath("/customers");
   revalidatePath("/pipeline");
   revalidatePath("/leads");
 }
@@ -731,12 +733,23 @@ export async function assignPropertyOwner(
     const denied = assertCanWriteCatalog(user);
     if (denied) return { ok: false, error: denied };
     const supabase = await createSupabaseServerClient();
+
+    const { data: existing } = await supabase
+      .from("properties")
+      .select("owner_id")
+      .eq("id", propertyId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
     const { error } = await supabase
       .from("properties")
       .update({ owner_id: ownerId, updated_at: new Date().toISOString() })
       .eq("id", propertyId);
     if (error) return { ok: false, error: error.message };
-    revalidateInventory(propertyId);
+    revalidateInventory(propertyId, ownerId);
+    if (existing?.owner_id && existing.owner_id !== ownerId) {
+      revalidatePath(`/customers/${existing.owner_id}`);
+    }
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : "Unknown error" };

@@ -766,7 +766,7 @@ export function PropertyDetailView({
               <p className="text-muted-foreground">Nationality: {owner.nationality || "—"}</p>
               <div className="pt-2">
                 <Link href={`/customers/${owner.id}`} className="text-sm font-medium text-secondary hover:underline">
-                  Open person profile
+                  Open customer profile
                 </Link>
               </div>
             </div>
@@ -793,9 +793,9 @@ export function PropertyDetailView({
                 </SelectContent>
               </Select>
               <p className="mt-3 text-xs text-muted-foreground">
-                New people are added in{" "}
+                New customers are added in{" "}
                 <Link href="/customers" className="underline hover:text-foreground">
-                  People
+                  Customers
                 </Link>
                 .
               </p>
