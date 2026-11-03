@@ -571,18 +571,17 @@
 .ul-wa-dock {
   transform-origin: center;
   will-change: transform;
+  animation: ul-breathe 1.6s ease-in-out infinite;
 }
 
 .ul-wa-dock:hover,
 .ul-wa-dock:focus-visible {
-  animation: ul-breathe 1.35s ease-in-out infinite;
+  animation-duration: 1.15s;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ul-wa-dock:hover,
-  .ul-wa-dock:focus-visible {
+  .ul-wa-dock {
     animation: none;
-    transform: scale(1.08);
   }
 }
 

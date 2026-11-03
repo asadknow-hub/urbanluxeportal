@@ -8,6 +8,7 @@ import { DevelopersMarquee } from "@/components/web/developers-marquee";
 import { WhyAgentsSection } from "@/components/web/why-agents-section";
 import { MarketGrowthSection } from "@/components/web/market-growth-section";
 import { TestimonialsSection } from "@/components/web/testimonials-section";
+import { CareersCanvasSection } from "@/components/web/careers-canvas-section";
 import { Reveal } from "@/components/web/reveal";
 import { cn } from "@/lib/utils";
 
@@ -274,34 +275,7 @@ export function HomePage() {
       <DevelopersMarquee />
 
       {/* DARK */}
-      <section className="ul-band-dark py-10 md:py-14 lg:py-16">
-        <div className="ul-shell-wide grid items-center gap-10 md:grid-cols-2 md:gap-16">
-          <Reveal>
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-white/5 md:aspect-[5/4]">
-              <Image
-                src={IMAGES.careers}
-                alt="Urban Luxe team"
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover"
-              />
-            </div>
-          </Reveal>
-          <Reveal delay={80} className="md:justify-self-end md:text-right">
-            <p className="ul-kicker">Careers</p>
-            <h2 className="ul-section-heading mt-3 text-3xl text-white md:text-4xl lg:text-[2.75rem]">
-              See what you&apos;re missing out on
-            </h2>
-            <p className="mt-5 max-w-md text-base leading-relaxed text-[#8ba0b8] md:ml-auto">
-              We are always accepting online applications. Dubai awaits — are you ready to take the
-              leap?
-            </p>
-            <Link href="/careers" prefetch className="ul-btn-primary mt-8 rounded-full">
-              Get in touch
-            </Link>
-          </Reveal>
-        </div>
-      </section>
+      <CareersCanvasSection />
 
       {/* LIGHT */}
       <TestimonialsSection />
