@@ -26,23 +26,18 @@ export function SiteLogo({
       className={cn("group inline-flex items-center", className)}
       aria-label={`${label} home`}
     >
-      {/* Paper chip keeps the navy mark readable over the dark hero */}
-      <span
+      <Image
+        src={logoSrc}
+        alt={label}
+        width={220}
+        height={60}
         className={cn(
-          "inline-flex items-center rounded-md transition-colors",
-          inverted && "bg-[#F6F3EE] px-2 py-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.2)]"
+          "h-8 w-auto max-w-[10.5rem] object-contain object-left md:h-9 md:max-w-[12rem]",
+          inverted && "brightness-110 contrast-125"
         )}
-      >
-        <Image
-          src={logoSrc}
-          alt={label}
-          width={200}
-          height={56}
-          className="h-8 w-auto max-w-[9.5rem] object-contain object-left md:h-9 md:max-w-[11rem]"
-          unoptimized
-          priority
-        />
-      </span>
+        unoptimized
+        priority
+      />
     </Link>
   );
 }
