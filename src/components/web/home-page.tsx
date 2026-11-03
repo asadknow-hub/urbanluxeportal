@@ -91,13 +91,20 @@ function SplitSection({
   children,
   image,
   reverse = false,
+  tone = "light",
 }: {
   children: ReactNode;
   image: ReactNode;
   reverse?: boolean;
+  tone?: "light" | "dark";
 }) {
   return (
-    <section className="bg-white py-10 md:py-14 lg:py-16">
+    <section
+      className={cn(
+        "py-10 md:py-14 lg:py-16",
+        tone === "dark" ? "ul-band-dark" : "bg-white"
+      )}
+    >
       <div className="ul-shell-wide grid items-center gap-10 md:grid-cols-2 md:gap-16 xl:gap-24">
         <Reveal className={reverse ? "md:order-2" : "md:justify-self-start"}>
           {children}
@@ -137,9 +144,10 @@ function SectionHead({
 export function HomePage() {
   return (
     <>
+      {/* DARK */}
       <HeroSection />
 
-      {/* Green-on-white callout — flush under hero, no sheet gap */}
+      {/* LIGHT */}
       <section className="bg-white py-10 md:py-14 lg:py-16">
         <div className="ul-shell-wide">
           <Reveal>
@@ -167,7 +175,7 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Dark accent band mixed into light UI */}
+      {/* DARK */}
       <section className="ul-band-dark py-10 md:py-14 lg:py-16">
         <div className="ul-shell-wide">
           <SectionHead
@@ -191,6 +199,7 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* LIGHT */}
       <section className="bg-white py-10 md:py-14 lg:py-16">
         <div className="ul-shell-wide">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
@@ -237,9 +246,13 @@ export function HomePage() {
         </div>
       </section>
 
-      <SplitSection image={<BrandImage src={IMAGES.interior} alt="Luxury interior in Dubai" />}>
+      {/* DARK */}
+      <SplitSection
+        tone="dark"
+        image={<BrandImage src={IMAGES.interior} alt="Luxury interior in Dubai" />}
+      >
         <p className="ul-kicker">Our promise</p>
-        <h2 className="ul-section-heading mt-3 text-3xl leading-tight md:text-4xl lg:text-[2.65rem]">
+        <h2 className="ul-section-heading mt-3 text-3xl leading-tight text-white md:text-4xl lg:text-[2.65rem]">
           Placed with the care of a private office
         </h2>
         <p className="ul-section-lede mt-5 max-w-lg text-base leading-relaxed">
@@ -251,6 +264,16 @@ export function HomePage() {
         </Link>
       </SplitSection>
 
+      {/* LIGHT */}
+      <WhyAgentsSection />
+
+      {/* DARK */}
+      <MarketGrowthSection />
+
+      {/* LIGHT */}
+      <DevelopersMarquee />
+
+      {/* DARK */}
       <section className="ul-band-dark py-10 md:py-14 lg:py-16">
         <div className="ul-shell-wide grid items-center gap-10 md:grid-cols-2 md:gap-16">
           <Reveal>
@@ -280,19 +303,23 @@ export function HomePage() {
         </div>
       </section>
 
-      <WhyAgentsSection />
-      <MarketGrowthSection />
-      <DevelopersMarquee />
+      {/* LIGHT */}
+      <TestimonialsSection />
 
-      <section className="bg-white py-10 md:py-14 lg:py-16">
+      {/* DARK */}
+      <section className="ul-band-dark py-10 md:py-14 lg:py-16">
         <div className="ul-shell-wide">
           <Reveal>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p className="ul-kicker">Insights</p>
-                <h2 className="ul-section-heading mt-2 text-3xl md:text-4xl">Featured</h2>
+                <h2 className="ul-section-heading mt-2 text-3xl text-white md:text-4xl">Featured</h2>
               </div>
-              <Link href="/insights" prefetch className="ul-link-arrow">
+              <Link
+                href="/insights"
+                prefetch
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-white/80 transition-colors hover:text-[var(--ul-secondary)]"
+              >
                 All insights <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
@@ -303,7 +330,7 @@ export function HomePage() {
                 <Link
                   href={item.href}
                   prefetch
-                  className="group block overflow-hidden rounded-2xl border border-[var(--ul-hair)] bg-white shadow-[0_8px_30px_rgba(7,17,31,0.05)]"
+                  className="group block overflow-hidden rounded-2xl border border-white/10 bg-white shadow-[0_8px_30px_rgba(7,17,31,0.2)]"
                 >
                   <div className="relative aspect-[4/3] overflow-hidden bg-[var(--ul-tertiary)]">
                     <Image
@@ -329,9 +356,8 @@ export function HomePage() {
         </div>
       </section>
 
-      <TestimonialsSection />
-
-      <section className="border-t border-[var(--ul-hair)] bg-[var(--ul-tertiary)] py-10 md:py-14 lg:py-16">
+      {/* LIGHT — then footer (dark) */}
+      <section className="bg-white py-10 md:py-14 lg:py-16">
         <Reveal className="ul-shell-wide flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           <div>
             <p className="ul-kicker">Stay informed</p>

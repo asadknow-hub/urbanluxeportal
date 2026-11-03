@@ -44,7 +44,7 @@ const QUALITIES = [
 
 export function WhyAgentsSection() {
   return (
-    <section className="bg-[var(--ul-tertiary)] py-10 md:py-14 lg:py-16">
+    <section className="bg-white py-10 md:py-14 lg:py-16">
       <div className="ul-shell-wide">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end">
           <Reveal className="justify-self-start">
