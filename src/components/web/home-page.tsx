@@ -251,7 +251,7 @@ export function HomePage() {
         </Link>
       </SplitSection>
 
-      <section className="ul-band-dark py-16 md:py-24">
+      <section className="ul-band-dark py-10 md:py-14 lg:py-16">
         <div className="ul-shell-wide grid items-center gap-10 md:grid-cols-2 md:gap-16">
           <Reveal>
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-white/5 md:aspect-[5/4]">
@@ -284,7 +284,7 @@ export function HomePage() {
       <MarketGrowthSection />
       <DevelopersMarquee />
 
-      <section className="bg-white py-16 md:py-24">
+      <section className="bg-white py-10 md:py-14 lg:py-16">
         <div className="ul-shell-wide">
           <Reveal>
             <div className="flex flex-wrap items-end justify-between gap-4">
@@ -331,7 +331,7 @@ export function HomePage() {
 
       <TestimonialsSection />
 
-      <section className="border-t border-[var(--ul-hair)] bg-[var(--ul-tertiary)] py-16 md:py-20">
+      <section className="border-t border-[var(--ul-hair)] bg-[var(--ul-tertiary)] py-10 md:py-14 lg:py-16">
         <Reveal className="ul-shell-wide flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           <div>
             <p className="ul-kicker">Stay informed</p>

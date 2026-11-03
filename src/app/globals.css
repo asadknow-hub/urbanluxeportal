@@ -560,26 +560,29 @@
   0%,
   100% {
     transform: scale(1);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
   }
   50% {
-    transform: scale(1.12);
+    transform: scale(1.14);
+    box-shadow: 0 18px 52px rgba(0, 128, 64, 0.5);
   }
 }
 
 .ul-wa-dock {
   transform-origin: center;
-  transition: box-shadow 0.25s ease;
+  will-change: transform;
 }
 
-.ul-wa-dock:hover {
-  animation: ul-breathe 1.15s ease-in-out infinite;
-  box-shadow: 0 16px 48px rgba(0, 128, 64, 0.45);
+.ul-wa-dock:hover,
+.ul-wa-dock:focus-visible {
+  animation: ul-breathe 1.35s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ul-wa-dock:hover {
+  .ul-wa-dock:hover,
+  .ul-wa-dock:focus-visible {
     animation: none;
-    transform: scale(1.06);
+    transform: scale(1.08);
   }
 }
 
