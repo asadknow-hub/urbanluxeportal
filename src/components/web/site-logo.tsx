@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { useBrand } from "@/components/brand/brand-provider";
 
 /** Official UrbanLuxe wordmark — falls back if CRM brand logo is unset. */
-const DEFAULT_LOGO = "/brand/urbanluxe-logo.jpg";
+const DEFAULT_LOGO = "/logovec.png";
 
 export function SiteLogo({
   inverted = false,
