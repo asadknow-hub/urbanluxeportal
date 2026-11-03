@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Check, ChevronDown, Menu, Phone, Search, X } from "lucide-react";
+import { Check, ChevronDown, Menu, Phone, X } from "lucide-react";
 import { CURRENCIES, NAV, SITE } from "@/lib/web/site";
 import { SiteLogo } from "@/components/web/site-logo";
 import { useCurrency } from "@/components/web/currency-provider";
@@ -49,8 +49,8 @@ export function SiteNav() {
         className={cn(
           "fixed inset-x-0 top-0 z-[100] pt-[var(--ul-safe-top,0px)] transition-[background-color,box-shadow,backdrop-filter] duration-300",
           overDarkHero
-            ? "border-b border-white/10 bg-transparent"
-            : "border-b border-[var(--ul-hair)] bg-[var(--ul-paper)]/95 shadow-[0_8px_28px_rgba(10,22,48,0.08)] backdrop-blur-md"
+            ? "bg-transparent"
+            : "bg-[var(--ul-paper)]/95 shadow-[0_8px_28px_rgba(10,22,48,0.08)] backdrop-blur-md"
         )}
       >
         <div
@@ -146,20 +146,6 @@ export function SiteNav() {
               <span className="hidden lg:inline">{SITE.phoneDisplay}</span>
               <span className="lg:hidden">Call</span>
             </a>
-
-            <Link
-              href="/buy"
-              prefetch
-              className={cn(
-                "hidden h-10 w-10 items-center justify-center rounded-full transition-colors lg:inline-flex",
-                overDarkHero
-                  ? "text-white/90 hover:bg-white/10"
-                  : "text-[var(--ul-primary)] hover:bg-[var(--ul-tertiary)]"
-              )}
-              aria-label="Search properties"
-            >
-              <Search className="h-[1.125rem] w-[1.125rem]" strokeWidth={2} />
-            </Link>
 
             <button
               type="button"

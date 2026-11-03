@@ -41,7 +41,8 @@ export function HeroSection() {
               className="block"
               style={{
                 color: "transparent",
-                WebkitTextStroke: "2px #F6F3EE",
+                WebkitTextStroke: "3.5px #F6F3EE",
+                paintOrder: "stroke fill",
               }}
             >
               Find your

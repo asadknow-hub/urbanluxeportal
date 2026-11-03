@@ -2,8 +2,8 @@ import { CURRENCIES } from "@/lib/web/site";
 
 export type CurrencyCode = (typeof CURRENCIES)[number]["code"];
 
-export const CURRENCY_STORAGE_KEY = "urbanluxe-currency";
-export const CURRENCY_COOKIE = "urbanluxe-currency";
+export const CURRENCY_STORAGE_KEY = "urbanluxe-currency-v2";
+export const CURRENCY_COOKIE = "urbanluxe-currency-v2";
 
 /** Approximate mid-market rates vs AED for display (not live FX). */
 export const AED_TO: Record<CurrencyCode, number> = {
