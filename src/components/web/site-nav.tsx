@@ -21,10 +21,11 @@ export function SiteNav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const onHome = pathname === "/";
+  /** Transparent only while sitting over the dark home hero */
   const overDarkHero = onHome && !scrolled && !open;
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 16);
+    const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -42,25 +43,21 @@ export function SiteNav() {
   }, [open]);
 
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-[100] pt-[var(--ul-safe-top,0px)] transition-colors duration-300",
-        overDarkHero ? "bg-transparent" : "bg-white/95 backdrop-blur-md"
-      )}
-    >
-      <div
+    <>
+      {/* Fixed overlay — sits ON the hero at rest (not a white strip above it) */}
+      <header
         className={cn(
-          "relative z-[1] border-b transition-[border-color,box-shadow] duration-300",
-          overDarkHero ? "border-white/10" : "border-[var(--ul-hair)]",
-          scrolled && !overDarkHero && "shadow-[0_8px_30px_rgba(7,17,31,0.06)]"
+          "fixed inset-x-0 top-0 z-[100] pt-[var(--ul-safe-top,0px)] transition-[background-color,box-shadow,backdrop-filter] duration-300",
+          overDarkHero
+            ? "border-b border-white/10 bg-transparent"
+            : "border-b border-[var(--ul-hair)] bg-white/95 shadow-[0_8px_28px_rgba(7,17,31,0.08)] backdrop-blur-md"
         )}
       >
-        {/* True left | center | right — not a bunched middle cluster */}
         <div
           className={cn(
             "ul-shell-wide grid items-center gap-3 transition-[height] duration-300",
             "grid-cols-[auto_1fr_auto] lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]",
-            scrolled ? "h-14" : "h-16 sm:h-[4.5rem]"
+            scrolled || !onHome ? "h-14" : "h-16 sm:h-[4.25rem]"
           )}
         >
           <div className="justify-self-start">
@@ -83,7 +80,7 @@ export function SiteNav() {
                     overDarkHero
                       ? active
                         ? "text-[var(--ul-secondary)]"
-                        : "text-white/80 hover:text-white"
+                        : "text-white/85 hover:text-white"
                       : active
                         ? "text-[var(--ul-secondary)]"
                         : "text-[var(--ul-primary)]/70 hover:text-[var(--ul-primary)]"
@@ -99,10 +96,7 @@ export function SiteNav() {
             <Link
               href="/sell"
               prefetch
-              className={cn(
-                "hidden h-10 items-center rounded-full px-4 text-[0.72rem] font-bold uppercase tracking-[0.06em] transition-colors md:inline-flex",
-                "bg-[var(--ul-secondary)] text-white hover:bg-[var(--ul-accent-deep)]"
-              )}
+              className="hidden h-10 items-center rounded-full bg-[var(--ul-secondary)] px-4 text-[0.72rem] font-bold uppercase tracking-[0.06em] text-white transition-colors hover:bg-[var(--ul-accent-deep)] md:inline-flex"
             >
               List property
             </Link>
@@ -112,7 +106,7 @@ export function SiteNav() {
                 className={cn(
                   "hidden h-10 items-center gap-1 rounded-full px-2 text-[0.75rem] font-semibold outline-none transition-colors lg:inline-flex",
                   overDarkHero
-                    ? "text-white/80 hover:bg-white/10"
+                    ? "text-white/85 hover:bg-white/10"
                     : "text-[var(--ul-primary)]/75 hover:bg-[var(--ul-tertiary)]"
                 )}
                 aria-label={`Currency: ${currency}`}
@@ -142,20 +136,15 @@ export function SiteNav() {
             <a
               href={`tel:${SITE.phoneTel}`}
               className={cn(
-                "hidden items-center gap-2 rounded-full border px-3 py-2 text-[0.72rem] font-bold no-underline transition-colors lg:inline-flex",
+                "hidden items-center gap-2 rounded-full border px-3 py-2 text-[0.72rem] font-bold no-underline transition-colors md:inline-flex",
                 overDarkHero
-                  ? "border-white/25 text-white hover:border-[var(--ul-secondary)] hover:bg-white/5"
+                  ? "border-white/30 text-white hover:border-[var(--ul-secondary)] hover:bg-white/5"
                   : "border-[var(--ul-hair)] text-[var(--ul-primary)] hover:border-[var(--ul-secondary)]"
               )}
             >
-              <Phone
-                className={cn(
-                  "h-3.5 w-3.5",
-                  overDarkHero ? "text-[var(--ul-secondary)]" : "text-[var(--ul-secondary)]"
-                )}
-              />
-              <span className="hidden xl:inline">{SITE.phoneDisplay}</span>
-              <span className="xl:hidden">Call</span>
+              <Phone className="h-3.5 w-3.5 text-[var(--ul-secondary)]" />
+              <span className="hidden lg:inline">{SITE.phoneDisplay}</span>
+              <span className="lg:hidden">Call</span>
             </a>
 
             <Link
@@ -163,7 +152,9 @@ export function SiteNav() {
               prefetch
               className={cn(
                 "hidden h-10 w-10 items-center justify-center rounded-full transition-colors lg:inline-flex",
-                overDarkHero ? "text-white/85 hover:bg-white/10" : "text-[var(--ul-primary)] hover:bg-[var(--ul-tertiary)]"
+                overDarkHero
+                  ? "text-white/90 hover:bg-white/10"
+                  : "text-[var(--ul-primary)] hover:bg-[var(--ul-tertiary)]"
               )}
               aria-label="Search properties"
             >
@@ -184,45 +175,50 @@ export function SiteNav() {
             </button>
           </div>
         </div>
-      </div>
 
-      {open ? (
-        <div className="fixed inset-x-0 bottom-0 top-[calc(4rem+var(--ul-safe-top,0px))] z-50 flex flex-col bg-white lg:hidden">
-          <nav
-            className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 pb-[calc(1.25rem+var(--ul-safe-bottom,0px))] pt-2"
-            aria-label="Mobile"
-          >
-            {NAV.map((item) => {
-              const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  prefetch
-                  className={cn(
-                    "border-b border-[var(--ul-hair)] py-4 text-base font-bold uppercase tracking-[0.08em] text-[var(--ul-primary)]",
-                    active && "text-[var(--ul-secondary)]"
-                  )}
+        {open ? (
+          <div className="fixed inset-x-0 bottom-0 top-[calc(3.5rem+var(--ul-safe-top,0px))] z-50 flex flex-col bg-white lg:hidden">
+            <nav
+              className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 pb-[calc(1.25rem+var(--ul-safe-bottom,0px))] pt-2"
+              aria-label="Mobile"
+            >
+              {NAV.map((item) => {
+                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    prefetch
+                    className={cn(
+                      "border-b border-[var(--ul-hair)] py-4 text-base font-bold uppercase tracking-[0.08em] text-[var(--ul-primary)]",
+                      active && "text-[var(--ul-secondary)]"
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+              <div className="mt-auto grid gap-3 pt-6">
+                <a
+                  href={`tel:${SITE.phoneTel}`}
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-[var(--ul-hair)] text-sm font-semibold text-[var(--ul-primary)] no-underline"
                 >
-                  {item.label}
+                  <Phone className="h-4 w-4 text-[var(--ul-secondary)]" />
+                  {SITE.phoneDisplay}
+                </a>
+                <Link href="/sell" prefetch className="ul-btn-primary h-12 w-full">
+                  List your property
                 </Link>
-              );
-            })}
-            <div className="mt-auto grid gap-3 pt-6">
-              <a
-                href={`tel:${SITE.phoneTel}`}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-[var(--ul-hair)] text-sm font-semibold text-[var(--ul-primary)] no-underline"
-              >
-                <Phone className="h-4 w-4 text-[var(--ul-secondary)]" />
-                {SITE.phoneDisplay}
-              </a>
-              <Link href="/sell" prefetch className="ul-btn-primary h-12 w-full rounded-full">
-                List your property
-              </Link>
-            </div>
-          </nav>
-        </div>
+              </div>
+            </nav>
+          </div>
+        ) : null}
+      </header>
+
+      {/* Non-home pages need offset under the fixed header */}
+      {!onHome ? (
+        <div className="h-[calc(3.5rem+var(--ul-safe-top,0px))]" aria-hidden />
       ) : null}
-    </header>
+    </>
   );
 }

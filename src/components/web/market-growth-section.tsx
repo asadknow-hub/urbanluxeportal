@@ -79,7 +79,7 @@ function ChartTooltip({
 
 export function MarketGrowthSection() {
   return (
-    <section className="ul-band-dark py-16 md:py-24">
+    <section className="ul-band-dark py-10 md:py-14 lg:py-16">
       <div className="ul-shell-wide">
         <Reveal className="mb-12 grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-end">
           <div className="justify-self-start">

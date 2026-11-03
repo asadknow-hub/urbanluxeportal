@@ -97,7 +97,7 @@ function SplitSection({
   reverse?: boolean;
 }) {
   return (
-    <section className="bg-white py-14 md:py-24">
+    <section className="bg-white py-10 md:py-14 lg:py-16">
       <div className="ul-shell-wide grid items-center gap-10 md:grid-cols-2 md:gap-16 xl:gap-24">
         <Reveal className={reverse ? "md:order-2" : "md:justify-self-start"}>
           {children}
@@ -168,7 +168,7 @@ export function HomePage() {
       </section>
 
       {/* Dark accent band mixed into light UI */}
-      <section className="ul-band-dark py-14 md:py-20">
+      <section className="ul-band-dark py-10 md:py-14 lg:py-16">
         <div className="ul-shell-wide">
           <SectionHead
             kicker="How UrbanLuxe works"
@@ -191,7 +191,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="bg-white py-14 md:py-20">
+      <section className="bg-white py-10 md:py-14 lg:py-16">
         <div className="ul-shell-wide">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div className="justify-self-start">
