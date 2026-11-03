@@ -9,26 +9,9 @@ import { WhyAgentsSection } from "@/components/web/why-agents-section";
 import { MarketGrowthSection } from "@/components/web/market-growth-section";
 import { TestimonialsSection } from "@/components/web/testimonials-section";
 import { CareersCanvasSection } from "@/components/web/careers-canvas-section";
+import { HowItWorksSection } from "@/components/web/how-it-works-section";
 import { Reveal } from "@/components/web/reveal";
 import { cn } from "@/lib/utils";
-
-const STEPS = [
-  {
-    n: "01",
-    title: "Tell us the brief",
-    body: "Budget, community, lifestyle — we lock the criteria before we show a single home.",
-  },
-  {
-    n: "02",
-    title: "Private shortlist",
-    body: "Curated buy, rent, and off-plan options — including quiet listings off the open portals.",
-  },
-  {
-    n: "03",
-    title: "Close with clarity",
-    body: "Negotiation, paperwork, and handover handled end-to-end by one dedicated advisor.",
-  },
-] as const;
 
 const CATEGORY_CARDS = [
   {
@@ -118,30 +101,6 @@ function SplitSection({
   );
 }
 
-function SectionHead({
-  kicker,
-  title,
-  lede,
-}: {
-  kicker: string;
-  title: string;
-  lede?: string;
-}) {
-  return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-end">
-      <div className="justify-self-start">
-        <p className="ul-kicker">{kicker}</p>
-        <h2 className="ul-section-heading mt-3 text-3xl md:text-4xl lg:text-[2.65rem]">{title}</h2>
-      </div>
-      {lede ? (
-        <p className="max-w-xl text-base leading-relaxed text-[var(--ul-muted)] lg:justify-self-end lg:text-right">
-          {lede}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
 export function HomePage() {
   return (
     <>
@@ -177,28 +136,7 @@ export function HomePage() {
       </section>
 
       {/* DARK */}
-      <section className="ul-band-dark py-10 md:py-14 lg:py-16">
-        <div className="ul-shell-wide">
-          <SectionHead
-            kicker="How UrbanLuxe works"
-            title="A clear path from brief to keys"
-            lede="Left-to-right structure on every screen — value on one side, action on the other. No skinny middle brochure."
-          />
-          <div className="mt-10 grid gap-4 md:grid-cols-3 md:gap-5">
-            {STEPS.map((step, i) => (
-              <Reveal key={step.n} delay={i * 70}>
-                <article className="ul-card-dark flex h-full flex-col p-5 sm:p-6">
-                  <span className="text-3xl font-extrabold tabular-nums text-[var(--ul-secondary)]">
-                    {step.n}
-                  </span>
-                  <h3 className="mt-4 text-lg font-bold uppercase tracking-wide text-white">{step.title}</h3>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-[#8ba0b8]">{step.body}</p>
-                </article>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
+      <HowItWorksSection />
 
       {/* LIGHT */}
       <section className="ul-band-light py-10 md:py-14 lg:py-16">
