@@ -4,11 +4,11 @@ import { useId, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const TOWERS = [
-  { name: "Hills Estate", gain: 14, height: 42 },
-  { name: "Marina", gain: 16, height: 52 },
-  { name: "Downtown", gain: 19, height: 64 },
-  { name: "Creek Harbour", gain: 22, height: 78 },
-  { name: "Palm Jumeirah", gain: 24, height: 92 },
+  { name: "Hills Estate", gain: 12.5, height: 38 },
+  { name: "Marina", gain: 14.2, height: 48 },
+  { name: "Downtown", gain: 16.9, height: 60 },
+  { name: "Creek Harbour", gain: 19.6, height: 74 },
+  { name: "Palm Jumeirah", gain: 21.4, height: 90 },
 ] as const;
 
 const STATS = [
@@ -34,6 +34,10 @@ const STATS = [
   },
 ] as const;
 
+function formatGain(gain: number) {
+  return Number.isInteger(gain) ? `${gain}` : gain.toFixed(1);
+}
+
 function Tower({
   name,
   gain,
@@ -56,21 +60,22 @@ function Tower({
         "group relative flex h-full min-w-0 flex-1 flex-col items-center justify-end outline-none",
         active && "z-[1]"
       )}
-      aria-label={`${name}: +${gain}% year on year`}
+      aria-label={`${name}: +${formatGain(gain)}% year on year`}
     >
       <span
         className={cn(
-          "mb-2 text-[clamp(0.95rem,2.2vw,1.55rem)] font-bold tabular-nums tracking-tight text-[#F6F3EE] transition-opacity",
-          active ? "opacity-100" : "opacity-80"
+          "mb-2.5 text-[clamp(1.05rem,2.4vw,1.65rem)] font-bold tabular-nums tracking-tight text-[#F6F3EE] transition-opacity",
+          active ? "opacity-100" : "opacity-75"
         )}
         style={{ fontFamily: "var(--font-headline), var(--font-poppins), system-ui, sans-serif" }}
       >
-        +{gain}%
+        +{formatGain(gain)}%
       </span>
+
       <span
         className={cn(
-          "relative w-[72%] max-w-[5.5rem] overflow-hidden rounded-sm transition-[filter,transform] duration-300 sm:w-[68%] md:max-w-[6.5rem]",
-          active ? "brightness-125" : "brightness-100 group-hover:brightness-110"
+          "relative w-[78%] max-w-[7rem] overflow-hidden transition-[filter,opacity,transform] duration-300 sm:w-[72%] md:max-w-[8.5rem] lg:max-w-[9.5rem]",
+          active ? "opacity-100" : "opacity-80 group-hover:opacity-95"
         )}
         style={{ height: `${height}%` }}
         aria-hidden
@@ -79,16 +84,19 @@ function Tower({
           className="absolute inset-0"
           style={{
             backgroundImage:
-              "repeating-linear-gradient(90deg, rgba(246,243,238,0.55) 0 1.5px, transparent 1.5px 7px)",
-            backgroundColor: "rgba(246,243,238,0.04)",
+              "repeating-linear-gradient(90deg, rgba(246,243,238,0.62) 0 1px, transparent 1px 5px)",
+            backgroundColor: "rgba(10, 22, 48, 0.35)",
+            boxShadow: active
+              ? "inset 0 0 0 1px rgba(246,243,238,0.18)"
+              : "inset 0 0 0 1px rgba(246,243,238,0.08)",
           }}
         />
-        <span className="absolute inset-x-0 bottom-0 h-px bg-[#F6F3EE]/35" />
       </span>
+
       <span
         className={cn(
-          "mt-3 max-w-[6.5rem] text-center text-[0.62rem] font-semibold uppercase leading-tight tracking-[0.08em] text-[#F6F3EE]/55 transition-colors sm:text-[0.68rem]",
-          active && "text-[#F6F3EE]/90"
+          "mt-3 max-w-[7.5rem] text-center text-[0.64rem] font-semibold uppercase leading-tight tracking-[0.1em] text-[#F6F3EE]/45 transition-colors sm:text-[0.7rem]",
+          active && "text-[#F6F3EE]/85"
         )}
       >
         {name}
@@ -98,76 +106,91 @@ function Tower({
 }
 
 export function MarketGrowthSection() {
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(2);
   const gradId = useId().replace(/:/g, "");
-  const selected = TOWERS[active] ?? TOWERS[0];
+  const selected = TOWERS[active] ?? TOWERS[2];
 
   return (
-    <section className="ul-band-dark relative flex h-[100svh] min-h-[34rem] flex-col overflow-hidden">
-      <div className="ul-shell-wide relative flex min-h-0 flex-1 flex-col py-6 md:py-8 lg:py-10">
+    <section className="relative flex h-[100svh] min-h-[36rem] flex-col overflow-hidden bg-[var(--ul-primary)] text-[#F6F3EE]">
+      {/* Soft wash — matches design depth */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(90% 70% at 78% 8%, rgba(61,220,151,0.07), transparent 55%), radial-gradient(70% 55% at 12% 88%, rgba(246,243,238,0.04), transparent 50%)",
+        }}
+      />
+
+      <div className="ul-shell-wide relative flex min-h-0 flex-1 flex-col pb-6 pt-[calc(3.75rem+var(--ul-safe-top,0px))] md:pb-8 lg:pb-10">
         {/* Header */}
-        <div className="grid shrink-0 gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:items-start">
-          <h2 className="ul-section-heading text-[clamp(2.4rem,7vw,5.25rem)] leading-[0.88] text-[#F6F3EE]">
+        <header className="grid shrink-0 gap-5 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] lg:items-start lg:gap-10">
+          <h2
+            className="text-[clamp(2.6rem,6.8vw,5.5rem)] font-bold uppercase leading-[0.86] tracking-[-0.03em] text-[#F6F3EE]"
+            style={{ fontFamily: "var(--font-headline), var(--font-poppins), system-ui, sans-serif" }}
+          >
             <span className="block">Real growth.</span>
             <span
-              className="mt-1 block text-transparent"
+              className="mt-1 block"
               style={{
-                WebkitTextStroke: "1.5px #F6F3EE",
+                color: "transparent",
+                WebkitTextStroke: "2px #F6F3EE",
+                paintOrder: "stroke fill",
               }}
             >
               Real returns.
             </span>
           </h2>
-          <p className="max-w-md text-sm leading-relaxed text-[#F6F3EE]/55 lg:justify-self-end lg:pt-2 lg:text-right md:text-[0.95rem]">
-            Track how prime communities have appreciated — and what UrbanLuxe clients have typically
-            earned on resale and handover.
+          <p className="max-w-md text-[0.9rem] leading-relaxed text-[#F6F3EE]/50 lg:justify-self-end lg:pt-3 lg:text-right md:text-[0.95rem]">
+            Prime Dubai has climbed every year since 2020. Here is how its communities have
+            appreciated, and what UrbanLuxe clients have typically earned at resale and handover.
           </p>
-        </div>
+        </header>
 
-        {/* Chart canvas */}
-        <div className="relative mt-5 flex min-h-0 flex-1 flex-col md:mt-6">
+        {/* Chart */}
+        <div className="relative mt-4 flex min-h-0 flex-1 flex-col md:mt-5 lg:mt-6">
           <div className="relative min-h-0 flex-1">
-            {/* Index line */}
             <svg
-              className="pointer-events-none absolute inset-x-0 top-[8%] bottom-[18%] z-0 h-auto w-full"
-              viewBox="0 0 1000 320"
+              className="pointer-events-none absolute inset-0 z-0 h-full w-full"
+              viewBox="0 0 1000 420"
               preserveAspectRatio="none"
               aria-hidden
             >
               <defs>
                 <linearGradient id={`ul-line-${gradId}`} x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#3DDC97" stopOpacity="0.35" />
-                  <stop offset="50%" stopColor="#3DDC97" stopOpacity="1" />
-                  <stop offset="100%" stopColor="#3DDC97" stopOpacity="0.85" />
+                  <stop offset="0%" stopColor="#3DDC97" stopOpacity="0.25" />
+                  <stop offset="35%" stopColor="#3DDC97" stopOpacity="0.95" />
+                  <stop offset="100%" stopColor="#3DDC97" stopOpacity="1" />
                 </linearGradient>
-                <filter id={`ul-glow-${gradId}`} x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="3.5" result="blur" />
+                <filter id={`ul-glow-${gradId}`} x="-30%" y="-40%" width="160%" height="180%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
                   <feMerge>
                     <feMergeNode in="blur" />
                     <feMergeNode in="SourceGraphic" />
                   </feMerge>
                 </filter>
               </defs>
+              {/* Curve sits mid-canvas so it threads the towers */}
               <path
-                d="M40 250 C 180 235, 320 200, 480 150 S 780 70, 960 48"
+                d="M 28 318 C 160 300, 280 268, 420 210 S 720 95, 972 58"
                 fill="none"
                 stroke={`url(#ul-line-${gradId})`}
-                strokeWidth="3"
+                strokeWidth="3.25"
                 strokeLinecap="round"
+                vectorEffect="non-scaling-stroke"
                 filter={`url(#ul-glow-${gradId})`}
               />
-              <circle cx="40" cy="250" r="5.5" fill="#3DDC97" />
-              <circle cx="960" cy="48" r="5.5" fill="#3DDC97" />
+              <circle cx="28" cy="318" r="6" fill="#3DDC97" />
+              <circle cx="972" cy="58" r="6" fill="#3DDC97" />
             </svg>
 
-            <p className="pointer-events-none absolute left-0 top-[58%] z-[1] hidden text-[0.65rem] font-medium tracking-wide text-[#3DDC97]/90 sm:block md:top-[62%]">
+            <p className="pointer-events-none absolute left-0 top-[68%] z-[2] hidden -translate-y-1/2 text-[0.68rem] font-medium tracking-[0.02em] text-[#3DDC97] sm:block md:text-[0.72rem]">
               2020 index 100
             </p>
-            <p className="pointer-events-none absolute right-0 top-[6%] z-[1] hidden text-right text-[0.65rem] font-medium tracking-wide text-[#3DDC97]/90 sm:block">
+            <p className="pointer-events-none absolute right-0 top-[8%] z-[2] hidden text-right text-[0.68rem] font-medium tracking-[0.02em] text-[#3DDC97] sm:block md:text-[0.72rem]">
               2026 index 178
             </p>
 
-            <div className="relative z-[1] flex h-full min-h-[14rem] items-end gap-2 pb-1 pt-8 sm:gap-3 md:min-h-0 md:gap-4 md:pt-10">
+            <div className="relative z-[1] flex h-full min-h-[15rem] items-end gap-3 px-[4%] pb-1 pt-10 sm:gap-4 sm:px-[3%] md:min-h-0 md:gap-5 md:pt-12">
               {TOWERS.map((tower, i) => (
                 <Tower
                   key={tower.name}
@@ -179,40 +202,42 @@ export function MarketGrowthSection() {
             </div>
           </div>
 
-          <div className="mt-3 flex shrink-0 flex-col gap-1 sm:mt-4 sm:flex-row sm:items-end sm:justify-between">
-            <p className="text-[0.7rem] text-[#F6F3EE]/45 md:text-xs">
-              Hover or tab to a tower to read its yearly appreciation.
-              <span className="ml-1 text-[#F6F3EE]/75">
-                {selected.name}: +{selected.gain}% YoY
+          <div className="mt-3 flex shrink-0 flex-col gap-1.5 sm:mt-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
+            <p className="text-[0.72rem] text-[#F6F3EE]/42 md:text-[0.78rem]">
+              Hover or tab to a tower to read its yearly appreciation.{" "}
+              <span className="text-[#F6F3EE]/78">
+                {selected.name}: +{formatGain(selected.gain)}% YoY
               </span>
             </p>
-            <p className="max-w-md text-[0.7rem] text-[#F6F3EE]/40 sm:text-right md:text-xs">
+            <p className="max-w-sm text-[0.72rem] leading-snug text-[#F6F3EE]/35 sm:text-right md:text-[0.78rem]">
               Tower height = appreciation, % year on year. Line = prime Dubai price index (2020 =
               100).
             </p>
           </div>
         </div>
 
-        {/* Stats bar */}
-        <div className="mt-5 grid shrink-0 grid-cols-2 gap-y-5 border-t border-[#F6F3EE]/12 pt-5 sm:mt-6 sm:grid-cols-4 sm:gap-0 sm:pt-6 md:mt-8">
+        {/* Stats */}
+        <div className="mt-5 grid shrink-0 grid-cols-2 gap-x-4 gap-y-5 border-t border-[#F6F3EE]/14 pt-5 sm:mt-6 sm:grid-cols-4 sm:gap-0 sm:pt-6 md:mt-7">
           {STATS.map((stat, i) => (
             <div
               key={stat.label}
               className={cn(
-                "px-0 sm:px-4 md:px-5",
-                i > 0 && "sm:border-l sm:border-[#F6F3EE]/12",
+                "min-w-0 sm:px-5 md:px-6",
+                i > 0 && "sm:border-l sm:border-[#F6F3EE]/14",
                 i === 0 && "sm:pl-0",
                 i === STATS.length - 1 && "sm:pr-0"
               )}
             >
               <p
-                className="text-[clamp(1.35rem,2.8vw,2rem)] font-bold tracking-tight text-[#F6F3EE]"
+                className="text-[clamp(1.45rem,2.9vw,2.15rem)] font-bold tracking-tight text-[#F6F3EE]"
                 style={{ fontFamily: "var(--font-headline), var(--font-poppins), system-ui, sans-serif" }}
               >
                 {stat.value}
               </p>
-              <p className="mt-1 text-xs font-semibold text-[#F6F3EE]/85 md:text-sm">{stat.label}</p>
-              <p className="mt-0.5 text-[0.68rem] leading-snug text-[#F6F3EE]/40 md:text-xs">
+              <p className="mt-1.5 text-[0.8rem] font-semibold text-[#F6F3EE]/82 md:text-[0.88rem]">
+                {stat.label}
+              </p>
+              <p className="mt-0.5 text-[0.68rem] leading-snug text-[#F6F3EE]/38 md:text-[0.75rem]">
                 {stat.sub}
               </p>
             </div>
