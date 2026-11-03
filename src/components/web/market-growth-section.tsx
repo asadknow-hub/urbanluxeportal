@@ -140,7 +140,7 @@ export function MarketGrowthSection() {
               Real returns.
             </span>
           </h2>
-          <p className="max-w-md text-[0.9rem] leading-relaxed text-[#F6F3EE]/50 lg:justify-self-end lg:pt-3 lg:text-right md:text-[0.95rem]">
+          <p className="max-w-md text-[0.9rem] leading-relaxed text-[#F6F3EE]/78 lg:justify-self-end lg:pt-3 lg:text-right md:text-[0.95rem]">
             Prime Dubai has climbed every year since 2020. Here is how its communities have
             appreciated, and what UrbanLuxe clients have typically earned at resale and handover.
           </p>
@@ -171,7 +171,7 @@ export function MarketGrowthSection() {
               </defs>
               {/* Curve sits mid-canvas so it threads the towers */}
               <path
-                d="M 28 318 C 160 300, 280 268, 420 210 S 720 95, 972 58"
+                d="M 28 318 C 160 300, 280 268, 420 210 S 700 110, 920 72"
                 fill="none"
                 stroke={`url(#ul-line-${gradId})`}
                 strokeWidth="3.25"
@@ -180,13 +180,13 @@ export function MarketGrowthSection() {
                 filter={`url(#ul-glow-${gradId})`}
               />
               <circle cx="28" cy="318" r="6" fill="#3DDC97" />
-              <circle cx="972" cy="58" r="6" fill="#3DDC97" />
+              <circle cx="920" cy="72" r="6" fill="#3DDC97" />
             </svg>
 
             <p className="pointer-events-none absolute left-0 top-[68%] z-[2] hidden -translate-y-1/2 text-[0.68rem] font-medium tracking-[0.02em] text-[#3DDC97] sm:block md:text-[0.72rem]">
               2020 index 100
             </p>
-            <p className="pointer-events-none absolute right-0 top-[8%] z-[2] hidden text-right text-[0.68rem] font-medium tracking-[0.02em] text-[#3DDC97] sm:block md:text-[0.72rem]">
+            <p className="pointer-events-none absolute right-0 top-[2%] z-[2] hidden text-right text-[0.68rem] font-semibold tracking-[0.02em] text-[#3DDC97] sm:block md:text-[0.72rem]">
               2026 index 178
             </p>
 
@@ -209,7 +209,7 @@ export function MarketGrowthSection() {
                 {selected.name}: +{formatGain(selected.gain)}% YoY
               </span>
             </p>
-            <p className="max-w-sm text-[0.72rem] leading-snug text-[#F6F3EE]/35 sm:text-right md:text-[0.78rem]">
+            <p className="max-w-sm text-[0.72rem] font-medium leading-snug text-[var(--ul-secondary)] sm:text-right md:text-[0.78rem]">
               Tower height = appreciation, % year on year. Line = prime Dubai price index (2020 =
               100).
             </p>
