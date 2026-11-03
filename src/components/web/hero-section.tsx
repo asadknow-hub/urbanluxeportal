@@ -6,7 +6,7 @@ import { IMAGES } from "@/lib/web/listings";
 
 export function HeroSection() {
   return (
-    <section className="relative h-[75svh] max-h-[44rem] min-h-[28rem] overflow-hidden bg-[var(--ul-primary)]">
+    <section className="relative h-[100svh] min-h-[32rem] overflow-hidden bg-[var(--ul-primary)]">
       <div className="absolute inset-0">
         <Image
           src={IMAGES.heroRefined}
