@@ -10,7 +10,7 @@ export function HeroSection() {
     <section className="relative flex h-[100svh] min-h-[36rem] flex-col overflow-hidden bg-[var(--ul-primary)]">
       <div className="absolute inset-0">
         <video
-          className="absolute inset-0 h-full w-full object-cover object-center opacity-55"
+          className="absolute inset-0 h-full w-full object-cover object-center"
           autoPlay
           muted
           loop
@@ -21,15 +21,9 @@ export function HeroSection() {
         >
           <source src={HERO_VIDEO} type="video/mp4" />
         </video>
-        <div className="absolute inset-0 bg-gradient-to-r from-[var(--ul-primary)] via-[var(--ul-primary)]/82 to-[var(--ul-primary)]/40" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[var(--ul-primary)] via-[var(--ul-primary)]/20 to-[var(--ul-primary)]/55" />
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(70% 55% at 85% 20%, rgba(0,128,64,0.14), transparent 55%), radial-gradient(50% 40% at 15% 90%, rgba(246,243,238,0.05), transparent 50%)",
-          }}
-        />
+        {/* Light scrim only — keep type readable without killing the footage */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[var(--ul-primary)]/70 via-[var(--ul-primary)]/35 to-[var(--ul-primary)]/15" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--ul-primary)]/75 via-transparent to-[var(--ul-primary)]/25" />
       </div>
 
       <div className="ul-shell-wide relative flex min-h-0 flex-1 flex-col justify-end gap-8 pb-10 pt-[calc(4.75rem+var(--ul-safe-top,0px))] sm:pb-12 lg:grid lg:grid-cols-[minmax(0,1.2fr)_minmax(20rem,27rem)] lg:items-end lg:gap-14 xl:grid-cols-[minmax(0,1.3fr)_minmax(22rem,28rem)] xl:gap-16">
