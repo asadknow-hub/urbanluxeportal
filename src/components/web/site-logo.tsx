@@ -5,6 +5,24 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useBrand } from "@/components/brand/brand-provider";
 
+function Wordmark({ inverted }: { inverted: boolean }) {
+  return (
+    <span className="inline-flex items-baseline gap-0 tracking-[0.04em]">
+      <span
+        className={cn(
+          "text-[1.05rem] font-extrabold uppercase md:text-[1.2rem]",
+          inverted ? "text-white" : "text-[#07111F]"
+        )}
+      >
+        Urban
+      </span>
+      <span className="text-[1.05rem] font-extrabold uppercase text-[#00C853] md:text-[1.2rem]">
+        Luxe
+      </span>
+    </span>
+  );
+}
+
 export function SiteLogo({
   inverted = false,
   className,
@@ -20,9 +38,23 @@ export function SiteLogo({
     <Link
       href="/"
       prefetch
-      className={cn("group inline-flex items-center", className)}
+      className={cn("group inline-flex items-center gap-2.5", className)}
       aria-label={`${label} home`}
     >
+      <span
+        className={cn(
+          "grid h-9 w-9 place-items-center rounded-lg border",
+          inverted
+            ? "border-[#00C853]/40 bg-[#00C853]/15 text-[#00C853]"
+            : "border-[#00C853]/30 bg-[#00C853]/10 text-[#00C853]"
+        )}
+        aria-hidden
+      >
+        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <path d="M4 18V9.5L12 4l8 5.5V18" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M9 18v-5h6v5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
       {logoSrc ? (
         <Image
           src={logoSrc}
@@ -34,14 +66,7 @@ export function SiteLogo({
           priority
         />
       ) : (
-        <span
-          className={cn(
-            "text-[1.125rem] font-bold tracking-[0.06em] md:text-[1.2rem]",
-            inverted ? "text-white" : "text-[#0B1D3D]"
-          )}
-        >
-          {label.toUpperCase()}
-        </span>
+        <Wordmark inverted={inverted} />
       )}
     </Link>
   );

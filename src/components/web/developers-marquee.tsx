@@ -34,7 +34,7 @@ export function DevelopersMarquee() {
 
   return (
     <section className="overflow-hidden bg-[var(--ul-tertiary)] py-14 md:py-20">
-      <div className="mx-auto max-w-[1280px] px-5 md:px-10">
+      <div className="ul-shell">
         <p className="ul-kicker">Partners</p>
         <h2 className="ul-section-heading mt-3 text-2xl md:text-3xl">
           Developers that work with us

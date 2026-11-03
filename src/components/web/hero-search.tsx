@@ -83,7 +83,7 @@ export function HeroSearch() {
 
         <button
           type="submit"
-          className="flex h-12 w-12 shrink-0 items-center justify-center bg-[#1E7A4A] text-white transition-colors hover:bg-[#155c38] sm:h-[3.25rem] sm:w-[3.25rem]"
+          className="flex h-12 w-12 shrink-0 items-center justify-center bg-[#00C853] text-[#07111F] transition-colors hover:bg-[#00a844] sm:h-[3.25rem] sm:w-[3.25rem]"
           aria-label="Search properties"
         >
           <Search className="h-[1.125rem] w-[1.125rem]" strokeWidth={2.25} />

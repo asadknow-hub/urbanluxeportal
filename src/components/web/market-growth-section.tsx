@@ -79,18 +79,18 @@ function ChartTooltip({
 
 export function MarketGrowthSection() {
   return (
-    <section className="bg-[var(--ul-primary)] px-5 py-16 md:px-10 md:py-24">
-      <div className="mx-auto max-w-[1280px]">
-        <Reveal className="mb-12 max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ul-secondary)]">
-            Market performance
-          </p>
-          <h2 className="mt-3 text-3xl font-semibold leading-tight text-white md:text-4xl">
-            Real growth. Real returns for Dubai homeowners.
-          </h2>
-          <p className="mt-4 text-base leading-relaxed text-white/70">
-            Track how prime communities have appreciated — and what Urban Luxe clients have
-            typically earned on resale and handover.
+    <section className="bg-[var(--ul-primary)] py-16 md:py-24">
+      <div className="ul-shell">
+        <Reveal className="mb-12 grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-end">
+          <div>
+            <p className="ul-kicker">Market performance</p>
+            <h2 className="ul-section-heading mt-3 text-3xl md:text-4xl">
+              Real growth. Real returns for Dubai homeowners.
+            </h2>
+          </div>
+          <p className="max-w-xl text-base leading-relaxed text-[var(--ul-muted)] lg:justify-self-end lg:text-right">
+            Track how prime communities have appreciated — and what UrbanLuxe clients have typically
+            earned on resale and handover.
           </p>
         </Reveal>
 
@@ -118,8 +118,8 @@ export function MarketGrowthSection() {
                   <AreaChart data={APPRECIATION_SERIES} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="growthFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#1E7A4A" stopOpacity={0.35} />
-                        <stop offset="100%" stopColor="#1E7A4A" stopOpacity={0.02} />
+                        <stop offset="0%" stopColor="#00C853" stopOpacity={0.35} />
+                        <stop offset="100%" stopColor="#00C853" stopOpacity={0.02} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid stroke="#F2F2F2" strokeDasharray="4 4" vertical={false} />
@@ -139,7 +139,7 @@ export function MarketGrowthSection() {
                     <Area
                       type="monotone"
                       dataKey="index"
-                      stroke="#1E7A4A"
+                      stroke="#00C853"
                       strokeWidth={2.5}
                       fill="url(#growthFill)"
                     />

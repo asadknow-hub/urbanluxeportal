@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Check, ChevronDown, LayoutDashboard, Menu, Search, X } from "lucide-react";
-import { CURRENCIES, NAV } from "@/lib/web/site";
+import { Check, ChevronDown, Menu, Phone, Search, X } from "lucide-react";
+import { CURRENCIES, NAV, SITE } from "@/lib/web/site";
 import { SiteLogo } from "@/components/web/site-logo";
 import { useCurrency } from "@/components/web/currency-provider";
 import {
@@ -43,28 +43,20 @@ export function SiteNav() {
     <header className="sticky top-0 z-[100] pt-[var(--ul-safe-top,0px)]">
       <div
         className={cn(
-          "relative z-[1] border-b border-[#e5e7eb]/80 bg-white transition-[box-shadow,height] duration-300 ease-out",
-          scrolled && "shadow-[0_1px_0_rgba(11,29,61,0.06)]"
+          "relative z-[1] border-b border-white/10 bg-[var(--ul-primary)]/95 backdrop-blur-md transition-[box-shadow] duration-300",
+          scrolled && "shadow-[0_8px_30px_rgba(0,0,0,0.35)]"
         )}
       >
         <div
           className={cn(
-            "mx-auto flex max-w-[1440px] items-center justify-between gap-3 px-4 transition-[height,padding] duration-300 ease-out sm:gap-4 sm:px-5 md:px-10",
-            scrolled ? "h-12" : "h-14 sm:h-[4.25rem]"
+            "ul-shell flex items-center justify-between gap-3 transition-[height] duration-300",
+            scrolled ? "h-14" : "h-16 sm:h-[4.5rem]"
           )}
         >
-          <SiteLogo
-            className={cn(
-              "min-w-0 transition-transform duration-300 ease-out",
-              scrolled && "scale-[0.88] origin-left"
-            )}
-          />
+          <SiteLogo inverted />
 
           <nav
-            className={cn(
-              "hidden items-center lg:flex",
-              scrolled ? "gap-5 xl:gap-6" : "gap-6 xl:gap-8"
-            )}
+            className={cn("hidden items-center lg:flex", scrolled ? "gap-5 xl:gap-7" : "gap-6 xl:gap-8")}
             aria-label="Primary"
           >
             {NAV.map((item) => {
@@ -75,9 +67,8 @@ export function SiteNav() {
                   href={item.href}
                   prefetch
                   className={cn(
-                    "whitespace-nowrap font-bold transition-[color,font-size] duration-300",
-                    scrolled ? "text-[0.75rem]" : "text-[0.8125rem]",
-                    active ? "text-[#0B1D3D]" : "text-[#0B1D3D]/80 hover:text-[#0B1D3D]"
+                    "whitespace-nowrap text-[0.8rem] font-bold uppercase tracking-[0.08em] transition-colors",
+                    active ? "text-[var(--ul-secondary)]" : "text-white/75 hover:text-white"
                   )}
                 >
                   {item.label}
@@ -86,24 +77,18 @@ export function SiteNav() {
             })}
           </nav>
 
-          <div className={cn("relative z-[1] flex shrink-0 items-center", scrolled ? "gap-1 sm:gap-2" : "gap-1.5 sm:gap-3")}>
+          <div className="relative z-[1] flex shrink-0 items-center gap-2 sm:gap-3">
             <Link
               href="/sell"
               prefetch
-              className={cn(
-                "hidden items-center rounded-md bg-[#0B1D3D] px-4 font-medium text-white transition-[height,font-size,background-color] duration-300 hover:bg-[#0a172e] md:inline-flex",
-                scrolled ? "h-8 text-[0.75rem]" : "h-9 text-[0.8125rem]"
-              )}
+              className="hidden h-10 items-center rounded-lg bg-[var(--ul-secondary)] px-4 text-[0.75rem] font-bold uppercase tracking-[0.06em] text-[#07111F] transition-colors hover:bg-[var(--ul-accent-deep)] md:inline-flex"
             >
-              List Your Property
+              List property
             </Link>
 
             <DropdownMenu>
               <DropdownMenuTrigger
-                className={cn(
-                  "hidden items-center gap-1 rounded-md px-2 font-medium text-[#0B1D3D] outline-none transition-colors hover:bg-[#F2F2F2] focus-visible:ring-2 focus-visible:ring-[#0B1D3D]/20 lg:inline-flex",
-                  scrolled ? "h-8 text-[0.75rem]" : "h-9 text-[0.8125rem]"
-                )}
+                className="hidden h-10 items-center gap-1 rounded-lg px-2 text-[0.75rem] font-semibold text-white/80 outline-none transition-colors hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-[var(--ul-secondary)]/40 lg:inline-flex"
                 aria-label={`Currency: ${currency}`}
               >
                 {currency}
@@ -117,44 +102,37 @@ export function SiteNav() {
                     className="flex cursor-pointer items-center justify-between gap-3"
                   >
                     <span>
-                      <span className="font-medium text-[#0B1D3D]">{item.code}</span>
-                      <span className="ml-2 text-[#0B1D3D]/55">{item.label}</span>
+                      <span className="font-medium">{item.code}</span>
+                      <span className="ml-2 opacity-55">{item.label}</span>
                     </span>
                     {currency === item.code ? (
-                      <Check className="h-3.5 w-3.5 text-[#1E7A4A]" strokeWidth={2.5} />
+                      <Check className="h-3.5 w-3.5 text-[var(--ul-secondary)]" strokeWidth={2.5} />
                     ) : null}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
 
+            <a
+              href={`tel:${SITE.phoneTel}`}
+              className="hidden items-center gap-2 rounded-lg border border-[var(--ul-secondary)]/50 px-3 py-2 text-[0.75rem] font-bold text-white no-underline transition-colors hover:border-[var(--ul-secondary)] hover:bg-[var(--ul-secondary)]/10 md:inline-flex"
+            >
+              <Phone className="h-3.5 w-3.5 text-[var(--ul-secondary)]" />
+              {SITE.phoneDisplay}
+            </a>
+
             <Link
               href="/buy"
               prefetch
-              className={cn(
-                "hidden items-center justify-center rounded-md text-[#0B1D3D] transition-colors hover:bg-[#F2F2F2] lg:inline-flex",
-                scrolled ? "h-8 w-8" : "h-9 w-9"
-              )}
+              className="hidden h-10 w-10 items-center justify-center rounded-lg text-white/80 transition-colors hover:bg-white/5 lg:inline-flex"
               aria-label="Search properties"
             >
-              <Search className={scrolled ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} strokeWidth={2} />
+              <Search className="h-[1.125rem] w-[1.125rem]" strokeWidth={2} />
             </Link>
-
-            <a
-              href="/login"
-              className={cn(
-                "relative z-10 hidden items-center gap-1.5 rounded-md border border-[#0B1D3D]/12 bg-white font-medium text-[#0B1D3D] no-underline transition-colors hover:bg-[#F2F2F2] md:inline-flex",
-                scrolled ? "h-9 px-3 text-[0.75rem]" : "h-10 px-3.5 text-[0.8125rem]"
-              )}
-              aria-label="Agent portal"
-            >
-              <LayoutDashboard className={scrolled ? "h-4 w-4" : "h-[1.125rem] w-[1.125rem]"} strokeWidth={2} />
-              <span>Portal</span>
-            </a>
 
             <button
               type="button"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-md text-[#0B1D3D] lg:hidden"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-white lg:hidden"
               aria-expanded={open}
               aria-label={open ? "Close menu" : "Open menu"}
               onClick={() => setOpen((v) => !v)}
@@ -165,8 +143,8 @@ export function SiteNav() {
         </div>
       </div>
 
-      {open && (
-        <div className="fixed inset-x-0 bottom-0 top-[calc(3.5rem+var(--ul-safe-top,0px))] z-50 flex flex-col bg-white sm:top-[calc(4.25rem+var(--ul-safe-top,0px))] lg:hidden">
+      {open ? (
+        <div className="fixed inset-x-0 bottom-0 top-[calc(4rem+var(--ul-safe-top,0px))] z-50 flex flex-col bg-[var(--ul-primary)] lg:hidden">
           <nav
             className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 pb-[calc(1.25rem+var(--ul-safe-bottom,0px))] pt-2"
             aria-label="Mobile"
@@ -179,8 +157,8 @@ export function SiteNav() {
                   href={item.href}
                   prefetch
                   className={cn(
-                    "border-b border-[#f2f2f2] py-4 text-base font-bold text-[#0B1D3D]",
-                    active && "text-[#1E7A4A]"
+                    "border-b border-white/10 py-4 text-base font-bold uppercase tracking-[0.08em] text-white",
+                    active && "text-[var(--ul-secondary)]"
                   )}
                 >
                   {item.label}
@@ -188,10 +166,8 @@ export function SiteNav() {
               );
             })}
 
-            <div className="border-b border-[#f2f2f2] py-4">
-              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-[#0B1D3D]/50">
-                Currency
-              </p>
+            <div className="border-b border-white/10 py-4">
+              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-white/50">Currency</p>
               <div className="grid grid-cols-4 gap-2">
                 {CURRENCIES.map((item) => (
                   <button
@@ -201,8 +177,8 @@ export function SiteNav() {
                     className={cn(
                       "min-h-11 rounded-md px-2 py-2.5 text-sm font-semibold transition-colors",
                       currency === item.code
-                        ? "bg-[#0B1D3D] text-white"
-                        : "bg-[#F2F2F2] text-[#0B1D3D]"
+                        ? "bg-[var(--ul-secondary)] text-[#07111F]"
+                        : "bg-white/5 text-white"
                     )}
                   >
                     {item.code}
@@ -212,28 +188,20 @@ export function SiteNav() {
             </div>
 
             <div className="mt-auto grid gap-3 pt-6">
-              <Link
-                href="/buy"
-                prefetch
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-[#e5e7eb] text-sm font-semibold text-[#0B1D3D]"
-              >
-                <Search className="h-4 w-4" />
-                Search properties
-              </Link>
               <a
-                href="/login"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-md border border-[#e5e7eb] text-sm font-semibold text-[#0B1D3D] no-underline"
+                href={`tel:${SITE.phoneTel}`}
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-[var(--ul-secondary)]/50 text-sm font-semibold text-white no-underline"
               >
-                <LayoutDashboard className="h-4 w-4" />
-                Agent portal
+                <Phone className="h-4 w-4 text-[var(--ul-secondary)]" />
+                {SITE.phoneDisplay}
               </a>
               <Link href="/sell" prefetch className="ul-btn-primary h-12 w-full">
-                List Your Property
+                List your property
               </Link>
             </div>
           </nav>
         </div>
-      )}
+      ) : null}
     </header>
   );
 }

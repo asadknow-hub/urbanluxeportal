@@ -38,8 +38,8 @@ export function SiteFooter() {
   }
 
   return (
-    <footer className="bg-[#222222] text-white">
-      <div className="mx-auto max-w-[1440px] px-4 py-12 sm:px-5 sm:py-16 md:px-10 md:py-20">
+    <footer className="bg-[var(--ul-quaternary)] text-white">
+      <div className="ul-shell py-12 sm:py-16 md:py-20">
         <div className="grid gap-10 sm:gap-12 lg:grid-cols-12">
           <div className="lg:col-span-5">
             <SiteLogo inverted />
@@ -63,7 +63,7 @@ export function SiteFooter() {
               <button
                 type="submit"
                 disabled={pending}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-r bg-[#0B1D3D] text-white transition-colors hover:bg-[#0a172e] disabled:opacity-60"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-r bg-[var(--ul-secondary)] text-[#07111F] transition-colors hover:bg-[var(--ul-accent-deep)] disabled:opacity-60"
                 aria-label="Subscribe"
               >
                 <ArrowRight className="h-4 w-4" />

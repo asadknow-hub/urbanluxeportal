@@ -10,14 +10,16 @@ export function PageIntro({
   lede: string;
 }) {
   return (
-    <section className="border-b border-[#e5e7eb] bg-[#0B1D3D] px-4 pb-10 pt-10 text-white sm:px-5 sm:pb-14 sm:pt-12 md:px-10 md:pb-16 md:pt-16">
-      <div className="mx-auto max-w-[1440px]">
+    <section className="border-b border-white/10 bg-[var(--ul-primary)] py-12 text-white sm:py-14 md:py-16">
+      <div className="ul-shell grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:items-end">
         <Reveal>
-          <p className="ul-kicker text-[#1E7A4A]">{eyebrow}</p>
-          <h1 className="mt-3 max-w-3xl text-[1.85rem] leading-[1.12] sm:mt-4 sm:text-4xl md:text-5xl">
+          <p className="ul-kicker">{eyebrow}</p>
+          <h1 className="mt-3 max-w-4xl text-[1.85rem] font-extrabold uppercase leading-[1.08] tracking-[-0.03em] sm:mt-4 sm:text-4xl md:text-5xl">
             {title}
           </h1>
-          <p className="mt-4 max-w-xl text-[0.9375rem] leading-relaxed text-white/70 sm:mt-5 sm:text-base md:text-lg">
+        </Reveal>
+        <Reveal delay={60}>
+          <p className="max-w-xl text-[0.9375rem] leading-relaxed text-[var(--ul-muted)] sm:text-base md:justify-self-end md:text-right md:text-lg">
             {lede}
           </p>
         </Reveal>
