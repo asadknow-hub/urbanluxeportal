@@ -139,11 +139,11 @@ export function HomePage() {
     <>
       <HeroSection />
 
-      {/* Green-on-white callout — forest green, condensed type, left copy / right CTAs */}
-      <section className="ul-band-dark -mt-2 pb-8 pt-2 md:pb-12">
+      {/* Green-on-white callout — flush under hero, no sheet gap */}
+      <section className="bg-white py-10 md:py-14 lg:py-16">
         <div className="ul-shell-wide">
           <Reveal>
-            <div className="ul-callout grid gap-8 md:grid-cols-[minmax(0,1.35fr)_auto] md:items-center md:gap-12">
+            <div className="grid gap-8 md:grid-cols-[minmax(0,1.35fr)_auto] md:items-center md:gap-12">
               <div className="min-w-0 text-left">
                 <p className="ul-callout-kicker">Zero hidden fees</p>
                 <h2 className="ul-callout-title mt-3 text-[clamp(1.85rem,4.2vw,3.35rem)]">

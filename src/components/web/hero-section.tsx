@@ -20,7 +20,7 @@ export function HeroSection() {
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--ul-primary)] via-transparent to-[var(--ul-primary)]/25" />
       </div>
 
-      <div className="ul-shell-wide relative flex h-full grid-cols-1 flex-col justify-end gap-6 pb-14 pt-[calc(4.5rem+var(--ul-safe-top,0px))] sm:pb-16 lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,26rem)] lg:items-end lg:gap-12 xl:grid-cols-[minmax(0,1.25fr)_minmax(22rem,28rem)] xl:gap-16">
+      <div className="ul-shell-wide relative flex h-full grid-cols-1 flex-col justify-end gap-6 pb-10 pt-[calc(4.5rem+var(--ul-safe-top,0px))] sm:pb-12 lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(20rem,26rem)] lg:items-end lg:gap-12 xl:grid-cols-[minmax(0,1.25fr)_minmax(22rem,28rem)] xl:gap-16">
         <div className="max-w-none lg:max-w-[42rem] lg:justify-self-start">
           <p className="ul-kicker">Private Dubai brokerage</p>
           <h1 className="ul-hero-title mt-3 text-[clamp(2.1rem,5.5vw,4.25rem)] font-bold uppercase tracking-[-0.04em] text-white">
@@ -52,10 +52,6 @@ export function HeroSection() {
             <HeroSearch />
           </div>
         </div>
-      </div>
-
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 sm:h-10">
-        <div className="ul-sheet h-full w-full" />
       </div>
     </section>
   );
