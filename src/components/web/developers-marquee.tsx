@@ -33,7 +33,7 @@ export function DevelopersMarquee() {
   const loop = [...DEVELOPERS, ...DEVELOPERS];
 
   return (
-    <section className="overflow-hidden bg-white py-8 md:py-12">
+    <section className="ul-band-light overflow-hidden py-8 md:py-12">
       <div className="ul-shell-wide">
         <p className="ul-kicker">Partners</p>
         <h2 className="ul-section-heading mt-3 text-2xl md:text-3xl">

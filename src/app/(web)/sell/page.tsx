@@ -115,7 +115,7 @@ export default function SellPage() {
         </div>
       </section>
 
-      <section className="bg-white px-4 py-12 sm:px-5 sm:py-14 md:px-10 md:py-20">
+      <section className="ul-band-light px-4 py-12 sm:px-5 sm:py-14 md:px-10 md:py-20">
         <div className="mx-auto grid max-w-[1280px] items-center gap-10 md:grid-cols-2 md:gap-16">
           <Reveal>
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#F2F2F2] md:aspect-[5/4]">
@@ -177,7 +177,7 @@ export default function SellPage() {
         </div>
       </section>
 
-      <section id="how" className="bg-white px-5 py-14 md:px-10 md:py-20">
+      <section id="how" className="ul-band-light px-5 py-14 md:px-10 md:py-20">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <p className="ul-kicker">Process</p>

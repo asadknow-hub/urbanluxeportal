@@ -14,7 +14,7 @@ function Wordmark({ inverted }: { inverted: boolean }) {
       <span
         className={cn(
           "text-[1.15rem] font-bold uppercase leading-none md:text-[1.35rem]",
-          inverted ? "text-white" : "text-[#07111F]"
+          inverted ? "text-white" : "text-[var(--ul-primary)]"
         )}
       >
         Urban

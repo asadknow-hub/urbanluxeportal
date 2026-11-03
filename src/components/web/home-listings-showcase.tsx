@@ -14,7 +14,7 @@ export function HomeListingsShowcase({ kind }: { kind: Extract<ListingKind, "sal
     <section
       className={
         kind === "sale"
-          ? "bg-white px-4 py-10 sm:px-5 sm:py-12 md:px-10 md:py-14 lg:py-16"
+          ? "ul-band-light px-4 py-10 sm:px-5 sm:py-12 md:px-10 md:py-14 lg:py-16"
           : "bg-[var(--ul-tertiary)] px-4 py-10 sm:px-5 sm:py-12 md:px-10 md:py-14 lg:py-16"
       }
     >

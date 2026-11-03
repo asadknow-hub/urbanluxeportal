@@ -103,7 +103,7 @@ function SplitSection({
     <section
       className={cn(
         "py-10 md:py-14 lg:py-16",
-        tone === "dark" ? "ul-band-dark" : "bg-white"
+        tone === "dark" ? "ul-band-dark" : "ul-band-light"
       )}
     >
       <div className="ul-shell-wide grid items-center gap-10 md:grid-cols-2 md:gap-16 xl:gap-24">
@@ -149,7 +149,7 @@ export function HomePage() {
       <HeroSection />
 
       {/* LIGHT */}
-      <section className="bg-white py-10 md:py-14 lg:py-16">
+      <section className="ul-band-light py-10 md:py-14 lg:py-16">
         <div className="ul-shell-wide">
           <Reveal>
             <div className="grid gap-8 md:grid-cols-[minmax(0,1.35fr)_auto] md:items-center md:gap-12">
@@ -201,7 +201,7 @@ export function HomePage() {
       </section>
 
       {/* LIGHT */}
-      <section className="bg-white py-10 md:py-14 lg:py-16">
+      <section className="ul-band-light py-10 md:py-14 lg:py-16">
         <div className="ul-shell-wide">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div className="justify-self-start">
@@ -331,7 +331,7 @@ export function HomePage() {
       </section>
 
       {/* LIGHT — then footer (dark) */}
-      <section className="bg-white py-10 md:py-14 lg:py-16">
+      <section className="ul-band-light py-10 md:py-14 lg:py-16">
         <Reveal className="ul-shell-wide flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           <div>
             <p className="ul-kicker">Stay informed</p>

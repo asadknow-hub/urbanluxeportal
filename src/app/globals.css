@@ -184,23 +184,23 @@
 }
 
 /* —— Public website brand (locked) ——
-   Light paper UI · Accent #008040 · Dark hero/bands #07111F
+   Light sections #F6F3EE · Accent #008040 · Dark bands #0A1630
    Source of truth also: src/lib/web/brand.ts
 */
 .ul-site {
-  --ul-primary: #07111f;
+  --ul-primary: #0a1630;
   --ul-secondary: #008040;
-  --ul-tertiary: #f4f6f8;
-  --ul-quaternary: #050b14;
+  --ul-tertiary: #efeae3;
+  --ul-quaternary: #060d1c;
   /* aliases */
   --ul-surface: var(--ul-tertiary);
   --ul-footer: var(--ul-quaternary);
-  --ul-paper: #ffffff;
-  --ul-ink: #07111f;
+  --ul-paper: #f6f3ee;
+  --ul-ink: #0a1630;
   --ul-gold: var(--ul-secondary);
   --ul-accent-deep: #006633;
   --ul-muted: #4b5563;
-  --ul-hair: #e5e7eb;
+  --ul-hair: #e4dfd7;
   --ul-safe-bottom: env(safe-area-inset-bottom, 0px);
   --ul-safe-top: env(safe-area-inset-top, 0px);
   --ul-dock-space: calc(5.5rem + var(--ul-safe-bottom));
@@ -232,6 +232,11 @@
   color: #f4f7fb;
 }
 
+.ul-band-light {
+  background: var(--ul-paper);
+  color: var(--ul-ink);
+}
+
 .ul-band-dark .ul-section-heading {
   color: #fff;
 }
@@ -260,10 +265,10 @@
 }
 
 .ul-callout {
-  background: #fff;
+  background: var(--ul-paper);
   border-radius: 1.75rem;
   padding: clamp(1.5rem, 3vw, 2.75rem);
-  box-shadow: 0 24px 64px rgba(7, 17, 31, 0.18);
+  box-shadow: 0 24px 64px rgba(10, 22, 48, 0.18);
 }
 
 .ul-callout-kicker {

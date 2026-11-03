@@ -110,7 +110,7 @@ export default function MortgagesPage() {
         </div>
       </section>
 
-      <section id="faq" className="bg-white px-5 py-14 md:px-10 md:py-20">
+      <section id="faq" className="ul-band-light px-5 py-14 md:px-10 md:py-20">
         <div className="mx-auto max-w-[880px]">
           <Reveal>
             <p className="ul-kicker">FAQs</p>

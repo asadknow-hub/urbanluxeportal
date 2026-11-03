@@ -81,7 +81,7 @@ export default function PropertyManagementPage() {
         </div>
       </section>
 
-      <section className="bg-white px-5 py-14 md:px-10 md:py-20">
+      <section className="ul-band-light px-5 py-14 md:px-10 md:py-20">
         <div className="mx-auto grid max-w-[1280px] items-center gap-10 md:grid-cols-2 md:gap-16">
           <Reveal>
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#F2F2F2]">
@@ -137,7 +137,7 @@ export default function PropertyManagementPage() {
         </div>
       </section>
 
-      <section id="enquire" className="bg-white px-5 py-14 md:px-10 md:py-20">
+      <section id="enquire" className="ul-band-light px-5 py-14 md:px-10 md:py-20">
         <div className="mx-auto grid max-w-[1280px] gap-10 lg:grid-cols-2 lg:gap-16">
           <Reveal>
             <p className="ul-kicker">Enquire</p>

@@ -107,7 +107,7 @@ export default function InsightsPage() {
         </div>
       </section>
 
-      <section id="featured" className="bg-white px-4 py-10 sm:px-5 sm:py-12 md:px-10 md:py-16">
+      <section id="featured" className="ul-band-light px-4 py-10 sm:px-5 sm:py-12 md:px-10 md:py-16">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <div className="mb-6 flex items-end justify-between gap-4">
@@ -187,7 +187,7 @@ export default function InsightsPage() {
         </div>
       </section>
 
-      <section id="latest" className="bg-white px-5 py-14 md:px-10 md:py-20">
+      <section id="latest" className="ul-band-light px-5 py-14 md:px-10 md:py-20">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <p className="ul-kicker">Latest</p>

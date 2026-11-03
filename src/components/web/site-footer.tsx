@@ -63,7 +63,7 @@ export function SiteFooter() {
               <button
                 type="submit"
                 disabled={pending}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-r bg-[var(--ul-secondary)] text-[#07111F] transition-colors hover:bg-[var(--ul-accent-deep)] disabled:opacity-60"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-r bg-[var(--ul-secondary)] text-[var(--ul-primary)] transition-colors hover:bg-[var(--ul-accent-deep)] disabled:opacity-60"
                 aria-label="Subscribe"
               >
                 <ArrowRight className="h-4 w-4" />

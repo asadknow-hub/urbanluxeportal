@@ -7,7 +7,7 @@ export function ListingsPage({ kind }: { kind: ListingKind }) {
     kind === "sale" ? [...listingsFor("sale"), ...listingsFor("offplan")] : listingsFor(kind);
 
   return (
-    <section className="min-h-[60vh] bg-[var(--ul-tertiary)] py-6 md:py-8">
+    <section className="ul-band-light min-h-[60vh] py-6 md:py-8">
       <div className="ul-shell-wide">
         <div className="overflow-hidden rounded-[1.5rem] border border-[var(--ul-hair)] bg-white p-4 shadow-[0_12px_40px_rgba(7,17,31,0.06)] sm:p-5 md:p-6">
           <Suspense

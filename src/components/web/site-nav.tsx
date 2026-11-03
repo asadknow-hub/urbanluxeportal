@@ -50,7 +50,7 @@ export function SiteNav() {
           "fixed inset-x-0 top-0 z-[100] pt-[var(--ul-safe-top,0px)] transition-[background-color,box-shadow,backdrop-filter] duration-300",
           overDarkHero
             ? "border-b border-white/10 bg-transparent"
-            : "border-b border-[var(--ul-hair)] bg-white/95 shadow-[0_8px_28px_rgba(7,17,31,0.08)] backdrop-blur-md"
+            : "border-b border-[var(--ul-hair)] bg-[var(--ul-paper)]/95 shadow-[0_8px_28px_rgba(10,22,48,0.08)] backdrop-blur-md"
         )}
       >
         <div
@@ -177,7 +177,7 @@ export function SiteNav() {
         </div>
 
         {open ? (
-          <div className="fixed inset-x-0 bottom-0 top-[calc(3.5rem+var(--ul-safe-top,0px))] z-50 flex flex-col bg-white lg:hidden">
+          <div className="fixed inset-x-0 bottom-0 top-[calc(3.5rem+var(--ul-safe-top,0px))] z-50 flex flex-col bg-[var(--ul-paper)] lg:hidden">
             <nav
               className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 pb-[calc(1.25rem+var(--ul-safe-bottom,0px))] pt-2"
               aria-label="Mobile"

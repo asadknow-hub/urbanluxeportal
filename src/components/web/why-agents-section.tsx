@@ -44,7 +44,7 @@ const QUALITIES = [
 
 export function WhyAgentsSection() {
   return (
-    <section className="bg-white py-10 md:py-14 lg:py-16">
+    <section className="ul-band-light py-10 md:py-14 lg:py-16">
       <div className="ul-shell-wide">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end">
           <Reveal className="justify-self-start">
@@ -65,7 +65,7 @@ export function WhyAgentsSection() {
           {QUALITIES.map((item, i) => (
             <Reveal key={item.title} delay={i * 50}>
               <article className="flex h-full flex-col rounded-2xl border border-[var(--ul-hair)] bg-white p-6 shadow-[0_8px_30px_rgba(7,17,31,0.04)]">
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--ul-secondary)] text-[#07111F]">
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--ul-secondary)] text-[var(--ul-primary)]">
                   <item.icon className="h-5 w-5" strokeWidth={1.75} />
                 </span>
                 <h3 className="mt-5 text-lg font-bold uppercase tracking-wide text-[var(--ul-primary)]">

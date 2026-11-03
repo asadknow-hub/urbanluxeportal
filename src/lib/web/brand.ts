@@ -1,18 +1,20 @@
 /**
- * UrbanLuxe public brand — light UI, deep forest green on white,
- * dark navy for hero / accent bands. Headlines use condensed Oswald.
+ * UrbanLuxe public brand — warm paper light UI, deep forest green,
+ * navy #0A1630 for hero / accent bands. Headlines use condensed Oswald.
  */
 export const BRAND = {
   /** Deep navy ink / dark bands */
-  primary: "#07111F",
-  /** Forest green — darker, cleaner on white (reference) */
+  primary: "#0A1630",
+  /** Forest green — darker, cleaner on paper */
   secondary: "#008040",
-  /** Soft light surface */
-  tertiary: "#F4F6F8",
+  /** Soft warm surface (cards / nested) */
+  tertiary: "#EFEAE3",
   /** Footer / deep canvas */
-  quaternary: "#050B14",
+  quaternary: "#060D1C",
+  /** Light section background */
+  paper: "#F6F3EE",
   muted: "#4B5563",
-  hair: "#E5E7EB",
+  hair: "#E4DFD7",
 } as const;
 
 export type BrandColor = (typeof BRAND)[keyof typeof BRAND];

@@ -143,7 +143,7 @@ export default function CareersPage() {
         </div>
       </section>
 
-      <section className="bg-white px-5 py-14 md:px-10 md:py-20">
+      <section className="ul-band-light px-5 py-14 md:px-10 md:py-20">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <p className="ul-kicker">How we work</p>
@@ -223,7 +223,7 @@ export default function CareersPage() {
         </div>
       </section>
 
-      <section id="apply" className="bg-white px-5 py-14 md:px-10 md:py-20">
+      <section id="apply" className="ul-band-light px-5 py-14 md:px-10 md:py-20">
         <div className="mx-auto grid max-w-[1280px] gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           <Reveal>
             <p className="ul-kicker">Apply</p>
