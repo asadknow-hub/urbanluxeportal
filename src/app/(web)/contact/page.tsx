@@ -20,8 +20,8 @@ export default async function ContactPage() {
       />
       <section className="mx-auto grid max-w-[1440px] gap-10 px-4 py-12 sm:gap-12 sm:px-5 sm:py-16 md:px-10 lg:grid-cols-2">
         <div>
-          <h2 className="text-2xl text-[#0B1D3D] sm:text-3xl">The office</h2>
-          <p className="mt-5 max-w-sm text-base leading-relaxed text-[#0B1D3D]/65">
+          <h2 className="text-2xl text-[#0A1630] sm:text-3xl">The office</h2>
+          <p className="mt-5 max-w-sm text-base leading-relaxed text-[#0A1630]/65">
             {brand.address}
           </p>
           <dl className="mt-10 space-y-5">
@@ -30,7 +30,7 @@ export default async function ContactPage() {
               <dd className="mt-2">
                 <a
                   href={`tel:${brand.phoneTel}`}
-                  className="text-lg text-[#0B1D3D] hover:text-[#1E7A4A]"
+                  className="text-lg text-[#0A1630] hover:text-[#1E7A4A]"
                 >
                   {brand.phoneDisplay}
                 </a>
@@ -41,7 +41,7 @@ export default async function ContactPage() {
               <dd className="mt-2">
                 <a
                   href={`mailto:${brand.email}`}
-                  className="text-lg text-[#0B1D3D] hover:text-[#1E7A4A]"
+                  className="text-lg text-[#0A1630] hover:text-[#1E7A4A]"
                 >
                   {brand.email}
                 </a>
@@ -49,12 +49,12 @@ export default async function ContactPage() {
             </div>
             <div>
               <dt className="ul-kicker">RERA</dt>
-              <dd className="mt-2 text-lg text-[#0B1D3D]">{brand.rera}</dd>
+              <dd className="mt-2 text-lg text-[#0A1630]">{brand.rera}</dd>
             </div>
           </dl>
         </div>
-        <div className="rounded-xl border border-[#e5e7eb] bg-[#F2F2F2] p-6 md:p-10">
-          <h2 className="mb-6 text-2xl font-semibold text-[#0B1D3D]">Enquiry</h2>
+        <div className="rounded-xl border border-[#e5e7eb] bg-[#F6F3EE] p-6 md:p-10">
+          <h2 className="mb-6 text-2xl font-semibold text-[#0A1630]">Enquiry</h2>
           <EnquireForm />
         </div>
       </section>

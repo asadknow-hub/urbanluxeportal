@@ -122,7 +122,7 @@ export function MarketGrowthSection() {
                         <stop offset="100%" stopColor="#008040" stopOpacity={0.02} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid stroke="#F2F2F2" strokeDasharray="4 4" vertical={false} />
+                    <CartesianGrid stroke="#F6F3EE" strokeDasharray="4 4" vertical={false} />
                     <XAxis
                       dataKey="year"
                       tick={{ fill: "#6b7280", fontSize: 12 }}
@@ -157,22 +157,22 @@ export function MarketGrowthSection() {
               <div className="mt-4 h-64 md:h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={COMMUNITY_GAINS} layout="vertical" margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
-                    <CartesianGrid stroke="#F2F2F2" horizontal={false} />
+                    <CartesianGrid stroke="#F6F3EE" horizontal={false} />
                     <XAxis type="number" hide domain={[0, 28]} />
                     <YAxis
                       type="category"
                       dataKey="area"
                       width={90}
-                      tick={{ fill: "#0B1D3D", fontSize: 11 }}
+                      tick={{ fill: "#0A1630", fontSize: 11 }}
                       axisLine={false}
                       tickLine={false}
                     />
                     <Tooltip
-                      cursor={{ fill: "#F2F2F2" }}
+                      cursor={{ fill: "#F6F3EE" }}
                       formatter={(v) => [`${v}%`, "Gain"]}
                       contentStyle={{ borderRadius: 4, border: "1px solid #e5e7eb" }}
                     />
-                    <Bar dataKey="gain" fill="#0B1D3D" radius={[0, 2, 2, 0]} barSize={18} />
+                    <Bar dataKey="gain" fill="#0A1630" radius={[0, 2, 2, 0]} barSize={18} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

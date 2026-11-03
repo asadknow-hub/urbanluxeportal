@@ -50,7 +50,7 @@ function BrandMark({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "pointer-events-none absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-sm bg-[#0B1D3D]/85 text-[0.65rem] font-bold tracking-tight text-white",
+        "pointer-events-none absolute bottom-2 right-2 flex h-7 w-7 items-center justify-center rounded-sm bg-[#0A1630]/85 text-[0.65rem] font-bold tracking-tight text-white",
         className
       )}
       aria-hidden
@@ -85,7 +85,7 @@ export function ListingResultCard({ listing }: { listing: Listing }) {
           className="relative block aspect-[16/11] sm:aspect-auto sm:min-h-[280px] md:min-h-[300px]"
         >
           <div className="absolute inset-0 grid grid-cols-1 gap-1.5 p-2 sm:grid-cols-[1fr_6.5rem] sm:gap-1.5 md:grid-cols-[1fr_7rem] md:gap-2 md:p-2.5">
-            <div className="relative overflow-hidden rounded-lg bg-[#F2F2F2]">
+            <div className="relative overflow-hidden rounded-lg bg-[#F6F3EE]">
               <Image
                 src={main!}
                 alt={listing.title}
@@ -101,7 +101,7 @@ export function ListingResultCard({ listing }: { listing: Listing }) {
             </div>
             <div className="hidden grid-rows-3 gap-1.5 sm:grid md:gap-2">
               {thumbs.slice(0, 3).map((src, i) => (
-                <div key={`${listing.slug}-t${i}`} className="relative overflow-hidden rounded-lg bg-[#F2F2F2]">
+                <div key={`${listing.slug}-t${i}`} className="relative overflow-hidden rounded-lg bg-[#F6F3EE]">
                   <Image src={src} alt="" fill sizes="112px" className="object-cover" />
                   {i === 2 ? <BrandMark className="h-6 w-6 text-[0.55rem]" /> : null}
                 </div>
@@ -112,33 +112,33 @@ export function ListingResultCard({ listing }: { listing: Listing }) {
 
         <div className="flex flex-col px-4 py-5 sm:px-6 sm:py-6 md:px-8 md:py-8">
           <Link href={`/properties/${listing.slug}`} prefetch className="group flex-1">
-            <p className="text-xl font-bold tracking-tight text-[#0B1D3D] sm:text-2xl md:text-[1.85rem]">
+            <p className="text-xl font-bold tracking-tight text-[#0A1630] sm:text-2xl md:text-[1.85rem]">
               {price}
             </p>
-            <h2 className="mt-2.5 text-[0.9375rem] font-bold leading-snug text-[#0B1D3D] transition-colors group-hover:text-[#1E7A4A] sm:mt-3 sm:text-base md:text-[1.0625rem]">
+            <h2 className="mt-2.5 text-[0.9375rem] font-bold leading-snug text-[#0A1630] transition-colors group-hover:text-[#1E7A4A] sm:mt-3 sm:text-base md:text-[1.0625rem]">
               {headlineFor(listing)}
             </h2>
-            <p className="mt-3 flex items-start gap-1.5 text-sm leading-relaxed text-[#0B1D3D]/65">
-              <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#0B1D3D]/45" strokeWidth={2} />
+            <p className="mt-3 flex items-start gap-1.5 text-sm leading-relaxed text-[#0A1630]/65">
+              <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#0A1630]/45" strokeWidth={2} />
               <span>
                 {listing.title}, {listing.community}.
               </span>
             </p>
-            <div className="mt-3.5 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-[#0B1D3D]/75 sm:mt-4 sm:gap-x-4">
+            <div className="mt-3.5 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-[#0A1630]/75 sm:mt-4 sm:gap-x-4">
               <span className="font-medium">{typeLabel(listing.type)}</span>
-              <span className="text-[#0B1D3D]/25" aria-hidden>
+              <span className="text-[#0A1630]/25" aria-hidden>
                 |
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <BedDouble className="h-3.5 w-3.5 text-[#0B1D3D]/45" />
+                <BedDouble className="h-3.5 w-3.5 text-[#0A1630]/45" />
                 {listing.beds}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Bath className="h-3.5 w-3.5 text-[#0B1D3D]/45" />
+                <Bath className="h-3.5 w-3.5 text-[#0A1630]/45" />
                 {listing.baths}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Maximize2 className="h-3.5 w-3.5 text-[#0B1D3D]/45" />
+                <Maximize2 className="h-3.5 w-3.5 text-[#0A1630]/45" />
                 {listing.sqft.toLocaleString()} sq.ft
               </span>
             </div>
@@ -146,15 +146,15 @@ export function ListingResultCard({ listing }: { listing: Listing }) {
 
           <div className="mt-6 flex flex-col gap-4 border-t border-[#eee] pt-4 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:pt-5">
             <div className="flex items-center gap-3">
-              <div className="relative h-11 w-11 overflow-hidden rounded-full bg-[#F2F2F2]">
+              <div className="relative h-11 w-11 overflow-hidden rounded-full bg-[#F6F3EE]">
                 <Image src={agent.photo} alt="" fill sizes="44px" className="object-cover" />
               </div>
-              <p className="text-sm font-semibold text-[#0B1D3D]">{agent.name}</p>
+              <p className="text-sm font-semibold text-[#0A1630]">{agent.name}</p>
             </div>
             <div className="grid grid-cols-2 gap-2.5 sm:flex sm:items-center">
               <a
                 href={`tel:${brand.phoneTel}`}
-                className="inline-flex h-11 items-center justify-center gap-1.5 rounded-full border border-[#0B1D3D]/25 px-4 text-sm font-semibold text-[#0B1D3D] transition-colors hover:border-[#0B1D3D] hover:bg-[#F2F2F2] sm:h-10"
+                className="inline-flex h-11 items-center justify-center gap-1.5 rounded-full border border-[#0A1630]/25 px-4 text-sm font-semibold text-[#0A1630] transition-colors hover:border-[#0A1630] hover:bg-[#F6F3EE] sm:h-10"
               >
                 <Phone className="h-3.5 w-3.5" strokeWidth={2.25} />
                 Call
@@ -163,7 +163,7 @@ export function ListingResultCard({ listing }: { listing: Listing }) {
                 href={wa}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex h-11 items-center justify-center gap-1.5 rounded-full border border-[#25D366]/40 px-4 text-sm font-semibold text-[#0B1D3D] transition-colors hover:border-[#25D366] hover:bg-[#25D366]/08 sm:h-10"
+                className="inline-flex h-11 items-center justify-center gap-1.5 rounded-full border border-[#25D366]/40 px-4 text-sm font-semibold text-[#0A1630] transition-colors hover:border-[#25D366] hover:bg-[#25D366]/08 sm:h-10"
               >
                 <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />
                 WhatsApp

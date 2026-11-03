@@ -86,7 +86,7 @@ const PATHS = [
 export default function SellPage() {
   return (
     <>
-      <section className="bg-[#0B1D3D] px-4 pb-10 pt-10 text-white sm:px-5 sm:pb-12 sm:pt-12 md:px-10 md:pb-14 md:pt-16">
+      <section className="bg-[#0A1630] px-4 pb-10 pt-10 text-white sm:px-5 sm:pb-12 sm:pt-12 md:px-10 md:pb-14 md:pt-16">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <p className="ul-kicker text-[#1E7A4A]">List your property</p>
@@ -118,7 +118,7 @@ export default function SellPage() {
       <section className="ul-band-light px-4 py-12 sm:px-5 sm:py-14 md:px-10 md:py-20">
         <div className="mx-auto grid max-w-[1280px] items-center gap-10 md:grid-cols-2 md:gap-16">
           <Reveal>
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#F2F2F2] md:aspect-[5/4]">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#F6F3EE] md:aspect-[5/4]">
               <Image
                 src={IMAGES.interior}
                 alt="Dubai residence interior"
@@ -140,10 +140,10 @@ export default function SellPage() {
             </p>
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
               {REASONS.map((item) => (
-                <div key={item.title} className="rounded-xl border border-[#e5e7eb] bg-[#F2F2F2] p-4">
+                <div key={item.title} className="rounded-xl border border-[#e5e7eb] bg-[#F6F3EE] p-4">
                   <item.icon className="h-5 w-5 text-[#1E7A4A]" strokeWidth={2} />
-                  <p className="mt-3 text-sm font-semibold text-[#0B1D3D]">{item.title}</p>
-                  <p className="mt-1.5 text-xs leading-relaxed text-[#0B1D3D]/65">{item.body}</p>
+                  <p className="mt-3 text-sm font-semibold text-[#0A1630]">{item.title}</p>
+                  <p className="mt-1.5 text-xs leading-relaxed text-[#0A1630]/65">{item.body}</p>
                 </div>
               ))}
             </div>
@@ -151,7 +151,7 @@ export default function SellPage() {
         </div>
       </section>
 
-      <section className="border-y border-[#e5e7eb] bg-[#F2F2F2] px-5 py-14 md:px-10 md:py-16">
+      <section className="border-y border-[#e5e7eb] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-16">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <p className="ul-kicker">Paths</p>
@@ -162,8 +162,8 @@ export default function SellPage() {
               <Reveal key={path.title} delay={i * 50}>
                 <div className="flex h-full flex-col rounded-xl border border-[#e5e7eb] bg-white p-6 md:p-8">
                   <path.icon className="h-6 w-6 text-[#1E7A4A]" strokeWidth={2} />
-                  <h3 className="mt-4 text-xl font-semibold text-[#0B1D3D]">{path.title}</h3>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-[#0B1D3D]/70">{path.body}</p>
+                  <h3 className="mt-4 text-xl font-semibold text-[#0A1630]">{path.title}</h3>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-[#0A1630]/70">{path.body}</p>
                   <Link
                     href={path.href}
                     className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#1E7A4A] hover:text-[#155c38]"
@@ -189,10 +189,10 @@ export default function SellPage() {
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {STEPS.map((step, i) => (
               <Reveal key={step.n} delay={i * 40}>
-                <div className="h-full rounded-xl border border-[#e5e7eb] bg-[#F2F2F2] p-5">
+                <div className="h-full rounded-xl border border-[#e5e7eb] bg-[#F6F3EE] p-5">
                   <p className="text-xs font-bold tracking-[0.16em] text-[#1E7A4A]">{step.n}</p>
-                  <h3 className="mt-3 text-lg font-semibold text-[#0B1D3D]">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[#0B1D3D]/65">{step.body}</p>
+                  <h3 className="mt-3 text-lg font-semibold text-[#0A1630]">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[#0A1630]/65">{step.body}</p>
                 </div>
               </Reveal>
             ))}
@@ -202,7 +202,7 @@ export default function SellPage() {
 
       <section
         id="instruct"
-        className="border-t border-[#e5e7eb] bg-[#F2F2F2] px-5 py-14 md:px-10 md:py-20"
+        className="border-t border-[#e5e7eb] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-20"
       >
         <div className="mx-auto grid max-w-[1280px] gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16">
           <Reveal>
@@ -214,7 +214,7 @@ export default function SellPage() {
               Share the address and your intent. We will reply with next steps for valuation and
               strategy — not a generic brochure pack.
             </p>
-            <div className="mt-8 space-y-4 text-sm leading-relaxed text-[#0B1D3D]/70">
+            <div className="mt-8 space-y-4 text-sm leading-relaxed text-[#0A1630]/70">
               <p>
                 A valuation is a conversation about light, plot, and what sold last season. If the
                 residence is not ready for the market, we will say so.
@@ -239,10 +239,10 @@ export default function SellPage() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden bg-[#0B1D3D] px-5 py-14 md:px-10 md:py-16">
+      <section className="relative overflow-hidden bg-[#0A1630] px-5 py-14 md:px-10 md:py-16">
         <div className="absolute inset-0 opacity-30">
           <Image src={IMAGES.skyline} alt="" fill sizes="100vw" className="object-cover" />
-          <div className="absolute inset-0 bg-[#0B1D3D]/75" />
+          <div className="absolute inset-0 bg-[#0A1630]/75" />
         </div>
         <Reveal className="relative mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-6 md:flex-row md:items-center">
           <div className="max-w-xl">
@@ -255,7 +255,7 @@ export default function SellPage() {
           </div>
           <Link
             href="#instruct"
-            className="inline-flex h-11 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-[#0B1D3D] transition-colors hover:bg-[#F2F2F2]"
+            className="inline-flex h-11 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-[#0A1630] transition-colors hover:bg-[#F6F3EE]"
           >
             List your property
           </Link>

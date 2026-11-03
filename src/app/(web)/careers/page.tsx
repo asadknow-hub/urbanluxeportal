@@ -79,7 +79,7 @@ const PERKS = [
 export default function CareersPage() {
   return (
     <>
-      <section className="bg-[#0B1D3D] px-4 pb-10 pt-10 text-white sm:px-5 sm:pb-12 sm:pt-12 md:px-10 md:pb-14 md:pt-16">
+      <section className="bg-[#0A1630] px-4 pb-10 pt-10 text-white sm:px-5 sm:pb-12 sm:pt-12 md:px-10 md:pb-14 md:pt-16">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <p className="ul-kicker text-[#1E7A4A]">Careers</p>
@@ -152,10 +152,10 @@ export default function CareersPage() {
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {VALUES.map((item, i) => (
               <Reveal key={item.title} delay={i * 50}>
-                <div className="h-full rounded-xl border border-[#e5e7eb] bg-[#F2F2F2] p-5">
+                <div className="h-full rounded-xl border border-[#e5e7eb] bg-[#F6F3EE] p-5">
                   <item.icon className="h-5 w-5 text-[#1E7A4A]" strokeWidth={2} />
-                  <p className="mt-4 font-semibold text-[#0B1D3D]">{item.title}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-[#0B1D3D]/65">{item.body}</p>
+                  <p className="mt-4 font-semibold text-[#0A1630]">{item.title}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-[#0A1630]/65">{item.body}</p>
                 </div>
               </Reveal>
             ))}
@@ -163,7 +163,7 @@ export default function CareersPage() {
         </div>
       </section>
 
-      <section id="roles" className="border-t border-[#e5e7eb] bg-[#F2F2F2] px-5 py-14 md:px-10 md:py-20">
+      <section id="roles" className="border-t border-[#e5e7eb] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-20">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <div className="flex flex-wrap items-end justify-between gap-4">
@@ -191,19 +191,19 @@ export default function CareersPage() {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <Briefcase className="h-4 w-4 text-[#1E7A4A]" strokeWidth={2} />
-                      <h3 className="text-lg font-semibold text-[#0B1D3D]">{role.title}</h3>
+                      <h3 className="text-lg font-semibold text-[#0A1630]">{role.title}</h3>
                     </div>
-                    <p className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-[#0B1D3D]/45">
+                    <p className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-[#0A1630]/45">
                       {role.type}
                     </p>
-                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#0B1D3D]/70">
+                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#0A1630]/70">
                       {role.blurb}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {role.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="rounded-full bg-[#F2F2F2] px-2.5 py-1 text-[0.7rem] font-semibold text-[#0B1D3D]/7"
+                          className="rounded-full bg-[#F6F3EE] px-2.5 py-1 text-[0.7rem] font-semibold text-[#0A1630]/7"
                         >
                           {tag}
                         </span>
@@ -212,7 +212,7 @@ export default function CareersPage() {
                   </div>
                   <Link
                     href={`#apply`}
-                    className="inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-[#0B1D3D] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#0a172e]"
+                    className="inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-[#0A1630] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#081226]"
                   >
                     Apply
                   </Link>
@@ -234,20 +234,20 @@ export default function CareersPage() {
               Tell us the role, your experience, and why this house. We read every application —
               no buy/rent dropdowns required.
             </p>
-            <p className="mt-6 text-sm text-[#0B1D3D]/65">
+            <p className="mt-6 text-sm text-[#0A1630]/65">
               Hiring is handled by people, not a queue bot. Expect a reply within a few working
               days if there is a fit.
             </p>
           </Reveal>
           <Reveal delay={60}>
-            <div className="rounded-xl border border-[#e5e7eb] bg-[#F2F2F2] p-6 md:p-8">
+            <div className="rounded-xl border border-[#e5e7eb] bg-[#F6F3EE] p-6 md:p-8">
               <CareersApplicationForm />
             </div>
           </Reveal>
         </div>
       </section>
 
-      <section className="bg-[#0B1D3D] px-5 py-12 md:px-10 md:py-14">
+      <section className="bg-[#0A1630] px-5 py-12 md:px-10 md:py-14">
         <Reveal className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-6 md:flex-row md:items-center">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#1E7A4A]">
@@ -260,7 +260,7 @@ export default function CareersPage() {
           <Link
             href="/contact"
             prefetch
-            className="inline-flex h-11 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-[#0B1D3D] transition-colors hover:bg-[#F2F2F2]"
+            className="inline-flex h-11 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-[#0A1630] transition-colors hover:bg-[#F6F3EE]"
           >
             Contact the team
           </Link>

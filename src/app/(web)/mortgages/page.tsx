@@ -35,7 +35,7 @@ const HIGHLIGHTS = [
 export default function MortgagesPage() {
   return (
     <>
-      <section className="bg-[#0B1D3D] px-4 pb-8 pt-10 text-white sm:px-5 sm:pb-10 sm:pt-12 md:px-10 md:pb-12 md:pt-16">
+      <section className="bg-[#0A1630] px-4 pb-8 pt-10 text-white sm:px-5 sm:pb-10 sm:pt-12 md:px-10 md:pb-12 md:pt-16">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <p className="ul-kicker text-[#1E7A4A]">Mortgages</p>
@@ -69,12 +69,12 @@ export default function MortgagesPage() {
                 <Link
                   href={item.href}
                   prefetch={item.href.startsWith("/")}
-                  className="flex h-full gap-3 rounded-xl border border-white/10 bg-white/95 p-4 text-[#0B1D3D] transition-colors hover:bg-white"
+                  className="flex h-full gap-3 rounded-xl border border-white/10 bg-white/95 p-4 text-[#0A1630] transition-colors hover:bg-white"
                 >
                   <item.icon className="mt-0.5 h-4 w-4 shrink-0 text-[#1E7A4A]" strokeWidth={2} />
                   <div>
                     <p className="text-sm font-semibold">{item.title}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-[#0B1D3D]/65">{item.body}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-[#0A1630]/65">{item.body}</p>
                   </div>
                 </Link>
               </Reveal>
@@ -83,25 +83,25 @@ export default function MortgagesPage() {
         </div>
       </section>
 
-      <section id="calculator" className="border-b border-[#e5e7eb] bg-[#F2F2F2] px-5 py-8 md:px-10 md:py-10">
+      <section id="calculator" className="border-b border-[#e5e7eb] bg-[#F6F3EE] px-5 py-8 md:px-10 md:py-10">
         <div className="mx-auto max-w-[960px]">
           <MortgageCalculator />
           <div className="mt-4 flex flex-col gap-3 rounded-xl border border-[#e5e7eb] bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between md:px-5">
-            <p className="text-sm font-semibold text-[#0B1D3D]">
+            <p className="text-sm font-semibold text-[#0A1630]">
               Need help or ready to proceed?
             </p>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <Link
                 href="/contact"
                 prefetch
-                className="inline-flex h-10 items-center justify-center rounded-full bg-[#0B1D3D] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#0a172e]"
+                className="inline-flex h-10 items-center justify-center rounded-full bg-[#0A1630] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#081226]"
               >
                 Start Mortgage Approval
               </Link>
               <Link
                 href="/contact"
                 prefetch
-                className="inline-flex h-10 items-center justify-center rounded-full border border-[#0B1D3D] px-5 text-sm font-semibold text-[#0B1D3D] transition-colors hover:bg-[#F2F2F2]"
+                className="inline-flex h-10 items-center justify-center rounded-full border border-[#0A1630] px-5 text-sm font-semibold text-[#0A1630] transition-colors hover:bg-[#F6F3EE]"
               >
                 Speak to our team
               </Link>
@@ -124,17 +124,17 @@ export default function MortgagesPage() {
           <div className="mt-8">
             <MortgageFaq />
           </div>
-          <Reveal className="mt-10 flex flex-col items-start justify-between gap-5 rounded-xl border border-[#e5e7eb] bg-[#F2F2F2] p-6 sm:flex-row sm:items-center md:p-8">
+          <Reveal className="mt-10 flex flex-col items-start justify-between gap-5 rounded-xl border border-[#e5e7eb] bg-[#F6F3EE] p-6 sm:flex-row sm:items-center md:p-8">
             <div>
-              <p className="text-lg font-semibold text-[#0B1D3D]">Still have questions?</p>
-              <p className="mt-1 text-sm text-[#0B1D3D]/65">
+              <p className="text-lg font-semibold text-[#0A1630]">Still have questions?</p>
+              <p className="mt-1 text-sm text-[#0A1630]/65">
                 We&apos;ll match your budget and timeline with the right lending path.
               </p>
             </div>
             <Link
               href="/contact"
               prefetch
-              className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-[#0B1D3D] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#0a172e]"
+              className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-[#0A1630] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#081226]"
             >
               Book a consultation
             </Link>

@@ -44,7 +44,7 @@ export default async function InsightArticlePage({
   return (
     <>
       <article>
-        <section className="bg-[#0B1D3D] px-5 pb-10 pt-10 text-white md:px-10 md:pb-12 md:pt-14">
+        <section className="bg-[#0A1630] px-5 pb-10 pt-10 text-white md:px-10 md:pb-12 md:pt-14">
           <div className="mx-auto max-w-[800px]">
             <Link
               href="/insights"
@@ -71,7 +71,7 @@ export default async function InsightArticlePage({
         </section>
 
         <div className="relative mx-auto -mt-2 max-w-[960px] px-5 md:px-10">
-          <div className="relative aspect-[16/9] overflow-hidden rounded-xl bg-[#F2F2F2] shadow-[0_8px_32px_rgba(11,29,61,0.12)]">
+          <div className="relative aspect-[16/9] overflow-hidden rounded-xl bg-[#F6F3EE] shadow-[0_8px_32px_rgba(11,29,61,0.12)]">
             <Image
               src={article.image}
               alt={article.title}
@@ -84,10 +84,10 @@ export default async function InsightArticlePage({
         </div>
 
         <div className="mx-auto max-w-[720px] px-5 py-12 md:px-10 md:py-16">
-          <p className="text-lg font-medium leading-relaxed text-[#0B1D3D]/80 md:text-xl">
+          <p className="text-lg font-medium leading-relaxed text-[#0A1630]/80 md:text-xl">
             {article.excerpt}
           </p>
-          <div className="mt-8 space-y-5 text-base leading-relaxed text-[#0B1D3D]/75 md:text-[1.0625rem]">
+          <div className="mt-8 space-y-5 text-base leading-relaxed text-[#0A1630]/75 md:text-[1.0625rem]">
             {article.body.map((paragraph) => (
               <p key={paragraph.slice(0, 48)}>{paragraph}</p>
             ))}
@@ -96,7 +96,7 @@ export default async function InsightArticlePage({
           <div className="mt-12 flex flex-col gap-3 border-t border-[#e5e7eb] pt-8 sm:flex-row sm:items-center sm:justify-between">
             <Link
               href="/insights"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0B1D3D] hover:text-[#1E7A4A]"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0A1630] hover:text-[#1E7A4A]"
             >
               <ArrowLeft className="h-4 w-4" />
               All insights
@@ -104,7 +104,7 @@ export default async function InsightArticlePage({
             <Link
               href="/contact"
               prefetch
-              className="inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D3D] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#0a172e]"
+              className="inline-flex h-11 items-center justify-center rounded-full bg-[#0A1630] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#081226]"
             >
               Talk to the desk
             </Link>
@@ -113,7 +113,7 @@ export default async function InsightArticlePage({
       </article>
 
       {related.length > 0 && (
-        <section className="border-t border-[#e5e7eb] bg-[#F2F2F2] px-5 py-14 md:px-10 md:py-16">
+        <section className="border-t border-[#e5e7eb] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-16">
           <div className="mx-auto max-w-[1280px]">
             <Reveal>
               <p className="ul-kicker">Keep reading</p>
@@ -127,7 +127,7 @@ export default async function InsightArticlePage({
                   prefetch
                   className="group overflow-hidden rounded-xl border border-[#e5e7eb] bg-white transition-shadow hover:shadow-[0_8px_28px_rgba(11,29,61,0.08)]"
                 >
-                  <div className="relative aspect-[16/10] bg-[#F2F2F2]">
+                  <div className="relative aspect-[16/10] bg-[#F6F3EE]">
                     <Image
                       src={item.image}
                       alt={item.title}
@@ -140,10 +140,10 @@ export default async function InsightArticlePage({
                     <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#1E7A4A]">
                       {item.category}
                     </p>
-                    <h3 className="mt-2 font-semibold leading-snug text-[#0B1D3D] group-hover:text-[#1E7A4A]">
+                    <h3 className="mt-2 font-semibold leading-snug text-[#0A1630] group-hover:text-[#1E7A4A]">
                       {item.title}
                     </h3>
-                    <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#0B1D3D]/7">
+                    <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#0A1630]/7">
                       Read <ArrowRight className="h-3.5 w-3.5" />
                     </span>
                   </div>
@@ -151,7 +151,7 @@ export default async function InsightArticlePage({
               ))}
             </div>
             {featured.slug !== article.slug && (
-              <p className="mt-8 text-center text-sm text-[#0B1D3D]/55">
+              <p className="mt-8 text-center text-sm text-[#0A1630]/55">
                 Featured this month:{" "}
                 <Link
                   href={`/insights/${featured.slug}`}

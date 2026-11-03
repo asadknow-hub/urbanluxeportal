@@ -42,7 +42,7 @@ export function CareersApplicationForm({ defaultRole }: { defaultRole?: string }
   }
 
   const field =
-    "h-12 w-full rounded-md border border-[#e5e7eb] bg-white px-4 text-sm text-[#0B1D3D] outline-none placeholder:text-[#6b7280] focus:border-[#1E7A4A]";
+    "h-12 w-full rounded-md border border-[#e5e7eb] bg-white px-4 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#1E7A4A]";
 
   return (
     <form onSubmit={onSubmit} className="space-y-3" encType="multipart/form-data">
@@ -93,7 +93,7 @@ export function CareersApplicationForm({ defaultRole }: { defaultRole?: string }
         className={field}
       />
       <div>
-        <label htmlFor="careers-cv" className="mb-1.5 block text-xs font-medium text-[#0B1D3D]/65">
+        <label htmlFor="careers-cv" className="mb-1.5 block text-xs font-medium text-[#0A1630]/65">
           CV / résumé (PDF or Word, max 10MB)
         </label>
         <input
@@ -101,7 +101,7 @@ export function CareersApplicationForm({ defaultRole }: { defaultRole?: string }
           name="cv"
           type="file"
           accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-          className="block w-full text-sm text-[#0B1D3D] file:mr-3 file:rounded-md file:border-0 file:bg-[#F2F2F2] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[#0B1D3D]"
+          className="block w-full text-sm text-[#0A1630] file:mr-3 file:rounded-md file:border-0 file:bg-[#F6F3EE] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[#0A1630]"
         />
       </div>
       <textarea
@@ -109,12 +109,12 @@ export function CareersApplicationForm({ defaultRole }: { defaultRole?: string }
         rows={4}
         required
         placeholder="Why Urban Luxe — and what you bring to the desk"
-        className="w-full rounded-md border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#0B1D3D] outline-none placeholder:text-[#6b7280] focus:border-[#1E7A4A]"
+        className="w-full rounded-md border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#1E7A4A]"
       />
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex h-12 w-full items-center justify-center rounded-md bg-[#0B1D3D] text-sm font-semibold text-white transition-colors hover:bg-[#0a172e] disabled:opacity-60"
+        className="inline-flex h-12 w-full items-center justify-center rounded-md bg-[#0A1630] text-sm font-semibold text-white transition-colors hover:bg-[#081226] disabled:opacity-60"
       >
         {pending ? "Sending…" : "Submit application"}
       </button>
@@ -122,7 +122,7 @@ export function CareersApplicationForm({ defaultRole }: { defaultRole?: string }
         Prefer email? Write to{" "}
         <a
           href={`mailto:${brand.email}?subject=Career%20application`}
-          className="text-[#0B1D3D] underline-offset-4 hover:underline"
+          className="text-[#0A1630] underline-offset-4 hover:underline"
         >
           {brand.email}
         </a>

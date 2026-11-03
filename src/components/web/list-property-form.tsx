@@ -48,7 +48,7 @@ export function ListPropertyForm({ defaultIntent = "sell" }: { defaultIntent?: s
   }
 
   const field =
-    "h-12 w-full rounded-md border border-[#e5e7eb] bg-white px-4 text-sm text-[#0B1D3D] outline-none placeholder:text-[#6b7280] focus:border-[#1E7A4A]";
+    "h-12 w-full rounded-md border border-[#e5e7eb] bg-white px-4 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#1E7A4A]";
 
   return (
     <form onSubmit={onSubmit} className="space-y-3">
@@ -106,12 +106,12 @@ export function ListPropertyForm({ defaultIntent = "sell" }: { defaultIntent?: s
         name="message"
         rows={4}
         placeholder="Timing, asking expectations, or anything we should know"
-        className="w-full rounded-md border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#0B1D3D] outline-none placeholder:text-[#6b7280] focus:border-[#1E7A4A]"
+        className="w-full rounded-md border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#1E7A4A]"
       />
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex h-12 w-full items-center justify-center rounded-md bg-[#0B1D3D] text-sm font-semibold text-white transition-colors hover:bg-[#0a172e] disabled:opacity-60"
+        className="inline-flex h-12 w-full items-center justify-center rounded-md bg-[#0A1630] text-sm font-semibold text-white transition-colors hover:bg-[#081226] disabled:opacity-60"
       >
         {pending ? "Sending…" : "Request a conversation"}
       </button>
@@ -119,7 +119,7 @@ export function ListPropertyForm({ defaultIntent = "sell" }: { defaultIntent?: s
         Or call{" "}
         <a
           href={`tel:${brand.phoneTel}`}
-          className="text-[#0B1D3D] underline-offset-4 hover:underline"
+          className="text-[#0A1630] underline-offset-4 hover:underline"
         >
           {brand.phoneDisplay}
         </a>

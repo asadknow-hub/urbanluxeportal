@@ -46,8 +46,8 @@ export function HeroSearch() {
               className={cn(
                 "shrink-0 px-3.5 py-2.5 text-[0.6875rem] font-semibold tracking-[0.12em] uppercase transition-colors sm:px-5 sm:tracking-[0.14em]",
                 active
-                  ? "rounded-t-md bg-white text-[#0B1D3D]"
-                  : "rounded-t-md bg-[#F2F2F2]/90 text-[#0B1D3D]/70 hover:text-[#0B1D3D]"
+                  ? "rounded-t-md bg-white text-[#0A1630]"
+                  : "rounded-t-md bg-[#F6F3EE]/90 text-[#0A1630]/70 hover:text-[#0A1630]"
               )}
             >
               <span className="sm:hidden">{item.short}</span>
@@ -67,13 +67,13 @@ export function HeroSearch() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="City or property type"
-          className="h-12 min-w-0 flex-1 bg-transparent px-4 text-base text-[#0B1D3D] outline-none placeholder:text-[#0B1D3D]/40 sm:h-[3.25rem] sm:px-5 sm:text-sm"
+          className="h-12 min-w-0 flex-1 bg-transparent px-4 text-base text-[#0A1630] outline-none placeholder:text-[#0A1630]/40 sm:h-[3.25rem] sm:px-5 sm:text-sm"
         />
 
         <button
           type="button"
           onClick={() => setShowFilters((v) => !v)}
-          className="inline-flex h-12 w-12 shrink-0 items-center justify-center border-l border-[#0B1D3D]/8 text-[#0B1D3D]/80 transition-colors hover:text-[#0B1D3D] sm:h-[3.25rem] sm:w-auto sm:gap-2 sm:px-5 sm:text-sm sm:font-medium"
+          className="inline-flex h-12 w-12 shrink-0 items-center justify-center border-l border-[#0A1630]/8 text-[#0A1630]/80 transition-colors hover:text-[#0A1630] sm:h-[3.25rem] sm:w-auto sm:gap-2 sm:px-5 sm:text-sm sm:font-medium"
           aria-expanded={showFilters}
           aria-label="Filters"
         >
@@ -91,14 +91,14 @@ export function HeroSearch() {
       </div>
 
       {showFilters && (
-        <div className="mt-2 rounded-lg bg-white/95 p-4 shadow-lg ring-1 ring-[#0B1D3D]/8 backdrop-blur-sm">
-          <label className="mb-1.5 block text-[0.65rem] font-semibold tracking-[0.12em] uppercase text-[#0B1D3D]/60">
+        <div className="mt-2 rounded-lg bg-white/95 p-4 shadow-lg ring-1 ring-[#0A1630]/8 backdrop-blur-sm">
+          <label className="mb-1.5 block text-[0.65rem] font-semibold tracking-[0.12em] uppercase text-[#0A1630]/60">
             Community
           </label>
           <select
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="h-11 w-full rounded border border-[#0B1D3D]/12 px-3 text-base text-[#0B1D3D] outline-none focus:border-[#1E7A4A] sm:h-10 sm:text-sm"
+            className="h-11 w-full rounded border border-[#0A1630]/12 px-3 text-base text-[#0A1630] outline-none focus:border-[#1E7A4A] sm:h-10 sm:text-sm"
           >
             <option value="">Any area</option>
             {COMMUNITIES.map((c) => (

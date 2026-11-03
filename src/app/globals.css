@@ -51,30 +51,30 @@
 :root {
   /* Urban Luxe CRM — aligned with public site (blue + green) */
   --background: #f4f7fb;
-  --foreground: #0b1d3d;
+  --foreground: #0A1630;
   --card: #ffffff;
-  --card-foreground: #0b1d3d;
+  --card-foreground: #0A1630;
   --popover: #ffffff;
-  --popover-foreground: #0b1d3d;
-  --primary: #0b1d3d;
+  --popover-foreground: #0A1630;
+  --primary: #0A1630;
   --primary-foreground: #ffffff;
   --secondary: #1e7a4a;
   --secondary-foreground: #ffffff;
   --muted: #e8eef5;
   --muted-foreground: #5c6b7f;
   --accent: #e8f5ee;
-  --accent-foreground: #0b1d3d;
+  --accent-foreground: #0A1630;
   --destructive: #dc2626;
   --border: #d4dee9;
   --input: #d4dee9;
   --ring: #1e7a4a;
-  --chart-1: #0b1d3d;
+  --chart-1: #0A1630;
   --chart-2: #1e7a4a;
   --chart-3: #5c6b7f;
   --chart-4: #3d9e6a;
   --chart-5: #dc2626;
   --radius: 0.875rem;
-  --sidebar: #0b1d3d;
+  --sidebar: #0A1630;
   --sidebar-foreground: #f4f7fb;
   --sidebar-primary: #1e7a4a;
   --sidebar-primary-foreground: #ffffff;
@@ -622,7 +622,7 @@
   border-radius: 999px;
   background: #dbe3ea;
   outline: none;
-  accent-color: #0b1d3d;
+  accent-color: #0A1630;
 }
 
 .ul-mortgage-range::-webkit-slider-runnable-track {
@@ -638,7 +638,7 @@
   height: 1.15rem;
   margin-top: -0.4rem;
   border-radius: 999px;
-  background: #0b1d3d;
+  background: #0A1630;
   border: 2px solid #fff;
   box-shadow: 0 1px 4px rgba(11, 29, 61, 0.25);
   cursor: pointer;
@@ -654,7 +654,7 @@
   width: 1.15rem;
   height: 1.15rem;
   border-radius: 999px;
-  background: #0b1d3d;
+  background: #0A1630;
   border: 2px solid #fff;
   box-shadow: 0 1px 4px rgba(11, 29, 61, 0.25);
   cursor: pointer;

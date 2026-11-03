@@ -44,7 +44,7 @@ export function EnquireForm({
   }
 
   const field =
-    "h-12 w-full rounded border border-[#e5e7eb] bg-white px-4 text-sm text-[#0B1D3D] outline-none placeholder:text-[#6b7280] focus:border-[#1E7A4A]";
+    "h-12 w-full rounded border border-[#e5e7eb] bg-white px-4 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#1E7A4A]";
 
   return (
     <form onSubmit={onSubmit} className="space-y-3">
@@ -59,7 +59,7 @@ export function EnquireForm({
       />
       {propertyTitle && (
         <p className="text-sm font-light text-[#6b7280]">
-          Enquiring about <span className="text-[#0B1D3D]">{propertyTitle}</span>
+          Enquiring about <span className="text-[#0A1630]">{propertyTitle}</span>
         </p>
       )}
       <input name="name" required placeholder="Full name" className={field} />
@@ -78,13 +78,13 @@ export function EnquireForm({
         name="message"
         rows={compact ? 3 : 4}
         placeholder="Tell us what you are looking for"
-        className="w-full rounded border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#0B1D3D] outline-none placeholder:text-[#6b7280] focus:border-[#1E7A4A]"
+        className="w-full rounded border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#1E7A4A]"
         defaultValue={propertyTitle ? `Please share details for ${propertyTitle}.` : ""}
       />
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex h-12 w-full items-center justify-center rounded bg-[#0B1D3D] text-sm font-semibold text-white transition-colors hover:bg-[#0a172e] disabled:opacity-60"
+        className="inline-flex h-12 w-full items-center justify-center rounded bg-[#0A1630] text-sm font-semibold text-white transition-colors hover:bg-[#081226] disabled:opacity-60"
       >
         {pending ? "Sending…" : "Send enquiry"}
       </button>
@@ -92,7 +92,7 @@ export function EnquireForm({
         Or call{" "}
         <a
           href={`tel:${brand.phoneTel}`}
-          className="text-[#0B1D3D] underline-offset-4 hover:underline"
+          className="text-[#0A1630] underline-offset-4 hover:underline"
         >
           {brand.phoneDisplay}
         </a>

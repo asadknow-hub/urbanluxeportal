@@ -71,13 +71,13 @@ function FilterSelect({
     <div className={cn("relative min-w-0", className)}>
       <select
         aria-label={ariaLabel}
-        className="h-11 w-full appearance-none rounded-md border border-[#d1d5db] bg-white py-2 pl-3 pr-9 text-sm font-medium text-[#0B1D3D] outline-none transition-colors hover:border-[#0B1D3D]/40 focus:border-[#0B1D3D]"
+        className="h-11 w-full appearance-none rounded-md border border-[#d1d5db] bg-white py-2 pl-3 pr-9 text-sm font-medium text-[#0A1630] outline-none transition-colors hover:border-[#0A1630]/40 focus:border-[#0A1630]"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >
         {children}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#0B1D3D]/45" />
+      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#0A1630]/45" />
     </div>
   );
 }
@@ -254,7 +254,7 @@ export function ListingsExplorer({
           </FilterSelect>
 
           <div className="relative min-w-0 flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#0B1D3D]/40" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#0A1630]/40" />
             <input
               type="search"
               value={query}
@@ -263,7 +263,7 @@ export function ListingsExplorer({
                 syncUrl({ q: e.target.value });
               }}
               placeholder="Community or building"
-              className="h-11 w-full rounded-md border border-[#d1d5db] bg-white py-2 pl-10 pr-3 text-base text-[#0B1D3D] outline-none placeholder:text-[#0B1D3D]/40 hover:border-[#0B1D3D]/40 focus:border-[#0B1D3D] sm:text-sm"
+              className="h-11 w-full rounded-md border border-[#d1d5db] bg-white py-2 pl-10 pr-3 text-base text-[#0A1630] outline-none placeholder:text-[#0A1630]/40 hover:border-[#0A1630]/40 focus:border-[#0A1630] sm:text-sm"
             />
           </div>
 
@@ -273,14 +273,14 @@ export function ListingsExplorer({
             type="button"
             onClick={() => setFiltersOpen(true)}
             className={cn(
-              "inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-md border border-[#d1d5db] px-3.5 text-sm font-semibold text-[#0B1D3D] transition-colors hover:border-[#0B1D3D]/40 lg:hidden",
-              activeFilterCount > 0 && "border-[#0B1D3D] bg-[#F2F2F2]"
+              "inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-md border border-[#d1d5db] px-3.5 text-sm font-semibold text-[#0A1630] transition-colors hover:border-[#0A1630]/40 lg:hidden",
+              activeFilterCount > 0 && "border-[#0A1630] bg-[#F6F3EE]"
             )}
           >
             <SlidersHorizontal className="h-4 w-4" strokeWidth={2} />
             Filters
             {activeFilterCount > 0 ? (
-              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#0B1D3D] px-1.5 text-[0.7rem] text-white">
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#0A1630] px-1.5 text-[0.7rem] text-white">
                 {activeFilterCount}
               </span>
             ) : null}
@@ -290,8 +290,8 @@ export function ListingsExplorer({
             type="button"
             onClick={() => setMoreOpen((v) => !v)}
             className={cn(
-              "hidden h-11 shrink-0 items-center justify-center gap-2 rounded-md border border-[#d1d5db] px-3.5 text-sm font-semibold text-[#0B1D3D] transition-colors hover:border-[#0B1D3D]/40 lg:inline-flex",
-              moreOpen && "border-[#0B1D3D] bg-[#F2F2F2]"
+              "hidden h-11 shrink-0 items-center justify-center gap-2 rounded-md border border-[#d1d5db] px-3.5 text-sm font-semibold text-[#0A1630] transition-colors hover:border-[#0A1630]/40 lg:inline-flex",
+              moreOpen && "border-[#0A1630] bg-[#F6F3EE]"
             )}
           >
             <SlidersHorizontal className="h-4 w-4" strokeWidth={2} />
@@ -324,14 +324,14 @@ export function ListingsExplorer({
         <div className="fixed inset-0 z-[55] lg:hidden" role="dialog" aria-modal="true" aria-label="Listing filters">
           <button
             type="button"
-            className="absolute inset-0 bg-[#0B1D3D]/45"
+            className="absolute inset-0 bg-[#0A1630]/45"
             aria-label="Close filters"
             onClick={() => setFiltersOpen(false)}
           />
           <div className="absolute inset-x-0 bottom-0 max-h-[88svh] overflow-y-auto rounded-t-2xl bg-white px-4 pb-[calc(1.25rem+var(--ul-safe-bottom,0px))] pt-3 shadow-[0_-12px_40px_rgba(11,29,61,0.18)]">
             <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[#d1d5db]" />
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-lg font-bold text-[#0B1D3D]">Filters</h2>
+              <h2 className="text-lg font-bold text-[#0A1630]">Filters</h2>
               <button
                 type="button"
                 className="text-sm font-semibold text-[#1E7A4A]"
@@ -376,15 +376,15 @@ export function ListingsExplorer({
       )}
 
       <div className="mt-5 flex flex-col gap-4 border-b border-[#e5e7eb] pb-4 sm:mt-6 sm:pb-5 lg:flex-row lg:items-center lg:justify-between lg:pb-6">
-        <p className="text-sm text-[#0B1D3D]/70 md:text-[0.9375rem]">
+        <p className="text-sm text-[#0A1630]/70 md:text-[0.9375rem]">
           {title}{" "}
-          <span className="font-bold text-[#0B1D3D]">| {filtered.length} results</span>
+          <span className="font-bold text-[#0A1630]">| {filtered.length} results</span>
         </p>
 
         <div className="flex flex-wrap items-center gap-2.5 sm:gap-4">
           {!isRent && (
             <div className="flex w-full items-center gap-2 sm:w-auto">
-              <span className="hidden text-sm text-[#0B1D3D]/65 sm:inline">Show:</span>
+              <span className="hidden text-sm text-[#0A1630]/65 sm:inline">Show:</span>
               <div className="inline-flex w-full overflow-hidden rounded-md border border-[#d1d5db] sm:w-auto">
                 {(
                   [
@@ -404,8 +404,8 @@ export function ListingsExplorer({
                       className={cn(
                         "inline-flex h-10 flex-1 items-center justify-center gap-1.5 px-3 text-sm font-semibold transition-colors sm:h-9 sm:flex-none",
                         active
-                          ? "bg-[#0B1D3D] text-white"
-                          : "bg-white text-[#0B1D3D] hover:bg-[#F2F2F2]"
+                          ? "bg-[#0A1630] text-white"
+                          : "bg-white text-[#0A1630] hover:bg-[#F6F3EE]"
                       )}
                     >
                       {active ? <Check className="h-3.5 w-3.5" strokeWidth={2.5} /> : null}
@@ -418,10 +418,10 @@ export function ListingsExplorer({
           )}
 
           <div className="relative min-w-0 flex-1 sm:flex-none">
-            <ArrowUpDown className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#0B1D3D]/45" />
+            <ArrowUpDown className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#0A1630]/45" />
             <select
               aria-label="Sort listings"
-              className="h-10 w-full appearance-none rounded-md border border-[#d1d5db] bg-white py-1.5 pl-8 pr-8 text-sm font-medium text-[#0B1D3D] outline-none hover:border-[#0B1D3D]/40 focus:border-[#0B1D3D] sm:h-9 sm:w-auto"
+              className="h-10 w-full appearance-none rounded-md border border-[#d1d5db] bg-white py-1.5 pl-8 pr-8 text-sm font-medium text-[#0A1630] outline-none hover:border-[#0A1630]/40 focus:border-[#0A1630] sm:h-9 sm:w-auto"
               value={sort}
               onChange={(e) => {
                 const v = e.target.value as SortKey;
@@ -434,7 +434,7 @@ export function ListingsExplorer({
               <option value="price-desc">Price: High to Low</option>
               <option value="beds">Bedrooms</option>
             </select>
-            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#0B1D3D]/45" />
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#0A1630]/45" />
           </div>
 
           <a
@@ -449,7 +449,7 @@ export function ListingsExplorer({
             }
             target="_blank"
             rel="noreferrer"
-            className="inline-flex h-10 items-center gap-1.5 rounded-md border border-[#d1d5db] px-3 text-sm font-semibold text-[#0B1D3D] transition-colors hover:border-[#0B1D3D]/40 hover:bg-[#F2F2F2] sm:h-9"
+            className="inline-flex h-10 items-center gap-1.5 rounded-md border border-[#d1d5db] px-3 text-sm font-semibold text-[#0A1630] transition-colors hover:border-[#0A1630]/40 hover:bg-[#F6F3EE] sm:h-9"
           >
             <Map className="h-3.5 w-3.5" strokeWidth={2} />
             Map
@@ -459,7 +459,7 @@ export function ListingsExplorer({
 
       <div className="mt-6 space-y-5 pb-8 sm:mt-8 sm:space-y-6 md:mt-10 md:space-y-8 md:pb-12">
         {filtered.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-[#d1d5db] px-5 py-12 text-center text-sm text-[#0B1D3D]/55 sm:px-6 sm:py-16">
+          <p className="rounded-lg border border-dashed border-[#d1d5db] px-5 py-12 text-center text-sm text-[#0A1630]/55 sm:px-6 sm:py-16">
             No properties match these filters. Try widening your search.
           </p>
         ) : (

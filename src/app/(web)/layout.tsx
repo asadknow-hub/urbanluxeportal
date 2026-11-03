@@ -87,7 +87,7 @@ export default async function WebLayout({ children }: { children: React.ReactNod
           <div className="ul-site min-h-screen">
             <a
               href="#main-content"
-              className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#0B1D3D] focus:shadow-lg"
+              className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#0A1630] focus:shadow-lg"
             >
               Skip to content
             </a>

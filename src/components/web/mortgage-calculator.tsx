@@ -63,7 +63,7 @@ function CompactField({
 }) {
   return (
     <div className="min-w-0">
-      <label htmlFor={id} className="mb-1.5 block text-xs font-bold text-[#0B1D3D]">
+      <label htmlFor={id} className="mb-1.5 block text-xs font-bold text-[#0A1630]">
         {label}
       </label>
       {control}
@@ -77,7 +77,7 @@ function CompactField({
         className="ul-mortgage-range mt-2.5 w-full"
         aria-label={`${label} slider`}
       />
-      <div className="mt-1 flex items-center justify-between text-[0.65rem] text-[#0B1D3D]/40">
+      <div className="mt-1 flex items-center justify-between text-[0.65rem] text-[#0A1630]/40">
         <span>{minLabel}</span>
         <span>{maxLabel}</span>
       </div>
@@ -136,17 +136,17 @@ export function MortgageCalculator() {
   }
 
   const inputClass =
-    "h-9 w-full rounded-md border border-[#d1d5db] bg-white px-2.5 text-sm font-medium text-[#0B1D3D] outline-none transition-colors hover:border-[#0B1D3D]/35 focus:border-[#0B1D3D]";
+    "h-9 w-full rounded-md border border-[#d1d5db] bg-white px-2.5 text-sm font-medium text-[#0A1630] outline-none transition-colors hover:border-[#0A1630]/35 focus:border-[#0A1630]";
 
   return (
     <div className="rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-[0_4px_20px_rgba(11,29,61,0.05)] md:p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <h2 className="text-base font-bold tracking-tight text-[#0B1D3D] md:text-lg">
+        <h2 className="text-base font-bold tracking-tight text-[#0A1630] md:text-lg">
           Calculate your mortgage repayments
         </h2>
         <div className="sm:text-right">
-          <p className="text-[0.7rem] text-[#0B1D3D]/50">Monthly repayment</p>
-          <p className="text-xl font-bold tracking-tight text-[#0B1D3D] md:text-2xl">
+          <p className="text-[0.7rem] text-[#0A1630]/50">Monthly repayment</p>
+          <p className="text-xl font-bold tracking-tight text-[#0A1630] md:text-2xl">
             {format(Math.round(monthly))}
           </p>
         </div>
@@ -189,13 +189,13 @@ export function MortgageCalculator() {
           value={downAmount}
           onChange={setDownFromAmount}
           control={
-            <div className="grid grid-cols-[1fr_3.25rem] overflow-hidden rounded-md border border-[#d1d5db] focus-within:border-[#0B1D3D]">
+            <div className="grid grid-cols-[1fr_3.25rem] overflow-hidden rounded-md border border-[#d1d5db] focus-within:border-[#0A1630]">
               <input
                 id="down-payment"
                 type="text"
                 inputMode="numeric"
                 aria-label="Down payment amount"
-                className="h-9 border-0 bg-transparent px-2.5 text-sm font-medium text-[#0B1D3D] outline-none"
+                className="h-9 border-0 bg-transparent px-2.5 text-sm font-medium text-[#0A1630] outline-none"
                 value={downAmountText}
                 onChange={(e) => setDownAmountText(e.target.value)}
                 onBlur={() => setDownFromAmount(parseNumber(downAmountText) || downSliderMin)}
@@ -205,12 +205,12 @@ export function MortgageCalculator() {
                   type="text"
                   inputMode="numeric"
                   aria-label="Down payment percent"
-                  className="h-9 w-full bg-transparent py-0 pl-1.5 pr-5 text-sm font-medium text-[#0B1D3D] outline-none"
+                  className="h-9 w-full bg-transparent py-0 pl-1.5 pr-5 text-sm font-medium text-[#0A1630] outline-none"
                   value={downPctText}
                   onChange={(e) => setDownPctText(e.target.value.replace(/[^\d]/g, ""))}
                   onBlur={() => setDownFromPct(parseNumber(downPctText) || DOWN_PCT_MIN)}
                 />
-                <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-[0.65rem] font-semibold text-[#0B1D3D]/50">
+                <span className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-[0.65rem] font-semibold text-[#0A1630]/50">
                   %
                 </span>
               </div>
@@ -287,7 +287,7 @@ export function MortgageCalculator() {
         />
       </div>
 
-      <p className="mt-3 text-[0.65rem] leading-relaxed text-[#0B1D3D]/40">
+      <p className="mt-3 text-[0.65rem] leading-relaxed text-[#0A1630]/40">
         * Estimate for {format(price)} at {formatNumber(rate, 2)}% fixed — not a bank offer.
       </p>
     </div>

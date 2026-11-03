@@ -60,7 +60,7 @@ function MetaRow({
     <div
       className={cn(
         "flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.7rem] font-semibold uppercase tracking-[0.14em]",
-        light ? "text-white/70" : "text-[#0B1D3D]/45"
+        light ? "text-white/70" : "text-[#0A1630]/45"
       )}
     >
       <span className="text-[#1E7A4A]">{category}</span>
@@ -81,7 +81,7 @@ export default function InsightsPage() {
 
   return (
     <>
-      <section className="bg-[#0B1D3D] px-4 pb-10 pt-10 text-white sm:px-5 sm:pb-12 sm:pt-12 md:px-10 md:pb-14 md:pt-16">
+      <section className="bg-[#0A1630] px-4 pb-10 pt-10 text-white sm:px-5 sm:pb-12 sm:pt-12 md:px-10 md:pb-14 md:pt-16">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <p className="ul-kicker text-[#1E7A4A]">Insights</p>
@@ -129,7 +129,7 @@ export default function InsightsPage() {
             <Link
               href={`/insights/${featured.slug}`}
               prefetch
-              className="group grid overflow-hidden rounded-2xl border border-[#e5e7eb] bg-[#F2F2F2] shadow-[0_4px_24px_rgba(11,29,61,0.05)] transition-shadow hover:shadow-[0_10px_36px_rgba(11,29,61,0.1)] lg:grid-cols-2"
+              className="group grid overflow-hidden rounded-2xl border border-[#e5e7eb] bg-[#F6F3EE] shadow-[0_4px_24px_rgba(11,29,61,0.05)] transition-shadow hover:shadow-[0_10px_36px_rgba(11,29,61,0.1)] lg:grid-cols-2"
             >
               <div className="relative min-h-[240px] lg:min-h-[380px]">
                 <Image
@@ -147,13 +147,13 @@ export default function InsightsPage() {
                   date={featured.date}
                   readMins={featured.readMins}
                 />
-                <h3 className="mt-4 text-2xl font-bold leading-snug text-[#0B1D3D] transition-colors group-hover:text-[#1E7A4A] md:text-3xl">
+                <h3 className="mt-4 text-2xl font-bold leading-snug text-[#0A1630] transition-colors group-hover:text-[#1E7A4A] md:text-3xl">
                   {featured.title}
                 </h3>
-                <p className="mt-4 text-sm leading-relaxed text-[#0B1D3D]/70 md:text-base">
+                <p className="mt-4 text-sm leading-relaxed text-[#0A1630]/70 md:text-base">
                   {featured.excerpt}
                 </p>
-                <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#0B1D3D] transition-all group-hover:gap-2.5">
+                <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#0A1630] transition-all group-hover:gap-2.5">
                   Read the brief <ArrowRight className="h-4 w-4" />
                 </span>
               </div>
@@ -162,24 +162,24 @@ export default function InsightsPage() {
         </div>
       </section>
 
-      <section id="snapshot" className="border-y border-[#e5e7eb] bg-[#F2F2F2] px-5 py-10 md:px-10 md:py-12">
+      <section id="snapshot" className="border-y border-[#e5e7eb] bg-[#F6F3EE] px-5 py-10 md:px-10 md:py-12">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <div className="mb-6 flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-[#1E7A4A]" strokeWidth={2.25} />
-              <p className="text-sm font-semibold text-[#0B1D3D]">Market snapshot</p>
-              <span className="text-xs text-[#0B1D3D]/45">Indicative · Urban Luxe desk</span>
+              <p className="text-sm font-semibold text-[#0A1630]">Market snapshot</p>
+              <span className="text-xs text-[#0A1630]/45">Indicative · Urban Luxe desk</span>
             </div>
           </Reveal>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {SNAPSHOT.map((item, i) => (
               <Reveal key={item.label} delay={i * 40}>
                 <div className="rounded-xl border border-[#e5e7eb] bg-white px-5 py-5">
-                  <p className="text-xs font-medium uppercase tracking-[0.12em] text-[#0B1D3D]/45">
+                  <p className="text-xs font-medium uppercase tracking-[0.12em] text-[#0A1630]/45">
                     {item.label}
                   </p>
-                  <p className="mt-2 text-3xl font-bold tracking-tight text-[#0B1D3D]">{item.value}</p>
-                  <p className="mt-1 text-xs text-[#0B1D3D]/55">{item.sub}</p>
+                  <p className="mt-2 text-3xl font-bold tracking-tight text-[#0A1630]">{item.value}</p>
+                  <p className="mt-1 text-xs text-[#0A1630]/55">{item.sub}</p>
                 </div>
               </Reveal>
             ))}
@@ -206,7 +206,7 @@ export default function InsightsPage() {
                   prefetch
                   className="group flex h-full flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_2px_12px_rgba(11,29,61,0.04)] transition-shadow hover:shadow-[0_8px_28px_rgba(11,29,61,0.1)]"
                 >
-                  <div className="relative aspect-[16/10] overflow-hidden bg-[#F2F2F2]">
+                  <div className="relative aspect-[16/10] overflow-hidden bg-[#F6F3EE]">
                     <Image
                       src={item.image}
                       alt={item.title}
@@ -226,7 +226,7 @@ export default function InsightsPage() {
                     <p
                       className={cn(
                         "mt-2 flex-1 text-sm leading-relaxed",
-                        item.panel.includes("tertiary") ? "text-[#0B1D3D]/70" : "text-white/80"
+                        item.panel.includes("tertiary") ? "text-[#0A1630]/70" : "text-white/80"
                       )}
                     >
                       {item.excerpt}
@@ -242,7 +242,7 @@ export default function InsightsPage() {
         </div>
       </section>
 
-      <section id="guides" className="border-t border-[#e5e7eb] bg-[#F2F2F2] px-5 py-14 md:px-10 md:py-20">
+      <section id="guides" className="border-t border-[#e5e7eb] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-20">
         <div className="mx-auto grid max-w-[1280px] gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           <Reveal>
             <p className="ul-kicker">Guides</p>
@@ -255,7 +255,7 @@ export default function InsightsPage() {
             <Link
               href="/contact"
               prefetch
-              className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[#0B1D3D] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#0a172e]"
+              className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[#0A1630] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#081226]"
             >
               Request a briefing
             </Link>
@@ -267,15 +267,15 @@ export default function InsightsPage() {
                 <Link
                   href={guide.href}
                   prefetch
-                  className="group flex items-start justify-between gap-4 rounded-xl border border-[#e5e7eb] bg-white px-5 py-5 transition-colors hover:border-[#0B1D3D]/25"
+                  className="group flex items-start justify-between gap-4 rounded-xl border border-[#e5e7eb] bg-white px-5 py-5 transition-colors hover:border-[#0A1630]/25"
                 >
                   <div>
-                    <p className="font-semibold text-[#0B1D3D] group-hover:text-[#1E7A4A]">
+                    <p className="font-semibold text-[#0A1630] group-hover:text-[#1E7A4A]">
                       {guide.title}
                     </p>
-                    <p className="mt-1.5 text-sm leading-relaxed text-[#0B1D3D]/65">{guide.body}</p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-[#0A1630]/65">{guide.body}</p>
                   </div>
-                  <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-[#0B1D3D]/35 transition-transform group-hover:translate-x-0.5 group-hover:text-[#1E7A4A]" />
+                  <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-[#0A1630]/35 transition-transform group-hover:translate-x-0.5 group-hover:text-[#1E7A4A]" />
                 </Link>
               </Reveal>
             ))}
@@ -283,7 +283,7 @@ export default function InsightsPage() {
         </div>
       </section>
 
-      <section className="bg-[#0B1D3D] px-5 py-14 md:px-10 md:py-16">
+      <section className="bg-[#0A1630] px-5 py-14 md:px-10 md:py-16">
         <Reveal className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           <div className="max-w-xl">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#1E7A4A]">
@@ -301,7 +301,7 @@ export default function InsightsPage() {
             <Link
               href="/contact"
               prefetch
-              className="inline-flex h-11 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-[#0B1D3D] transition-colors hover:bg-[#F2F2F2]"
+              className="inline-flex h-11 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-[#0A1630] transition-colors hover:bg-[#F6F3EE]"
             >
               Get the briefing
             </Link>

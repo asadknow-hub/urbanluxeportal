@@ -85,7 +85,7 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
         {filtersOpen && (
           <button
             type="button"
-            className="fixed inset-0 z-40 bg-[#0B1D3D]/45 lg:hidden"
+            className="fixed inset-0 z-40 bg-[#0A1630]/45 lg:hidden"
             aria-label="Close filters"
             onClick={() => setFiltersOpen(false)}
           />

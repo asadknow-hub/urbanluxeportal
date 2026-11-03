@@ -19,7 +19,7 @@ export function PropertyMobileBar({
       <div className="mx-auto grid max-w-[1200px] grid-cols-3 gap-2">
         <a
           href={`tel:${brand.phoneTel}`}
-          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-md border border-[#0B1D3D]/2 text-sm font-semibold text-[#0B1D3D]"
+          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-md border border-[#0A1630]/2 text-sm font-semibold text-[#0A1630]"
         >
           <Phone className="h-3.5 w-3.5" />
           Call
@@ -28,14 +28,14 @@ export function PropertyMobileBar({
           href={wa}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-md border border-[#25D366]/35 text-sm font-semibold text-[#0B1D3D]"
+          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-md border border-[#25D366]/35 text-sm font-semibold text-[#0A1630]"
         >
           <MessageCircle className="h-3.5 w-3.5 text-[#25D366]" />
           Chat
         </a>
         <Link
           href="#enquire"
-          className="inline-flex h-11 items-center justify-center rounded-md bg-[#0B1D3D] text-sm font-semibold text-white"
+          className="inline-flex h-11 items-center justify-center rounded-md bg-[#0A1630] text-sm font-semibold text-white"
         >
           Enquire
         </Link>

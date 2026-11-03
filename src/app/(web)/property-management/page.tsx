@@ -51,7 +51,7 @@ const STEPS = [
 export default function PropertyManagementPage() {
   return (
     <>
-      <section className="bg-[#0B1D3D] px-4 pb-10 pt-10 text-white sm:px-5 sm:pb-12 sm:pt-12 md:px-10 md:pb-14 md:pt-16">
+      <section className="bg-[#0A1630] px-4 pb-10 pt-10 text-white sm:px-5 sm:pb-12 sm:pt-12 md:px-10 md:pb-14 md:pt-16">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <p className="ul-kicker text-[#1E7A4A]">Services</p>
@@ -84,7 +84,7 @@ export default function PropertyManagementPage() {
       <section className="ul-band-light px-5 py-14 md:px-10 md:py-20">
         <div className="mx-auto grid max-w-[1280px] items-center gap-10 md:grid-cols-2 md:gap-16">
           <Reveal>
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#F2F2F2]">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#F6F3EE]">
               <Image
                 src={IMAGES.living}
                 alt="Managed residence"
@@ -106,10 +106,10 @@ export default function PropertyManagementPage() {
             </p>
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               {SERVICES.map((item) => (
-                <div key={item.title} className="rounded-xl border border-[#e5e7eb] bg-[#F2F2F2] p-4">
+                <div key={item.title} className="rounded-xl border border-[#e5e7eb] bg-[#F6F3EE] p-4">
                   <item.icon className="h-5 w-5 text-[#1E7A4A]" strokeWidth={2} />
-                  <p className="mt-3 text-sm font-semibold text-[#0B1D3D]">{item.title}</p>
-                  <p className="mt-1.5 text-xs leading-relaxed text-[#0B1D3D]/65">{item.body}</p>
+                  <p className="mt-3 text-sm font-semibold text-[#0A1630]">{item.title}</p>
+                  <p className="mt-1.5 text-xs leading-relaxed text-[#0A1630]/65">{item.body}</p>
                 </div>
               ))}
             </div>
@@ -117,7 +117,7 @@ export default function PropertyManagementPage() {
         </div>
       </section>
 
-      <section className="border-y border-[#e5e7eb] bg-[#F2F2F2] px-5 py-14 md:px-10 md:py-16">
+      <section className="border-y border-[#e5e7eb] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-16">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <p className="ul-kicker">Process</p>
@@ -128,8 +128,8 @@ export default function PropertyManagementPage() {
               <Reveal key={step.n} delay={i * 40}>
                 <div className="h-full rounded-xl border border-[#e5e7eb] bg-white p-5">
                   <p className="text-xs font-bold tracking-[0.16em] text-[#1E7A4A]">{step.n}</p>
-                  <h3 className="mt-3 font-semibold text-[#0B1D3D]">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[#0B1D3D]/65">{step.body}</p>
+                  <h3 className="mt-3 font-semibold text-[#0A1630]">{step.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[#0A1630]/65">{step.body}</p>
                 </div>
               </Reveal>
             ))}
@@ -157,7 +157,7 @@ export default function PropertyManagementPage() {
             </Link>
           </Reveal>
           <Reveal delay={60}>
-            <div className="rounded-xl border border-[#e5e7eb] bg-[#F2F2F2] p-6 md:p-8">
+            <div className="rounded-xl border border-[#e5e7eb] bg-[#F6F3EE] p-6 md:p-8">
               <EnquireForm compact />
             </div>
           </Reveal>

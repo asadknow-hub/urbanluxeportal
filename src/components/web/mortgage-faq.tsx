@@ -54,12 +54,12 @@ export function MortgageFaq() {
               aria-expanded={isOpen}
               onClick={() => setOpen(isOpen ? null : i)}
             >
-              <span className="text-base font-semibold text-[#0B1D3D] md:text-[1.0625rem]">
+              <span className="text-base font-semibold text-[#0A1630] md:text-[1.0625rem]">
                 {item.q}
               </span>
               <ChevronDown
                 className={cn(
-                  "h-5 w-5 shrink-0 text-[#0B1D3D]/50 transition-transform duration-200",
+                  "h-5 w-5 shrink-0 text-[#0A1630]/50 transition-transform duration-200",
                   isOpen && "rotate-180"
                 )}
               />
@@ -71,7 +71,7 @@ export function MortgageFaq() {
               )}
             >
               <div className="overflow-hidden">
-                <p className="px-5 pb-5 text-sm leading-relaxed text-[#0B1D3D]/70 md:px-6 md:text-[0.9375rem]">
+                <p className="px-5 pb-5 text-sm leading-relaxed text-[#0A1630]/70 md:px-6 md:text-[0.9375rem]">
                   {item.a}
                 </p>
               </div>
