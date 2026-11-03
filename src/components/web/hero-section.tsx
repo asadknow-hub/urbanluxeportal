@@ -1,21 +1,26 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { HeroSearch } from "@/components/web/hero-search";
 import { IMAGES } from "@/lib/web/listings";
 
+const HERO_VIDEO = "/b57b94922dc9e0dcee448d0ac5381a4a.mp4";
+
 export function HeroSection() {
   return (
     <section className="relative flex h-[100svh] min-h-[36rem] flex-col overflow-hidden bg-[var(--ul-primary)]">
       <div className="absolute inset-0">
-        <Image
-          src={IMAGES.heroRefined}
-          alt="Luxury penthouse terrace overlooking Dubai at dusk"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-[center_35%] opacity-50 sm:object-center"
-        />
+        <video
+          className="absolute inset-0 h-full w-full object-cover object-center opacity-55"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          poster={IMAGES.heroRefined}
+          aria-hidden
+        >
+          <source src={HERO_VIDEO} type="video/mp4" />
+        </video>
         <div className="absolute inset-0 bg-gradient-to-r from-[var(--ul-primary)] via-[var(--ul-primary)]/82 to-[var(--ul-primary)]/40" />
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--ul-primary)] via-[var(--ul-primary)]/20 to-[var(--ul-primary)]/55" />
         <div
