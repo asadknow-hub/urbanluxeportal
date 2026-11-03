@@ -7,16 +7,19 @@ import { useBrand } from "@/components/brand/brand-provider";
 
 function Wordmark({ inverted }: { inverted: boolean }) {
   return (
-    <span className="inline-flex items-baseline gap-0 tracking-[0.04em]">
+    <span
+      className="inline-flex items-baseline tracking-[0.02em]"
+      style={{ fontFamily: "var(--font-headline), var(--font-poppins), system-ui, sans-serif" }}
+    >
       <span
         className={cn(
-          "text-[1.05rem] font-extrabold uppercase md:text-[1.2rem]",
+          "text-[1.15rem] font-bold uppercase leading-none md:text-[1.35rem]",
           inverted ? "text-white" : "text-[#07111F]"
         )}
       >
         Urban
       </span>
-      <span className="text-[1.05rem] font-extrabold uppercase text-[#00C853] md:text-[1.2rem]">
+      <span className="text-[1.15rem] font-bold uppercase leading-none text-[#008040] md:text-[1.35rem]">
         Luxe
       </span>
     </span>
@@ -45,8 +48,8 @@ export function SiteLogo({
         className={cn(
           "grid h-9 w-9 place-items-center rounded-lg border",
           inverted
-            ? "border-[#00C853]/40 bg-[#00C853]/15 text-[#00C853]"
-            : "border-[#00C853]/30 bg-[#00C853]/10 text-[#00C853]"
+            ? "border-[#008040]/45 bg-[#008040]/15 text-[#008040]"
+            : "border-[#008040]/35 bg-[#008040]/10 text-[#008040]"
         )}
         aria-hidden
       >

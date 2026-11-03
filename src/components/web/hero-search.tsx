@@ -34,7 +34,7 @@ export function HeroSearch() {
   }
 
   return (
-    <form onSubmit={submit} className="w-full max-w-2xl">
+    <form onSubmit={submit} className="w-full">
       <div className="ul-hide-scroll -mx-1 flex items-end gap-0.5 overflow-x-auto px-1 pb-px">
         {TABS.map((item) => {
           const active = tab === item.id;
@@ -83,7 +83,7 @@ export function HeroSearch() {
 
         <button
           type="submit"
-          className="flex h-12 w-12 shrink-0 items-center justify-center bg-[#00C853] text-[#07111F] transition-colors hover:bg-[#00a844] sm:h-[3.25rem] sm:w-[3.25rem]"
+          className="flex h-12 w-12 shrink-0 items-center justify-center bg-[#008040] text-white transition-colors hover:bg-[#006633] sm:h-[3.25rem] sm:w-[3.25rem]"
           aria-label="Search properties"
         >
           <Search className="h-[1.125rem] w-[1.125rem]" strokeWidth={2.25} />

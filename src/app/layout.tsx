@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cinzel, Geist, Geist_Mono, Josefin_Sans, Poppins } from "next/font/google";
+import { Cinzel, Geist, Geist_Mono, Josefin_Sans, Oswald, Poppins } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,7 +24,13 @@ const cinzel = Cinzel({
 const poppins = Poppins({
   variable: "--font-poppins",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+const oswald = Oswald({
+  variable: "--font-headline",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
 const josefin = Josefin_Sans({
@@ -46,14 +52,14 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0B1D3D",
+  themeColor: "#07111F",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${cinzel.variable} ${josefin.variable} ${poppins.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${cinzel.variable} ${josefin.variable} ${poppins.variable} ${oswald.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <TooltipProvider>

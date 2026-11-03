@@ -39,7 +39,7 @@ export function SiteFooter() {
 
   return (
     <footer className="bg-[var(--ul-quaternary)] text-white">
-      <div className="ul-shell py-12 sm:py-16 md:py-20">
+      <div className="ul-shell-wide py-12 sm:py-16 md:py-20">
         <div className="grid gap-10 sm:gap-12 lg:grid-cols-12">
           <div className="lg:col-span-5">
             <SiteLogo inverted />

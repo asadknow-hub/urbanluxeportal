@@ -44,17 +44,17 @@ const QUALITIES = [
 
 export function WhyAgentsSection() {
   return (
-    <section className="bg-[var(--ul-primary)] py-16 md:py-24">
-      <div className="ul-shell">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-end">
-          <Reveal>
+    <section className="bg-[var(--ul-tertiary)] py-16 md:py-24">
+      <div className="ul-shell-wide">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end">
+          <Reveal className="justify-self-start">
             <p className="ul-kicker">Our people</p>
             <h2 className="ul-section-heading mt-3 text-3xl md:text-4xl">
               Why our agents are right for you
             </h2>
           </Reveal>
-          <Reveal delay={50}>
-            <p className="max-w-xl text-base leading-relaxed text-[var(--ul-muted)] lg:justify-self-end lg:text-right">
+          <Reveal delay={50} className="lg:justify-self-end lg:text-right">
+            <p className="max-w-xl text-base leading-relaxed text-[var(--ul-muted)] lg:ml-auto">
               Specialists, not sales scripts — advisors who combine market craft with the care of a
               private office.
             </p>
@@ -64,11 +64,13 @@ export function WhyAgentsSection() {
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {QUALITIES.map((item, i) => (
             <Reveal key={item.title} delay={i * 50}>
-              <article className="ul-card-dark flex h-full flex-col p-6">
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--ul-secondary)] text-[#07111F]">
+              <article className="flex h-full flex-col rounded-2xl border border-[var(--ul-hair)] bg-white p-6 shadow-[0_8px_30px_rgba(7,17,31,0.04)]">
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--ul-secondary)] text-[#07111F]">
                   <item.icon className="h-5 w-5" strokeWidth={1.75} />
                 </span>
-                <h3 className="mt-5 text-lg font-bold uppercase tracking-wide text-white">{item.title}</h3>
+                <h3 className="mt-5 text-lg font-bold uppercase tracking-wide text-[var(--ul-primary)]">
+                  {item.title}
+                </h3>
                 <p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--ul-muted)]">{item.body}</p>
               </article>
             </Reveal>
@@ -76,7 +78,7 @@ export function WhyAgentsSection() {
         </div>
 
         <Reveal delay={200} className="mt-12">
-          <Link href="/contact" prefetch className="ul-btn-primary">
+          <Link href="/contact" prefetch className="ul-btn-primary rounded-full">
             Speak with an agent
           </Link>
         </Reveal>

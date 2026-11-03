@@ -1,20 +1,18 @@
 /**
- * UrbanLuxe public brand palette — matched to the approved dark navy + kelly green system.
- * Use these values (or CSS vars --ul-*) everywhere on the public site.
+ * UrbanLuxe public brand — light UI, deep forest green on white,
+ * dark navy for hero / accent bands. Headlines use condensed Oswald.
  */
 export const BRAND = {
-  /** Near-black navy page canvas */
+  /** Deep navy ink / dark bands */
   primary: "#07111F",
-  /** Kelly / electric green accent */
-  secondary: "#00C853",
-  /** Soft surface on dark */
-  tertiary: "#0E1A2E",
-  /** Deep ink / footer */
+  /** Forest green — darker, cleaner on white (reference) */
+  secondary: "#008040",
+  /** Soft light surface */
+  tertiary: "#F4F6F8",
+  /** Footer / deep canvas */
   quaternary: "#050B14",
-  /** Green on white callouts */
-  onPaper: "#00C853",
-  muted: "#8BA0B8",
-  hair: "#1A2A40",
+  muted: "#4B5563",
+  hair: "#E5E7EB",
 } as const;
 
 export type BrandColor = (typeof BRAND)[keyof typeof BRAND];

@@ -7,15 +7,15 @@ export function ListingsPage({ kind }: { kind: ListingKind }) {
     kind === "sale" ? [...listingsFor("sale"), ...listingsFor("offplan")] : listingsFor(kind);
 
   return (
-    <section className="min-h-[70vh] bg-[var(--ul-primary)] py-6 md:py-8">
-      <div className="ul-shell">
-        <div className="ul-panel-light overflow-hidden p-4 sm:p-5 md:p-6">
+    <section className="min-h-[70vh] bg-[var(--ul-tertiary)] py-6 md:py-8">
+      <div className="ul-shell-wide">
+        <div className="overflow-hidden rounded-[1.5rem] border border-[var(--ul-hair)] bg-white p-4 shadow-[0_12px_40px_rgba(7,17,31,0.06)] sm:p-5 md:p-6">
           <Suspense
             fallback={
               <div className="space-y-4">
-                <div className="h-14 animate-pulse rounded-lg bg-[#e2e8f0]" />
-                <div className="h-10 animate-pulse rounded-md bg-[#e2e8f0]" />
-                <div className="h-64 animate-pulse rounded-lg bg-[#e2e8f0]" />
+                <div className="h-14 animate-pulse rounded-lg bg-[#e5e7eb]" />
+                <div className="h-10 animate-pulse rounded-md bg-[#e5e7eb]" />
+                <div className="h-64 animate-pulse rounded-lg bg-[#e5e7eb]" />
               </div>
             }
           >

@@ -97,14 +97,40 @@ function SplitSection({
   reverse?: boolean;
 }) {
   return (
-    <section className="bg-[var(--ul-primary)] px-0 py-14 sm:py-18 md:py-24">
-      <div className="ul-shell grid items-center gap-10 md:grid-cols-2 md:gap-16">
-        <Reveal className={reverse ? "md:order-2" : undefined}>{children}</Reveal>
-        <Reveal delay={80} className={reverse ? "md:order-1" : undefined}>
+    <section className="bg-white py-14 md:py-24">
+      <div className="ul-shell-wide grid items-center gap-10 md:grid-cols-2 md:gap-16 xl:gap-24">
+        <Reveal className={reverse ? "md:order-2" : "md:justify-self-start"}>
+          {children}
+        </Reveal>
+        <Reveal delay={80} className={reverse ? "md:order-1 md:justify-self-start" : "md:justify-self-end"}>
           {image}
         </Reveal>
       </div>
     </section>
+  );
+}
+
+function SectionHead({
+  kicker,
+  title,
+  lede,
+}: {
+  kicker: string;
+  title: string;
+  lede?: string;
+}) {
+  return (
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:items-end">
+      <div className="justify-self-start">
+        <p className="ul-kicker">{kicker}</p>
+        <h2 className="ul-section-heading mt-3 text-3xl md:text-4xl lg:text-[2.65rem]">{title}</h2>
+      </div>
+      {lede ? (
+        <p className="max-w-xl text-base leading-relaxed text-[var(--ul-muted)] lg:justify-self-end lg:text-right">
+          {lede}
+        </p>
+      ) : null}
+    </div>
   );
 }
 
@@ -113,53 +139,17 @@ export function HomePage() {
     <>
       <HeroSection />
 
-      {/* How it works — structured 3-up like the reference */}
-      <section className="bg-[var(--ul-primary)] py-14 md:py-20">
-        <div className="ul-shell">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-end lg:gap-12">
-            <Reveal>
-              <p className="ul-kicker">How UrbanLuxe works</p>
-              <h2 className="ul-section-heading mt-3 text-3xl md:text-4xl lg:text-[2.75rem]">
-                A clear path from brief to keys
-              </h2>
-            </Reveal>
-            <Reveal delay={60}>
-              <p className="max-w-2xl text-base leading-relaxed text-[var(--ul-muted)] lg:justify-self-end lg:text-right">
-                No middle-of-the-page brochure fluff — a structured process built for serious buyers,
-                tenants, and sellers across Dubai.
-              </p>
-            </Reveal>
-          </div>
-
-          <div className="mt-10 grid gap-4 md:grid-cols-3 md:gap-5">
-            {STEPS.map((step, i) => (
-              <Reveal key={step.n} delay={i * 70}>
-                <article className="ul-card-dark flex h-full flex-col p-5 sm:p-6">
-                  <span className="text-3xl font-extrabold tabular-nums text-[var(--ul-secondary)]">
-                    {step.n}
-                  </span>
-                  <h3 className="mt-4 text-lg font-bold uppercase tracking-wide text-white">{step.title}</h3>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--ul-muted)]">{step.body}</p>
-                </article>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Green-on-white banner — reference callout */}
-      <section className="bg-[var(--ul-primary)] pb-6 md:pb-10">
-        <div className="ul-shell">
+      {/* Green-on-white callout — forest green, condensed type, left copy / right CTAs */}
+      <section className="ul-band-dark -mt-2 pb-8 pt-2 md:pb-12">
+        <div className="ul-shell-wide">
           <Reveal>
-            <div className="ul-panel-light grid gap-6 p-6 sm:p-8 md:grid-cols-[1.2fr_0.8fr] md:items-center md:gap-10 md:p-10">
-              <div>
-                <p className="text-[0.72rem] font-bold uppercase tracking-[0.18em] text-[var(--ul-secondary)]">
-                  Zero hidden fees
-                </p>
-                <h2 className="mt-3 text-3xl font-extrabold uppercase leading-[1.05] tracking-[-0.03em] text-[var(--ul-secondary)] md:text-4xl lg:text-[2.85rem]">
+            <div className="ul-callout grid gap-8 md:grid-cols-[minmax(0,1.35fr)_auto] md:items-center md:gap-12">
+              <div className="min-w-0 text-left">
+                <p className="ul-callout-kicker">Zero hidden fees</p>
+                <h2 className="ul-callout-title mt-3 text-[clamp(1.85rem,4.2vw,3.35rem)]">
                   Your home journey starts and ends here — free.
                 </h2>
-                <p className="mt-4 max-w-xl text-base leading-relaxed text-[#334155]">
+                <p className="mt-4 max-w-xl text-[0.95rem] leading-relaxed text-[#333333] sm:text-base">
                   From first viewing to final handover, UrbanLuxe guides every step with dedicated
                   specialists and transparent advice.
                 </p>
@@ -168,11 +158,7 @@ export function HomePage() {
                 <Link href="/buy" prefetch className="ul-btn-primary">
                   Start now <ArrowRight className="h-4 w-4" />
                 </Link>
-                <Link
-                  href="/contact"
-                  prefetch
-                  className="inline-flex h-11 items-center justify-center rounded-lg border border-[#07111F]/15 px-5 text-[0.75rem] font-bold uppercase tracking-[0.06em] text-[#07111F] transition-colors hover:border-[var(--ul-secondary)] hover:text-[var(--ul-secondary)]"
-                >
+                <Link href="/contact" prefetch className="ul-btn-outline">
                   Talk to us
                 </Link>
               </div>
@@ -181,11 +167,34 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Categories */}
-      <section className="bg-[var(--ul-primary)] py-14 md:py-20">
-        <div className="ul-shell">
+      {/* Dark accent band mixed into light UI */}
+      <section className="ul-band-dark py-14 md:py-20">
+        <div className="ul-shell-wide">
+          <SectionHead
+            kicker="How UrbanLuxe works"
+            title="A clear path from brief to keys"
+            lede="Left-to-right structure on every screen — value on one side, action on the other. No skinny middle brochure."
+          />
+          <div className="mt-10 grid gap-4 md:grid-cols-3 md:gap-5">
+            {STEPS.map((step, i) => (
+              <Reveal key={step.n} delay={i * 70}>
+                <article className="ul-card-dark flex h-full flex-col p-5 sm:p-6">
+                  <span className="text-3xl font-extrabold tabular-nums text-[var(--ul-secondary)]">
+                    {step.n}
+                  </span>
+                  <h3 className="mt-4 text-lg font-bold uppercase tracking-wide text-white">{step.title}</h3>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-[#8ba0b8]">{step.body}</p>
+                </article>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white py-14 md:py-20">
+        <div className="ul-shell-wide">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-            <div>
+            <div className="justify-self-start">
               <p className="ul-kicker">Explore</p>
               <h2 className="ul-section-heading mt-2 text-3xl md:text-4xl">Buy · Rent · Offplan</h2>
             </div>
@@ -199,25 +208,25 @@ export function HomePage() {
                 <Link
                   href={card.href}
                   prefetch
-                  className="group flex h-full min-h-[20rem] flex-col overflow-hidden rounded-2xl border border-white/10 bg-[var(--ul-tertiary)] transition-transform duration-200 motion-safe:hover:-translate-y-0.5"
+                  className="group flex h-full min-h-[20rem] flex-col overflow-hidden rounded-2xl border border-[var(--ul-hair)] bg-white shadow-[0_8px_30px_rgba(7,17,31,0.05)] transition-transform duration-200 motion-safe:hover:-translate-y-0.5"
                 >
-                  <div className="relative min-h-[12rem] flex-1 overflow-hidden sm:min-h-[14rem]">
+                  <div className="relative min-h-[12rem] flex-1 overflow-hidden bg-[var(--ul-tertiary)] sm:min-h-[14rem]">
                     <Image
                       src={card.image}
                       alt={card.kicker}
                       fill
-                      sizes="(max-width: 768px) 100vw, 400px"
+                      sizes="(max-width: 768px) 100vw, 33vw"
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   </div>
-                  <div className="flex flex-col bg-[var(--ul-paper)] px-5 py-5 text-[#07111F] sm:px-6 sm:py-6">
+                  <div className="flex flex-col px-5 py-5 sm:px-6 sm:py-6">
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ul-secondary)]">
                       {card.kicker}
                     </p>
-                    <p className="mt-2 text-xl font-bold leading-snug tracking-tight md:text-2xl">
+                    <p className="mt-2 text-xl font-bold leading-snug tracking-tight text-[var(--ul-primary)] md:text-2xl">
                       {card.title}
                     </p>
-                    <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#07111F] transition-all group-hover:gap-2.5">
+                    <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ul-primary)] transition-all group-hover:gap-2.5">
                       {card.link} <ArrowRight className="h-4 w-4 text-[var(--ul-secondary)]" />
                     </span>
                   </div>
@@ -237,16 +246,15 @@ export function HomePage() {
           From first viewing to final handover — UrbanLuxe guides you through every step with
           dedicated specialists and zero hidden fees.
         </p>
-        <Link href="/buy" prefetch className="ul-btn-primary mt-8">
+        <Link href="/buy" prefetch className="ul-btn-primary mt-8 rounded-full">
           Start now
         </Link>
       </SplitSection>
 
-      {/* Careers band */}
-      <section className="bg-[var(--ul-tertiary)] py-16 md:py-24">
-        <div className="ul-shell grid items-center gap-10 md:grid-cols-2 md:gap-16">
+      <section className="ul-band-dark py-16 md:py-24">
+        <div className="ul-shell-wide grid items-center gap-10 md:grid-cols-2 md:gap-16">
           <Reveal>
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[var(--ul-primary)]/40 md:aspect-[5/4]">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-white/5 md:aspect-[5/4]">
               <Image
                 src={IMAGES.careers}
                 alt="Urban Luxe team"
@@ -256,16 +264,16 @@ export function HomePage() {
               />
             </div>
           </Reveal>
-          <Reveal delay={80}>
+          <Reveal delay={80} className="md:justify-self-end md:text-right">
             <p className="ul-kicker">Careers</p>
-            <h2 className="ul-section-heading mt-3 text-3xl md:text-4xl lg:text-[2.75rem]">
+            <h2 className="ul-section-heading mt-3 text-3xl text-white md:text-4xl lg:text-[2.75rem]">
               See what you&apos;re missing out on
             </h2>
-            <p className="mt-5 max-w-md text-base leading-relaxed text-[var(--ul-muted)]">
+            <p className="mt-5 max-w-md text-base leading-relaxed text-[#8ba0b8] md:ml-auto">
               We are always accepting online applications. Dubai awaits — are you ready to take the
               leap?
             </p>
-            <Link href="/careers" prefetch className="ul-btn-primary mt-8">
+            <Link href="/careers" prefetch className="ul-btn-primary mt-8 rounded-full">
               Get in touch
             </Link>
           </Reveal>
@@ -276,8 +284,8 @@ export function HomePage() {
       <MarketGrowthSection />
       <DevelopersMarquee />
 
-      <section className="bg-[var(--ul-primary)] py-16 md:py-24">
-        <div className="ul-shell">
+      <section className="bg-white py-16 md:py-24">
+        <div className="ul-shell-wide">
           <Reveal>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
@@ -295,9 +303,9 @@ export function HomePage() {
                 <Link
                   href={item.href}
                   prefetch
-                  className="group block overflow-hidden rounded-2xl border border-white/10 bg-[var(--ul-tertiary)]"
+                  className="group block overflow-hidden rounded-2xl border border-[var(--ul-hair)] bg-white shadow-[0_8px_30px_rgba(7,17,31,0.05)]"
                 >
-                  <div className="relative aspect-[4/3] overflow-hidden">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-[var(--ul-tertiary)]">
                     <Image
                       src={item.image}
                       alt={item.title}
@@ -306,8 +314,10 @@ export function HomePage() {
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   </div>
-                  <div className="bg-[var(--ul-paper)] px-5 py-5 text-[#07111F]">
-                    <p className="text-lg font-bold leading-snug md:text-xl">{item.title}</p>
+                  <div className="px-5 py-5">
+                    <p className="text-lg font-bold leading-snug text-[var(--ul-primary)] md:text-xl">
+                      {item.title}
+                    </p>
                     <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ul-secondary)] transition-all group-hover:gap-2.5">
                       Read more <ArrowRight className="h-4 w-4" />
                     </span>
@@ -321,8 +331,8 @@ export function HomePage() {
 
       <TestimonialsSection />
 
-      <section className="border-t border-white/10 bg-[var(--ul-quaternary)] py-16 md:py-20">
-        <Reveal className="ul-shell flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
+      <section className="border-t border-[var(--ul-hair)] bg-[var(--ul-tertiary)] py-16 md:py-20">
+        <Reveal className="ul-shell-wide flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           <div>
             <p className="ul-kicker">Stay informed</p>
             <h2 className="ul-section-heading mt-3 text-2xl md:text-3xl">
@@ -332,11 +342,11 @@ export function HomePage() {
               Market updates, new launches, and expert insights — straight to your inbox.
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Link href="/contact" prefetch className="ul-btn-primary">
+          <div className="flex flex-wrap gap-3 md:justify-end">
+            <Link href="/contact" prefetch className="ul-btn-primary rounded-full">
               Get in touch
             </Link>
-            <Link href="/buy" prefetch className="ul-btn-outline">
+            <Link href="/buy" prefetch className="ul-btn-outline rounded-full">
               Browse listings
             </Link>
           </div>

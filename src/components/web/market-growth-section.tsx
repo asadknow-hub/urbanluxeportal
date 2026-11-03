@@ -79,16 +79,16 @@ function ChartTooltip({
 
 export function MarketGrowthSection() {
   return (
-    <section className="bg-[var(--ul-primary)] py-16 md:py-24">
-      <div className="ul-shell">
+    <section className="ul-band-dark py-16 md:py-24">
+      <div className="ul-shell-wide">
         <Reveal className="mb-12 grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-end">
-          <div>
+          <div className="justify-self-start">
             <p className="ul-kicker">Market performance</p>
-            <h2 className="ul-section-heading mt-3 text-3xl md:text-4xl">
+            <h2 className="ul-section-heading mt-3 text-3xl text-white md:text-4xl">
               Real growth. Real returns for Dubai homeowners.
             </h2>
           </div>
-          <p className="max-w-xl text-base leading-relaxed text-[var(--ul-muted)] lg:justify-self-end lg:text-right">
+          <p className="max-w-xl text-base leading-relaxed text-[#8ba0b8] lg:justify-self-end lg:text-right">
             Track how prime communities have appreciated — and what UrbanLuxe clients have typically
             earned on resale and handover.
           </p>
@@ -118,8 +118,8 @@ export function MarketGrowthSection() {
                   <AreaChart data={APPRECIATION_SERIES} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="growthFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#00C853" stopOpacity={0.35} />
-                        <stop offset="100%" stopColor="#00C853" stopOpacity={0.02} />
+                        <stop offset="0%" stopColor="#008040" stopOpacity={0.35} />
+                        <stop offset="100%" stopColor="#008040" stopOpacity={0.02} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid stroke="#F2F2F2" strokeDasharray="4 4" vertical={false} />
@@ -139,7 +139,7 @@ export function MarketGrowthSection() {
                     <Area
                       type="monotone"
                       dataKey="index"
-                      stroke="#00C853"
+                      stroke="#008040"
                       strokeWidth={2.5}
                       fill="url(#growthFill)"
                     />

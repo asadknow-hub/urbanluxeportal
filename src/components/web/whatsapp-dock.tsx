@@ -17,7 +17,7 @@ export function WhatsAppDock() {
       target="_blank"
       rel="noreferrer"
       className={cn(
-        "fixed right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--ul-secondary)] text-[#07111F] shadow-[0_12px_40px_rgba(0,0,0,0.35)] transition-transform duration-200 hover:scale-105 max-lg:bottom-[max(1rem,var(--ul-safe-bottom))] lg:bottom-5 lg:right-5",
+        "fixed right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--ul-secondary)] text-white shadow-[0_12px_40px_rgba(0,0,0,0.28)] transition-transform duration-200 hover:scale-105 max-lg:bottom-[max(1rem,var(--ul-safe-bottom))] lg:bottom-5 lg:right-5",
         onProperty && "max-lg:hidden"
       )}
       aria-label={`WhatsApp ${brand.name}`}

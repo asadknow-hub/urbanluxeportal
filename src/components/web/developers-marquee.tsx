@@ -33,8 +33,8 @@ export function DevelopersMarquee() {
   const loop = [...DEVELOPERS, ...DEVELOPERS];
 
   return (
-    <section className="overflow-hidden bg-[var(--ul-tertiary)] py-14 md:py-20">
-      <div className="ul-shell">
+    <section className="overflow-hidden bg-white py-14 md:py-20">
+      <div className="ul-shell-wide">
         <p className="ul-kicker">Partners</p>
         <h2 className="ul-section-heading mt-3 text-2xl md:text-3xl">
           Developers that work with us
@@ -43,11 +43,11 @@ export function DevelopersMarquee() {
 
       <div className="relative mt-12">
         <div
-          className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-[var(--ul-tertiary)] to-transparent md:w-36"
+          className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-white to-transparent md:w-36"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-[var(--ul-tertiary)] to-transparent md:w-36"
+          className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-white to-transparent md:w-36"
           aria-hidden
         />
 

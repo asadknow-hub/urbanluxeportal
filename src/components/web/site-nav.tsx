@@ -20,9 +20,11 @@ export function SiteNav() {
   const { currency, setCurrency } = useCurrency();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const onHome = pathname === "/";
+  const overDarkHero = onHome && !scrolled && !open;
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    const onScroll = () => setScrolled(window.scrollY > 16);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -40,23 +42,33 @@ export function SiteNav() {
   }, [open]);
 
   return (
-    <header className="sticky top-0 z-[100] pt-[var(--ul-safe-top,0px)]">
+    <header
+      className={cn(
+        "sticky top-0 z-[100] pt-[var(--ul-safe-top,0px)] transition-colors duration-300",
+        overDarkHero ? "bg-transparent" : "bg-white/95 backdrop-blur-md"
+      )}
+    >
       <div
         className={cn(
-          "relative z-[1] border-b border-white/10 bg-[var(--ul-primary)]/95 backdrop-blur-md transition-[box-shadow] duration-300",
-          scrolled && "shadow-[0_8px_30px_rgba(0,0,0,0.35)]"
+          "relative z-[1] border-b transition-[border-color,box-shadow] duration-300",
+          overDarkHero ? "border-white/10" : "border-[var(--ul-hair)]",
+          scrolled && !overDarkHero && "shadow-[0_8px_30px_rgba(7,17,31,0.06)]"
         )}
       >
+        {/* True left | center | right — not a bunched middle cluster */}
         <div
           className={cn(
-            "ul-shell flex items-center justify-between gap-3 transition-[height] duration-300",
+            "ul-shell-wide grid items-center gap-3 transition-[height] duration-300",
+            "grid-cols-[auto_1fr_auto] lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]",
             scrolled ? "h-14" : "h-16 sm:h-[4.5rem]"
           )}
         >
-          <SiteLogo inverted />
+          <div className="justify-self-start">
+            <SiteLogo inverted={overDarkHero} />
+          </div>
 
           <nav
-            className={cn("hidden items-center lg:flex", scrolled ? "gap-5 xl:gap-7" : "gap-6 xl:gap-8")}
+            className="hidden items-center justify-center gap-7 xl:gap-9 lg:flex"
             aria-label="Primary"
           >
             {NAV.map((item) => {
@@ -67,8 +79,14 @@ export function SiteNav() {
                   href={item.href}
                   prefetch
                   className={cn(
-                    "whitespace-nowrap text-[0.8rem] font-bold uppercase tracking-[0.08em] transition-colors",
-                    active ? "text-[var(--ul-secondary)]" : "text-white/75 hover:text-white"
+                    "whitespace-nowrap text-[0.78rem] font-bold uppercase tracking-[0.1em] transition-colors",
+                    overDarkHero
+                      ? active
+                        ? "text-[var(--ul-secondary)]"
+                        : "text-white/80 hover:text-white"
+                      : active
+                        ? "text-[var(--ul-secondary)]"
+                        : "text-[var(--ul-primary)]/70 hover:text-[var(--ul-primary)]"
                   )}
                 >
                   {item.label}
@@ -77,18 +95,26 @@ export function SiteNav() {
             })}
           </nav>
 
-          <div className="relative z-[1] flex shrink-0 items-center gap-2 sm:gap-3">
+          <div className="flex shrink-0 items-center justify-self-end gap-2 sm:gap-3">
             <Link
               href="/sell"
               prefetch
-              className="hidden h-10 items-center rounded-lg bg-[var(--ul-secondary)] px-4 text-[0.75rem] font-bold uppercase tracking-[0.06em] text-[#07111F] transition-colors hover:bg-[var(--ul-accent-deep)] md:inline-flex"
+              className={cn(
+                "hidden h-10 items-center rounded-full px-4 text-[0.72rem] font-bold uppercase tracking-[0.06em] transition-colors md:inline-flex",
+                "bg-[var(--ul-secondary)] text-white hover:bg-[var(--ul-accent-deep)]"
+              )}
             >
               List property
             </Link>
 
             <DropdownMenu>
               <DropdownMenuTrigger
-                className="hidden h-10 items-center gap-1 rounded-lg px-2 text-[0.75rem] font-semibold text-white/80 outline-none transition-colors hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-[var(--ul-secondary)]/40 lg:inline-flex"
+                className={cn(
+                  "hidden h-10 items-center gap-1 rounded-full px-2 text-[0.75rem] font-semibold outline-none transition-colors lg:inline-flex",
+                  overDarkHero
+                    ? "text-white/80 hover:bg-white/10"
+                    : "text-[var(--ul-primary)]/75 hover:bg-[var(--ul-tertiary)]"
+                )}
                 aria-label={`Currency: ${currency}`}
               >
                 {currency}
@@ -115,16 +141,30 @@ export function SiteNav() {
 
             <a
               href={`tel:${SITE.phoneTel}`}
-              className="hidden items-center gap-2 rounded-lg border border-[var(--ul-secondary)]/50 px-3 py-2 text-[0.75rem] font-bold text-white no-underline transition-colors hover:border-[var(--ul-secondary)] hover:bg-[var(--ul-secondary)]/10 md:inline-flex"
+              className={cn(
+                "hidden items-center gap-2 rounded-full border px-3 py-2 text-[0.72rem] font-bold no-underline transition-colors lg:inline-flex",
+                overDarkHero
+                  ? "border-white/25 text-white hover:border-[var(--ul-secondary)] hover:bg-white/5"
+                  : "border-[var(--ul-hair)] text-[var(--ul-primary)] hover:border-[var(--ul-secondary)]"
+              )}
             >
-              <Phone className="h-3.5 w-3.5 text-[var(--ul-secondary)]" />
-              {SITE.phoneDisplay}
+              <Phone
+                className={cn(
+                  "h-3.5 w-3.5",
+                  overDarkHero ? "text-[var(--ul-secondary)]" : "text-[var(--ul-secondary)]"
+                )}
+              />
+              <span className="hidden xl:inline">{SITE.phoneDisplay}</span>
+              <span className="xl:hidden">Call</span>
             </a>
 
             <Link
               href="/buy"
               prefetch
-              className="hidden h-10 w-10 items-center justify-center rounded-lg text-white/80 transition-colors hover:bg-white/5 lg:inline-flex"
+              className={cn(
+                "hidden h-10 w-10 items-center justify-center rounded-full transition-colors lg:inline-flex",
+                overDarkHero ? "text-white/85 hover:bg-white/10" : "text-[var(--ul-primary)] hover:bg-[var(--ul-tertiary)]"
+              )}
               aria-label="Search properties"
             >
               <Search className="h-[1.125rem] w-[1.125rem]" strokeWidth={2} />
@@ -132,7 +172,10 @@ export function SiteNav() {
 
             <button
               type="button"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-white lg:hidden"
+              className={cn(
+                "inline-flex h-11 w-11 items-center justify-center rounded-full lg:hidden",
+                overDarkHero ? "text-white" : "text-[var(--ul-primary)]"
+              )}
               aria-expanded={open}
               aria-label={open ? "Close menu" : "Open menu"}
               onClick={() => setOpen((v) => !v)}
@@ -144,7 +187,7 @@ export function SiteNav() {
       </div>
 
       {open ? (
-        <div className="fixed inset-x-0 bottom-0 top-[calc(4rem+var(--ul-safe-top,0px))] z-50 flex flex-col bg-[var(--ul-primary)] lg:hidden">
+        <div className="fixed inset-x-0 bottom-0 top-[calc(4rem+var(--ul-safe-top,0px))] z-50 flex flex-col bg-white lg:hidden">
           <nav
             className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 pb-[calc(1.25rem+var(--ul-safe-bottom,0px))] pt-2"
             aria-label="Mobile"
@@ -157,7 +200,7 @@ export function SiteNav() {
                   href={item.href}
                   prefetch
                   className={cn(
-                    "border-b border-white/10 py-4 text-base font-bold uppercase tracking-[0.08em] text-white",
+                    "border-b border-[var(--ul-hair)] py-4 text-base font-bold uppercase tracking-[0.08em] text-[var(--ul-primary)]",
                     active && "text-[var(--ul-secondary)]"
                   )}
                 >
@@ -165,37 +208,15 @@ export function SiteNav() {
                 </Link>
               );
             })}
-
-            <div className="border-b border-white/10 py-4">
-              <p className="mb-3 text-xs font-medium uppercase tracking-wide text-white/50">Currency</p>
-              <div className="grid grid-cols-4 gap-2">
-                {CURRENCIES.map((item) => (
-                  <button
-                    key={item.code}
-                    type="button"
-                    onClick={() => setCurrency(item.code)}
-                    className={cn(
-                      "min-h-11 rounded-md px-2 py-2.5 text-sm font-semibold transition-colors",
-                      currency === item.code
-                        ? "bg-[var(--ul-secondary)] text-[#07111F]"
-                        : "bg-white/5 text-white"
-                    )}
-                  >
-                    {item.code}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <div className="mt-auto grid gap-3 pt-6">
               <a
                 href={`tel:${SITE.phoneTel}`}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-[var(--ul-secondary)]/50 text-sm font-semibold text-white no-underline"
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-[var(--ul-hair)] text-sm font-semibold text-[var(--ul-primary)] no-underline"
               >
                 <Phone className="h-4 w-4 text-[var(--ul-secondary)]" />
                 {SITE.phoneDisplay}
               </a>
-              <Link href="/sell" prefetch className="ul-btn-primary h-12 w-full">
+              <Link href="/sell" prefetch className="ul-btn-primary h-12 w-full rounded-full">
                 List your property
               </Link>
             </div>
