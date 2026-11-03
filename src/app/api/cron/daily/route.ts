@@ -10,6 +10,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const frontendOnly =
+    (process.env.NEXT_PUBLIC_FRONTEND_ONLY ?? process.env.FRONTEND_ONLY ?? "1")
+      .trim()
+      .toLowerCase();
+  if (["1", "true", "yes", "on"].includes(frontendOnly)) {
+    return NextResponse.json({ ok: true, silent: true });
+  }
+
   const supabase = createSupabaseServiceClient();
   const now = new Date();
   const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);

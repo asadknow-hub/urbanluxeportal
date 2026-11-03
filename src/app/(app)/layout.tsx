@@ -6,6 +6,7 @@ import { Topbar } from "@/components/layout/topbar";
 import { SessionHeartbeat } from "@/components/shared/session-heartbeat";
 import { BrandProvider } from "@/components/brand/brand-provider";
 import { getPublicBrand } from "@/server/company-settings";
+import { isFrontendOnly } from "@/lib/web/frontend-only";
 
 export async function generateMetadata(): Promise<Metadata> {
   const brand = await getPublicBrand();
@@ -20,6 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  if (isFrontendOnly()) redirect("/");
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   const brand = await getPublicBrand();

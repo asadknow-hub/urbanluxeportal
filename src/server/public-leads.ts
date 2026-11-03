@@ -5,6 +5,7 @@ import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { applyLeadRouting } from "@/server/routing";
 import { resolveDefaultLeadStageId } from "@/lib/lead-stages";
 import { ensurePersonForLead } from "@/server/people";
+import { isFrontendOnly } from "@/lib/web/frontend-only";
 
 export type PublicLeadResult = {
   ok: boolean;
@@ -53,6 +54,11 @@ export async function createPublicLead(
     const data = parsed.data;
     if (data.company?.trim()) {
       // Silent success for bots
+      return { ok: true };
+    }
+
+    // Marketing-site phase: accept forms without writing to CRM.
+    if (isFrontendOnly()) {
       return { ok: true };
     }
 
@@ -187,21 +193,26 @@ export async function submitCareersForm(formData: FormData): Promise<PublicLeadR
       return { ok: false, error: "Upload a PDF or Word CV" };
     }
 
-    const ext = cv.name.split(".").pop()?.toLowerCase() || "pdf";
-    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const supabase = createSupabaseServiceClient();
-    const buffer = Buffer.from(await cv.arrayBuffer());
-    const { error: uploadError } = await supabase.storage
-      .from("careers")
-      .upload(path, buffer, { contentType: cv.type || "application/pdf", upsert: false });
+    if (isFrontendOnly()) {
+      // Accept the application without uploading — CRM storage comes later.
+      cvUrl = `pending/${cv.name}`;
+    } else {
+      const ext = cv.name.split(".").pop()?.toLowerCase() || "pdf";
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const supabase = createSupabaseServiceClient();
+      const buffer = Buffer.from(await cv.arrayBuffer());
+      const { error: uploadError } = await supabase.storage
+        .from("careers")
+        .upload(path, buffer, { contentType: cv.type || "application/pdf", upsert: false });
 
-    if (uploadError) {
-      console.error("[careers] upload:", uploadError.message);
-      return { ok: false, error: "Could not upload CV. Try again or email us." };
+      if (uploadError) {
+        console.error("[careers] upload:", uploadError.message);
+        return { ok: false, error: "Could not upload CV. Try again or email us." };
+      }
+
+      // Private bucket — store path for staff; signed URL can be generated in portal later
+      cvUrl = `careers/${path}`;
     }
-
-    // Private bucket — store path for staff; signed URL can be generated in portal later
-    cvUrl = `careers/${path}`;
   }
 
   const notes = [

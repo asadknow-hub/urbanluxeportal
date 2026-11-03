@@ -1,6 +1,7 @@
 "use server";
 
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
+import { isFrontendOnly } from "@/lib/web/frontend-only";
 
 export type PublicAgent = {
   id: string;
@@ -11,6 +12,7 @@ export type PublicAgent = {
 
 /** Active advisors for public listing cards (falls back to empty → UI uses placeholders). */
 export async function getPublicAgents(): Promise<PublicAgent[]> {
+  if (isFrontendOnly()) return [];
   try {
     const supabase = createSupabaseServiceClient();
     const { data } = await supabase

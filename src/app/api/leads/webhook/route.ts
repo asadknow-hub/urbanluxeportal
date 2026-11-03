@@ -10,6 +10,14 @@ import { ensurePersonForLead } from "@/server/people";
 
 export async function POST(req: NextRequest) {
   try {
+    const frontendOnly =
+      (process.env.NEXT_PUBLIC_FRONTEND_ONLY ?? process.env.FRONTEND_ONLY ?? "1")
+        .trim()
+        .toLowerCase();
+    if (["1", "true", "yes", "on"].includes(frontendOnly)) {
+      return NextResponse.json({ ok: true, silent: true });
+    }
+
     const configuredKey = process.env.LEAD_API_KEY?.trim();
     if (!configuredKey) {
       console.error("[leads/webhook] LEAD_API_KEY is not configured");

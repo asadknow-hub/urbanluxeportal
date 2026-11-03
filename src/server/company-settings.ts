@@ -10,6 +10,7 @@ import {
   type CompanyBrand,
   type CompanySettingsRow,
 } from "@/lib/company-brand";
+import { isFrontendOnly } from "@/lib/web/frontend-only";
 
 export type ActionResult<T = unknown> = {
   ok: boolean;
@@ -60,6 +61,7 @@ export async function getCompanySettingsRow(): Promise<CompanySettingsRow | null
 }
 
 export async function getPublicBrand(): Promise<CompanyBrand> {
+  if (isFrontendOnly()) return brandFromSettings(null);
   try {
     const row = await getCompanySettingsRow();
     return brandFromSettings(row);

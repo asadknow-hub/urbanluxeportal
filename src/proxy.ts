@@ -10,7 +10,16 @@ const PORTAL_PREFIXES = [
   "/deals",
   "/viewings",
   "/inventory",
+  "/company-properties",
+  "/login",
 ];
+
+function isFrontendOnly() {
+  const raw =
+    process.env.NEXT_PUBLIC_FRONTEND_ONLY ?? process.env.FRONTEND_ONLY ?? "1";
+  const v = raw.trim().toLowerCase();
+  return v === "1" || v === "true" || v === "yes" || v === "on";
+}
 
 function isPortalPath(pathname: string) {
   return PORTAL_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -37,6 +46,14 @@ export async function proxy(request: NextRequest) {
     pathname === "/favicon.ico"
   ) {
     return NextResponse.next();
+  }
+
+  // Public-site phase: CRM / portal routes stay offline.
+  if (isFrontendOnly() && isPortalPath(pathname)) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/";
+    redirectUrl.search = "";
+    return NextResponse.redirect(redirectUrl);
   }
 
   if (isPublicWebPath(pathname)) {

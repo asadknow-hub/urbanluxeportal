@@ -47,7 +47,6 @@ export const FOOTER_LINKS = [
   { href: "/contact", label: "Contact" },
   { href: "/careers", label: "Careers" },
   { href: "/insights", label: "Insights" },
-  { href: "/login", label: "Agent Portal" },
 ] as const;
 
 export function waLink(text?: string) {

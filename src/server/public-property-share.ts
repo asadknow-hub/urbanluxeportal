@@ -1,6 +1,7 @@
 import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { propertyMediaPublicUrl } from "@/lib/property-media";
 import { propertyLabel } from "@/lib/inventory";
+import { isFrontendOnly } from "@/lib/web/frontend-only";
 
 export type PublicSharedProperty = {
   property_code: string;
@@ -27,6 +28,8 @@ export type PublicSharedProperty = {
 export async function getPublicSharedProperty(
   token: string
 ): Promise<PublicSharedProperty | null> {
+  if (isFrontendOnly()) return null;
+
   const trimmed = token.trim();
   if (!/^[0-9a-f-]{36}$/i.test(trimmed)) return null;
 
