@@ -8,16 +8,8 @@ import { submitListPropertyForm } from "@/server/public-leads";
 const INTENT = [
   { value: "sell", label: "I want to sell" },
   { value: "let", label: "I want to let" },
-  { value: "both", label: "Sell or let, advise me" },
+  { value: "both", label: "Sell or let" },
   { value: "valuation", label: "Valuation only" },
-] as const;
-
-const PROPERTY_TYPES = [
-  "Apartment",
-  "Villa",
-  "Penthouse",
-  "Townhouse",
-  "Other",
 ] as const;
 
 export function ListPropertyForm({ defaultIntent = "sell" }: { defaultIntent?: string }) {
@@ -48,10 +40,10 @@ export function ListPropertyForm({ defaultIntent = "sell" }: { defaultIntent?: s
   }
 
   const field =
-    "h-12 w-full rounded-md border border-[var(--ul-hair)] bg-white px-4 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#008040]";
+    "h-11 w-full rounded-md border border-[var(--ul-hair)] bg-white px-3.5 text-sm text-[var(--ul-primary)] outline-none placeholder:text-[var(--ul-muted)] focus:border-[var(--ul-secondary)]";
 
   return (
-    <form onSubmit={onSubmit} className="space-y-3">
+    <form onSubmit={onSubmit} className="space-y-2.5">
       <input
         type="text"
         name="company"
@@ -61,21 +53,23 @@ export function ListPropertyForm({ defaultIntent = "sell" }: { defaultIntent?: s
         className="absolute -left-[9999px] h-0 w-0 opacity-0"
       />
       <input name="name" required placeholder="Full name" className={field} autoComplete="name" />
-      <input
-        name="email"
-        type="email"
-        required
-        placeholder="Email"
-        className={field}
-        autoComplete="email"
-      />
-      <input
-        name="phone"
-        required
-        placeholder="Mobile / WhatsApp"
-        className={field}
-        autoComplete="tel"
-      />
+      <div className="grid gap-2.5 sm:grid-cols-2">
+        <input
+          name="phone"
+          required
+          placeholder="Mobile / WhatsApp"
+          className={field}
+          autoComplete="tel"
+        />
+        <input
+          name="email"
+          type="email"
+          required
+          placeholder="Email"
+          className={field}
+          autoComplete="email"
+        />
+      </div>
       <select name="intent" required className={field} defaultValue={defaultIntent}>
         {INTENT.map((item) => (
           <option key={item.value} value={item.value}>
@@ -89,37 +83,24 @@ export function ListPropertyForm({ defaultIntent = "sell" }: { defaultIntent?: s
         placeholder="Building / community / address"
         className={field}
       />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <select name="propertyType" required className={field} defaultValue="">
-          <option value="" disabled>
-            Property type
-          </option>
-          {PROPERTY_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
-        <input name="beds" placeholder="Bedrooms (optional)" className={field} />
-      </div>
       <textarea
         name="message"
-        rows={4}
-        placeholder="Timing, asking expectations, or anything we should know"
-        className="w-full rounded-md border border-[var(--ul-hair)] bg-white px-4 py-3 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#008040]"
+        rows={2}
+        placeholder="Timing or notes (optional)"
+        className="w-full rounded-md border border-[var(--ul-hair)] bg-white px-3.5 py-2.5 text-sm text-[var(--ul-primary)] outline-none placeholder:text-[var(--ul-muted)] focus:border-[var(--ul-secondary)]"
       />
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex h-12 w-full items-center justify-center rounded-md bg-[#0A1630] text-sm font-semibold text-white transition-colors hover:bg-[#081226] disabled:opacity-60"
+        className="inline-flex h-11 w-full items-center justify-center rounded-md bg-[var(--ul-secondary)] text-sm font-semibold text-white transition-colors hover:bg-[#006633] disabled:opacity-60"
       >
         {pending ? "Sending…" : "Request a conversation"}
       </button>
-      <p className="text-center text-xs text-[#6b7280]">
+      <p className="text-center text-xs text-[var(--ul-muted)]">
         Or call{" "}
         <a
           href={`tel:${brand.phoneTel}`}
-          className="text-[#0A1630] underline-offset-4 hover:underline"
+          className="text-[var(--ul-primary)] underline-offset-4 hover:underline"
         >
           {brand.phoneDisplay}
         </a>

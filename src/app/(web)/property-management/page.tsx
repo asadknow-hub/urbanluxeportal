@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { IMAGES } from "@/lib/web/listings";
 import { EnquireForm } from "@/components/web/enquire-form";
-import { PageIntro } from "@/components/web/page-intro";
 import { Reveal } from "@/components/web/reveal";
 
 export const metadata: Metadata = {
@@ -13,127 +10,76 @@ export const metadata: Metadata = {
     "Urban Luxe property management in Dubai: tenant care, maintenance coordination, and reporting for landlords who want the house looked after.",
 };
 
-const SERVICES = [
+const POINTS = [
   {
-    title: "Tenant placement & renewals",
-    body: "Qualified tenants, photographed handovers, and renewals handled before the scramble.",
+    n: "01",
+    title: "Tenant placement",
+    body: "Qualified occupants, photographed handovers, renewals before the scramble.",
   },
   {
-    title: "Maintenance coordination",
-    body: "Trusted vendors, clear approvals, and updates you can read without a site visit.",
+    n: "02",
+    title: "Maintenance",
+    body: "Trusted vendors, clear approvals, updates you can read without a site visit.",
   },
   {
-    title: "Inspections & reporting",
-    body: "Move-in / move-out records and periodic condition notes for peace of mind.",
+    n: "03",
+    title: "One landlord desk",
+    body: "Rent follow-up, notices, and building liaison on a single thread.",
   },
-  {
-    title: "Landlord liaison",
-    body: "One desk for rent collection follow-up, notices, and building management contact.",
-  },
-] as const;
-
-const STEPS = [
-  { n: "01", title: "Brief", body: "Property, tenancy status, and how hands-on you want to be." },
-  { n: "02", title: "Setup", body: "Access, utilities context, and vendor preferences locked in." },
-  { n: "03", title: "Manage", body: "Day-to-day coordination with clear escalation rules." },
-  { n: "04", title: "Report", body: "Simple updates: what happened, what it cost, what is next." },
 ] as const;
 
 export default function PropertyManagementPage() {
   return (
-    <>
-      <PageIntro
-        tone="light"
-        layout="stack"
-        eyebrow="Services"
-        title="Property management that treats the house as a house."
-        lede="For landlords who want qualified occupants, orderly maintenance, and a dedicated desk that picks up the phone."
-        primaryCta={{ href: "#enquire", label: "Talk to management" }}
-        secondaryCta={{ href: "/sell", label: "Also listing? Instruct us", prefetch: true }}
-      />
-
-      <section id="enquire" className="ul-band-light px-5 py-14 md:px-10 md:py-20">
-        <div className="mx-auto grid max-w-[1280px] gap-10 lg:grid-cols-2 lg:gap-16">
-          <Reveal>
-            <p className="ul-kicker">Enquire</p>
-            <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">
-              Tell us about the property
-            </h2>
-            <p className="ul-section-lede mt-3">
-              Location, current tenancy, and what you need handled. We will confirm whether we are
-              the right fit before anything is signed.
+    <section className="ul-band-light border-b border-[var(--ul-hair)]">
+      <div className="ul-shell-wide py-8 md:py-10 lg:py-12">
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-12 xl:gap-16">
+          <Reveal className="min-w-0">
+            <p className="ul-kicker">Property management</p>
+            <h1 className="mt-3 max-w-xl text-[1.75rem] font-extrabold uppercase leading-[1.08] tracking-[-0.03em] text-[var(--ul-primary)] sm:text-4xl">
+              Management that treats the house as a house.
+            </h1>
+            <p className="mt-3 max-w-md text-[0.95rem] leading-relaxed text-[var(--ul-muted)]">
+              For landlords who want orderly maintenance and a desk that picks up the phone.
             </p>
+
+            <ol className="mt-8 space-y-4 border-t border-[var(--ul-hair)] pt-7">
+              {POINTS.map((item) => (
+                <li key={item.n} className="grid gap-1 sm:grid-cols-[2.75rem_minmax(0,1fr)] sm:gap-3">
+                  <span className="text-xs font-bold tracking-[0.16em] text-[var(--ul-secondary)]">
+                    {item.n}
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--ul-primary)]">{item.title}</p>
+                    <p className="mt-0.5 text-sm leading-relaxed text-[var(--ul-muted)]">{item.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+
             <Link
               href="/valuations"
               prefetch
-              className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#008040] hover:text-[#006633]"
+              className="mt-8 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ul-secondary)] hover:text-[#006633]"
             >
               Need a valuation first? <ArrowRight className="h-4 w-4" />
             </Link>
           </Reveal>
-          <Reveal delay={60}>
-            <div className="rounded-xl border border-[var(--ul-hair)] bg-[#F6F3EE] p-6 md:p-8">
-              <EnquireForm compact />
-            </div>
-          </Reveal>
-        </div>
-      </section>
 
-      <section className="border-y border-[var(--ul-hair)] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-20">
-        <div className="mx-auto max-w-[1280px]">
-          <Reveal>
-            <p className="ul-kicker">What we cover</p>
-            <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">
-              Care for the asset and the people in it
-            </h2>
-            <p className="ul-section-lede mt-3 max-w-xl">
-              We manage select residences with the same standard we use for private sales: fewer
-              excuses, clearer communication.
-            </p>
-          </Reveal>
-          <ul className="mt-10 divide-y divide-[var(--ul-hair)] rounded-xl border border-[var(--ul-hair)] bg-white">
-            {SERVICES.map((item, i) => (
-              <Reveal key={item.title} delay={i * 40}>
-                <li className="px-6 py-5 md:px-8 md:py-6">
-                  <p className="font-semibold text-[#0A1630]">{item.title}</p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-[#0A1630]/65">{item.body}</p>
-                </li>
-              </Reveal>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      <section className="ul-band-light px-5 py-14 md:px-10 md:py-20">
-        <div className="mx-auto grid max-w-[1280px] items-center gap-10 md:grid-cols-2 md:gap-16">
-          <Reveal>
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#F6F3EE]">
-              <Image
-                src={IMAGES.living}
-                alt="Managed residence"
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover"
-              />
-            </div>
-          </Reveal>
-          <Reveal delay={80}>
-            <p className="ul-kicker">Process</p>
-            <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">How engagement works</h2>
-            <div className="mt-8 space-y-5">
-              {STEPS.map((step) => (
-                <div key={step.n} className="flex gap-4">
-                  <p className="text-xs font-bold tracking-[0.16em] text-[#008040]">{step.n}</p>
-                  <div>
-                    <h3 className="font-semibold text-[#0A1630]">{step.title}</h3>
-                    <p className="mt-1 text-sm leading-relaxed text-[#0A1630]/65">{step.body}</p>
-                  </div>
-                </div>
-              ))}
+          <Reveal delay={60} className="min-w-0 lg:sticky lg:top-24">
+            <div id="enquire" className="border border-[var(--ul-hair)] bg-white p-5 sm:p-6">
+              <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--ul-secondary)]">
+                Enquire
+              </p>
+              <h2 className="mt-2 text-xl font-bold text-[var(--ul-primary)]">
+                Tell us about the property
+              </h2>
+              <div className="mt-5">
+                <EnquireForm compact defaultInterest="sell" />
+              </div>
             </div>
           </Reveal>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }

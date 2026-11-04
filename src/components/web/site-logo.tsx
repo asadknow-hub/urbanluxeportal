@@ -36,7 +36,7 @@ export function SiteLogo({
         alt={label}
         width={220}
         height={60}
-        className="h-8 w-auto max-w-[10.5rem] object-contain object-left md:h-9 md:max-w-[12rem]"
+        className="h-9 w-auto max-w-[12rem] object-contain object-left md:h-11 md:max-w-[14rem]"
         unoptimized
         priority
       />

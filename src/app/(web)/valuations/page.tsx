@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { IMAGES } from "@/lib/web/listings";
 import { ListPropertyForm } from "@/components/web/list-property-form";
-import { PageIntro } from "@/components/web/page-intro";
 import { Reveal } from "@/components/web/reveal";
 
 export const metadata: Metadata = {
@@ -13,127 +10,77 @@ export const metadata: Metadata = {
     "Request a Dubai property valuation from Urban Luxe: a site visit, real comps, and a clear recommendation.",
 };
 
-const PILLARS = [
+const POINTS = [
   {
+    n: "01",
     title: "On-site reading",
-    body: "Light, layout, plot, and condition assessed in person on the day of the visit.",
+    body: "Light, layout, plot, and condition assessed in person.",
   },
   {
+    n: "02",
     title: "Real comps",
-    body: "What traded nearby, at what terms. Portal asking prices stay secondary until verified.",
+    body: "Nearby trades at real terms. Portal asking prices stay secondary.",
   },
   {
-    title: "Market position",
-    body: "Whether to list, place privately, wait, or improve before going to market.",
-  },
-  {
+    n: "03",
     title: "Clear next step",
-    body: "A recommendation you can act on: sell, let, hold, or instruct management.",
+    body: "Sell, let, hold, or manage. One recommendation you can act on.",
   },
 ] as const;
 
 export default function ValuationsPage() {
   return (
-    <>
-      <PageIntro
-        tone="dark"
-        layout="compact"
-        eyebrow="Services"
-        title="A valuation built from the residence and the market."
-        lede="We look at what sold last season, how your residence actually lives, and whether the market is ready for it. If timing is wrong, we will say so plainly."
-        primaryCta={{ href: "#request", label: "Request a valuation" }}
-        secondaryCta={{ href: "/sell", label: "Ready to instruct a sale", prefetch: true }}
-      />
-
-      <section id="request" className="ul-band-light px-5 py-14 md:px-10 md:py-20">
-        <div className="mx-auto grid max-w-[1280px] gap-10 lg:grid-cols-[1fr_1.05fr] lg:gap-16">
-          <Reveal>
-            <p className="ul-kicker">Request</p>
-            <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">
-              Book a valuation conversation
-            </h2>
-            <p className="ul-section-lede mt-3">
-              Share the address and intent. Select “Valuation only” if you are not ready to instruct
-              a sale or letting yet.
+    <section className="ul-band-light border-b border-[var(--ul-hair)]">
+      <div className="ul-shell-wide py-8 md:py-10 lg:py-12">
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-12 xl:gap-16">
+          <Reveal className="min-w-0">
+            <p className="ul-kicker">Valuations</p>
+            <h1 className="mt-3 max-w-xl text-[1.75rem] font-extrabold uppercase leading-[1.08] tracking-[-0.03em] text-[var(--ul-primary)] sm:text-4xl">
+              A valuation built from the residence and the market.
+            </h1>
+            <p className="mt-3 max-w-md text-[0.95rem] leading-relaxed text-[var(--ul-muted)]">
+              Share the address. We reply with next steps for a site visit and comps. If timing is
+              wrong, we say so.
             </p>
-            <ol className="mt-8 space-y-4">
-              {PILLARS.map((item, i) => (
-                <li key={item.title} className="flex gap-4">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F6F3EE] text-xs font-bold text-[#008040]">
-                    {String(i + 1).padStart(2, "0")}
+
+            <ol className="mt-8 space-y-4 border-t border-[var(--ul-hair)] pt-7">
+              {POINTS.map((item) => (
+                <li key={item.n} className="grid gap-1 sm:grid-cols-[2.75rem_minmax(0,1fr)] sm:gap-3">
+                  <span className="text-xs font-bold tracking-[0.16em] text-[var(--ul-secondary)]">
+                    {item.n}
                   </span>
                   <div>
-                    <p className="text-sm font-semibold text-[#0A1630]">{item.title}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-[#0A1630]/65">{item.body}</p>
+                    <p className="text-sm font-semibold text-[var(--ul-primary)]">{item.title}</p>
+                    <p className="mt-0.5 text-sm leading-relaxed text-[var(--ul-muted)]">{item.body}</p>
                   </div>
                 </li>
               ))}
             </ol>
-          </Reveal>
-          <Reveal delay={60}>
-            <div className="rounded-xl border border-[var(--ul-hair)] bg-[#F6F3EE] p-6 md:p-8">
-              <ListPropertyForm defaultIntent="valuation" />
-            </div>
-          </Reveal>
-        </div>
-      </section>
 
-      <section className="border-y border-[var(--ul-hair)] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-16">
-        <div className="mx-auto grid max-w-[1280px] items-center gap-10 md:grid-cols-2 md:gap-16">
-          <Reveal>
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-white">
-              <Image
-                src={IMAGES.villa}
-                alt="Residence for valuation"
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover"
-              />
-            </div>
+            <Link
+              href="/sell"
+              prefetch
+              className="mt-8 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ul-secondary)] hover:text-[#006633]"
+            >
+              Ready to instruct a sale? <ArrowRight className="h-4 w-4" />
+            </Link>
           </Reveal>
-          <Reveal delay={80}>
-            <p className="ul-kicker">Our approach</p>
-            <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">
-              Numbers with context
-            </h2>
-            <p className="ul-section-lede mt-3">
-              Automated estimates miss privacy, light, and the difference between a rushed seller
-              and a patient one. We price the residence in front of us, grounded in recent trades.
-            </p>
-          </Reveal>
-        </div>
-      </section>
 
-      <section className="ul-band-light px-5 py-14 md:px-10 md:py-16">
-        <div className="mx-auto max-w-[880px] text-center">
-          <Reveal>
-            <p className="ul-kicker">Also useful</p>
-            <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">
-              After the number, a decision
-            </h2>
-            <p className="ul-section-lede mx-auto mt-3 max-w-xl">
-              Valuation often leads to listing, letting, or management. We keep those paths on the
-              same desk so you are not handed off mid-conversation.
-            </p>
-            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link
-                href="/sell"
-                prefetch
-                className="inline-flex h-11 items-center justify-center rounded-full bg-[#0A1630] px-6 text-sm font-semibold text-white hover:bg-[#081226]"
-              >
-                List your property
-              </Link>
-              <Link
-                href="/property-management"
-                prefetch
-                className="inline-flex h-11 items-center justify-center gap-1.5 rounded-full border border-[#0A1630] px-6 text-sm font-semibold text-[#0A1630] hover:bg-white"
-              >
-                Property management <ArrowRight className="h-4 w-4" />
-              </Link>
+          <Reveal delay={60} className="min-w-0 lg:sticky lg:top-24">
+            <div id="request" className="border border-[var(--ul-hair)] bg-white p-5 sm:p-6">
+              <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--ul-secondary)]">
+                Request
+              </p>
+              <h2 className="mt-2 text-xl font-bold text-[var(--ul-primary)]">
+                Book a valuation
+              </h2>
+              <div className="mt-5">
+                <ListPropertyForm defaultIntent="valuation" />
+              </div>
             </div>
           </Reveal>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }

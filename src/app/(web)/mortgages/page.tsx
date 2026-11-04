@@ -1,87 +1,86 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MortgageCalculator } from "@/components/web/mortgage-calculator";
-import { MortgageFaq } from "@/components/web/mortgage-faq";
-import { PageIntro } from "@/components/web/page-intro";
+import { ArrowRight } from "lucide-react";
+import { EnquireForm } from "@/components/web/enquire-form";
 import { Reveal } from "@/components/web/reveal";
 
 export const metadata: Metadata = {
   title: "Mortgages",
   description:
-    "Dubai mortgage guidance from Urban Luxe: FAQs, an indicative calculator, and advisor support for buyers.",
+    "Dubai mortgage guidance from Urban Luxe: advisor support for buyers financing a residence.",
 };
+
+const POINTS = [
+  {
+    n: "01",
+    title: "Clear lending path",
+    body: "Resident, non-resident, and off-plan questions answered before you offer.",
+  },
+  {
+    n: "02",
+    title: "Advisor introductions",
+    body: "We connect you with mortgage specialists who move at offer pace.",
+  },
+  {
+    n: "03",
+    title: "Aligned to the brief",
+    body: "Budget, deposit, and term framed around the home you actually want.",
+  },
+] as const;
 
 export default function MortgagesPage() {
   return (
-    <>
-      <PageIntro
-        tone="dark"
-        layout="compact"
-        eyebrow="Mortgages"
-        title="Finance the right home with clarity."
-        lede="Indicative calculations, straight answers on Dubai lending, and introductions to advisors who move at the pace of your offer."
-        primaryCta={{ href: "#calculator", label: "Calculate repayments" }}
-        secondaryCta={{ href: "/contact", label: "Speak to an advisor", prefetch: true }}
-      />
-
-      <section id="calculator" className="border-b border-[var(--ul-hair)] bg-[#F6F3EE] px-5 py-8 md:px-10 md:py-10">
-        <div className="mx-auto max-w-[960px]">
-          <MortgageCalculator />
-          <div className="mt-4 flex flex-col gap-3 rounded-xl border border-[var(--ul-hair)] bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between md:px-5">
-            <p className="text-sm font-semibold text-[#0A1630]">
-              Need help or ready to proceed?
+    <section className="ul-band-light border-b border-[var(--ul-hair)]">
+      <div className="ul-shell-wide py-8 md:py-10 lg:py-12">
+        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-12 xl:gap-16">
+          <Reveal className="min-w-0">
+            <p className="ul-kicker">Mortgages</p>
+            <h1 className="mt-3 max-w-xl text-[1.75rem] font-extrabold uppercase leading-[1.08] tracking-[-0.03em] text-[var(--ul-primary)] sm:text-4xl">
+              Finance the right home with clarity.
+            </h1>
+            <p className="mt-3 max-w-md text-[0.95rem] leading-relaxed text-[var(--ul-muted)]">
+              Straight answers on Dubai lending and introductions to advisors who keep pace with
+              your offer.
             </p>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <Link
-                href="/contact"
-                prefetch
-                className="inline-flex h-10 items-center justify-center rounded-full bg-[#0A1630] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#081226]"
-              >
-                Start Mortgage Approval
-              </Link>
-              <Link
-                href="/contact"
-                prefetch
-                className="inline-flex h-10 items-center justify-center rounded-full border border-[#0A1630] px-5 text-sm font-semibold text-[#0A1630] transition-colors hover:bg-[#F6F3EE]"
-              >
-                Speak to our team
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <section id="faq" className="ul-band-light px-5 py-14 md:px-10 md:py-20">
-        <div className="mx-auto max-w-[880px]">
-          <Reveal>
-            <p className="ul-kicker">FAQs</p>
-            <h2 className="ul-section-heading mt-3 text-3xl md:text-4xl">
-              Mortgage questions, answered
-            </h2>
-            <p className="ul-section-lede mt-3">
-              Practical guidance for buyers financing property in Dubai.
-            </p>
-          </Reveal>
-          <div className="mt-8">
-            <MortgageFaq />
-          </div>
-          <Reveal className="mt-10 flex flex-col items-start justify-between gap-5 rounded-xl border border-[var(--ul-hair)] bg-[#F6F3EE] p-6 sm:flex-row sm:items-center md:p-8">
-            <div>
-              <p className="text-lg font-semibold text-[#0A1630]">Still have questions?</p>
-              <p className="mt-1 text-sm text-[#0A1630]/65">
-                We&apos;ll match your budget and timeline with the right lending path.
-              </p>
-            </div>
+            <ol className="mt-8 space-y-4 border-t border-[var(--ul-hair)] pt-7">
+              {POINTS.map((item) => (
+                <li key={item.n} className="grid gap-1 sm:grid-cols-[2.75rem_minmax(0,1fr)] sm:gap-3">
+                  <span className="text-xs font-bold tracking-[0.16em] text-[var(--ul-secondary)]">
+                    {item.n}
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--ul-primary)]">{item.title}</p>
+                    <p className="mt-0.5 text-sm leading-relaxed text-[var(--ul-muted)]">{item.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+
             <Link
-              href="/contact"
+              href="/buy"
               prefetch
-              className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-[#0A1630] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#081226]"
+              className="mt-8 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ul-secondary)] hover:text-[#006633]"
             >
-              Book a consultation
+              Browse homes to finance <ArrowRight className="h-4 w-4" />
             </Link>
           </Reveal>
+
+          <Reveal delay={60} className="min-w-0 lg:sticky lg:top-24">
+            <div className="border border-[var(--ul-hair)] bg-white p-5 sm:p-6">
+              <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--ul-secondary)]">
+                Speak to us
+              </p>
+              <h2 className="mt-2 text-xl font-bold text-[var(--ul-primary)]">
+                Mortgage enquiry
+              </h2>
+              <div className="mt-5">
+                <EnquireForm defaultInterest="buy" />
+              </div>
+            </div>
+          </Reveal>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }

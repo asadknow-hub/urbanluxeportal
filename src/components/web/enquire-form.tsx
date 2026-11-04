@@ -44,11 +44,10 @@ export function EnquireForm({
   }
 
   const field =
-    "h-12 w-full rounded border border-[var(--ul-hair)] bg-white px-4 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#008040]";
+    "h-11 w-full rounded-md border border-[var(--ul-hair)] bg-white px-3.5 text-sm text-[var(--ul-primary)] outline-none placeholder:text-[var(--ul-muted)] focus:border-[var(--ul-secondary)]";
 
   return (
-    <form onSubmit={onSubmit} className="space-y-3">
-      {/* Honeypot */}
+    <form onSubmit={onSubmit} className="space-y-2.5">
       <input
         type="text"
         name="company"
@@ -57,46 +56,64 @@ export function EnquireForm({
         aria-hidden
         className="absolute -left-[9999px] h-0 w-0 opacity-0"
       />
-      {propertyTitle && (
-        <p className="text-sm font-light text-[#6b7280]">
-          Enquiring about <span className="text-[#0A1630]">{propertyTitle}</span>
+      {propertyTitle ? (
+        <p className="text-sm text-[var(--ul-muted)]">
+          Enquiring about <span className="text-[var(--ul-primary)]">{propertyTitle}</span>
         </p>
-      )}
-      <input name="name" required placeholder="Full name" className={field} />
-      <input name="email" type="email" required placeholder="Email" className={field} />
-      <input name="phone" required placeholder="Mobile / WhatsApp" className={field} />
-      {!compact && (
+      ) : null}
+      <input name="name" required placeholder="Full name" className={field} autoComplete="name" />
+      <div className="grid gap-2.5 sm:grid-cols-2">
+        <input
+          name="phone"
+          required
+          placeholder="Mobile / WhatsApp"
+          className={field}
+          autoComplete="tel"
+        />
+        <input
+          name="email"
+          type="email"
+          required
+          placeholder="Email"
+          className={field}
+          autoComplete="email"
+        />
+      </div>
+      {!compact ? (
         <select name="interest" className={field} defaultValue={defaultInterest}>
           <option value="buy">I want to buy</option>
           <option value="rent">I want to rent</option>
           <option value="off_plan">Off-plan</option>
           <option value="sell">I want to sell</option>
         </select>
+      ) : (
+        <input type="hidden" name="interest" value={defaultInterest} />
       )}
-      {compact ? <input type="hidden" name="interest" value={defaultInterest} /> : null}
       <textarea
         name="message"
-        rows={compact ? 3 : 4}
-        placeholder="Tell us what you are looking for"
-        className="w-full rounded border border-[var(--ul-hair)] bg-white px-4 py-3 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#008040]"
+        rows={2}
+        placeholder="Brief note (optional)"
+        className="w-full rounded-md border border-[var(--ul-hair)] bg-white px-3.5 py-2.5 text-sm text-[var(--ul-primary)] outline-none placeholder:text-[var(--ul-muted)] focus:border-[var(--ul-secondary)]"
         defaultValue={propertyTitle ? `Please share details for ${propertyTitle}.` : ""}
       />
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex h-12 w-full items-center justify-center rounded bg-[#0A1630] text-sm font-semibold text-white transition-colors hover:bg-[#081226] disabled:opacity-60"
+        className="inline-flex h-11 w-full items-center justify-center rounded-md bg-[var(--ul-secondary)] text-sm font-semibold text-white transition-colors hover:bg-[#006633] disabled:opacity-60"
       >
         {pending ? "Sending…" : "Send enquiry"}
       </button>
-      <p className="text-center text-xs text-[#6b7280]">
-        Or call{" "}
-        <a
-          href={`tel:${brand.phoneTel}`}
-          className="text-[#0A1630] underline-offset-4 hover:underline"
-        >
-          {brand.phoneDisplay}
-        </a>
-      </p>
+      {!compact ? (
+        <p className="text-center text-xs text-[var(--ul-muted)]">
+          Or call{" "}
+          <a
+            href={`tel:${brand.phoneTel}`}
+            className="text-[var(--ul-primary)] underline-offset-4 hover:underline"
+          >
+            {brand.phoneDisplay}
+          </a>
+        </p>
+      ) : null}
     </form>
   );
 }
