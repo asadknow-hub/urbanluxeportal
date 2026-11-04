@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Clock3, TrendingUp } from "lucide-react";
+import { ArrowRight, Clock3 } from "lucide-react";
 import { featuredInsight, latestInsights } from "@/lib/web/insights";
-import { PageIntro } from "@/components/web/page-intro";
 import { Reveal } from "@/components/web/reveal";
-import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Insights",
@@ -13,58 +11,42 @@ export const metadata: Metadata = {
     "Market updates, community briefs, and buyer guidance from Urban Luxe. Dubai real estate notes from the desk.",
 };
 
-const TOPICS = [
-  { label: "Market", href: "#featured" },
-  { label: "Communities", href: "#latest" },
-  { label: "Off-plan", href: "#latest" },
-  { label: "Buying guide", href: "#guides" },
-  { label: "Investment", href: "#snapshot" },
-] as const;
-
-const SNAPSHOT = [
-  { label: "Median ready sale lift", value: "+12%", sub: "YoY · select communities" },
-  { label: "Avg. days on market", value: "28", sub: "Prime villa stock" },
-  { label: "Off-plan share", value: "41%", sub: "Of Q2 enquiries" },
-  { label: "Mortgage share", value: "63%", sub: "Of closed buy briefs" },
+const NAV = [
+  { label: "Featured", href: "#featured" },
+  { label: "Latest", href: "#latest" },
+  { label: "Guides", href: "#guides" },
 ] as const;
 
 const GUIDES = [
   {
     title: "First viewing checklist",
-    body: "Light, noise, service charge, and the three questions that reveal a rushed listing.",
+    body: "Light, noise, service charge, and the questions that reveal a rushed listing.",
     href: "/insights/palm-fronds-what-to-check-before-offer",
   },
   {
     title: "Offer strategy in a competitive week",
-    body: "When to move fast, when to wait, and how to structure conditions without losing the house.",
+    body: "When to move fast, when to wait, and how to structure conditions.",
     href: "/insights/villa-sales-reach-new-highs",
   },
   {
-    title: "Rent vs buy in Dubai, 2026 frame",
-    body: "A clear model for five-year holds, residency plans, and opportunity cost.",
+    title: "Rent vs buy in Dubai, 2026",
+    body: "A clear frame for five-year holds, residency plans, and opportunity cost.",
     href: "/insights/holding-periods-that-actually-pay",
   },
 ] as const;
 
-function MetaRow({
+function Meta({
   category,
   date,
   readMins,
-  light = false,
 }: {
   category: string;
   date: string;
   readMins: number;
-  light?: boolean;
 }) {
   return (
-    <div
-      className={cn(
-        "flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.7rem] font-semibold uppercase tracking-[0.14em]",
-        light ? "text-white/70" : "text-[#0A1630]/45"
-      )}
-    >
-      <span className="text-[#008040]">{category}</span>
+    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-[var(--ul-muted)]">
+      <span className="text-[var(--ul-secondary)]">{category}</span>
       <span aria-hidden>·</span>
       <span>{date}</span>
       <span aria-hidden>·</span>
@@ -72,7 +54,7 @@ function MetaRow({
         <Clock3 className="h-3 w-3" />
         {readMins} min
       </span>
-    </div>
+    </p>
   );
 }
 
@@ -82,38 +64,50 @@ export default function InsightsPage() {
 
   return (
     <>
-      <PageIntro
-        tone="light"
-        layout="stack"
-        eyebrow="Insights"
-        title="Notes from the desk: market, communities, and how to buy well."
-        lede="Short briefs for clients who want signal over noise: launches worth a private look, pricing that moved, and guidance before you write an offer."
-      >
-        <div className="ul-hide-scroll flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
-          {TOPICS.map((topic) => (
-            <Link
-              key={topic.label}
-              href={topic.href}
-              className="shrink-0 rounded-full border border-[var(--ul-hair)] px-3.5 py-2 text-xs font-semibold text-[var(--ul-primary)] transition-colors hover:border-[var(--ul-secondary)] hover:text-[var(--ul-secondary)]"
-            >
-              {topic.label}
-            </Link>
-          ))}
-        </div>
-      </PageIntro>
+      <section className="ul-band-light border-b border-[var(--ul-hair)]">
+        <div className="ul-shell-wide py-8 md:py-10 lg:py-12">
+          <Reveal className="max-w-3xl">
+            <p className="ul-kicker">Insights</p>
+            <h1 className="mt-3 text-[1.75rem] font-extrabold uppercase leading-[1.08] tracking-[-0.03em] text-[var(--ul-primary)] sm:text-4xl md:text-[2.75rem]">
+              Notes from the desk
+            </h1>
+            <p className="mt-3 max-w-xl text-[0.95rem] leading-relaxed text-[var(--ul-muted)] sm:text-base">
+              Market, communities, and how to buy well. Short briefs for clients who want signal
+              before they view or offer.
+            </p>
+          </Reveal>
 
-      <section id="featured" className="ul-band-light px-4 py-10 sm:px-5 sm:py-12 md:px-10 md:py-16">
-        <div className="mx-auto max-w-[1280px]">
+          <nav
+            aria-label="Insights sections"
+            className="mt-8 flex flex-wrap gap-x-6 gap-y-2 border-t border-[var(--ul-hair)] pt-5"
+          >
+            {NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="text-sm font-semibold text-[var(--ul-primary)] transition-colors hover:text-[var(--ul-secondary)]"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      </section>
+
+      <section id="featured" className="ul-band-light border-b border-[var(--ul-hair)] scroll-mt-24">
+        <div className="ul-shell-wide py-10 md:py-12 lg:py-14">
           <Reveal>
             <div className="mb-6 flex items-end justify-between gap-4">
               <div>
                 <p className="ul-kicker">Featured</p>
-                <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">This month&apos;s brief</h2>
+                <h2 className="mt-2 text-xl font-bold text-[var(--ul-primary)] md:text-2xl">
+                  This month&apos;s brief
+                </h2>
               </div>
               <Link
                 href="/buy"
                 prefetch
-                className="hidden text-sm font-semibold text-[#008040] transition-colors hover:text-[#006633] sm:inline-flex sm:items-center sm:gap-1.5"
+                className="hidden text-sm font-semibold text-[var(--ul-secondary)] hover:text-[#006633] sm:inline-flex sm:items-center sm:gap-1.5"
               >
                 Browse residences <ArrowRight className="h-4 w-4" />
               </Link>
@@ -124,9 +118,9 @@ export default function InsightsPage() {
             <Link
               href={`/insights/${featured.slug}`}
               prefetch
-              className="group grid overflow-hidden rounded-2xl border border-[var(--ul-hair)] bg-[#F6F3EE] lg:grid-cols-2"
+              className="group grid gap-6 border border-[var(--ul-hair)] bg-white lg:grid-cols-2 lg:gap-0"
             >
-              <div className="relative min-h-[240px] lg:min-h-[380px]">
+              <div className="relative min-h-[14rem] sm:min-h-[18rem] lg:min-h-[22rem]">
                 <Image
                   src={featured.image}
                   alt={featured.title}
@@ -136,20 +130,20 @@ export default function InsightsPage() {
                   priority
                 />
               </div>
-              <div className="flex flex-col justify-center px-6 py-8 md:px-10 md:py-12">
-                <MetaRow
+              <div className="flex flex-col justify-center px-5 py-6 sm:px-8 sm:py-8 lg:px-10">
+                <Meta
                   category={featured.category}
                   date={featured.date}
                   readMins={featured.readMins}
                 />
-                <h3 className="mt-4 text-2xl font-bold leading-snug text-[#0A1630] transition-colors group-hover:text-[#008040] md:text-3xl">
+                <h3 className="mt-3 text-2xl font-bold leading-snug text-[var(--ul-primary)] transition-colors group-hover:text-[var(--ul-secondary)] md:text-[1.75rem]">
                   {featured.title}
                 </h3>
-                <p className="mt-4 text-sm leading-relaxed text-[#0A1630]/70 md:text-base">
+                <p className="mt-3 text-sm leading-relaxed text-[var(--ul-muted)] md:text-[0.95rem]">
                   {featured.excerpt}
                 </p>
-                <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#0A1630] transition-all group-hover:gap-2.5">
-                  Read the brief <ArrowRight className="h-4 w-4" />
+                <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ul-primary)]">
+                  Read the brief <ArrowRight className="h-4 w-4 text-[var(--ul-secondary)]" />
                 </span>
               </div>
             </Link>
@@ -157,158 +151,139 @@ export default function InsightsPage() {
         </div>
       </section>
 
-      <section id="snapshot" className="border-y border-[var(--ul-hair)] bg-[#F6F3EE] px-5 py-10 md:px-10 md:py-12">
-        <div className="mx-auto max-w-[1280px]">
-          <Reveal>
-            <div className="mb-6 flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-[#008040]" strokeWidth={2.25} />
-              <p className="text-sm font-semibold text-[#0A1630]">Market snapshot</p>
-              <span className="text-xs text-[#0A1630]/45">Indicative · Urban Luxe desk</span>
-            </div>
-          </Reveal>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {SNAPSHOT.map((item, i) => (
-              <Reveal key={item.label} delay={i * 40}>
-                <div className="rounded-xl border border-[var(--ul-hair)] bg-white px-5 py-5">
-                  <p className="text-xs font-medium uppercase tracking-[0.12em] text-[#0A1630]/45">
-                    {item.label}
-                  </p>
-                  <p className="mt-2 text-3xl font-bold tracking-tight text-[#0A1630]">{item.value}</p>
-                  <p className="mt-1 text-xs text-[#0A1630]/55">{item.sub}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="latest" className="ul-band-light px-5 py-14 md:px-10 md:py-20">
-        <div className="mx-auto max-w-[1280px]">
-          <Reveal>
+      <section id="latest" className="ul-band-light border-b border-[var(--ul-hair)] scroll-mt-24">
+        <div className="ul-shell-wide py-10 md:py-12 lg:py-14">
+          <Reveal className="max-w-2xl">
             <p className="ul-kicker">Latest</p>
-            <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">From the desk</h2>
-            <p className="ul-section-lede mt-3 max-w-xl">
-              Community notes, launch filters, and practical pieces for buyers, tenants, and
-              investors.
+            <h2 className="mt-2 text-xl font-bold text-[var(--ul-primary)] md:text-2xl">
+              From the desk
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-[var(--ul-muted)]">
+              Community notes, launch filters, and practical pieces for buyers and investors.
             </p>
           </Reveal>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-8 divide-y divide-[var(--ul-hair)] border-y border-[var(--ul-hair)]">
             {articles.map((item, i) => (
-              <Reveal key={item.slug} delay={i * 50}>
-                <Link
-                  href={`/insights/${item.slug}`}
-                  prefetch
-                  className="group flex h-full flex-col overflow-hidden rounded-xl border border-[var(--ul-hair)] bg-white"
-                >
-                  <div className="relative aspect-[16/10] overflow-hidden bg-[#F6F3EE]">
-                    <Image
-                      src={item.image}
-                      alt={item.title}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className={cn("flex flex-1 flex-col px-5 py-5", item.panel)}>
-                    <MetaRow
-                      category={item.category}
-                      date={item.date}
-                      readMins={item.readMins}
-                      light={!item.panel.includes("tertiary")}
-                    />
-                    <h3 className="mt-3 text-lg font-bold leading-snug md:text-xl">{item.title}</h3>
-                    <p
-                      className={cn(
-                        "mt-2 flex-1 text-sm leading-relaxed",
-                        item.panel.includes("tertiary") ? "text-[#0A1630]/70" : "text-white/80"
-                      )}
-                    >
-                      {item.excerpt}
-                    </p>
-                    <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold opacity-95 transition-all group-hover:gap-2.5">
-                      Read more <ArrowRight className="h-4 w-4" />
+              <li key={item.slug}>
+                <Reveal delay={i * 40}>
+                  <Link
+                    href={`/insights/${item.slug}`}
+                    prefetch
+                    className="group grid gap-4 py-5 sm:grid-cols-[8.5rem_minmax(0,1fr)] sm:gap-6 md:grid-cols-[10rem_minmax(0,1fr)_auto] md:items-center md:py-6"
+                  >
+                    <div className="relative aspect-[16/10] overflow-hidden bg-[var(--ul-paper)] sm:aspect-[4/3]">
+                      <Image
+                        src={item.image}
+                        alt=""
+                        fill
+                        sizes="160px"
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <Meta
+                        category={item.category}
+                        date={item.date}
+                        readMins={item.readMins}
+                      />
+                      <h3 className="mt-2 text-base font-bold leading-snug text-[var(--ul-primary)] transition-colors group-hover:text-[var(--ul-secondary)] md:text-lg">
+                        {item.title}
+                      </h3>
+                      <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-[var(--ul-muted)]">
+                        {item.excerpt}
+                      </p>
+                    </div>
+                    <span className="hidden items-center gap-1.5 text-sm font-semibold text-[var(--ul-secondary)] md:inline-flex">
+                      Read <ArrowRight className="h-4 w-4" />
                     </span>
-                  </div>
-                </Link>
-              </Reveal>
+                  </Link>
+                </Reveal>
+              </li>
             ))}
+          </ul>
+        </div>
+      </section>
+
+      <section id="guides" className="ul-band-light border-b border-[var(--ul-hair)] scroll-mt-24">
+        <div className="ul-shell-wide py-10 md:py-12 lg:py-14">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-14">
+            <Reveal>
+              <p className="ul-kicker">Guides</p>
+              <h2 className="mt-2 text-xl font-bold text-[var(--ul-primary)] md:text-2xl">
+                Practical papers
+              </h2>
+              <p className="mt-2 max-w-md text-sm leading-relaxed text-[var(--ul-muted)]">
+                Short frameworks we use on viewings and offer calls. The same notes we share with
+                clients.
+              </p>
+              <Link
+                href="/contact"
+                prefetch
+                className="mt-6 inline-flex h-11 items-center justify-center bg-[var(--ul-secondary)] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#006633]"
+              >
+                Request a briefing
+              </Link>
+            </Reveal>
+
+            <ol className="divide-y divide-[var(--ul-hair)] border-y border-[var(--ul-hair)]">
+              {GUIDES.map((guide, i) => (
+                <li key={guide.title}>
+                  <Reveal delay={i * 40}>
+                    <Link
+                      href={guide.href}
+                      prefetch
+                      className="group grid gap-3 py-5 sm:grid-cols-[2.75rem_minmax(0,1fr)_auto] sm:items-start sm:gap-4"
+                    >
+                      <span className="text-xs font-bold tracking-[0.16em] text-[var(--ul-secondary)]">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-[var(--ul-primary)] transition-colors group-hover:text-[var(--ul-secondary)]">
+                          {guide.title}
+                        </p>
+                        <p className="mt-1 text-sm leading-relaxed text-[var(--ul-muted)]">
+                          {guide.body}
+                        </p>
+                      </div>
+                      <ArrowRight className="mt-1 hidden h-4 w-4 shrink-0 text-[var(--ul-muted)] transition-colors group-hover:text-[var(--ul-secondary)] sm:block" />
+                    </Link>
+                  </Reveal>
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
       </section>
 
-      <section id="guides" className="border-t border-[var(--ul-hair)] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-20">
-        <div className="mx-auto grid max-w-[1280px] gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
-          <Reveal>
-            <p className="ul-kicker">Guides</p>
-            <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">
-              Practical papers for serious clients
+      <section className="ul-band-light">
+        <div className="ul-shell-wide flex flex-col items-start justify-between gap-6 border-t border-[var(--ul-hair)] py-10 md:flex-row md:items-center md:py-12">
+          <Reveal className="max-w-lg">
+            <p className="ul-kicker">Stay close</p>
+            <h2 className="mt-2 text-xl font-bold text-[var(--ul-primary)] md:text-2xl">
+              When the market moves, we write
             </h2>
-            <p className="ul-section-lede mt-3">
-              Short frameworks we use on viewings and offer calls, the same notes we share with clients.
+            <p className="mt-2 text-sm leading-relaxed text-[var(--ul-muted)]">
+              Ask for a private briefing if you want launches and pricing notes tied to your brief.
             </p>
-            <Link
-              href="/contact"
-              prefetch
-              className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[#0A1630] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#081226]"
-            >
-              Request a briefing
-            </Link>
           </Reveal>
-
-          <div className="space-y-3">
-            {GUIDES.map((guide, i) => (
-              <Reveal key={guide.title} delay={i * 50}>
-                <Link
-                  href={guide.href}
-                  prefetch
-                  className="group flex items-start justify-between gap-4 rounded-xl border border-[var(--ul-hair)] bg-white px-5 py-5 transition-colors hover:border-[#0A1630]/25"
-                >
-                  <div>
-                    <p className="font-semibold text-[#0A1630] group-hover:text-[#008040]">
-                      {guide.title}
-                    </p>
-                    <p className="mt-1.5 text-sm leading-relaxed text-[#0A1630]/65">{guide.body}</p>
-                  </div>
-                  <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-[#0A1630]/35 transition-transform group-hover:translate-x-0.5 group-hover:text-[#008040]" />
-                </Link>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-[#0A1630] px-5 py-14 md:px-10 md:py-16">
-        <Reveal className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-8 md:flex-row md:items-center">
-          <div className="max-w-xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#008040]">
-              Stay informed
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-white md:text-3xl">
-              Keep up with what&apos;s happening
-            </h2>
-            <p className="mt-3 text-sm leading-relaxed text-white/70 md:text-base">
-              Market updates, new launches, and expert notes when something moves that matters to
-              your brief, we write.
-            </p>
-          </div>
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+          <Reveal delay={40} className="flex flex-wrap gap-3">
             <Link
               href="/contact"
               prefetch
-              className="inline-flex h-11 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-[#0A1630] transition-colors hover:bg-[#F6F3EE]"
+              className="inline-flex h-11 items-center justify-center bg-[var(--ul-secondary)] px-5 text-sm font-semibold text-white hover:bg-[#006633]"
             >
               Get the briefing
             </Link>
             <Link
               href="/buy"
               prefetch
-              className="inline-flex h-11 items-center justify-center rounded-full border border-white/35 px-6 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+              className="inline-flex h-11 items-center justify-center border border-[var(--ul-hair)] px-5 text-sm font-semibold text-[var(--ul-primary)] hover:border-[var(--ul-primary)]"
             >
               View properties
             </Link>
-          </div>
-        </Reveal>
+          </Reveal>
+        </div>
       </section>
     </>
   );
