@@ -71,13 +71,13 @@ function FilterSelect({
     <div className={cn("relative min-w-0", className)}>
       <select
         aria-label={ariaLabel}
-        className="h-11 w-full appearance-none rounded-md border border-[#d1d5db] bg-white py-2 pl-3 pr-9 text-sm font-medium text-[#0A1630] outline-none transition-colors hover:border-[#0A1630]/40 focus:border-[#0A1630]"
+        className="h-11 w-full appearance-none border border-[var(--ul-hair)] bg-white py-2 pl-3 pr-9 text-sm font-medium text-[var(--ul-primary)] outline-none transition-colors hover:border-[var(--ul-primary)]/40 focus:border-[var(--ul-secondary)]"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >
         {children}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#0A1630]/45" />
+      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ul-muted)]" />
     </div>
   );
 }
@@ -166,9 +166,6 @@ export function ListingsExplorer({
     return rows;
   }, [listings, status, type, community, beds, priceMin, priceMax, query, sort, isRent]);
 
-  const title =
-    kind === "rent" ? "Properties For Rent In Dubai" : "Properties For Sale In Dubai";
-
   const activeFilterCount = [type, beds, priceMin, priceMax, community].filter(Boolean).length;
 
   const filterFields = (
@@ -241,7 +238,7 @@ export function ListingsExplorer({
 
   return (
     <div>
-      <div className="rounded-lg border border-[var(--ul-hair)] bg-white p-3 shadow-[0_1px_2px_rgba(11,29,61,0.04)] md:p-3.5">
+      <div className="border-b border-[var(--ul-hair)] pb-4">
         <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center">
           <FilterSelect
             aria-label="Transaction type"
@@ -254,7 +251,7 @@ export function ListingsExplorer({
           </FilterSelect>
 
           <div className="relative min-w-0 flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#0A1630]/40" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ul-muted)]" />
             <input
               type="search"
               value={query}
@@ -263,7 +260,7 @@ export function ListingsExplorer({
                 syncUrl({ q: e.target.value });
               }}
               placeholder="Community or building"
-              className="h-11 w-full rounded-md border border-[#d1d5db] bg-white py-2 pl-10 pr-3 text-base text-[#0A1630] outline-none placeholder:text-[#0A1630]/40 hover:border-[#0A1630]/40 focus:border-[#0A1630] sm:text-sm"
+              className="h-11 w-full border border-[var(--ul-hair)] bg-white py-2 pl-10 pr-3 text-base text-[var(--ul-primary)] outline-none placeholder:text-[var(--ul-muted)] hover:border-[var(--ul-primary)]/40 focus:border-[var(--ul-secondary)] sm:text-sm"
             />
           </div>
 
@@ -273,14 +270,14 @@ export function ListingsExplorer({
             type="button"
             onClick={() => setFiltersOpen(true)}
             className={cn(
-              "inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-md border border-[#d1d5db] px-3.5 text-sm font-semibold text-[#0A1630] transition-colors hover:border-[#0A1630]/40 lg:hidden",
-              activeFilterCount > 0 && "border-[#0A1630] bg-[#F6F3EE]"
+              "inline-flex h-11 shrink-0 items-center justify-center gap-2 border border-[var(--ul-hair)] px-3.5 text-sm font-semibold text-[var(--ul-primary)] transition-colors hover:border-[var(--ul-primary)]/40 lg:hidden",
+              activeFilterCount > 0 && "border-[var(--ul-primary)] bg-[var(--ul-paper)]"
             )}
           >
             <SlidersHorizontal className="h-4 w-4" strokeWidth={2} />
             Filters
             {activeFilterCount > 0 ? (
-              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#0A1630] px-1.5 text-[0.7rem] text-white">
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--ul-secondary)] px-1.5 text-[0.7rem] text-white">
                 {activeFilterCount}
               </span>
             ) : null}
@@ -290,17 +287,17 @@ export function ListingsExplorer({
             type="button"
             onClick={() => setMoreOpen((v) => !v)}
             className={cn(
-              "hidden h-11 shrink-0 items-center justify-center gap-2 rounded-md border border-[#d1d5db] px-3.5 text-sm font-semibold text-[#0A1630] transition-colors hover:border-[#0A1630]/40 lg:inline-flex",
-              moreOpen && "border-[#0A1630] bg-[#F6F3EE]"
+              "hidden h-11 shrink-0 items-center justify-center gap-2 border border-[var(--ul-hair)] px-3.5 text-sm font-semibold text-[var(--ul-primary)] transition-colors hover:border-[var(--ul-primary)]/40 lg:inline-flex",
+              moreOpen && "border-[var(--ul-primary)] bg-[var(--ul-paper)]"
             )}
           >
             <SlidersHorizontal className="h-4 w-4" strokeWidth={2} />
-            More Filters
+            More
           </button>
         </div>
 
         {moreOpen && (
-          <div className="mt-3 hidden gap-2.5 border-t border-[var(--ul-hair)] pt-3 sm:grid-cols-2 lg:grid lg:grid-cols-3">
+          <div className="mt-3 hidden gap-2.5 border-t border-[var(--ul-hair)] pt-3 lg:grid lg:grid-cols-3">
             <FilterSelect
               aria-label="Community"
               value={community}
@@ -328,13 +325,13 @@ export function ListingsExplorer({
             aria-label="Close filters"
             onClick={() => setFiltersOpen(false)}
           />
-          <div className="absolute inset-x-0 bottom-0 max-h-[88svh] overflow-y-auto rounded-t-2xl bg-white px-4 pb-[calc(1.25rem+var(--ul-safe-bottom,0px))] pt-3 shadow-[0_-12px_40px_rgba(11,29,61,0.18)]">
-            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[#d1d5db]" />
+          <div className="absolute inset-x-0 bottom-0 max-h-[88svh] overflow-y-auto border-t border-[var(--ul-hair)] bg-white px-4 pb-[calc(1.25rem+var(--ul-safe-bottom,0px))] pt-3">
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[var(--ul-hair)]" />
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-lg font-bold text-[#0A1630]">Filters</h2>
+              <h2 className="text-lg font-bold text-[var(--ul-primary)]">Filters</h2>
               <button
                 type="button"
-                className="text-sm font-semibold text-[#008040]"
+                className="text-sm font-semibold text-[var(--ul-secondary)]"
                 onClick={() => {
                   setType("");
                   setBeds("");
@@ -375,53 +372,49 @@ export function ListingsExplorer({
         </div>
       )}
 
-      <div className="mt-5 flex flex-col gap-4 border-b border-[var(--ul-hair)] pb-4 sm:mt-6 sm:pb-5 lg:flex-row lg:items-center lg:justify-between lg:pb-6">
-        <p className="text-sm text-[#0A1630]/70 md:text-[0.9375rem]">
-          {title}{" "}
-          <span className="font-bold text-[#0A1630]">| {filtered.length} results</span>
+      <div className="mt-5 flex flex-col gap-3 border-b border-[var(--ul-hair)] pb-4 sm:mt-6 lg:flex-row lg:items-center lg:justify-between">
+        <p className="text-sm text-[var(--ul-muted)]">
+          <span className="font-semibold text-[var(--ul-primary)]">{filtered.length}</span> results
         </p>
 
-        <div className="flex flex-wrap items-center gap-2.5 sm:gap-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {!isRent && (
-            <div className="flex w-full items-center gap-2 sm:w-auto">
-              <span className="hidden text-sm text-[#0A1630]/65 sm:inline">Show:</span>
-              <div className="inline-flex w-full overflow-hidden rounded-md border border-[#d1d5db] sm:w-auto">
-                {(
-                  [
-                    { id: "ready" as const, label: "Ready" },
-                    { id: "offplan" as const, label: "Off Plan" },
-                  ] as const
-                ).map((opt) => {
-                  const active = status === opt.id;
-                  return (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => {
-                        setStatus(opt.id);
-                        syncUrl({ status: opt.id });
-                      }}
-                      className={cn(
-                        "inline-flex h-10 flex-1 items-center justify-center gap-1.5 px-3 text-sm font-semibold transition-colors sm:h-9 sm:flex-none",
-                        active
-                          ? "bg-[#0A1630] text-white"
-                          : "bg-white text-[#0A1630] hover:bg-[#F6F3EE]"
-                      )}
-                    >
-                      {active ? <Check className="h-3.5 w-3.5" strokeWidth={2.5} /> : null}
-                      {opt.label}
-                    </button>
-                  );
-                })}
-              </div>
+            <div className="inline-flex w-full border border-[var(--ul-hair)] sm:w-auto">
+              {(
+                [
+                  { id: "ready" as const, label: "Ready" },
+                  { id: "offplan" as const, label: "Off Plan" },
+                ] as const
+              ).map((opt) => {
+                const active = status === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => {
+                      setStatus(opt.id);
+                      syncUrl({ status: opt.id });
+                    }}
+                    className={cn(
+                      "inline-flex h-9 flex-1 items-center justify-center gap-1.5 px-3 text-sm font-semibold transition-colors sm:flex-none",
+                      active
+                        ? "bg-[var(--ul-primary)] text-white"
+                        : "bg-white text-[var(--ul-primary)] hover:bg-[var(--ul-paper)]"
+                    )}
+                  >
+                    {active ? <Check className="h-3.5 w-3.5" strokeWidth={2.5} /> : null}
+                    {opt.label}
+                  </button>
+                );
+              })}
             </div>
           )}
 
           <div className="relative min-w-0 flex-1 sm:flex-none">
-            <ArrowUpDown className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#0A1630]/45" />
+            <ArrowUpDown className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--ul-muted)]" />
             <select
               aria-label="Sort listings"
-              className="h-10 w-full appearance-none rounded-md border border-[#d1d5db] bg-white py-1.5 pl-8 pr-8 text-sm font-medium text-[#0A1630] outline-none hover:border-[#0A1630]/40 focus:border-[#0A1630] sm:h-9 sm:w-auto"
+              className="h-9 w-full appearance-none border border-[var(--ul-hair)] bg-white py-1.5 pl-8 pr-8 text-sm font-medium text-[var(--ul-primary)] outline-none hover:border-[var(--ul-primary)]/40 focus:border-[var(--ul-secondary)] sm:w-auto"
               value={sort}
               onChange={(e) => {
                 const v = e.target.value as SortKey;
@@ -429,12 +422,12 @@ export function ListingsExplorer({
                 syncUrl({ sort: v });
               }}
             >
-              <option value="recent">Sort: Most Recent</option>
-              <option value="price-asc">Price: Low to High</option>
-              <option value="price-desc">Price: High to Low</option>
+              <option value="recent">Most recent</option>
+              <option value="price-asc">Price: low to high</option>
+              <option value="price-desc">Price: high to low</option>
               <option value="beds">Bedrooms</option>
             </select>
-            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#0A1630]/45" />
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--ul-muted)]" />
           </div>
 
           <a
@@ -449,7 +442,7 @@ export function ListingsExplorer({
             }
             target="_blank"
             rel="noreferrer"
-            className="inline-flex h-10 items-center gap-1.5 rounded-md border border-[#d1d5db] px-3 text-sm font-semibold text-[#0A1630] transition-colors hover:border-[#0A1630]/40 hover:bg-[#F6F3EE] sm:h-9"
+            className="inline-flex h-9 items-center gap-1.5 border border-[var(--ul-hair)] px-3 text-sm font-semibold text-[var(--ul-primary)] transition-colors hover:border-[var(--ul-primary)]/40 hover:bg-[var(--ul-paper)]"
           >
             <Map className="h-3.5 w-3.5" strokeWidth={2} />
             Map
@@ -457,9 +450,9 @@ export function ListingsExplorer({
         </div>
       </div>
 
-      <div className="mt-6 space-y-5 pb-8 sm:mt-8 sm:space-y-6 md:mt-10 md:space-y-8 md:pb-12">
+      <div className="mt-6 space-y-4 pb-8 md:mt-8 md:space-y-5 md:pb-10">
         {filtered.length === 0 ? (
-          <p className="rounded-lg border border-dashed border-[#d1d5db] px-5 py-12 text-center text-sm text-[#0A1630]/55 sm:px-6 sm:py-16">
+          <p className="border border-dashed border-[var(--ul-hair)] px-5 py-12 text-center text-sm text-[var(--ul-muted)]">
             No properties match these filters. Try widening your search.
           </p>
         ) : (

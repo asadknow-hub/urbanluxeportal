@@ -6,22 +6,34 @@ export function ListingsPage({ kind }: { kind: ListingKind }) {
   const listings =
     kind === "sale" ? [...listingsFor("sale"), ...listingsFor("offplan")] : listingsFor(kind);
 
+  const title = kind === "rent" ? "Rent in Dubai" : "Buy in Dubai";
+  const lede =
+    kind === "rent"
+      ? "Annual lets in better buildings, filtered to your brief."
+      : "Ready and off-plan residences, filtered to your brief.";
+
   return (
-    <section className="ul-band-light min-h-[60vh] py-6 md:py-8">
+    <section className="ul-band-light min-h-[60vh] border-b border-[var(--ul-hair)] py-8 md:py-10">
       <div className="ul-shell-wide">
-        <div className="overflow-hidden rounded-[1.5rem] border border-[var(--ul-hair)] bg-white p-4 shadow-[0_12px_40px_rgba(7,17,31,0.06)] sm:p-5 md:p-6">
-          <Suspense
-            fallback={
-              <div className="space-y-4">
-                <div className="h-14 animate-pulse rounded-lg bg-[var(--ul-hair)]" />
-                <div className="h-10 animate-pulse rounded-md bg-[var(--ul-hair)]" />
-                <div className="h-64 animate-pulse rounded-lg bg-[var(--ul-hair)]" />
-              </div>
-            }
-          >
-            <ListingsExplorer listings={listings} kind={kind} />
-          </Suspense>
-        </div>
+        <header className="mb-6 max-w-2xl md:mb-8">
+          <p className="ul-kicker">{kind === "rent" ? "Rent" : "Buy"}</p>
+          <h1 className="mt-2 text-[1.75rem] font-extrabold uppercase leading-[1.08] tracking-[-0.03em] text-[var(--ul-primary)] sm:text-4xl">
+            {title}
+          </h1>
+          <p className="mt-2 text-sm leading-relaxed text-[var(--ul-muted)] sm:text-[0.95rem]">{lede}</p>
+        </header>
+
+        <Suspense
+          fallback={
+            <div className="space-y-4">
+              <div className="h-11 animate-pulse bg-[var(--ul-hair)]" />
+              <div className="h-10 animate-pulse bg-[var(--ul-hair)]" />
+              <div className="h-48 animate-pulse bg-[var(--ul-hair)]" />
+            </div>
+          }
+        >
+          <ListingsExplorer listings={listings} kind={kind} />
+        </Suspense>
       </div>
     </section>
   );
