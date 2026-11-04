@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ListPropertyForm } from "@/components/web/list-property-form";
+import { MortgageCalculator } from "@/components/web/mortgage-calculator";
 import { Reveal } from "@/components/web/reveal";
 
 export const metadata: Metadata = {
@@ -30,55 +31,86 @@ const POINTS = [
 
 export default function ValuationsPage() {
   return (
-    <section className="ul-band-light border-b border-[var(--ul-hair)]">
-      <div className="ul-shell-wide py-8 md:py-10 lg:py-12">
-        <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(17.5rem,22rem)] lg:gap-10 xl:gap-14">
-          <Reveal className="min-w-0">
-            <p className="ul-kicker">Valuations</p>
-            <h1 className="mt-3 max-w-xl text-[1.75rem] font-extrabold uppercase leading-[1.08] tracking-[-0.03em] text-[var(--ul-primary)] sm:text-4xl">
-              A valuation built from the residence and the market.
-            </h1>
-            <p className="mt-3 max-w-md text-[0.95rem] leading-relaxed text-[var(--ul-muted)]">
-              Share the address. We reply with next steps for a site visit and comps. If timing is
-              wrong, we say so.
-            </p>
+    <>
+      <section className="ul-band-light border-b border-[var(--ul-hair)]">
+        <div className="ul-shell-wide py-8 md:py-10 lg:py-12">
+          <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(17.5rem,22rem)] lg:gap-10 xl:gap-14">
+            <Reveal className="min-w-0">
+              <p className="ul-kicker">Valuations</p>
+              <h1 className="mt-3 max-w-xl text-[1.75rem] font-extrabold uppercase leading-[1.08] tracking-[-0.03em] text-[var(--ul-primary)] sm:text-4xl">
+                A valuation built from the residence and the market.
+              </h1>
+              <p className="mt-3 max-w-md text-[0.95rem] leading-relaxed text-[var(--ul-muted)]">
+                Share the address. We reply with next steps for a site visit and comps. If timing is
+                wrong, we say so.
+              </p>
 
-            <ol className="mt-8 space-y-4 border-t border-[var(--ul-hair)] pt-7">
-              {POINTS.map((item) => (
-                <li key={item.n} className="grid gap-1 sm:grid-cols-[2.75rem_minmax(0,1fr)] sm:gap-3">
-                  <span className="text-xs font-bold tracking-[0.16em] text-[var(--ul-secondary)]">
-                    {item.n}
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold text-[var(--ul-primary)]">{item.title}</p>
-                    <p className="mt-0.5 text-sm leading-relaxed text-[var(--ul-muted)]">{item.body}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
+              <ol className="mt-8 space-y-4 border-t border-[var(--ul-hair)] pt-7">
+                {POINTS.map((item) => (
+                  <li key={item.n} className="grid gap-1 sm:grid-cols-[2.75rem_minmax(0,1fr)] sm:gap-3">
+                    <span className="text-xs font-bold tracking-[0.16em] text-[var(--ul-secondary)]">
+                      {item.n}
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-[var(--ul-primary)]">{item.title}</p>
+                      <p className="mt-0.5 text-sm leading-relaxed text-[var(--ul-muted)]">
+                        {item.body}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
 
-            <Link
-              href="/sell"
-              prefetch
-              className="mt-8 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ul-secondary)] hover:text-[#006633]"
+              <Link
+                href="/sell"
+                prefetch
+                className="mt-8 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ul-secondary)] hover:text-[#006633]"
+              >
+                Ready to instruct a sale? <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Reveal>
+
+            <Reveal
+              delay={60}
+              className="min-w-0 w-full max-w-[22rem] justify-self-start lg:sticky lg:top-24 lg:justify-self-end"
             >
-              Ready to instruct a sale? <ArrowRight className="h-4 w-4" />
+              <div id="request" className="border border-[var(--ul-hair)] bg-white p-4 sm:p-5">
+                <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--ul-secondary)]">
+                  Request
+                </p>
+                <h2 className="mt-2 text-lg font-bold text-[var(--ul-primary)]">Book a valuation</h2>
+                <div className="mt-4">
+                  <ListPropertyForm defaultIntent="valuation" />
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      <section className="ul-band-light border-b border-[var(--ul-hair)]">
+        <div className="ul-shell-wide py-8 md:py-10">
+          <Reveal className="mx-auto max-w-[22rem] md:max-w-[24rem]">
+            <p className="ul-kicker">Indicative finance</p>
+            <h2 className="mt-2 text-xl font-bold text-[var(--ul-primary)] md:text-2xl">
+              Model a repayment
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-[var(--ul-muted)]">
+              Rough monthly cost against a purchase price. Not a bank offer.
+            </p>
+            <div className="mt-5">
+              <MortgageCalculator />
+            </div>
+            <Link
+              href="/mortgages"
+              prefetch
+              className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ul-secondary)] hover:text-[#006633]"
+            >
+              Mortgage guidance <ArrowRight className="h-4 w-4" />
             </Link>
           </Reveal>
-
-          <Reveal delay={60} className="min-w-0 w-full max-w-[22rem] justify-self-start lg:sticky lg:top-24 lg:justify-self-end">
-            <div id="request" className="border border-[var(--ul-hair)] bg-white p-4 sm:p-5">
-              <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--ul-secondary)]">
-                Request
-              </p>
-              <h2 className="mt-2 text-lg font-bold text-[var(--ul-primary)]">Book a valuation</h2>
-              <div className="mt-4">
-                <ListPropertyForm defaultIntent="valuation" />
-              </div>
-            </div>
-          </Reveal>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
