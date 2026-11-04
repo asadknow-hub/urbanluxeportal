@@ -92,28 +92,28 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
         )}
         <aside
           className={cn(
-            "rounded-2xl bg-[#1b2430] p-5 text-[#f6f3ee] sm:p-6",
-            "max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-50 max-lg:max-h-[88svh] max-lg:overflow-y-auto max-lg:rounded-b-none max-lg:rounded-t-2xl max-lg:pb-[calc(1.25rem+var(--ul-safe-bottom,0px))]",
+            "rounded-xl border border-[var(--ul-hair)] bg-white p-5 text-[var(--ul-primary)] sm:p-6",
+            "max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-50 max-lg:max-h-[88svh] max-lg:overflow-y-auto max-lg:rounded-b-none max-lg:rounded-t-xl max-lg:pb-[calc(1.25rem+var(--ul-safe-bottom,0px))]",
             filtersOpen ? "max-lg:block" : "max-lg:hidden",
             "lg:sticky lg:top-24 lg:block lg:self-start"
           )}
         >
           <div className="mb-2 flex items-center justify-between lg:block">
-            <p className="text-sm font-medium tracking-wide">Search filters</p>
+            <p className="text-sm font-semibold tracking-wide">Search filters</p>
             <button
               type="button"
-              className="text-sm font-semibold text-[#2dd4bf] lg:hidden"
+              className="text-sm font-semibold text-[var(--ul-secondary)] lg:hidden"
               onClick={() => setFiltersOpen(false)}
             >
               Done
             </button>
           </div>
 
-          <label className="mt-6 block text-[0.65rem] tracking-[0.18em] uppercase text-[#2dd4bf]">Location</label>
+          <label className="mt-6 block text-[0.65rem] tracking-[0.18em] uppercase text-[var(--ul-muted)]">Location</label>
           <select
             value={community}
             onChange={(e) => setCommunity(e.target.value)}
-            className="mt-2 h-11 w-full rounded-lg border border-white/15 bg-white/5 px-3 text-sm outline-none"
+            className="mt-2 h-11 w-full rounded-md border border-[var(--ul-hair)] bg-[var(--ul-paper)] px-3 text-sm outline-none focus:border-[var(--ul-primary)]"
           >
             <option value="">All communities</option>
             {COMMUNITIES.map((c) => (
@@ -123,7 +123,7 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
             ))}
           </select>
 
-          <p className="mt-6 text-[0.65rem] tracking-[0.18em] uppercase text-[#2dd4bf]">Property type</p>
+          <p className="mt-6 text-[0.65rem] tracking-[0.18em] uppercase text-[var(--ul-muted)]">Property type</p>
           <div className="mt-2 grid grid-cols-2 gap-2">
             {TYPES.map((t) => (
               <button
@@ -131,8 +131,10 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
                 type="button"
                 onClick={() => setType(t.id)}
                 className={cn(
-                  "flex flex-col items-center gap-1 rounded-lg border px-2 py-3 text-[0.7rem]",
-                  type === t.id ? "border-[#2dd4bf] bg-white/10 text-[#2dd4bf]" : "border-white/15 text-[#f6f3ee]/80"
+                  "flex flex-col items-center gap-1 rounded-md border px-2 py-3 text-[0.7rem]",
+                  type === t.id
+                    ? "border-[var(--ul-secondary)] bg-[color-mix(in_srgb,var(--ul-secondary)_8%,white)] text-[var(--ul-secondary)]"
+                    : "border-[var(--ul-hair)] text-[var(--ul-muted)]"
                 )}
               >
                 <t.icon className="h-4 w-4" />
@@ -141,11 +143,11 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
             ))}
           </div>
 
-          <label className="mt-6 block text-[0.65rem] tracking-[0.18em] uppercase text-[#2dd4bf]">Bedrooms</label>
+          <label className="mt-6 block text-[0.65rem] tracking-[0.18em] uppercase text-[var(--ul-muted)]">Bedrooms</label>
           <select
             value={beds}
             onChange={(e) => setBeds(e.target.value)}
-            className="mt-2 h-11 w-full rounded-lg border border-white/15 bg-white/5 px-3 text-sm outline-none"
+            className="mt-2 h-11 w-full rounded-md border border-[var(--ul-hair)] bg-[var(--ul-paper)] px-3 text-sm outline-none focus:border-[var(--ul-primary)]"
           >
             <option value="">Any</option>
             <option value="1">1</option>
@@ -154,8 +156,8 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
             <option value="4">4+</option>
           </select>
 
-          <label className="mt-6 flex justify-between text-[0.65rem] tracking-[0.18em] uppercase text-[#2dd4bf]">
-            Price <span className="normal-case tracking-normal text-[#f6f3ee]/70">to {fmtShort(priceMax)}</span>
+          <label className="mt-6 flex justify-between text-[0.65rem] tracking-[0.18em] uppercase text-[var(--ul-muted)]">
+            Price <span className="normal-case tracking-normal text-[var(--ul-primary)]">to {fmtShort(priceMax)}</span>
           </label>
           <input
             type="range"
@@ -167,9 +169,9 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
             className="ul-range mt-3"
           />
 
-          <label className="mt-6 flex justify-between text-[0.65rem] tracking-[0.18em] uppercase text-[#2dd4bf]">
+          <label className="mt-6 flex justify-between text-[0.65rem] tracking-[0.18em] uppercase text-[var(--ul-muted)]">
             I can pay monthly
-            <span className="normal-case tracking-normal text-[#f6f3ee]/70">{format(monthlyMax)}</span>
+            <span className="normal-case tracking-normal text-[var(--ul-primary)]">{format(monthlyMax)}</span>
           </label>
           <input
             type="range"
@@ -181,9 +183,9 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
             className="ul-range mt-3"
           />
 
-          <label className="mt-6 flex justify-between text-[0.65rem] tracking-[0.18em] uppercase text-[#2dd4bf]">
+          <label className="mt-6 flex justify-between text-[0.65rem] tracking-[0.18em] uppercase text-[var(--ul-muted)]">
             Down payment
-            <span className="normal-case tracking-normal text-[#f6f3ee]/70">{format(downMax)}</span>
+            <span className="normal-case tracking-normal text-[var(--ul-primary)]">{format(downMax)}</span>
           </label>
           <input
             type="range"
@@ -195,7 +197,7 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
             className="ul-range mt-3"
           />
 
-          <p className="mt-8 flex h-12 items-center justify-center gap-2 rounded-lg bg-[#2dd4bf] text-[0.75rem] font-semibold tracking-[0.16em] uppercase text-[#14110e]">
+          <p className="mt-8 flex h-12 items-center justify-center gap-2 rounded-md bg-[var(--ul-secondary)] text-[0.75rem] font-semibold tracking-[0.16em] uppercase text-white">
             <Search className="h-4 w-4" />
             {filtered.length} matches
           </p>
@@ -209,11 +211,11 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
               { icon: Wallet, k: "Flexible", v: "Payment plans" },
               { icon: BadgeCheck, k: "Private", v: "Property advisors" },
             ].map((s) => (
-              <div key={s.v} className="flex items-center gap-3 rounded-xl border border-[#e4d9c8] bg-white px-4 py-3">
-                <s.icon className="h-5 w-5 text-[#2dd4bf]" />
+              <div key={s.v} className="flex items-center gap-3 border border-[var(--ul-hair)] bg-white px-4 py-3">
+                <s.icon className="h-5 w-5 text-[var(--ul-secondary)]" />
                 <div>
                   <p className="text-sm font-medium">{s.k}</p>
-                  <p className="text-xs text-[#8a8178]">{s.v}</p>
+                  <p className="text-xs text-[var(--ul-muted)]">{s.v}</p>
                 </div>
               </div>
             ))}
@@ -229,7 +231,7 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
 
           {filtered.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-[#e4d9c8] bg-white px-6 py-16 text-center text-[#8a8178]">
-              No matches in this range. Widen the sliders — or enquire and we will look beyond the brochure.
+              No matches in this range. Widen the sliders, or enquire and we will look beyond the brochure.
             </p>
           ) : (
             <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -239,18 +241,18 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
             </div>
           )}
 
-          <div className="mt-8 flex flex-col items-start justify-between gap-4 rounded-2xl border border-[#e4d9c8] bg-white px-6 py-5 sm:flex-row sm:items-center">
-            <p className="text-sm text-[#8a8178]">
+          <div className="mt-8 flex flex-col items-start justify-between gap-4 border border-[var(--ul-hair)] bg-white px-6 py-5 sm:flex-row sm:items-center">
+            <p className="text-sm text-[var(--ul-muted)]">
               Based on your budget. Down payment:{" "}
-              <span className="text-[#14110e]">{format(downMax)}</span>
+              <span className="text-[var(--ul-primary)]">{format(downMax)}</span>
               {" · "}
-              Monthly: <span className="text-[#14110e]">{format(monthlyMax)}</span>
-              {" — "}
+              Monthly: <span className="text-[var(--ul-primary)]">{format(monthlyMax)}</span>
+              {". "}
               {filtered.length} project{filtered.length === 1 ? "" : "s"} match.
             </p>
             <Link
               href="/contact"
-              className="inline-flex h-10 items-center rounded-lg bg-[#1b2430] px-4 text-[0.7rem] font-semibold tracking-[0.14em] uppercase text-white"
+              className="inline-flex h-10 items-center rounded-md bg-[var(--ul-primary)] px-4 text-[0.7rem] font-semibold tracking-[0.14em] uppercase text-white"
             >
               View all matches
             </Link>
@@ -264,7 +266,7 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
               { icon: BadgeCheck, t: "Expert guidance" },
             ].map((x) => (
               <div key={x.t} className="flex items-center gap-2 text-sm text-[#8a8178]">
-                <x.icon className="h-4 w-4 text-[#2dd4bf]" />
+                <x.icon className="h-4 w-4 text-[#008040]" />
                 {x.t}
               </div>
             ))}
@@ -285,44 +287,44 @@ function OffPlanCard({ listing, best }: { listing: Listing; best?: boolean }) {
   ];
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-2xl border border-[#e4d9c8] bg-white shadow-[0_8px_30px_rgba(20,17,14,0.05)]">
+    <article className="flex flex-col overflow-hidden border border-[var(--ul-hair)] bg-white">
       <div className="relative aspect-[16/10]">
         <Image src={listing.image} alt={listing.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
         {listing.developer && (
-          <span className="absolute left-3 top-3 rounded-md bg-white px-2 py-1 text-[0.65rem] font-semibold tracking-wide text-[#1b2430]">
+          <span className="absolute left-3 top-3 rounded-md bg-white px-2 py-1 text-[0.65rem] font-semibold tracking-wide text-[var(--ul-primary)]">
             {listing.developer}
           </span>
         )}
         {best && (
-          <span className="absolute right-12 top-3 rounded-md bg-[#2dd4bf] px-2 py-1 text-[0.62rem] font-semibold tracking-[0.08em] uppercase text-[#14110e]">
+          <span className="absolute right-12 top-3 rounded-md bg-[var(--ul-secondary)] px-2 py-1 text-[0.62rem] font-semibold tracking-[0.08em] uppercase text-white">
             Best match
           </span>
         )}
-        <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[#8a8178]">
+        <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[var(--ul-muted)]">
           <Heart className="h-4 w-4" />
         </span>
       </div>
       <div className="flex flex-1 flex-col p-4">
         <h3 className="text-lg leading-snug">{listing.title}</h3>
-        <p className="mt-1 text-sm text-[#8a8178]">{listing.community}</p>
-        <p className="mt-2 text-xs uppercase tracking-wide text-[#8a8178]">
+        <p className="mt-1 text-sm text-[var(--ul-muted)]">{listing.community}</p>
+        <p className="mt-2 text-xs uppercase tracking-wide text-[var(--ul-muted)]">
           {listing.type} · {listing.beds} bedroom
         </p>
         <p className="mt-3 text-base font-medium">From {format(listing.priceAed)}</p>
         {monthly != null && (
-          <p className="text-sm text-[#14b8a6]">Est. monthly {format(monthly)}</p>
+          <p className="text-sm text-[var(--ul-secondary)]">Est. monthly {format(monthly)}</p>
         )}
         <div className="mt-4">
-          <div className="flex h-1.5 overflow-hidden rounded-full bg-[#efe8dc]">
+          <div className="flex h-1.5 overflow-hidden rounded-full bg-[var(--ul-paper)]">
             {plan.map((p, i) => (
               <span
                 key={p.label}
-                className={i % 2 === 0 ? "bg-[#2dd4bf]" : "bg-[#1b2430]"}
+                className={i % 2 === 0 ? "bg-[var(--ul-secondary)]" : "bg-[var(--ul-primary)]"}
                 style={{ width: `${p.pct}%` }}
               />
             ))}
           </div>
-          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[0.65rem] text-[#8a8178]">
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[0.65rem] text-[var(--ul-muted)]">
             {plan.map((p) => (
               <span key={p.label}>
                 {p.pct}% {p.label}
@@ -330,13 +332,13 @@ function OffPlanCard({ listing, best }: { listing: Listing; best?: boolean }) {
             ))}
           </div>
         </div>
-        <div className="mt-4 flex justify-between text-xs text-[#8a8178]">
+        <div className="mt-4 flex justify-between text-xs text-[var(--ul-muted)]">
           <span>Size {listing.sqft.toLocaleString()} sq.ft</span>
           <span>Handover {listing.handover ?? "TBA"}</span>
         </div>
         <Link
           href={`/properties/${listing.slug}`}
-          className="mt-4 inline-flex h-11 items-center justify-center rounded-lg bg-[#1b2430] text-[0.7rem] font-semibold tracking-[0.16em] uppercase text-white transition-colors hover:bg-[#2dd4bf] hover:text-[#14110e]"
+          className="mt-4 inline-flex h-11 items-center justify-center rounded-md bg-[var(--ul-primary)] text-[0.7rem] font-semibold tracking-[0.16em] uppercase text-white transition-colors hover:bg-[var(--ul-secondary)]"
         >
           View details
         </Link>

@@ -334,7 +334,7 @@ export function ListingsExplorer({
               <h2 className="text-lg font-bold text-[#0A1630]">Filters</h2>
               <button
                 type="button"
-                className="text-sm font-semibold text-[#1E7A4A]"
+                className="text-sm font-semibold text-[#008040]"
                 onClick={() => {
                   setType("");
                   setBeds("");

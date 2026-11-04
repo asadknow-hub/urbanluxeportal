@@ -6,7 +6,7 @@ import { PageIntro } from "@/components/web/page-intro";
 
 export const metadata: Metadata = {
   title: "Communities",
-  description: "Palm, Downtown, Hills, Creek, Marina — the Dubai addresses we return to.",
+  description: "Palm, Downtown, Hills, Creek, Marina: the Dubai addresses we return to.",
 };
 
 export default function CommunitiesPage() {
@@ -27,9 +27,9 @@ export default function CommunitiesPage() {
               sizes="(max-width: 768px) 100vw, 25vw"
               className="object-cover transition-transform duration-700 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#14110e] via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0A1630] via-transparent to-transparent" />
             <div className="absolute inset-x-5 bottom-6 text-[#f6f3ee]">
-              <p className="text-[0.65rem] tracking-[0.24em] uppercase text-[#2dd4bf]">{c.region}</p>
+              <p className="text-[0.65rem] tracking-[0.24em] uppercase text-[#008040]">{c.region}</p>
               <h2 className="mt-1 text-2xl">{c.name}</h2>
             </div>
           </Link>

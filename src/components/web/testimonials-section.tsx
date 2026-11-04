@@ -4,7 +4,7 @@ import { Reveal } from "@/components/web/reveal";
 const TESTIMONIALS = [
   {
     quote:
-      "They never sent a catalogue. They sent three addresses — and one of them was the house we closed on within a month.",
+      "They never sent a catalogue. They sent three addresses, and one of them was the house we closed on within a month.",
     name: "Aisha Al Hashimi",
     role: "Buyer · Palm Jumeirah",
   },
@@ -16,7 +16,7 @@ const TESTIMONIALS = [
   },
   {
     quote:
-      "From first viewing to keys in six weeks. Discreet, exact, and unhurried — which, in this market, is rare.",
+      "From first viewing to keys in six weeks. Discreet, exact, and unhurried, which in this market is rare.",
     name: "Marie Laurent",
     role: "Tenant · Dubai Marina",
   },

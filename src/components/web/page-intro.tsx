@@ -1,28 +1,104 @@
+import type { ReactNode } from "react";
+import Link from "next/link";
 import { Reveal } from "@/components/web/reveal";
+import { cn } from "@/lib/utils";
+
+export type PageIntroCta = {
+  href: string;
+  label: string;
+  prefetch?: boolean;
+};
 
 export function PageIntro({
   eyebrow,
   title,
   lede,
+  tone = "dark",
+  primaryCta,
+  secondaryCta,
+  children,
+  className,
 }: {
   eyebrow: string;
   title: string;
   lede: string;
+  tone?: "dark" | "light";
+  primaryCta?: PageIntroCta;
+  secondaryCta?: PageIntroCta;
+  children?: ReactNode;
+  className?: string;
 }) {
+  const dark = tone === "dark";
+
   return (
-    <section className="ul-band-dark border-b border-white/10 py-12 sm:py-14 md:py-16">
-      <div className="ul-shell-wide grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] lg:items-end">
-        <Reveal className="justify-self-start">
-          <p className="ul-kicker">{eyebrow}</p>
-          <h1 className="mt-3 max-w-4xl text-[1.85rem] font-extrabold uppercase leading-[1.08] tracking-[-0.03em] text-white sm:mt-4 sm:text-4xl md:text-5xl">
-            {title}
-          </h1>
-        </Reveal>
-        <Reveal delay={60} className="lg:justify-self-end lg:text-right">
-          <p className="max-w-xl text-[0.9375rem] leading-relaxed text-[#8ba0b8] sm:text-base md:text-lg lg:ml-auto">
-            {lede}
-          </p>
-        </Reveal>
+    <section
+      className={cn(
+        dark
+          ? "ul-band-dark border-b border-white/10"
+          : "ul-band-light border-b border-[var(--ul-hair)]",
+        "py-12 sm:py-14 md:py-16",
+        className
+      )}
+    >
+      <div className="ul-shell-wide">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.65fr)] lg:items-end">
+          <Reveal className="justify-self-start">
+            <p className="ul-kicker">{eyebrow}</p>
+            <h1
+              className={cn(
+                "mt-3 max-w-4xl text-[1.85rem] font-extrabold uppercase leading-[1.08] tracking-[-0.03em] sm:mt-4 sm:text-4xl md:text-5xl",
+                dark ? "text-white" : "text-[var(--ul-primary)]"
+              )}
+            >
+              {title}
+            </h1>
+          </Reveal>
+          <Reveal delay={60} className="lg:justify-self-end lg:text-right">
+            <p
+              className={cn(
+                "max-w-xl text-[0.9375rem] leading-relaxed sm:text-base md:text-lg lg:ml-auto",
+                dark ? "text-[#8ba0b8]" : "text-[var(--ul-muted)]"
+              )}
+            >
+              {lede}
+            </p>
+          </Reveal>
+        </div>
+
+        {(primaryCta || secondaryCta) && (
+          <Reveal delay={90} className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center">
+            {primaryCta && (
+              <Link
+                href={primaryCta.href}
+                prefetch={primaryCta.prefetch}
+                className={cn(
+                  "inline-flex h-12 items-center justify-center rounded-full px-6 text-sm font-semibold transition-colors sm:h-11",
+                  dark
+                    ? "bg-[var(--ul-secondary)] text-white hover:bg-[#006633]"
+                    : "bg-[var(--ul-primary)] text-white hover:bg-[var(--ul-secondary)]"
+                )}
+              >
+                {primaryCta.label}
+              </Link>
+            )}
+            {secondaryCta && (
+              <Link
+                href={secondaryCta.href}
+                prefetch={secondaryCta.prefetch}
+                className={cn(
+                  "inline-flex h-12 items-center justify-center rounded-full border px-6 text-sm font-semibold transition-colors sm:h-11",
+                  dark
+                    ? "border-white/35 text-white hover:bg-white/10"
+                    : "border-[var(--ul-hair)] text-[var(--ul-primary)] hover:border-[var(--ul-secondary)]"
+                )}
+              >
+                {secondaryCta.label}
+              </Link>
+            )}
+          </Reveal>
+        )}
+
+        {children ? <div className="mt-8 md:mt-10">{children}</div> : null}
       </div>
     </section>
   );

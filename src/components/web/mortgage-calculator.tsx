@@ -288,7 +288,7 @@ export function MortgageCalculator() {
       </div>
 
       <p className="mt-3 text-[0.65rem] leading-relaxed text-[#0A1630]/40">
-        * Estimate for {format(price)} at {formatNumber(rate, 2)}% fixed — not a bank offer.
+        * Estimate for {format(price)} at {formatNumber(rate, 2)}% fixed. Not a bank offer.
       </p>
     </div>
   );

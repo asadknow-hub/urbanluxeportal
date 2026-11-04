@@ -97,15 +97,7 @@ export function HowItWorksSection() {
             style={{ fontFamily: "var(--font-headline), var(--font-poppins), system-ui, sans-serif" }}
           >
             <span className="block text-[#F6F3EE]">A clear path</span>
-            <span
-              className="mt-1 block"
-              style={{
-                color: "transparent",
-                WebkitTextStroke: "2px #F6F3EE",
-              }}
-            >
-              from brief to keys.
-            </span>
+            <span className="mt-1 block text-[#F6F3EE]">from brief to keys.</span>
           </h2>
           <p className="max-w-md text-[0.95rem] leading-relaxed text-[#F6F3EE]/70 lg:justify-self-end lg:pb-2 lg:text-right">
             Three steps, one dedicated advisor. No open portals to trawl and no paperwork to chase.

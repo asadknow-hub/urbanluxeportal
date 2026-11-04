@@ -1,5 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Cinzel, Geist, Geist_Mono, Josefin_Sans, Oswald, Poppins } from "next/font/google";
+/**
+ * Font story (public vs CRM):
+ * - `.ul-site` marketing uses Oswald (`--font-headline`) + Poppins (`--font-poppins`).
+ * - Geist + Cinzel remain loaded for the CRM/app shell (`--font-sans`, `--font-display`).
+ * Debt: ideally split loaders by `(web)` vs `(app)` layouts so marketing pages do not download CRM fonts.
+ */
+import { Cinzel, Geist, Geist_Mono, Oswald, Poppins } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -33,19 +39,13 @@ const oswald = Oswald({
   weight: ["500", "600", "700"],
 });
 
-const josefin = Josefin_Sans({
-  variable: "--font-josefin",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-});
-
 export const metadata: Metadata = {
   title: {
-    default: "UrbanLuxe — Private Dubai brokerage",
+    default: "UrbanLuxe · Private Dubai brokerage",
     template: "%s · UrbanLuxe",
   },
   description:
-    "A private Dubai brokerage for villas, apartments, and off-plan residences — placed with discretion.",
+    "A private Dubai brokerage for villas, apartments, and off-plan residences, placed with discretion.",
 };
 
 export const viewport: Viewport = {
@@ -59,7 +59,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${cinzel.variable} ${josefin.variable} ${poppins.variable} ${oswald.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${cinzel.variable} ${poppins.variable} ${oswald.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <TooltipProvider>

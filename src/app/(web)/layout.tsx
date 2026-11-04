@@ -22,13 +22,13 @@ export async function generateMetadata(): Promise<Metadata> {
   const brand = await getPublicBrand();
   const description =
     brand.tagline ||
-    "A private Dubai brokerage for villas, apartments, and off-plan residences — placed with discretion.";
+    "A private Dubai brokerage for villas, apartments, and off-plan residences, placed with discretion.";
   const url = siteUrl();
 
   return {
     metadataBase: new URL(url),
     title: {
-      default: `${brand.name} — Private Dubai brokerage`,
+      default: `${brand.name} · Private Dubai brokerage`,
       template: `%s · ${brand.name}`,
     },
     description,
@@ -37,13 +37,13 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: "en_AE",
       url,
       siteName: brand.name,
-      title: `${brand.name} — Private Dubai brokerage`,
+      title: `${brand.name} · Private Dubai brokerage`,
       description,
       ...(brand.logoUrl ? { images: [{ url: brand.logoUrl, alt: brand.name }] } : {}),
     },
     twitter: {
       card: "summary_large_image",
-      title: `${brand.name} — Private Dubai brokerage`,
+      title: `${brand.name} · Private Dubai brokerage`,
       description,
       ...(brand.logoUrl ? { images: [brand.logoUrl] } : {}),
     },

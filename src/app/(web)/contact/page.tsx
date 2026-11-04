@@ -5,7 +5,7 @@ import { getPublicBrand } from "@/server/company-settings";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Enquire with Urban Luxe — Dubai.",
+  description: "Enquire with Urban Luxe in Dubai.",
 };
 
 export default async function ContactPage() {
@@ -16,7 +16,7 @@ export default async function ContactPage() {
       <PageIntro
         eyebrow="Contact"
         title="Write, call, or walk in."
-        lede="Enquiries are read by people, not a queue. If you already have a reference, put it in the message."
+        lede="Every enquiry goes to a specialist on the desk. If you already have a reference, put it in the message."
       />
       <section className="mx-auto grid max-w-[1440px] gap-10 px-4 py-12 sm:gap-12 sm:px-5 sm:py-16 md:px-10 lg:grid-cols-2">
         <div>
@@ -30,7 +30,7 @@ export default async function ContactPage() {
               <dd className="mt-2">
                 <a
                   href={`tel:${brand.phoneTel}`}
-                  className="text-lg text-[#0A1630] hover:text-[#1E7A4A]"
+                  className="text-lg text-[#0A1630] hover:text-[#008040]"
                 >
                   {brand.phoneDisplay}
                 </a>
@@ -41,7 +41,7 @@ export default async function ContactPage() {
               <dd className="mt-2">
                 <a
                   href={`mailto:${brand.email}`}
-                  className="text-lg text-[#0A1630] hover:text-[#1E7A4A]"
+                  className="text-lg text-[#0A1630] hover:text-[#008040]"
                 >
                   {brand.email}
                 </a>

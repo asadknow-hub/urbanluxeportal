@@ -1,87 +1,27 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Calculator, CircleHelp, Handshake } from "lucide-react";
 import { MortgageCalculator } from "@/components/web/mortgage-calculator";
 import { MortgageFaq } from "@/components/web/mortgage-faq";
+import { PageIntro } from "@/components/web/page-intro";
 import { Reveal } from "@/components/web/reveal";
 
 export const metadata: Metadata = {
   title: "Mortgages",
   description:
-    "Dubai mortgage guidance from Urban Luxe — FAQs, an indicative calculator, and advisor support for buyers.",
+    "Dubai mortgage guidance from Urban Luxe: FAQs, an indicative calculator, and advisor support for buyers.",
 };
-
-const HIGHLIGHTS = [
-  {
-    icon: Calculator,
-    title: "Calculator",
-    body: "Model price, deposit, rate, and term before you view.",
-    href: "#calculator",
-  },
-  {
-    icon: CircleHelp,
-    title: "Clear FAQs",
-    body: "Resident, non-resident, off-plan, and cost questions answered.",
-    href: "#faq",
-  },
-  {
-    icon: Handshake,
-    title: "Advisor path",
-    body: "We connect you with mortgage specialists when you are ready.",
-    href: "/contact",
-  },
-] as const;
 
 export default function MortgagesPage() {
   return (
     <>
-      <section className="bg-[#0A1630] px-4 pb-8 pt-10 text-white sm:px-5 sm:pb-10 sm:pt-12 md:px-10 md:pb-12 md:pt-16">
-        <div className="mx-auto max-w-[1280px]">
-          <Reveal>
-            <p className="ul-kicker text-[#1E7A4A]">Mortgages</p>
-            <h1 className="mt-3 max-w-3xl text-[1.85rem] leading-[1.12] sm:mt-4 sm:text-3xl md:text-5xl">
-              Finance the right home — with clarity.
-            </h1>
-            <p className="mt-4 max-w-2xl text-[0.9375rem] leading-relaxed text-white/70 sm:text-sm md:text-base">
-              Indicative calculations, straight answers on Dubai lending, and introductions to
-              advisors who move at the pace of your offer.
-            </p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link
-                href="#calculator"
-                className="inline-flex h-12 items-center justify-center rounded-full bg-[#1E7A4A] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#155c38] sm:h-11"
-              >
-                Calculate repayments
-              </Link>
-              <Link
-                href="/contact"
-                prefetch
-                className="inline-flex h-12 items-center justify-center rounded-full border border-white/35 bg-transparent px-6 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:h-11"
-              >
-                Speak to an advisor
-              </Link>
-            </div>
-          </Reveal>
-
-          <div className="mt-8 grid gap-3 sm:grid-cols-3 md:mt-10 md:gap-4">
-            {HIGHLIGHTS.map((item) => (
-              <Reveal key={item.title}>
-                <Link
-                  href={item.href}
-                  prefetch={item.href.startsWith("/")}
-                  className="flex h-full gap-3 rounded-xl border border-white/10 bg-white/95 p-4 text-[#0A1630] transition-colors hover:bg-white"
-                >
-                  <item.icon className="mt-0.5 h-4 w-4 shrink-0 text-[#1E7A4A]" strokeWidth={2} />
-                  <div>
-                    <p className="text-sm font-semibold">{item.title}</p>
-                    <p className="mt-1 text-xs leading-relaxed text-[#0A1630]/65">{item.body}</p>
-                  </div>
-                </Link>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
+      <PageIntro
+        tone="dark"
+        eyebrow="Mortgages"
+        title="Finance the right home with clarity."
+        lede="Indicative calculations, straight answers on Dubai lending, and introductions to advisors who move at the pace of your offer."
+        primaryCta={{ href: "#calculator", label: "Calculate repayments" }}
+        secondaryCta={{ href: "/contact", label: "Speak to an advisor", prefetch: true }}
+      />
 
       <section id="calculator" className="border-b border-[#e5e7eb] bg-[#F6F3EE] px-5 py-8 md:px-10 md:py-10">
         <div className="mx-auto max-w-[960px]">

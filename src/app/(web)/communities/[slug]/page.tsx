@@ -35,9 +35,9 @@ export default async function CommunityPage({
 
   return (
     <article>
-      <section className="relative flex min-h-[70vh] items-end overflow-hidden bg-[#14110e]">
+      <section className="relative flex min-h-[70vh] items-end overflow-hidden bg-[#0A1630]">
         <Image src={community.image} alt={community.name} fill preload sizes="100vw" className="object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#14110e] via-[#14110e]/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0A1630] via-[#0A1630]/30 to-transparent" />
         <div className="relative z-10 mx-auto w-full max-w-[1440px] px-5 pb-16 pt-32 md:px-10">
           <p className="ul-kicker">{community.region}</p>
           <h1 className="mt-4 text-5xl text-[#f6f3ee] md:text-7xl">{community.name}</h1>

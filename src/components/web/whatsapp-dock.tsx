@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 export function WhatsAppDock() {
   const brand = useBrand();
   const pathname = usePathname();
-  const href = useWaLink(`Hello ${brand.name} — I would like to enquire about a residence.`);
+  const href = useWaLink(`Hello ${brand.name}, I would like to enquire about a residence.`);
   const onProperty = pathname.startsWith("/properties/");
 
   return (

@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Check, ChevronDown, Menu, Phone, X } from "lucide-react";
-import { CURRENCIES, NAV, SITE } from "@/lib/web/site";
+import { CURRENCIES, NAV } from "@/lib/web/site";
 import { SiteLogo } from "@/components/web/site-logo";
 import { useCurrency } from "@/components/web/currency-provider";
+import { useBrand } from "@/components/brand/brand-provider";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +18,7 @@ import { cn } from "@/lib/utils";
 
 export function SiteNav() {
   const pathname = usePathname();
+  const brand = useBrand();
   const { currency, setCurrency } = useCurrency();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -134,7 +136,7 @@ export function SiteNav() {
             </DropdownMenu>
 
             <a
-              href={`tel:${SITE.phoneTel}`}
+              href={`tel:${brand.phoneTel}`}
               className={cn(
                 "hidden items-center gap-2 rounded-full border px-3 py-2 text-[0.72rem] font-bold no-underline transition-colors md:inline-flex",
                 overDarkHero
@@ -143,7 +145,7 @@ export function SiteNav() {
               )}
             >
               <Phone className="h-3.5 w-3.5 text-[var(--ul-secondary)]" />
-              <span className="hidden lg:inline">{SITE.phoneDisplay}</span>
+              <span className="hidden lg:inline">{brand.phoneDisplay}</span>
               <span className="lg:hidden">Call</span>
             </a>
 
@@ -186,11 +188,11 @@ export function SiteNav() {
               })}
               <div className="mt-auto grid gap-3 pt-6">
                 <a
-                  href={`tel:${SITE.phoneTel}`}
+                  href={`tel:${brand.phoneTel}`}
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-[var(--ul-hair)] text-sm font-semibold text-[var(--ul-primary)] no-underline"
                 >
                   <Phone className="h-4 w-4 text-[var(--ul-secondary)]" />
-                  {SITE.phoneDisplay}
+                  {brand.phoneDisplay}
                 </a>
                 <Link href="/sell" prefetch className="ul-btn-primary h-12 w-full">
                   List your property

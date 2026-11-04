@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-/** Real static logos only — /public/developers */
+/** Real static logos only — files under /public/developers */
 const DEVELOPERS = [
   { name: "Emaar", src: "/developers/emaar.png" },
   { name: "Sobha", src: "/developers/sobha.jpg" },
@@ -29,25 +29,24 @@ function DeveloperLogo({ name, src }: { name: string; src: string }) {
 }
 
 export function DevelopersMarquee() {
-  // Two copies for seamless loop — wider set + large gaps so it doesn't feel repetitive
   const loop = [...DEVELOPERS, ...DEVELOPERS];
 
   return (
     <section className="ul-band-light overflow-hidden py-8 md:py-12">
       <div className="ul-shell-wide">
-        <p className="ul-kicker">Partners</p>
+        <p className="ul-kicker">Developers</p>
         <h2 className="ul-section-heading mt-3 text-2xl md:text-3xl">
-          Developers that work with us
+          Projects we know well
         </h2>
       </div>
 
       <div className="relative mt-12">
         <div
-          className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-white to-transparent md:w-36"
+          className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-[var(--ul-paper)] to-transparent md:w-36"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-white to-transparent md:w-36"
+          className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-[var(--ul-paper)] to-transparent md:w-36"
           aria-hidden
         />
 

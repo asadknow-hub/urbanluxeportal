@@ -1,41 +1,32 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Building2,
-  ClipboardCheck,
-  KeyRound,
-  Wrench,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { IMAGES } from "@/lib/web/listings";
 import { EnquireForm } from "@/components/web/enquire-form";
+import { PageIntro } from "@/components/web/page-intro";
 import { Reveal } from "@/components/web/reveal";
 
 export const metadata: Metadata = {
   title: "Property Management",
   description:
-    "Urban Luxe property management in Dubai — tenant care, maintenance coordination, and reporting for landlords who want the house looked after.",
+    "Urban Luxe property management in Dubai: tenant care, maintenance coordination, and reporting for landlords who want the house looked after.",
 };
 
 const SERVICES = [
   {
-    icon: KeyRound,
     title: "Tenant placement & renewals",
     body: "Qualified tenants, photographed handovers, and renewals handled before the scramble.",
   },
   {
-    icon: Wrench,
     title: "Maintenance coordination",
     body: "Trusted vendors, clear approvals, and updates you can read without a site visit.",
   },
   {
-    icon: ClipboardCheck,
     title: "Inspections & reporting",
     body: "Move-in / move-out records and periodic condition notes for peace of mind.",
   },
   {
-    icon: Building2,
     title: "Landlord liaison",
     body: "One desk for rent collection follow-up, notices, and building management contact.",
   },
@@ -45,97 +36,20 @@ const STEPS = [
   { n: "01", title: "Brief", body: "Property, tenancy status, and how hands-on you want to be." },
   { n: "02", title: "Setup", body: "Access, utilities context, and vendor preferences locked in." },
   { n: "03", title: "Manage", body: "Day-to-day coordination with clear escalation rules." },
-  { n: "04", title: "Report", body: "Simple updates — what happened, what it cost, what is next." },
+  { n: "04", title: "Report", body: "Simple updates: what happened, what it cost, what is next." },
 ] as const;
 
 export default function PropertyManagementPage() {
   return (
     <>
-      <section className="bg-[#0A1630] px-4 pb-10 pt-10 text-white sm:px-5 sm:pb-12 sm:pt-12 md:px-10 md:pb-14 md:pt-16">
-        <div className="mx-auto max-w-[1280px]">
-          <Reveal>
-            <p className="ul-kicker text-[#1E7A4A]">Services</p>
-            <h1 className="mt-3 max-w-3xl text-[1.85rem] leading-[1.12] sm:mt-4 sm:text-3xl md:text-5xl">
-              Property management that treats the house as a house.
-            </h1>
-            <p className="mt-4 max-w-2xl text-[0.9375rem] leading-relaxed text-white/70 sm:text-sm md:text-base">
-              For landlords who want qualified occupants, orderly maintenance, and a desk that
-              answers — not a portal ticket queue.
-            </p>
-            <div className="mt-6 flex flex-col gap-3 sm:mt-7 sm:flex-row">
-              <Link
-                href="#enquire"
-                className="inline-flex h-12 items-center justify-center rounded-full bg-[#1E7A4A] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#155c38] sm:h-11"
-              >
-                Talk to management
-              </Link>
-              <Link
-                href="/sell"
-                prefetch
-                className="inline-flex h-12 items-center justify-center rounded-full border border-white/35 px-6 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:h-11"
-              >
-                Also listing? Instruct us
-              </Link>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      <section className="ul-band-light px-5 py-14 md:px-10 md:py-20">
-        <div className="mx-auto grid max-w-[1280px] items-center gap-10 md:grid-cols-2 md:gap-16">
-          <Reveal>
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#F6F3EE]">
-              <Image
-                src={IMAGES.living}
-                alt="Managed residence"
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover"
-                priority
-              />
-            </div>
-          </Reveal>
-          <Reveal delay={80}>
-            <p className="ul-kicker">What we cover</p>
-            <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">
-              Care for the asset — and the people in it
-            </h2>
-            <p className="ul-section-lede mt-3">
-              We manage select residences with the same standard we use for private sales: fewer
-              excuses, clearer communication.
-            </p>
-            <div className="mt-8 grid gap-3 sm:grid-cols-2">
-              {SERVICES.map((item) => (
-                <div key={item.title} className="rounded-xl border border-[#e5e7eb] bg-[#F6F3EE] p-4">
-                  <item.icon className="h-5 w-5 text-[#1E7A4A]" strokeWidth={2} />
-                  <p className="mt-3 text-sm font-semibold text-[#0A1630]">{item.title}</p>
-                  <p className="mt-1.5 text-xs leading-relaxed text-[#0A1630]/65">{item.body}</p>
-                </div>
-              ))}
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      <section className="border-y border-[#e5e7eb] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-16">
-        <div className="mx-auto max-w-[1280px]">
-          <Reveal>
-            <p className="ul-kicker">Process</p>
-            <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">How engagement works</h2>
-          </Reveal>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {STEPS.map((step, i) => (
-              <Reveal key={step.n} delay={i * 40}>
-                <div className="h-full rounded-xl border border-[#e5e7eb] bg-white p-5">
-                  <p className="text-xs font-bold tracking-[0.16em] text-[#1E7A4A]">{step.n}</p>
-                  <h3 className="mt-3 font-semibold text-[#0A1630]">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[#0A1630]/65">{step.body}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
+      <PageIntro
+        tone="light"
+        eyebrow="Services"
+        title="Property management that treats the house as a house."
+        lede="For landlords who want qualified occupants, orderly maintenance, and a desk that answers from a dedicated desk, not a portal ticket queue."
+        primaryCta={{ href: "#enquire", label: "Talk to management" }}
+        secondaryCta={{ href: "/sell", label: "Also listing? Instruct us", prefetch: true }}
+      />
 
       <section id="enquire" className="ul-band-light px-5 py-14 md:px-10 md:py-20">
         <div className="mx-auto grid max-w-[1280px] gap-10 lg:grid-cols-2 lg:gap-16">
@@ -151,7 +65,7 @@ export default function PropertyManagementPage() {
             <Link
               href="/valuations"
               prefetch
-              className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#1E7A4A] hover:text-[#155c38]"
+              className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#008040] hover:text-[#006633]"
             >
               Need a valuation first? <ArrowRight className="h-4 w-4" />
             </Link>
@@ -159,6 +73,62 @@ export default function PropertyManagementPage() {
           <Reveal delay={60}>
             <div className="rounded-xl border border-[#e5e7eb] bg-[#F6F3EE] p-6 md:p-8">
               <EnquireForm compact />
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      <section className="border-y border-[#e5e7eb] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-20">
+        <div className="mx-auto max-w-[1280px]">
+          <Reveal>
+            <p className="ul-kicker">What we cover</p>
+            <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">
+              Care for the asset and the people in it
+            </h2>
+            <p className="ul-section-lede mt-3 max-w-xl">
+              We manage select residences with the same standard we use for private sales: fewer
+              excuses, clearer communication.
+            </p>
+          </Reveal>
+          <ul className="mt-10 divide-y divide-[#e5e7eb] rounded-xl border border-[#e5e7eb] bg-white">
+            {SERVICES.map((item, i) => (
+              <Reveal key={item.title} delay={i * 40}>
+                <li className="px-6 py-5 md:px-8 md:py-6">
+                  <p className="font-semibold text-[#0A1630]">{item.title}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-[#0A1630]/65">{item.body}</p>
+                </li>
+              </Reveal>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="ul-band-light px-5 py-14 md:px-10 md:py-20">
+        <div className="mx-auto grid max-w-[1280px] items-center gap-10 md:grid-cols-2 md:gap-16">
+          <Reveal>
+            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#F6F3EE]">
+              <Image
+                src={IMAGES.living}
+                alt="Managed residence"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover"
+              />
+            </div>
+          </Reveal>
+          <Reveal delay={80}>
+            <p className="ul-kicker">Process</p>
+            <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">How engagement works</h2>
+            <div className="mt-8 space-y-5">
+              {STEPS.map((step) => (
+                <div key={step.n} className="flex gap-4">
+                  <p className="text-xs font-bold tracking-[0.16em] text-[#008040]">{step.n}</p>
+                  <div>
+                    <h3 className="font-semibold text-[#0A1630]">{step.title}</h3>
+                    <p className="mt-1 text-sm leading-relaxed text-[#0A1630]/65">{step.body}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </Reveal>
         </div>

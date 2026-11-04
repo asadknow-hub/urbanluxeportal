@@ -117,7 +117,7 @@ export function MarketGrowthSection() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(90% 70% at 78% 8%, rgba(61,220,151,0.07), transparent 55%), radial-gradient(70% 55% at 12% 88%, rgba(246,243,238,0.04), transparent 50%)",
+            "radial-gradient(70% 55% at 12% 88%, rgba(246,243,238,0.04), transparent 50%)",
         }}
       />
 
@@ -129,16 +129,7 @@ export function MarketGrowthSection() {
             style={{ fontFamily: "var(--font-headline), var(--font-poppins), system-ui, sans-serif" }}
           >
             <span className="block">Real growth.</span>
-            <span
-              className="mt-1 block"
-              style={{
-                color: "transparent",
-                WebkitTextStroke: "2px #F6F3EE",
-                paintOrder: "stroke fill",
-              }}
-            >
-              Real returns.
-            </span>
+            <span className="mt-1 block text-[#F6F3EE]">Real returns.</span>
           </h2>
           <p className="max-w-md text-[0.9rem] leading-relaxed text-[#F6F3EE]/78 lg:justify-self-end lg:pt-3 lg:text-right md:text-[0.95rem]">
             Prime Dubai has climbed every year since 2020. Here is how its communities have
@@ -157,17 +148,10 @@ export function MarketGrowthSection() {
             >
               <defs>
                 <linearGradient id={`ul-line-${gradId}`} x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#3DDC97" stopOpacity="0.25" />
-                  <stop offset="35%" stopColor="#3DDC97" stopOpacity="0.95" />
-                  <stop offset="100%" stopColor="#3DDC97" stopOpacity="1" />
+                  <stop offset="0%" stopColor="#008040" stopOpacity="0.25" />
+                  <stop offset="35%" stopColor="#008040" stopOpacity="0.95" />
+                  <stop offset="100%" stopColor="#008040" stopOpacity="1" />
                 </linearGradient>
-                <filter id={`ul-glow-${gradId}`} x="-30%" y="-40%" width="160%" height="180%">
-                  <feGaussianBlur stdDeviation="4" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
               </defs>
               {/* Curve sits mid-canvas so it threads the towers */}
               <path
@@ -177,16 +161,15 @@ export function MarketGrowthSection() {
                 strokeWidth="3.25"
                 strokeLinecap="round"
                 vectorEffect="non-scaling-stroke"
-                filter={`url(#ul-glow-${gradId})`}
               />
-              <circle cx="28" cy="318" r="6" fill="#3DDC97" />
-              <circle cx="920" cy="72" r="6" fill="#3DDC97" />
+              <circle cx="28" cy="318" r="6" fill="#008040" />
+              <circle cx="920" cy="72" r="6" fill="#008040" />
             </svg>
 
-            <p className="pointer-events-none absolute left-0 top-[68%] z-[2] hidden -translate-y-1/2 text-[0.68rem] font-medium tracking-[0.02em] text-[#3DDC97] sm:block md:text-[0.72rem]">
+            <p className="pointer-events-none absolute left-0 top-[68%] z-[2] hidden -translate-y-1/2 text-[0.68rem] font-medium tracking-[0.02em] text-[#008040] sm:block md:text-[0.72rem]">
               2020 index 100
             </p>
-            <p className="pointer-events-none absolute right-0 top-[2%] z-[2] hidden text-right text-[0.68rem] font-semibold tracking-[0.02em] text-[#3DDC97] sm:block md:text-[0.72rem]">
+            <p className="pointer-events-none absolute right-0 top-[2%] z-[2] hidden text-right text-[0.68rem] font-semibold tracking-[0.02em] text-[#008040] sm:block md:text-[0.72rem]">
               2026 index 178
             </p>
 

@@ -73,7 +73,7 @@ export function ListingResultCard({ listing }: { listing: Listing }) {
     kind: listing.kind === "rent" ? "rent" : listing.kind,
   });
   const wa = useWaLink(
-    `Hi ${brand.name} — I'm interested in ${listing.title} (${listing.ref}) in ${listing.community}.`
+    `Hi ${brand.name}, I'm interested in ${listing.title} (${listing.ref}) in ${listing.community}.`
   );
 
   return (
@@ -115,7 +115,7 @@ export function ListingResultCard({ listing }: { listing: Listing }) {
             <p className="text-xl font-bold tracking-tight text-[#0A1630] sm:text-2xl md:text-[1.85rem]">
               {price}
             </p>
-            <h2 className="mt-2.5 text-[0.9375rem] font-bold leading-snug text-[#0A1630] transition-colors group-hover:text-[#1E7A4A] sm:mt-3 sm:text-base md:text-[1.0625rem]">
+            <h2 className="mt-2.5 text-[0.9375rem] font-bold leading-snug text-[#0A1630] transition-colors group-hover:text-[#008040] sm:mt-3 sm:text-base md:text-[1.0625rem]">
               {headlineFor(listing)}
             </h2>
             <p className="mt-3 flex items-start gap-1.5 text-sm leading-relaxed text-[#0A1630]/65">

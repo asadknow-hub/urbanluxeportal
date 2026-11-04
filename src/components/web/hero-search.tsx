@@ -98,7 +98,7 @@ export function HeroSearch() {
           <select
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="h-11 w-full rounded border border-[#0A1630]/12 px-3 text-base text-[#0A1630] outline-none focus:border-[#1E7A4A] sm:h-10 sm:text-sm"
+            className="h-11 w-full rounded border border-[#0A1630]/12 px-3 text-base text-[#0A1630] outline-none focus:border-[#008040] sm:h-10 sm:text-sm"
           >
             <option value="">Any area</option>
             {COMMUNITIES.map((c) => (

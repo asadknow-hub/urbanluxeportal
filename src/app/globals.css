@@ -416,11 +416,6 @@
   font-size: 0.8125rem;
   font-weight: 600;
   color: #fff;
-  transition: gap 0.2s ease;
-}
-
-.ul-link-arrow-light:hover {
-  gap: 0.625rem;
 }
 
 .ul-btn-outline {
@@ -477,11 +472,6 @@
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--ul-secondary);
-  transition: gap 0.2s ease;
-}
-
-.ul-link-arrow:hover {
-  gap: 0.625rem;
 }
 
 .ul-hero-title {
@@ -527,19 +517,6 @@
     transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes ul-ken {
-  from {
-    transform: scale(1.04) translate3d(0, 0, 0);
-  }
-  to {
-    transform: scale(1.14) translate3d(0, -2%, 0);
-  }
-}
-
-.ul-ken {
-  animation: ul-ken 28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
 @keyframes ul-marquee {
   from {
     transform: translateX(0);
@@ -561,50 +538,24 @@
   animation-play-state: paused;
 }
 
-@keyframes ul-breathe {
-  0%,
-  100% {
-    transform: scale(1);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
-  }
-  50% {
-    transform: scale(1.14);
-    box-shadow: 0 18px 52px rgba(0, 128, 64, 0.5);
-  }
-}
-
 .ul-wa-dock {
   transform-origin: center;
-  will-change: transform;
-  animation: ul-breathe 1.6s ease-in-out infinite;
+  transition: transform 0.2s ease;
 }
 
 .ul-wa-dock:hover,
 .ul-wa-dock:focus-visible {
-  animation-duration: 1.15s;
+  transform: scale(1.06);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ul-wa-dock {
-    animation: none;
+    transition: none;
   }
-}
-
-@keyframes ul-scroll-cue {
-  0%,
-  100% {
-    transform: scaleY(1);
-    opacity: 0.35;
+  .ul-wa-dock:hover,
+  .ul-wa-dock:focus-visible {
+    transform: none;
   }
-  50% {
-    transform: scaleY(0.45);
-    opacity: 1;
-  }
-}
-
-.ul-scroll-cue {
-  transform-origin: top;
-  animation: ul-scroll-cue 2.4s ease-in-out infinite;
 }
 
 .ul-hide-scroll {
@@ -661,9 +612,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ul-ken,
-  .ul-marquee-track,
-  .ul-scroll-cue {
+  .ul-marquee-track {
     animation: none;
   }
   .ul-reveal.is-pending {

@@ -57,23 +57,23 @@ export default async function PropertyPage({
     <article className="bg-[#f6f3ee] pb-8 pt-4 sm:pt-6 lg:pb-20 lg:pt-8">
       <div className="mx-auto max-w-[1200px] px-4 sm:px-5 md:px-8">
         <nav className="ul-hide-scroll mb-4 flex items-center gap-x-2 overflow-x-auto whitespace-nowrap pb-1 text-[0.75rem] text-[#8a8178] sm:mb-5 sm:flex-wrap sm:gap-y-1 sm:overflow-visible sm:whitespace-normal sm:pb-0 sm:text-[0.8rem]" aria-label="Breadcrumb">
-          <Link href={kindMeta.path} className="hover:text-[#2dd4bf]">
+          <Link href={kindMeta.path} className="hover:text-[#008040]">
             Back to search
           </Link>
           <span className="text-[#e4d9c8]">|</span>
-          <Link href="/" className="hover:text-[#2dd4bf]">
+          <Link href="/" className="hover:text-[#008040]">
             Home
           </Link>
           <ChevronRight className="h-3 w-3 shrink-0" />
-          <Link href={kindMeta.path} className="hover:text-[#2dd4bf]">
+          <Link href={kindMeta.path} className="hover:text-[#008040]">
             {kindLabel}
           </Link>
           <ChevronRight className="h-3 w-3 shrink-0" />
-          <Link href={`/communities/${listing.communitySlug}`} className="hover:text-[#2dd4bf]">
+          <Link href={`/communities/${listing.communitySlug}`} className="hover:text-[#008040]">
             {listing.community}
           </Link>
           <ChevronRight className="h-3 w-3 shrink-0" />
-          <span className="text-[#14110e]">
+          <span className="text-[#0A1630]">
             {listing.beds} Bedroom · {listing.type}
           </span>
         </nav>
@@ -85,7 +85,7 @@ export default async function PropertyPage({
             <p className="ul-kicker">{listing.community}</p>
             <h1 className="mt-2 text-[1.65rem] leading-tight sm:mt-3 sm:text-3xl md:text-5xl">{listing.title}</h1>
             <p className="mt-2 text-base font-light text-[#8a8178] sm:mt-3 sm:text-lg">{listing.subtitle}</p>
-            <p className="mt-4 text-xl text-[#14110e] sm:mt-5 sm:text-2xl">
+            <p className="mt-4 text-xl text-[#0A1630] sm:mt-5 sm:text-2xl">
               <PriceText amountAed={listing.priceAed} kind={listing.kind} />
             </p>
             <p className="mt-1 text-[0.7rem] tracking-[0.16em] uppercase text-[#8a8178]">Ref {listing.ref}</p>
@@ -111,13 +111,13 @@ export default async function PropertyPage({
               </div>
             </dl>
 
-            <p className="mt-8 max-w-2xl text-[0.9375rem] font-light leading-relaxed text-[#14110e]/80 sm:mt-10 sm:text-base">
+            <p className="mt-8 max-w-2xl text-[0.9375rem] font-light leading-relaxed text-[#0A1630]/80 sm:mt-10 sm:text-base">
               {listing.description}
             </p>
 
             {listing.handover && (
               <p className="mt-6 text-sm text-[#8a8178]">
-                Handover <span className="text-[#14110e]">{listing.handover}</span>
+                Handover <span className="text-[#0A1630]">{listing.handover}</span>
                 {listing.developer ? ` · ${listing.developer}` : ""}
               </p>
             )}
@@ -132,7 +132,7 @@ export default async function PropertyPage({
             </ul>
 
             <p className="mt-8 text-sm sm:mt-10">
-              <Link href={`/communities/${listing.communitySlug}`} className="text-[#2dd4bf] hover:underline">
+              <Link href={`/communities/${listing.communitySlug}`} className="text-[#008040] hover:underline">
                 More in {listing.community}
               </Link>
             </p>
@@ -165,9 +165,9 @@ export default async function PropertyPage({
         href={chatHref}
         target="_blank"
         rel="noreferrer"
-        className="pointer-events-none fixed bottom-24 right-5 z-40 hidden max-w-[16rem] rounded-2xl bg-white p-3 text-left text-xs leading-relaxed text-[#14110e] shadow-[0_12px_40px_rgba(20,17,14,0.18)] md:pointer-events-auto md:block"
+        className="pointer-events-none fixed bottom-24 right-5 z-40 hidden max-w-[16rem] rounded-2xl bg-white p-3 text-left text-xs leading-relaxed text-[#0A1630] shadow-[0_12px_40px_rgba(20,17,14,0.18)] md:pointer-events-auto md:block"
       >
-        Interested in this {listing.beds} bed in {listing.community}? Chat with our team — we can arrange a viewing.
+        Interested in this {listing.beds} bed in {listing.community}? Chat with our team. We can arrange a viewing.
       </a>
     </article>
   );

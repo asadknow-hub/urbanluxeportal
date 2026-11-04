@@ -39,7 +39,7 @@ export function PropertyGallery({ listing }: { listing: Listing }) {
             )}
           </button>
           {listing.exclusive && (
-            <span className="pointer-events-none absolute right-4 top-4 rounded-full bg-[#1b2430] px-3 py-1.5 text-[0.62rem] font-semibold tracking-[0.14em] uppercase text-[#2dd4bf]">
+            <span className="pointer-events-none absolute right-4 top-4 rounded-full bg-[#1b2430] px-3 py-1.5 text-[0.62rem] font-semibold tracking-[0.14em] uppercase text-[#008040]">
               Exclusive listing
             </span>
           )}
@@ -47,7 +47,7 @@ export function PropertyGallery({ listing }: { listing: Listing }) {
             <button
               type="button"
               onClick={() => show(0)}
-              className="inline-flex min-h-9 items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 text-xs font-medium text-[#14110e] shadow-sm"
+              className="inline-flex min-h-9 items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 text-xs font-medium text-[#0A1630] shadow-sm"
             >
               <Camera className="h-3.5 w-3.5" />
               {images.length} photos
@@ -56,7 +56,7 @@ export function PropertyGallery({ listing }: { listing: Listing }) {
               href={maps}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-9 items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 text-xs font-medium text-[#14110e] shadow-sm hover:bg-white"
+              className="inline-flex min-h-9 items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 text-xs font-medium text-[#0A1630] shadow-sm hover:bg-white"
             >
               <MapPin className="h-3.5 w-3.5" />
               Map
@@ -81,7 +81,7 @@ export function PropertyGallery({ listing }: { listing: Listing }) {
 
       {open && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-[#14110e]/90 p-4"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-[#0A1630]/90 p-4"
           role="dialog"
           aria-modal="true"
           aria-label="Photo gallery"

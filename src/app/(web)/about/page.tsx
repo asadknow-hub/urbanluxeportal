@@ -15,7 +15,7 @@ export default function AboutPage() {
       <PageIntro
         eyebrow="The house"
         title="A private office for a public city."
-        lede="UrbanLuxe exists for clients who would rather not be on a mailing list. We buy, sell, let, and allocate — quietly."
+        lede="UrbanLuxe is a quiet desk for serious buyers and sellers. We buy, sell, let, and allocate with discretion."
       />
       <section className="grid lg:grid-cols-2">
         <div className="relative min-h-[22rem] lg:min-h-[36rem]">
@@ -26,15 +26,15 @@ export default function AboutPage() {
             <h2 className="text-2xl sm:text-3xl md:text-4xl">How we work</h2>
             <ul className="mt-8 space-y-6 text-base font-light leading-relaxed text-[#8a8178]">
               <li>
-                <span className="block text-[0.7rem] tracking-[0.2em] uppercase text-[#2dd4bf]">01 — Brief</span>
-                A conversation, not a form with forty fields. Community, light, number, timing.
+                <span className="block text-[0.7rem] tracking-[0.2em] uppercase text-[#008040]">01 · Brief</span>
+                We start with a conversation: community, light, number, timing.
               </li>
               <li>
-                <span className="block text-[0.7rem] tracking-[0.2em] uppercase text-[#2dd4bf]">02 — Edit</span>
-                Three to five residences. If none fit, we wait — we do not pad the list.
+                <span className="block text-[0.7rem] tracking-[0.2em] uppercase text-[#008040]">02 · Edit</span>
+                Three to five residences. If none fit, we wait. We do not pad the list.
               </li>
               <li>
-                <span className="block text-[0.7rem] tracking-[0.2em] uppercase text-[#2dd4bf]">03 — Close</span>
+                <span className="block text-[0.7rem] tracking-[0.2em] uppercase text-[#008040]">03 · Close</span>
                 Viewings, papers, and the unglamorous work between offer and keys. Then we disappear until you need us.
               </li>
             </ul>
@@ -43,7 +43,7 @@ export default function AboutPage() {
       </section>
       <section className="mx-auto grid max-w-[1440px] gap-px border-y border-[#e4d9c8] bg-[#e4d9c8] md:grid-cols-3">
         {[
-          { k: "RERA", v: "Registered brokerage" },
+          { k: "Desk", v: "Dubai brokerage" },
           { k: "Focus", v: "Palm · Downtown · Hills · Creek" },
           { k: "Reply", v: "Within a working day" },
         ].map((s) => (
@@ -54,8 +54,8 @@ export default function AboutPage() {
         ))}
       </section>
       <section className="mx-auto max-w-3xl px-5 py-20 text-center md:py-28">
-        <p className="text-xl font-light leading-relaxed text-[#14110e] md:text-2xl">
-          The portal you may have heard of — our house system — lives with the team. This site is for the city.
+        <p className="text-xl font-light leading-relaxed text-[#0A1630] md:text-2xl">
+          Our house system lives with the team. This site is for the city.
         </p>
       </section>
     </>

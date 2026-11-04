@@ -66,7 +66,7 @@ export default async function TermsPage() {
             Privacy Policy
           </Link>
           . Contact{" "}
-          <a className="font-medium text-[#1E7A4A] hover:underline" href={`mailto:${brand.email}`}>
+          <a className="font-medium text-[#008040] hover:underline" href={`mailto:${brand.email}`}>
             {brand.email}
           </a>
           .

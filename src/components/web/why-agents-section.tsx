@@ -1,87 +1,97 @@
+import Image from "next/image";
 import Link from "next/link";
-import {
-  Award,
-  Clock3,
-  Handshake,
-  MapPinned,
-  MessageCircle,
-  ShieldCheck,
-} from "lucide-react";
+import { IMAGES } from "@/lib/web/listings";
 import { Reveal } from "@/components/web/reveal";
 
-const QUALITIES = [
+const POINTS = [
   {
-    icon: MapPinned,
-    title: "Hyper-local expertise",
-    body: "Agents who live the communities they sell — Palm, Marina, Hills, Creek — not generic city-wide lists.",
+    n: "01",
+    title: "Community depth",
+    body: "Advisors work Palm, Marina, Hills, and Creek every week. Briefs stay tied to streets they know.",
   },
   {
-    icon: ShieldCheck,
-    title: "RERA-licensed & vetted",
-    body: "Every advisor is licensed, background-checked, and held to UrbanLuxe service standards.",
+    n: "02",
+    title: "Vetted desk standards",
+    body: "Background checks and house service standards before anyone represents your brief.",
   },
   {
-    icon: Clock3,
+    n: "03",
     title: "Same-day viewings",
-    body: "Private tours arranged within hours when it matters — evenings and weekends included.",
+    body: "Private tours within hours when timing matters, including evenings and weekends.",
   },
   {
-    icon: Handshake,
-    title: "Negotiation that protects you",
-    body: "From offer strategy to SPA clauses, we fight for price, terms, and handover clarity.",
+    n: "04",
+    title: "Negotiation with clarity",
+    body: "Offer strategy, SPA clauses, and handover detail handled on the same thread.",
   },
   {
-    icon: MessageCircle,
-    title: "One clear point of contact",
-    body: "No call-centre handoffs. Your agent stays with you from enquiry through keys.",
+    n: "05",
+    title: "One advisor",
+    body: "Your contact stays with you from enquiry through keys. No call-centre handoffs.",
   },
   {
-    icon: Award,
-    title: "Off-market access",
-    body: "Quiet listings and developer allocations before they hit the open portals.",
+    n: "06",
+    title: "Quiet stock",
+    body: "Off-market listings and developer allocations before they hit open portals.",
   },
 ] as const;
 
 export function WhyAgentsSection() {
   return (
-    <section className="ul-band-light py-10 md:py-14 lg:py-16">
+    <section className="ul-band-light py-11 md:py-16 lg:py-[4.25rem]">
       <div className="ul-shell-wide">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end">
-          <Reveal className="justify-self-start">
-            <p className="ul-kicker">Our people</p>
-            <h2 className="ul-section-heading mt-3 text-3xl md:text-4xl">
-              Why our agents are right for you
-            </h2>
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-start lg:gap-14 xl:gap-20">
+          <Reveal className="min-w-0">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-[var(--ul-tertiary)] sm:aspect-[5/6] lg:sticky lg:top-24 lg:aspect-auto lg:min-h-[32rem]">
+              <Image
+                src={IMAGES.penthouse}
+                alt="Advisor preparing a Dubai viewing brief"
+                fill
+                sizes="(max-width: 1024px) 100vw, 45vw"
+                className="object-cover"
+              />
+            </div>
           </Reveal>
-          <Reveal delay={50} className="lg:justify-self-end lg:text-right">
-            <p className="max-w-xl text-base leading-relaxed text-[var(--ul-muted)] lg:ml-auto">
-              Specialists, not sales scripts — advisors who combine market craft with the care of a
-              private office.
-            </p>
-          </Reveal>
-        </div>
 
-        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {QUALITIES.map((item, i) => (
-            <Reveal key={item.title} delay={i * 50}>
-              <article className="flex h-full flex-col rounded-2xl border border-[var(--ul-hair)] bg-white p-6 shadow-[0_8px_30px_rgba(7,17,31,0.04)]">
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--ul-secondary)] text-white">
-                  <item.icon className="h-5 w-5" strokeWidth={1.75} />
-                </span>
-                <h3 className="mt-5 text-lg font-bold uppercase tracking-wide text-[var(--ul-primary)]">
-                  {item.title}
-                </h3>
-                <p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--ul-muted)]">{item.body}</p>
-              </article>
+          <div className="min-w-0">
+            <Reveal delay={40}>
+              <p className="ul-kicker">Our people</p>
+              <h2 className="ul-section-heading mt-3 text-3xl md:text-4xl">
+                Why our agents are right for you
+              </h2>
+              <p className="mt-4 max-w-xl text-base leading-relaxed text-[var(--ul-muted)]">
+                Market craft and private-office care on the same desk. Specialists who prepare
+                briefs, walk sites, and close with clarity.
+              </p>
             </Reveal>
-          ))}
-        </div>
 
-        <Reveal delay={200} className="mt-12">
-          <Link href="/contact" prefetch className="ul-btn-primary rounded-full">
-            Speak with an agent
-          </Link>
-        </Reveal>
+            <ol className="mt-10 space-y-7 border-t border-[var(--ul-hair)] pt-8">
+              {POINTS.map((item, i) => (
+                <Reveal key={item.n} delay={60 + i * 40}>
+                  <li className="grid gap-3 sm:grid-cols-[3.5rem_minmax(0,1fr)] sm:gap-5">
+                    <span className="text-xs font-bold tracking-[0.16em] text-[var(--ul-secondary)]">
+                      {item.n}
+                    </span>
+                    <div>
+                      <h3 className="text-base font-bold uppercase tracking-wide text-[var(--ul-primary)]">
+                        {item.title}
+                      </h3>
+                      <p className="mt-1.5 text-sm leading-relaxed text-[var(--ul-muted)]">
+                        {item.body}
+                      </p>
+                    </div>
+                  </li>
+                </Reveal>
+              ))}
+            </ol>
+
+            <Reveal delay={280} className="mt-10">
+              <Link href="/contact" prefetch className="ul-btn-primary rounded-full">
+                Speak with an agent
+              </Link>
+            </Reveal>
+          </div>
+        </div>
       </div>
     </section>
   );

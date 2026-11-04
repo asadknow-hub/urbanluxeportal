@@ -61,7 +61,7 @@ export default async function PrivacyPage() {
           <p>
             You may request access, correction, or deletion of personal data we hold, subject to
             legal retention duties. Contact{" "}
-            <a className="font-medium text-[#1E7A4A] hover:underline" href={`mailto:${brand.email}`}>
+            <a className="font-medium text-[#008040] hover:underline" href={`mailto:${brand.email}`}>
               {brand.email}
             </a>{" "}
             or call {brand.phoneDisplay}.

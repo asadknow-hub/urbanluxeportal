@@ -53,7 +53,7 @@ export default async function InsightArticlePage({
               <ArrowLeft className="h-4 w-4" />
               Insights
             </Link>
-            <p className="mt-6 text-xs font-semibold uppercase tracking-[0.14em] text-[#1E7A4A]">
+            <p className="mt-6 text-xs font-semibold uppercase tracking-[0.14em] text-[#008040]">
               {article.category}
             </p>
             <h1 className="mt-3 text-3xl leading-[1.15] md:text-4xl lg:text-[2.75rem]">
@@ -96,7 +96,7 @@ export default async function InsightArticlePage({
           <div className="mt-12 flex flex-col gap-3 border-t border-[#e5e7eb] pt-8 sm:flex-row sm:items-center sm:justify-between">
             <Link
               href="/insights"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0A1630] hover:text-[#1E7A4A]"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0A1630] hover:text-[#008040]"
             >
               <ArrowLeft className="h-4 w-4" />
               All insights
@@ -137,10 +137,10 @@ export default async function InsightArticlePage({
                     />
                   </div>
                   <div className="p-5">
-                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#1E7A4A]">
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#008040]">
                       {item.category}
                     </p>
-                    <h3 className="mt-2 font-semibold leading-snug text-[#0A1630] group-hover:text-[#1E7A4A]">
+                    <h3 className="mt-2 font-semibold leading-snug text-[#0A1630] group-hover:text-[#008040]">
                       {item.title}
                     </h3>
                     <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-[#0A1630]/7">
@@ -155,7 +155,7 @@ export default async function InsightArticlePage({
                 Featured this month:{" "}
                 <Link
                   href={`/insights/${featured.slug}`}
-                  className="font-semibold text-[#1E7A4A] hover:underline"
+                  className="font-semibold text-[#008040] hover:underline"
                 >
                   {featured.title}
                 </Link>

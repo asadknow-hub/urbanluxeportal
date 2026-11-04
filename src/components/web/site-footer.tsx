@@ -44,7 +44,7 @@ export function SiteFooter() {
           <div className="lg:col-span-4">
             <SiteLogo inverted />
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-[#F6F3EE]/55">
-              {brand.tagline} A Dubai brokerage for villas, apartments, and off-plan residences —
+              {brand.tagline} A Dubai brokerage for villas, apartments, and off-plan residences,
               placed with the care of a private office.
             </p>
             <form onSubmit={onSubscribe} className="mt-4 flex max-w-md gap-0">

@@ -90,14 +90,14 @@ export function CareersCanvasSection() {
               <div className="pointer-events-auto max-w-md rounded-2xl border border-white/10 bg-[var(--ul-primary)]/80 px-6 py-8 shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-md sm:px-8 sm:py-10">
                 <p className="ul-kicker">Careers</p>
                 <h2 className="ul-section-heading mt-3 text-[clamp(1.65rem,3.6vw,2.75rem)] text-white">
-                  See what you&apos;re missing out on
+                  Join the desk
                 </h2>
                 <p className="mt-4 text-sm leading-relaxed text-[#8ba0b8] sm:text-base">
-                  Craft over theatre — advisors who prepare briefs, walk sites, and close with
-                  clarity. Dubai awaits.
+                  Craft-led hiring for advisors who prepare briefs, walk sites, and close with
+                  clarity. See open roles and how we work.
                 </p>
                 <Link href="/careers" prefetch className="ul-btn-primary mt-7 rounded-full">
-                  Get in touch
+                  View careers
                 </Link>
               </div>
             </div>

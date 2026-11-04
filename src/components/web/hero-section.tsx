@@ -50,8 +50,8 @@ export function HeroSection() {
           </h1>
 
           <p className="mt-5 max-w-lg text-[0.95rem] leading-relaxed text-[#F6F3EE]/72 sm:text-base">
-            Villas, apartments, and off-plan residences — placed with discretion, not listed as
-            noise.
+            Villas, apartments, and off-plan residences placed with discretion. Fewer introductions,
+            better ones.
           </p>
 
           <div className="mt-7 flex flex-wrap gap-3">
@@ -69,7 +69,7 @@ export function HeroSection() {
             Search Dubai
           </p>
           <p className="mt-1 text-sm font-semibold text-[var(--ul-primary)]">
-            Buy, rent, or off-plan — structured to your brief.
+            Buy, rent, or off-plan, structured to your brief.
           </p>
           <div className="mt-3">
             <HeroSearch />

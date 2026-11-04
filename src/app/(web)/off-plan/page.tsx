@@ -5,7 +5,7 @@ import { OffPlanExplorer } from "@/components/web/off-plan-explorer";
 
 export const metadata: Metadata = {
   title: "Off-plan",
-  description: "Forthcoming towers and lagoons in Dubai — payment plans, monthly estimates, and private allocations.",
+  description: "Forthcoming towers and lagoons in Dubai: payment plans, monthly estimates, and private allocations.",
 };
 
 export default function OffPlanPage() {

@@ -8,7 +8,7 @@ import { submitListPropertyForm } from "@/server/public-leads";
 const INTENT = [
   { value: "sell", label: "I want to sell" },
   { value: "let", label: "I want to let" },
-  { value: "both", label: "Sell or let — advise me" },
+  { value: "both", label: "Sell or let, advise me" },
   { value: "valuation", label: "Valuation only" },
 ] as const;
 
@@ -37,7 +37,7 @@ export function ListPropertyForm({ defaultIntent = "sell" }: { defaultIntent?: s
       form.reset();
       toast.success(
         result.duplicate
-          ? "We already have your details — an advisor will follow up."
+          ? "We already have your details. An advisor will follow up."
           : "Received. An advisor will contact you about your property."
       );
     } catch {
@@ -48,7 +48,7 @@ export function ListPropertyForm({ defaultIntent = "sell" }: { defaultIntent?: s
   }
 
   const field =
-    "h-12 w-full rounded-md border border-[#e5e7eb] bg-white px-4 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#1E7A4A]";
+    "h-12 w-full rounded-md border border-[#e5e7eb] bg-white px-4 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#008040]";
 
   return (
     <form onSubmit={onSubmit} className="space-y-3">
@@ -106,7 +106,7 @@ export function ListPropertyForm({ defaultIntent = "sell" }: { defaultIntent?: s
         name="message"
         rows={4}
         placeholder="Timing, asking expectations, or anything we should know"
-        className="w-full rounded-md border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#1E7A4A]"
+        className="w-full rounded-md border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#008040]"
       />
       <button
         type="submit"

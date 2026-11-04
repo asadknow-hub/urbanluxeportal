@@ -11,14 +11,14 @@ const FAQS = [
   },
   {
     q: "What down payment do I need?",
-    a: "For residents buying ready property, banks commonly start around 20% down. Off-plan and non-resident purchases often require more — typically 25–50% depending on the lender and project. Always confirm with the bank before you commit.",
+    a: "For residents buying ready property, banks commonly start around 20% down. Off-plan and non-resident purchases often require more, typically 25–50% depending on the lender and project. Always confirm with the bank before you commit.",
   },
   {
     q: "How long can a UAE mortgage term be?",
-    a: "Most banks offer terms up to 25 years, with some products reaching 30 years. Age limits apply — lenders usually require the loan to finish before a set retirement age.",
+    a: "Most banks offer terms up to 25 years, with some products reaching 30 years. Age limits apply. Lenders usually require the loan to finish before a set retirement age.",
   },
   {
-    q: "Fixed or variable rate — which is better?",
+    q: "Fixed or variable rate: which is better?",
     a: "Fixed rates give payment certainty for a period (often 1–5 years). Variable rates can move with the market. Many buyers start fixed, then refinance. We help you compare both against your hold period.",
   },
   {
@@ -31,7 +31,7 @@ const FAQS = [
   },
   {
     q: "How does Urban Luxe help with mortgages?",
-    a: "We coordinate introductions to preferred mortgage advisors, package the property brief for the lender, and keep financing aligned with your viewing and offer timeline — so the SPA and bank process move together.",
+    a: "We coordinate introductions to preferred mortgage advisors, package the property brief for the lender, and keep financing aligned with your viewing and offer timeline so the SPA and bank process move together.",
   },
   {
     q: "Is the calculator a formal quote?",

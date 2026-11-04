@@ -33,7 +33,7 @@ export function EnquireForm({
       form.reset();
       toast.success(
         result.duplicate
-          ? "We already have your details — a specialist will follow up."
+          ? "We already have your details. A specialist will follow up."
           : "Received. A specialist will be in touch."
       );
     } catch {
@@ -44,7 +44,7 @@ export function EnquireForm({
   }
 
   const field =
-    "h-12 w-full rounded border border-[#e5e7eb] bg-white px-4 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#1E7A4A]";
+    "h-12 w-full rounded border border-[#e5e7eb] bg-white px-4 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#008040]";
 
   return (
     <form onSubmit={onSubmit} className="space-y-3">
@@ -78,7 +78,7 @@ export function EnquireForm({
         name="message"
         rows={compact ? 3 : 4}
         placeholder="Tell us what you are looking for"
-        className="w-full rounded border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#1E7A4A]"
+        className="w-full rounded border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#008040]"
         defaultValue={propertyTitle ? `Please share details for ${propertyTitle}.` : ""}
       />
       <button

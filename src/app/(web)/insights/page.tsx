@@ -3,13 +3,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Clock3, TrendingUp } from "lucide-react";
 import { featuredInsight, latestInsights } from "@/lib/web/insights";
+import { PageIntro } from "@/components/web/page-intro";
 import { Reveal } from "@/components/web/reveal";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Insights",
   description:
-    "Market updates, community briefs, and buyer guidance from Urban Luxe — Dubai real estate notes from the desk.",
+    "Market updates, community briefs, and buyer guidance from Urban Luxe. Dubai real estate notes from the desk.",
 };
 
 const TOPICS = [
@@ -39,7 +40,7 @@ const GUIDES = [
     href: "/insights/villa-sales-reach-new-highs",
   },
   {
-    title: "Rent vs buy in Dubai — 2026 frame",
+    title: "Rent vs buy in Dubai, 2026 frame",
     body: "A clear model for five-year holds, residency plans, and opportunity cost.",
     href: "/insights/holding-periods-that-actually-pay",
   },
@@ -63,7 +64,7 @@ function MetaRow({
         light ? "text-white/70" : "text-[#0A1630]/45"
       )}
     >
-      <span className="text-[#1E7A4A]">{category}</span>
+      <span className="text-[#008040]">{category}</span>
       <span aria-hidden>·</span>
       <span>{date}</span>
       <span aria-hidden>·</span>
@@ -81,31 +82,24 @@ export default function InsightsPage() {
 
   return (
     <>
-      <section className="bg-[#0A1630] px-4 pb-10 pt-10 text-white sm:px-5 sm:pb-12 sm:pt-12 md:px-10 md:pb-14 md:pt-16">
-        <div className="mx-auto max-w-[1280px]">
-          <Reveal>
-            <p className="ul-kicker text-[#1E7A4A]">Insights</p>
-            <h1 className="mt-3 max-w-3xl text-[1.85rem] leading-[1.12] sm:mt-4 sm:text-3xl md:text-5xl">
-              Notes from the desk — market, communities, and how to buy well.
-            </h1>
-            <p className="mt-4 max-w-2xl text-[0.9375rem] leading-relaxed text-white/70 sm:text-sm md:text-base">
-              Short briefs for clients who want signal over noise: launches worth a private look,
-              pricing that moved, and guidance before you write an offer.
-            </p>
-            <div className="ul-hide-scroll mt-6 flex gap-2 overflow-x-auto pb-1 sm:mt-7 sm:flex-wrap sm:overflow-visible sm:pb-0">
-              {TOPICS.map((topic) => (
-                <Link
-                  key={topic.label}
-                  href={topic.href}
-                  className="shrink-0 rounded-full border border-white/20 px-3.5 py-2 text-xs font-semibold text-white/85 transition-colors hover:border-white/50 hover:bg-white/10"
-                >
-                  {topic.label}
-                </Link>
-              ))}
-            </div>
-          </Reveal>
+      <PageIntro
+        tone="light"
+        eyebrow="Insights"
+        title="Notes from the desk: market, communities, and how to buy well."
+        lede="Short briefs for clients who want signal over noise: launches worth a private look, pricing that moved, and guidance before you write an offer."
+      >
+        <div className="ul-hide-scroll flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
+          {TOPICS.map((topic) => (
+            <Link
+              key={topic.label}
+              href={topic.href}
+              className="shrink-0 rounded-full border border-[var(--ul-hair)] px-3.5 py-2 text-xs font-semibold text-[var(--ul-primary)] transition-colors hover:border-[var(--ul-secondary)] hover:text-[var(--ul-secondary)]"
+            >
+              {topic.label}
+            </Link>
+          ))}
         </div>
-      </section>
+      </PageIntro>
 
       <section id="featured" className="ul-band-light px-4 py-10 sm:px-5 sm:py-12 md:px-10 md:py-16">
         <div className="mx-auto max-w-[1280px]">
@@ -118,7 +112,7 @@ export default function InsightsPage() {
               <Link
                 href="/buy"
                 prefetch
-                className="hidden text-sm font-semibold text-[#1E7A4A] transition-colors hover:text-[#155c38] sm:inline-flex sm:items-center sm:gap-1.5"
+                className="hidden text-sm font-semibold text-[#008040] transition-colors hover:text-[#006633] sm:inline-flex sm:items-center sm:gap-1.5"
               >
                 Browse residences <ArrowRight className="h-4 w-4" />
               </Link>
@@ -147,7 +141,7 @@ export default function InsightsPage() {
                   date={featured.date}
                   readMins={featured.readMins}
                 />
-                <h3 className="mt-4 text-2xl font-bold leading-snug text-[#0A1630] transition-colors group-hover:text-[#1E7A4A] md:text-3xl">
+                <h3 className="mt-4 text-2xl font-bold leading-snug text-[#0A1630] transition-colors group-hover:text-[#008040] md:text-3xl">
                   {featured.title}
                 </h3>
                 <p className="mt-4 text-sm leading-relaxed text-[#0A1630]/70 md:text-base">
@@ -166,7 +160,7 @@ export default function InsightsPage() {
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <div className="mb-6 flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-[#1E7A4A]" strokeWidth={2.25} />
+              <TrendingUp className="h-4 w-4 text-[#008040]" strokeWidth={2.25} />
               <p className="text-sm font-semibold text-[#0A1630]">Market snapshot</p>
               <span className="text-xs text-[#0A1630]/45">Indicative · Urban Luxe desk</span>
             </div>
@@ -250,7 +244,7 @@ export default function InsightsPage() {
               Practical papers for serious clients
             </h2>
             <p className="ul-section-lede mt-3">
-              Not marketing decks — short frameworks we use on viewings and offer calls.
+              Short frameworks we use on viewings and offer calls, not marketing decks.
             </p>
             <Link
               href="/contact"
@@ -270,12 +264,12 @@ export default function InsightsPage() {
                   className="group flex items-start justify-between gap-4 rounded-xl border border-[#e5e7eb] bg-white px-5 py-5 transition-colors hover:border-[#0A1630]/25"
                 >
                   <div>
-                    <p className="font-semibold text-[#0A1630] group-hover:text-[#1E7A4A]">
+                    <p className="font-semibold text-[#0A1630] group-hover:text-[#008040]">
                       {guide.title}
                     </p>
                     <p className="mt-1.5 text-sm leading-relaxed text-[#0A1630]/65">{guide.body}</p>
                   </div>
-                  <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-[#0A1630]/35 transition-transform group-hover:translate-x-0.5 group-hover:text-[#1E7A4A]" />
+                  <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-[#0A1630]/35 transition-transform group-hover:translate-x-0.5 group-hover:text-[#008040]" />
                 </Link>
               </Reveal>
             ))}
@@ -286,14 +280,14 @@ export default function InsightsPage() {
       <section className="bg-[#0A1630] px-5 py-14 md:px-10 md:py-16">
         <Reveal className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           <div className="max-w-xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#1E7A4A]">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#008040]">
               Stay informed
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-white md:text-3xl">
               Keep up with what&apos;s happening
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-white/70 md:text-base">
-              Market updates, new launches, and expert notes — when something moves that matters to
+              Market updates, new launches, and expert notes when something moves that matters to
               your brief, we write.
             </p>
           </div>

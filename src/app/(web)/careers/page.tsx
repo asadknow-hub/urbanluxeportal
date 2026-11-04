@@ -1,44 +1,34 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Briefcase,
-  Handshake,
-  MapPinned,
-  Sparkles,
-  Users,
-} from "lucide-react";
+import { ArrowRight, Briefcase } from "lucide-react";
 import { IMAGES } from "@/lib/web/listings";
 import { CareersApplicationForm } from "@/components/web/careers-application-form";
+import { PageIntro } from "@/components/web/page-intro";
 import { Reveal } from "@/components/web/reveal";
 
 export const metadata: Metadata = {
   title: "Careers",
   description:
-    "Join Urban Luxe in Dubai — sales, leasing, coordination, and specialist roles for people who take the brief seriously.",
+    "Join Urban Luxe in Dubai: sales, leasing, coordination, and specialist roles for people who take the brief seriously.",
 };
 
 const VALUES = [
   {
-    icon: Handshake,
     title: "Client over volume",
     body: "We would rather place three residences well than chase twenty that do not fit.",
   },
   {
-    icon: MapPinned,
     title: "Hyper-local desks",
-    body: "Advisors own communities — Palm, Downtown, Hills, Marina — not generic city-wide lists.",
+    body: "Advisors own communities: Palm, Downtown, Hills, Marina. Briefs stay local, not city-wide lists.",
   },
   {
-    icon: Users,
     title: "A real house",
     body: "Small team, clear standards, and mentorship from people who still take viewings.",
   },
   {
-    icon: Sparkles,
     title: "Craft & pace",
-    body: "High standards on communication and presentation — with the speed Dubai expects.",
+    body: "High standards on communication and presentation, with the speed Dubai expects.",
   },
 ] as const;
 
@@ -73,37 +63,73 @@ const PERKS = [
   "Competitive commission & base structures",
   "Training on communities, SPA process, and client care",
   "Modern DIFC-adjacent office culture",
-  "Clear progression — not a revolving door of cold desks",
+  "Clear progression and stable desks, not a revolving cold-call floor",
 ] as const;
 
 export default function CareersPage() {
   return (
     <>
-      <section className="bg-[#0A1630] px-4 pb-10 pt-10 text-white sm:px-5 sm:pb-12 sm:pt-12 md:px-10 md:pb-14 md:pt-16">
-        <div className="mx-auto max-w-[1280px]">
+      <PageIntro
+        tone="light"
+        eyebrow="Careers"
+        title="See what you're missing out on."
+        lede="We hire advisors, coordinators, and specialists who care about the brief as much as the close. Dubai awaits. Take the leap."
+        primaryCta={{ href: "#roles", label: "View open roles" }}
+        secondaryCta={{ href: "#apply", label: "Apply now" }}
+      />
+
+      <section id="roles" className="ul-band-light px-5 py-14 md:px-10 md:py-20">
+        <div className="mx-auto grid max-w-[1280px] gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16">
           <Reveal>
-            <p className="ul-kicker text-[#1E7A4A]">Careers</p>
-            <h1 className="mt-3 max-w-3xl text-[1.85rem] leading-[1.12] sm:mt-4 sm:text-3xl md:text-5xl">
-              See what you&apos;re missing out on.
-            </h1>
-            <p className="mt-4 max-w-2xl text-[0.9375rem] leading-relaxed text-white/70 sm:text-sm md:text-base">
-              We hire advisors, coordinators, and specialists who care about the brief as much as
-              the close. Dubai awaits — take the leap.
-            </p>
-            <div className="mt-6 flex flex-col gap-3 sm:mt-7 sm:flex-row sm:items-center">
-              <Link
-                href="#roles"
-                className="inline-flex h-12 items-center justify-center rounded-full bg-[#1E7A4A] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#155c38] sm:h-11"
-              >
-                View open roles
-              </Link>
-              <Link
-                href="#apply"
-                className="inline-flex h-12 items-center justify-center rounded-full border border-white/35 px-6 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:h-11"
-              >
-                Apply now
-              </Link>
+            <p className="ul-kicker">How we work</p>
+            <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">What we look for</h2>
+            <div className="mt-8 space-y-6 border-l-2 border-[#008040]/30 pl-5">
+              {VALUES.map((item) => (
+                <div key={item.title}>
+                  <p className="font-semibold text-[#0A1630]">{item.title}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-[#0A1630]/65">{item.body}</p>
+                </div>
+              ))}
             </div>
+          </Reveal>
+          <Reveal delay={60}>
+            <p className="ul-kicker">Open roles</p>
+            <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">Current openings</h2>
+            <p className="ul-section-lede mt-3">
+              Don&apos;t see your title? Send an open application. We hire for fit as much as for
+              function.
+            </p>
+            <div className="mt-6 space-y-3">
+              {OPEN_ROLES.map((role) => (
+                <div
+                  key={role.title}
+                  className="flex flex-col gap-3 rounded-xl border border-[#e5e7eb] bg-[#F6F3EE] p-5 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Briefcase className="h-4 w-4 text-[#008040]" strokeWidth={2} />
+                      <h3 className="text-lg font-semibold text-[#0A1630]">{role.title}</h3>
+                    </div>
+                    <p className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-[#0A1630]/45">
+                      {role.type}
+                    </p>
+                    <p className="mt-2 text-sm leading-relaxed text-[#0A1630]/70">{role.blurb}</p>
+                  </div>
+                  <Link
+                    href="#apply"
+                    className="inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-[#0A1630] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#081226]"
+                  >
+                    Apply
+                  </Link>
+                </div>
+              ))}
+            </div>
+            <Link
+              href="#apply"
+              className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#008040] hover:text-[#006633]"
+            >
+              Jump to application <ArrowRight className="h-4 w-4" />
+            </Link>
           </Reveal>
         </div>
       </section>
@@ -143,87 +169,7 @@ export default function CareersPage() {
         </div>
       </section>
 
-      <section className="ul-band-light px-5 py-14 md:px-10 md:py-20">
-        <div className="mx-auto max-w-[1280px]">
-          <Reveal>
-            <p className="ul-kicker">How we work</p>
-            <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">What we look for</h2>
-          </Reveal>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {VALUES.map((item, i) => (
-              <Reveal key={item.title} delay={i * 50}>
-                <div className="h-full rounded-xl border border-[#e5e7eb] bg-[#F6F3EE] p-5">
-                  <item.icon className="h-5 w-5 text-[#1E7A4A]" strokeWidth={2} />
-                  <p className="mt-4 font-semibold text-[#0A1630]">{item.title}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-[#0A1630]/65">{item.body}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="roles" className="border-t border-[#e5e7eb] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-20">
-        <div className="mx-auto max-w-[1280px]">
-          <Reveal>
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <p className="ul-kicker">Open roles</p>
-                <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">Current openings</h2>
-                <p className="ul-section-lede mt-3 max-w-xl">
-                  Don&apos;t see your title? Send an open application — we hire for fit as much as
-                  for function.
-                </p>
-              </div>
-              <Link
-                href="#apply"
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1E7A4A] hover:text-[#155c38]"
-              >
-                Jump to application <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </Reveal>
-
-          <div className="mt-8 space-y-3">
-            {OPEN_ROLES.map((role, i) => (
-              <Reveal key={role.title} delay={i * 40}>
-                <div className="flex flex-col gap-4 rounded-xl border border-[#e5e7eb] bg-white p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-[#1E7A4A]" strokeWidth={2} />
-                      <h3 className="text-lg font-semibold text-[#0A1630]">{role.title}</h3>
-                    </div>
-                    <p className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-[#0A1630]/45">
-                      {role.type}
-                    </p>
-                    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#0A1630]/70">
-                      {role.blurb}
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {role.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-full bg-[#F6F3EE] px-2.5 py-1 text-[0.7rem] font-semibold text-[#0A1630]/7"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <Link
-                    href={`#apply`}
-                    className="inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-[#0A1630] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#081226]"
-                  >
-                    Apply
-                  </Link>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="apply" className="ul-band-light px-5 py-14 md:px-10 md:py-20">
+      <section id="apply" className="border-t border-[#e5e7eb] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-20">
         <div className="mx-auto grid max-w-[1280px] gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           <Reveal>
             <p className="ul-kicker">Apply</p>
@@ -231,8 +177,8 @@ export default function CareersPage() {
               Send your application
             </h2>
             <p className="ul-section-lede mt-3">
-              Tell us the role, your experience, and why this house. We read every application —
-              no buy/rent dropdowns required.
+              Tell us the role, your experience, and why this house. We read every application.
+              No buy/rent dropdowns required.
             </p>
             <p className="mt-6 text-sm text-[#0A1630]/65">
               Hiring is handled by people, not a queue bot. Expect a reply within a few working
@@ -250,7 +196,7 @@ export default function CareersPage() {
       <section className="bg-[#0A1630] px-5 py-12 md:px-10 md:py-14">
         <Reveal className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-6 md:flex-row md:items-center">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#1E7A4A]">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#008040]">
               Not sure yet?
             </p>
             <h2 className="mt-2 text-xl font-semibold text-white md:text-2xl">
