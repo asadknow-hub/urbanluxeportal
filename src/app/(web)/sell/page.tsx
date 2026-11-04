@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Home, KeyRound } from "lucide-react";
-import { IMAGES } from "@/lib/web/listings";
+import { ArrowRight } from "lucide-react";
 import { ListPropertyForm } from "@/components/web/list-property-form";
-import { PageIntro } from "@/components/web/page-intro";
 import { Reveal } from "@/components/web/reveal";
 
 export const metadata: Metadata = {
@@ -13,231 +10,83 @@ export const metadata: Metadata = {
     "Instruct Urban Luxe to sell or let a Dubai residence privately, with a valuation built from site visits and real comps.",
 };
 
-const REASONS = [
-  {
-    title: "Private placement",
-    body: "Many of our sales never appear on public portals. We can list on portals or place through the private network.",
-  },
-  {
-    title: "Honest valuation",
-    body: "Light, plot, and what sold last season, discussed on site and backed by nearby trades.",
-  },
-  {
-    title: "Qualified buyers & tenants",
-    body: "We brief before we book. Viewings are intentional; handovers are photographed.",
-  },
-  {
-    title: "Paperwork that closes",
-    body: "From offer to SPA and keys, with coordination that keeps you informed at each step.",
-  },
-] as const;
-
-const STEPS = [
+const POINTS = [
   {
     n: "01",
-    title: "Brief",
-    body: "Address, timing, and whether you want to sell, let, or hear both paths.",
+    title: "Private placement",
+    body: "List on portals or place quietly through the private network.",
   },
   {
     n: "02",
-    title: "Value",
-    body: "We walk the residence and compare it to verified trades nearby, with portal asking prices kept in context.",
+    title: "On-site valuation",
+    body: "Light, plot, and nearby trades, discussed at the residence.",
   },
   {
     n: "03",
-    title: "Strategy",
-    body: "Portal list, private network, or both. Pricing and presentation that match the house.",
-  },
-  {
-    n: "04",
-    title: "Close",
-    body: "Offers, negotiation, contracts, and handover. We stay available if you need us after keys.",
-  },
-] as const;
-
-const PATHS = [
-  {
-    icon: Home,
-    title: "Sell",
-    body: "Primary homes and investor stock. We edit the brief, qualify demand, and protect your asking narrative.",
-    href: "#instruct",
-    cta: "Instruct a sale",
-  },
-  {
-    icon: KeyRound,
-    title: "Let",
-    body: "Annual contracts to occupants who will treat the house as a house. References and a proper handover.",
-    href: "#instruct",
-    cta: "Instruct a letting",
+    title: "One desk through keys",
+    body: "Brief, strategy, offers, SPA, and handover on the same thread.",
   },
 ] as const;
 
 export default function SellPage() {
   return (
-    <>
-      <PageIntro
-        tone="light"
-        layout="stack"
-        eyebrow="List your property"
-        title="Sell without a board on the street."
-        lede="We can list, or we can place. Tell us the address. A specialist will advise on sale, letting, or both."
-        primaryCta={{ href: "#instruct", label: "Request a conversation" }}
-        secondaryCta={{ href: "#how", label: "How it works" }}
-      />
-
-      <section
-        id="instruct"
-        className="ul-band-light px-4 py-12 sm:px-5 sm:py-14 md:px-10 md:py-20"
-      >
-        <div className="mx-auto grid max-w-[1280px] gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16">
-          <Reveal>
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#F6F3EE] lg:aspect-auto lg:min-h-[420px]">
-              <Image
-                src={IMAGES.interior}
-                alt="Dubai residence interior"
-                fill
-                sizes="(max-width: 1024px) 100vw, 45vw"
-                className="object-cover"
-                priority
-              />
-            </div>
-          </Reveal>
-          <Reveal delay={60}>
-            <p className="ul-kicker">Instruct us</p>
-            <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">
-              Request a conversation
-            </h2>
-            <p className="ul-section-lede mt-3">
-              Share the address and your intent. We will reply with next steps for valuation and
-              strategy shaped to the residence, its light, and the buyers who will pay for it.
+    <section className="ul-band-light border-b border-[var(--ul-hair)]">
+      <div className="ul-shell-wide py-10 md:py-14 lg:py-16">
+        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-14 xl:gap-20">
+          <Reveal className="min-w-0">
+            <p className="ul-kicker">List your property</p>
+            <h1 className="mt-3 max-w-xl text-[1.85rem] font-extrabold uppercase leading-[1.08] tracking-[-0.03em] text-[var(--ul-primary)] sm:text-4xl md:text-[2.75rem]">
+              Sell or let without a board on the street.
+            </h1>
+            <p className="mt-4 max-w-lg text-[0.95rem] leading-relaxed text-[var(--ul-muted)] sm:text-base">
+              Tell us the address and intent. A specialist will advise on sale, letting, or both,
+              then stay on the thread through keys.
             </p>
-            <div className="mt-8 rounded-xl border border-[var(--ul-hair)] bg-white p-6 md:p-8">
-              <ListPropertyForm />
-            </div>
+
+            <ol className="mt-10 space-y-6 border-t border-[var(--ul-hair)] pt-8">
+              {POINTS.map((item) => (
+                <li key={item.n} className="grid gap-1 sm:grid-cols-[3rem_minmax(0,1fr)] sm:gap-4">
+                  <span className="text-xs font-bold tracking-[0.16em] text-[var(--ul-secondary)]">
+                    {item.n}
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--ul-primary)]">{item.title}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-[var(--ul-muted)]">{item.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+
             <Link
               href="/contact"
               prefetch
-              className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#008040] hover:text-[#006633]"
+              className="mt-10 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ul-secondary)] hover:text-[#006633]"
             >
               Prefer to email or call? Contact us <ArrowRight className="h-4 w-4" />
             </Link>
           </Reveal>
-        </div>
-      </section>
 
-      <section className="border-y border-[var(--ul-hair)] bg-[#F6F3EE] px-4 py-12 sm:px-5 sm:py-14 md:px-10 md:py-20">
-        <div className="mx-auto max-w-[1280px]">
-          <Reveal>
-            <p className="ul-kicker">Why instruct Urban Luxe</p>
-            <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">
-              Placement with the care of a private office
-            </h2>
-            <p className="ul-section-lede mt-3 max-w-xl">
-              We will tell you plainly if the residence needs work before market. When it is ready,
-              viewings stay briefed and intentional.
-            </p>
-          </Reveal>
-          <ol className="mt-8 space-y-6 border-l-2 border-[#008040]/30 pl-5">
-            {REASONS.map((item, i) => (
-              <Reveal key={item.title} delay={i * 40}>
-                <li>
-                  <p className="text-xs font-bold tracking-[0.16em] text-[#008040]">
-                    {String(i + 1).padStart(2, "0")}
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-[#0A1630]">{item.title}</p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-[#0A1630]/65">{item.body}</p>
-                </li>
-              </Reveal>
-            ))}
-          </ol>
-        </div>
-      </section>
-
-      <section className="ul-band-light px-5 py-14 md:px-10 md:py-16">
-        <div className="mx-auto max-w-[1280px]">
-          <Reveal>
-            <p className="ul-kicker">Paths</p>
-            <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">Sell or let, your choice</h2>
-          </Reveal>
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
-            {PATHS.map((path, i) => (
-              <Reveal key={path.title} delay={i * 50}>
-                <div className="flex h-full flex-col rounded-xl border border-[var(--ul-hair)] bg-white p-6 md:p-8">
-                  <path.icon className="h-6 w-6 text-[#008040]" strokeWidth={2} />
-                  <h3 className="mt-4 text-xl font-semibold text-[#0A1630]">{path.title}</h3>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-[#0A1630]/70">{path.body}</p>
-                  <Link
-                    href={path.href}
-                    className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#008040] hover:text-[#006633]"
-                  >
-                    {path.cta} <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="how" className="ul-band-light px-5 py-14 md:px-10 md:py-20">
-        <div className="mx-auto max-w-[1280px]">
-          <Reveal>
-            <p className="ul-kicker">Process</p>
-            <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">How it works</h2>
-            <p className="ul-section-lede mt-3 max-w-xl">
-              Four clear steps from first call to keys, with one specialist on the thread throughout.
-            </p>
-          </Reveal>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {STEPS.map((step, i) => (
-              <Reveal key={step.n} delay={i * 40}>
-                <div className="h-full rounded-xl border border-[var(--ul-hair)] bg-[#F6F3EE] p-5">
-                  <p className="text-xs font-bold tracking-[0.16em] text-[#008040]">{step.n}</p>
-                  <h3 className="mt-3 text-lg font-semibold text-[#0A1630]">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[#0A1630]/65">{step.body}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="ul-band-light px-5 py-14 md:px-10 md:py-16">
-        <div className="mx-auto max-w-[880px] space-y-4 text-center text-sm leading-relaxed text-[#0A1630]/70">
-          <Reveal>
-            <p>
-              A valuation is a conversation about light, plot, and what sold last season. If the
-              residence is not ready for the market, we will say so.
-            </p>
-            <p>
-              For landlords: annual contracts, references, and a handover that is photographed.
-            </p>
+          <Reveal delay={60} className="min-w-0 lg:sticky lg:top-24">
+            <div
+              id="instruct"
+              className="border border-[var(--ul-hair)] bg-white p-5 sm:p-6 md:p-8"
+            >
+              <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--ul-secondary)]">
+                Instruct us
+              </p>
+              <h2 className="mt-2 text-xl font-bold text-[var(--ul-primary)] md:text-2xl">
+                Request a conversation
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--ul-muted)]">
+                Address, intent, and how to reach you. We reply with next steps.
+              </p>
+              <div className="mt-6">
+                <ListPropertyForm />
+              </div>
+            </div>
           </Reveal>
         </div>
-      </section>
-
-      <section className="relative overflow-hidden bg-[#0A1630] px-5 py-14 md:px-10 md:py-16">
-        <div className="absolute inset-0 opacity-30">
-          <Image src={IMAGES.skyline} alt="" fill sizes="100vw" className="object-cover" />
-          <div className="absolute inset-0 bg-[#0A1630]/75" />
-        </div>
-        <Reveal className="relative mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-          <div className="max-w-xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#008040]">
-              Ready when you are
-            </p>
-            <h2 className="mt-2 text-xl font-semibold text-white md:text-2xl">
-              Your residence. Your terms. Our desk.
-            </h2>
-          </div>
-          <Link
-            href="#instruct"
-            className="inline-flex h-11 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-[#0A1630] transition-colors hover:bg-[#F6F3EE]"
-          >
-            List your property
-          </Link>
-        </Reveal>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }
