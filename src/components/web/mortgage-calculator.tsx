@@ -177,7 +177,7 @@ export function MortgageCalculator() {
         />
       </div>
 
-      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+      <div className="mt-3 grid gap-3">
         <CompactField
           id="down-payment"
           label="Down Payment"
