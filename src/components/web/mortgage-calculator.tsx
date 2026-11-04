@@ -139,20 +139,20 @@ export function MortgageCalculator() {
     "h-9 w-full rounded-md border border-[#d1d5db] bg-white px-2.5 text-sm font-medium text-[#0A1630] outline-none transition-colors hover:border-[#0A1630]/35 focus:border-[#0A1630]";
 
   return (
-    <div className="rounded-xl border border-[var(--ul-hair)] bg-white p-4 md:p-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <h2 className="text-base font-bold tracking-tight text-[#0A1630] md:text-lg">
-          Calculate your mortgage repayments
+    <div className="border border-[var(--ul-hair)] bg-white p-4 sm:p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <h2 className="text-sm font-bold tracking-tight text-[var(--ul-primary)] sm:text-base">
+          Mortgage calculator
         </h2>
         <div className="sm:text-right">
-          <p className="text-[0.7rem] text-[#0A1630]/50">Monthly repayment</p>
-          <p className="text-xl font-bold tracking-tight text-[#0A1630] md:text-2xl">
+          <p className="text-[0.65rem] text-[var(--ul-muted)]">Monthly repayment</p>
+          <p className="text-lg font-bold tracking-tight text-[var(--ul-secondary)] sm:text-xl">
             {format(Math.round(monthly))}
           </p>
         </div>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-3">
         <CompactField
           id="purchase-price"
           label="Purchase Price"
@@ -177,7 +177,7 @@ export function MortgageCalculator() {
         />
       </div>
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-3">
+      <div className="mt-3 grid gap-3 sm:grid-cols-3">
         <CompactField
           id="down-payment"
           label="Down Payment"
