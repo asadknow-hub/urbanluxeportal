@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-/** Real static logos only — files under /public/developers */
+/** Real static logos only, files under /public/developers */
 const DEVELOPERS = [
   { name: "Emaar", src: "/developers/emaar.png" },
   { name: "Sobha", src: "/developers/sobha.jpg" },
@@ -13,48 +13,27 @@ const DEVELOPERS = [
   { name: "Danube Properties", src: "/developers/danube.png" },
 ] as const;
 
-function DeveloperLogo({ name, src }: { name: string; src: string }) {
-  return (
-    <span className="inline-flex h-16 w-52 shrink-0 items-center justify-center px-10 md:h-[4.5rem] md:w-64 md:px-14">
-      <Image
-        src={src}
-        alt={`${name} logo`}
-        width={160}
-        height={52}
-        unoptimized
-        className="h-11 w-auto max-w-[150px] object-contain object-center md:h-12 md:max-w-[170px]"
-      />
-    </span>
-  );
-}
-
 export function DevelopersMarquee() {
-  const loop = [...DEVELOPERS, ...DEVELOPERS];
-
   return (
-    <section className="ul-band-light overflow-hidden py-8 md:py-12">
+    <section className="ul-band-light py-10 md:py-14">
       <div className="ul-shell-wide">
         <p className="ul-kicker">Developers</p>
-        <h2 className="ul-section-heading mt-3 text-2xl md:text-3xl">
-          Projects we know well
-        </h2>
-      </div>
+        <h2 className="ul-section-heading mt-3 text-2xl md:text-3xl">Projects we know well</h2>
 
-      <div className="relative mt-12">
-        <div
-          className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-[var(--ul-paper)] to-transparent md:w-36"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-[var(--ul-paper)] to-transparent md:w-36"
-          aria-hidden
-        />
-
-        <div className="ul-marquee-track ul-marquee-slow flex w-max items-center gap-10 md:gap-16">
-          {loop.map((dev, i) => (
-            <DeveloperLogo key={`${dev.name}-${i}`} name={dev.name} src={dev.src} />
+        <ul className="mt-10 grid grid-cols-2 gap-x-6 gap-y-8 border-t border-[var(--ul-hair)] pt-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {DEVELOPERS.map((dev) => (
+            <li key={dev.name} className="flex h-14 items-center justify-center sm:h-16">
+              <Image
+                src={dev.src}
+                alt={`${dev.name} logo`}
+                width={140}
+                height={44}
+                unoptimized
+                className="h-9 w-auto max-w-[7.5rem] object-contain object-center opacity-80 sm:h-10 sm:max-w-[8.5rem]"
+              />
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );

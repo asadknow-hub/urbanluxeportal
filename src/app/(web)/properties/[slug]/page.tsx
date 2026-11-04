@@ -56,11 +56,11 @@ export default async function PropertyPage({
   return (
     <article className="bg-[#f6f3ee] pb-8 pt-4 sm:pt-6 lg:pb-20 lg:pt-8">
       <div className="mx-auto max-w-[1200px] px-4 sm:px-5 md:px-8">
-        <nav className="ul-hide-scroll mb-4 flex items-center gap-x-2 overflow-x-auto whitespace-nowrap pb-1 text-[0.75rem] text-[#8a8178] sm:mb-5 sm:flex-wrap sm:gap-y-1 sm:overflow-visible sm:whitespace-normal sm:pb-0 sm:text-[0.8rem]" aria-label="Breadcrumb">
+        <nav className="ul-hide-scroll mb-4 flex items-center gap-x-2 overflow-x-auto whitespace-nowrap pb-1 text-[0.75rem] text-[var(--ul-muted)] sm:mb-5 sm:flex-wrap sm:gap-y-1 sm:overflow-visible sm:whitespace-normal sm:pb-0 sm:text-[0.8rem]" aria-label="Breadcrumb">
           <Link href={kindMeta.path} className="hover:text-[#008040]">
             Back to search
           </Link>
-          <span className="text-[#e4d9c8]">|</span>
+          <span className="text-[var(--ul-hair)]">|</span>
           <Link href="/" className="hover:text-[#008040]">
             Home
           </Link>
@@ -84,30 +84,30 @@ export default async function PropertyPage({
           <div className="lg:col-span-8">
             <p className="ul-kicker">{listing.community}</p>
             <h1 className="mt-2 text-[1.65rem] leading-tight sm:mt-3 sm:text-3xl md:text-5xl">{listing.title}</h1>
-            <p className="mt-2 text-base font-light text-[#8a8178] sm:mt-3 sm:text-lg">{listing.subtitle}</p>
+            <p className="mt-2 text-base font-light text-[var(--ul-muted)] sm:mt-3 sm:text-lg">{listing.subtitle}</p>
             <p className="mt-4 text-xl text-[#0A1630] sm:mt-5 sm:text-2xl">
               <PriceText amountAed={listing.priceAed} kind={listing.kind} />
             </p>
-            <p className="mt-1 text-[0.7rem] tracking-[0.16em] uppercase text-[#8a8178]">Ref {listing.ref}</p>
+            <p className="mt-1 text-[0.7rem] tracking-[0.16em] uppercase text-[var(--ul-muted)]">Ref {listing.ref}</p>
 
-            <dl className="mt-6 grid grid-cols-3 gap-2 rounded-2xl border border-[#e4d9c8] bg-[#fffcf8] px-3 py-4 sm:mt-8 sm:gap-4 sm:px-5 sm:py-6">
+            <dl className="mt-6 grid grid-cols-3 gap-2 rounded-2xl border border-[var(--ul-hair)] bg-[var(--ul-paper)] px-3 py-4 sm:mt-8 sm:gap-4 sm:px-5 sm:py-6">
               <div>
-                <dt className="flex items-center gap-1.5 text-[0.6rem] tracking-[0.16em] uppercase text-[#8a8178] sm:gap-2 sm:text-[0.65rem] sm:tracking-[0.2em]">
+                <dt className="flex items-center gap-1.5 text-[0.6rem] tracking-[0.16em] uppercase text-[var(--ul-muted)] sm:gap-2 sm:text-[0.65rem] sm:tracking-[0.2em]">
                   <BedDouble className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Beds
                 </dt>
                 <dd className="mt-1 text-lg sm:text-xl">{listing.beds}</dd>
               </div>
               <div>
-                <dt className="flex items-center gap-1.5 text-[0.6rem] tracking-[0.16em] uppercase text-[#8a8178] sm:gap-2 sm:text-[0.65rem] sm:tracking-[0.2em]">
+                <dt className="flex items-center gap-1.5 text-[0.6rem] tracking-[0.16em] uppercase text-[var(--ul-muted)] sm:gap-2 sm:text-[0.65rem] sm:tracking-[0.2em]">
                   <Bath className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Baths
                 </dt>
                 <dd className="mt-1 text-lg sm:text-xl">{listing.baths}</dd>
               </div>
               <div>
-                <dt className="flex items-center gap-1.5 text-[0.6rem] tracking-[0.16em] uppercase text-[#8a8178] sm:gap-2 sm:text-[0.65rem] sm:tracking-[0.2em]">
+                <dt className="flex items-center gap-1.5 text-[0.6rem] tracking-[0.16em] uppercase text-[var(--ul-muted)] sm:gap-2 sm:text-[0.65rem] sm:tracking-[0.2em]">
                   <Maximize2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> Area
                 </dt>
-                <dd className="mt-1 text-base sm:text-xl">{listing.sqft.toLocaleString()} <span className="text-sm font-normal text-[#8a8178]">sq.ft</span></dd>
+                <dd className="mt-1 text-base sm:text-xl">{listing.sqft.toLocaleString()} <span className="text-sm font-normal text-[var(--ul-muted)]">sq.ft</span></dd>
               </div>
             </dl>
 
@@ -116,7 +116,7 @@ export default async function PropertyPage({
             </p>
 
             {listing.handover && (
-              <p className="mt-6 text-sm text-[#8a8178]">
+              <p className="mt-6 text-sm text-[var(--ul-muted)]">
                 Handover <span className="text-[#0A1630]">{listing.handover}</span>
                 {listing.developer ? ` · ${listing.developer}` : ""}
               </p>
@@ -125,7 +125,7 @@ export default async function PropertyPage({
             <h2 className="mt-10 text-xl sm:mt-12 sm:text-2xl">Specified</h2>
             <ul className="mt-4 grid gap-2 sm:mt-5 sm:grid-cols-2">
               {listing.amenities.map((a) => (
-                <li key={a} className="rounded-lg border border-[#e4d9c8] bg-[#fffcf8] px-4 py-3 text-sm font-light">
+                <li key={a} className="rounded-lg border border-[var(--ul-hair)] bg-[var(--ul-paper)] px-4 py-3 text-sm font-light">
                   {a}
                 </li>
               ))}
@@ -139,7 +139,7 @@ export default async function PropertyPage({
           </div>
 
           <aside id="enquire" className="scroll-mt-24 lg:col-span-4">
-            <div className="rounded-2xl border border-[#e4d9c8] bg-[#fffcf8] p-5 shadow-[0_12px_40px_rgba(20,17,14,0.06)] sm:p-6 lg:sticky lg:top-24">
+            <div className="border border-[var(--ul-hair)] bg-white p-5 sm:p-6 lg:sticky lg:top-24">
               <p className="ul-kicker">Private enquiry</p>
               <h2 className="mt-3 mb-5 text-xl sm:mb-6 sm:text-2xl">Request this residence</h2>
               <EnquireForm propertyTitle={listing.title} compact />
@@ -148,7 +148,7 @@ export default async function PropertyPage({
         </div>
 
         {similar.length > 0 && (
-          <section className="mt-12 border-t border-[#e4d9c8] pt-10 sm:mt-16 sm:pt-12">
+          <section className="mt-12 border-t border-[var(--ul-hair)] pt-10 sm:mt-16 sm:pt-12">
             <h2 className="mb-6 text-2xl sm:mb-8 sm:text-3xl">Also considered</h2>
             <div className="grid gap-5 md:grid-cols-3">
               {similar.map((item) => (
@@ -165,7 +165,7 @@ export default async function PropertyPage({
         href={chatHref}
         target="_blank"
         rel="noreferrer"
-        className="pointer-events-none fixed bottom-24 right-5 z-40 hidden max-w-[16rem] rounded-2xl bg-white p-3 text-left text-xs leading-relaxed text-[#0A1630] shadow-[0_12px_40px_rgba(20,17,14,0.18)] md:pointer-events-auto md:block"
+        className="pointer-events-none fixed bottom-24 right-5 z-40 hidden max-w-[16rem] border border-[var(--ul-hair)] bg-white p-3 text-left text-xs leading-relaxed text-[var(--ul-primary)] md:pointer-events-auto md:block"
       >
         Interested in this {listing.beds} bed in {listing.community}? Chat with our team. We can arrange a viewing.
       </a>

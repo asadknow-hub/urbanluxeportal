@@ -6,13 +6,14 @@ import { Reveal } from "@/components/web/reveal";
 
 export const metadata: Metadata = {
   title: "The house",
-  description: "UrbanLuxe is a private Dubai brokerage. Fewer introductions. Better ones.",
+  description: "UrbanLuxe is a private Dubai brokerage for serious buyers and sellers across Palm, Downtown, Hills, and Creek.",
 };
 
 export default function AboutPage() {
   return (
     <>
       <PageIntro
+        layout="stack"
         eyebrow="The house"
         title="A private office for a public city."
         lede="UrbanLuxe is a quiet desk for serious buyers and sellers. We buy, sell, let, and allocate with discretion."
@@ -24,14 +25,14 @@ export default function AboutPage() {
         <div className="flex flex-col justify-center px-5 py-12 sm:px-8 sm:py-16 md:px-16">
           <Reveal>
             <h2 className="text-2xl sm:text-3xl md:text-4xl">How we work</h2>
-            <ul className="mt-8 space-y-6 text-base font-light leading-relaxed text-[#8a8178]">
+            <ul className="mt-8 space-y-6 text-base font-light leading-relaxed text-[var(--ul-muted)]">
               <li>
                 <span className="block text-[0.7rem] tracking-[0.2em] uppercase text-[#008040]">01 · Brief</span>
                 We start with a conversation: community, light, number, timing.
               </li>
               <li>
                 <span className="block text-[0.7rem] tracking-[0.2em] uppercase text-[#008040]">02 · Edit</span>
-                Three to five residences. If none fit, we wait. We do not pad the list.
+                Three to five residences. If none fit, we wait until the right one appears.
               </li>
               <li>
                 <span className="block text-[0.7rem] tracking-[0.2em] uppercase text-[#008040]">03 · Close</span>
@@ -41,13 +42,13 @@ export default function AboutPage() {
           </Reveal>
         </div>
       </section>
-      <section className="mx-auto grid max-w-[1440px] gap-px border-y border-[#e4d9c8] bg-[#e4d9c8] md:grid-cols-3">
+      <section className="mx-auto grid max-w-[1440px] gap-px border-y border-[var(--ul-hair)] bg-[var(--ul-hair)] md:grid-cols-3">
         {[
           { k: "Desk", v: "Dubai brokerage" },
           { k: "Focus", v: "Palm · Downtown · Hills · Creek" },
           { k: "Reply", v: "Within a working day" },
         ].map((s) => (
-          <div key={s.k} className="bg-[#f6f3ee] px-8 py-14">
+          <div key={s.k} className="bg-[var(--ul-paper)] px-8 py-14">
             <p className="ul-kicker">{s.k}</p>
             <p className="mt-3 text-2xl">{s.v}</p>
           </div>

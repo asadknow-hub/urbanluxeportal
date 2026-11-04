@@ -21,7 +21,6 @@ export function HeroSection() {
         >
           <source src={HERO_VIDEO} type="video/mp4" />
         </video>
-        {/* Light scrim only — keep type readable without killing the footage */}
         <div className="absolute inset-0 bg-gradient-to-r from-[var(--ul-primary)]/70 via-[var(--ul-primary)]/35 to-[var(--ul-primary)]/15" />
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--ul-primary)]/75 via-transparent to-[var(--ul-primary)]/25" />
       </div>
@@ -33,25 +32,16 @@ export function HeroSection() {
           </p>
 
           <h1
-            className="mt-4 text-[clamp(2.75rem,8vw,6rem)] font-bold uppercase leading-[0.86] tracking-[-0.035em]"
+            className="mt-4 text-[clamp(2.75rem,8vw,6rem)] font-bold uppercase leading-[0.86] tracking-[-0.035em] text-[#F6F3EE]"
             style={{ fontFamily: "var(--font-headline), var(--font-poppins), system-ui, sans-serif" }}
           >
-            <span
-              className="block"
-              style={{
-                color: "transparent",
-                WebkitTextStroke: "3.5px #F6F3EE",
-                paintOrder: "stroke fill",
-              }}
-            >
-              Find your
-            </span>
+            <span className="block">Find your</span>
             <span className="mt-1 block text-[var(--ul-secondary)]">refined life.</span>
           </h1>
 
           <p className="mt-5 max-w-lg text-[0.95rem] leading-relaxed text-[#F6F3EE]/72 sm:text-base">
-            Villas, apartments, and off-plan residences placed with discretion. Fewer introductions,
-            better ones.
+            Villas, apartments, and off-plan residences. A short private shortlist and one advisor
+            through keys.
           </p>
 
           <div className="mt-7 flex flex-wrap gap-3">
@@ -64,12 +54,12 @@ export function HeroSection() {
           </div>
         </div>
 
-        <div className="w-full rounded-2xl border border-[#F6F3EE]/10 bg-[#F6F3EE] p-4 shadow-[0_28px_80px_rgba(0,0,0,0.35)] sm:p-5 lg:justify-self-end">
+        <div className="w-full border border-[#F6F3EE]/15 bg-[#F6F3EE] p-4 sm:p-5 lg:justify-self-end">
           <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--ul-secondary)]">
             Search Dubai
           </p>
           <p className="mt-1 text-sm font-semibold text-[var(--ul-primary)]">
-            Buy, rent, or off-plan, structured to your brief.
+            Buy, rent, or off-plan matched to your brief.
           </p>
           <div className="mt-3">
             <HeroSearch />

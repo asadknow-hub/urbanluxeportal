@@ -43,7 +43,7 @@ export function MortgageFaq() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <div className="divide-y divide-[#e5e7eb] rounded-xl border border-[#e5e7eb] bg-white">
+    <div className="divide-y divide-[var(--ul-hair)] rounded-xl border border-[var(--ul-hair)] bg-white">
       {FAQS.map((item, i) => {
         const isOpen = open === i;
         return (

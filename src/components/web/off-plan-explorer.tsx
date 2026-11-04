@@ -73,7 +73,7 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
         </div>
         <button
           type="button"
-          className="inline-flex h-11 shrink-0 items-center gap-2 rounded-lg border border-[#e4d9c8] bg-white px-3.5 text-sm sm:px-4 lg:hidden"
+          className="inline-flex h-11 shrink-0 items-center gap-2 rounded-lg border border-[var(--ul-hair)] bg-white px-3.5 text-sm sm:px-4 lg:hidden"
           onClick={() => setFiltersOpen(true)}
         >
           <SlidersHorizontal className="h-4 w-4" />
@@ -224,13 +224,13 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
           <div className="mb-5 flex items-end justify-between">
             <div>
               <h2 className="text-xl">Properties for you</h2>
-              <p className="mt-1 text-sm text-[#8a8178]">Matched to budget and payment preferences.</p>
+              <p className="mt-1 text-sm text-[var(--ul-muted)]">Matched to budget and payment preferences.</p>
             </div>
-            <p className="text-sm text-[#8a8178]">{filtered.length} shown</p>
+            <p className="text-sm text-[var(--ul-muted)]">{filtered.length} shown</p>
           </div>
 
           {filtered.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-[#e4d9c8] bg-white px-6 py-16 text-center text-[#8a8178]">
+            <p className="rounded-2xl border border-dashed border-[var(--ul-hair)] bg-white px-6 py-16 text-center text-[var(--ul-muted)]">
               No matches in this range. Widen the sliders, or enquire and we will look beyond the brochure.
             </p>
           ) : (
@@ -265,7 +265,7 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
               { icon: CalendarClock, t: "Flexible payment" },
               { icon: BadgeCheck, t: "Expert guidance" },
             ].map((x) => (
-              <div key={x.t} className="flex items-center gap-2 text-sm text-[#8a8178]">
+              <div key={x.t} className="flex items-center gap-2 text-sm text-[var(--ul-muted)]">
                 <x.icon className="h-4 w-4 text-[#008040]" />
                 {x.t}
               </div>

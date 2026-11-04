@@ -47,7 +47,7 @@ export default async function CommunityPage({
       <section className="mx-auto max-w-[1440px] px-5 py-16 md:px-10">
         <h2 className="mb-8 text-3xl">Residences here</h2>
         {listings.length === 0 ? (
-          <p className="text-[#8a8178]">Nothing in the brochure yet. Enquire and we will look.</p>
+          <p className="text-[var(--ul-muted)]">Nothing in the brochure yet. Enquire and we will look.</p>
         ) : (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {listings.map((listing) => (

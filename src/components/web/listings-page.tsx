@@ -13,9 +13,9 @@ export function ListingsPage({ kind }: { kind: ListingKind }) {
           <Suspense
             fallback={
               <div className="space-y-4">
-                <div className="h-14 animate-pulse rounded-lg bg-[#e5e7eb]" />
-                <div className="h-10 animate-pulse rounded-md bg-[#e5e7eb]" />
-                <div className="h-64 animate-pulse rounded-lg bg-[#e5e7eb]" />
+                <div className="h-14 animate-pulse rounded-lg bg-[var(--ul-hair)]" />
+                <div className="h-10 animate-pulse rounded-md bg-[var(--ul-hair)]" />
+                <div className="h-64 animate-pulse rounded-lg bg-[var(--ul-hair)]" />
               </div>
             }
           >

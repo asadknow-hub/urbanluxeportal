@@ -16,6 +16,7 @@ export default function MortgagesPage() {
     <>
       <PageIntro
         tone="dark"
+        layout="compact"
         eyebrow="Mortgages"
         title="Finance the right home with clarity."
         lede="Indicative calculations, straight answers on Dubai lending, and introductions to advisors who move at the pace of your offer."
@@ -23,10 +24,10 @@ export default function MortgagesPage() {
         secondaryCta={{ href: "/contact", label: "Speak to an advisor", prefetch: true }}
       />
 
-      <section id="calculator" className="border-b border-[#e5e7eb] bg-[#F6F3EE] px-5 py-8 md:px-10 md:py-10">
+      <section id="calculator" className="border-b border-[var(--ul-hair)] bg-[#F6F3EE] px-5 py-8 md:px-10 md:py-10">
         <div className="mx-auto max-w-[960px]">
           <MortgageCalculator />
-          <div className="mt-4 flex flex-col gap-3 rounded-xl border border-[#e5e7eb] bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between md:px-5">
+          <div className="mt-4 flex flex-col gap-3 rounded-xl border border-[var(--ul-hair)] bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between md:px-5">
             <p className="text-sm font-semibold text-[#0A1630]">
               Need help or ready to proceed?
             </p>
@@ -64,7 +65,7 @@ export default function MortgagesPage() {
           <div className="mt-8">
             <MortgageFaq />
           </div>
-          <Reveal className="mt-10 flex flex-col items-start justify-between gap-5 rounded-xl border border-[#e5e7eb] bg-[#F6F3EE] p-6 sm:flex-row sm:items-center md:p-8">
+          <Reveal className="mt-10 flex flex-col items-start justify-between gap-5 rounded-xl border border-[var(--ul-hair)] bg-[#F6F3EE] p-6 sm:flex-row sm:items-center md:p-8">
             <div>
               <p className="text-lg font-semibold text-[#0A1630]">Still have questions?</p>
               <p className="mt-1 text-sm text-[#0A1630]/65">

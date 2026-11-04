@@ -71,7 +71,7 @@ export default async function InsightArticlePage({
         </section>
 
         <div className="relative mx-auto -mt-2 max-w-[960px] px-5 md:px-10">
-          <div className="relative aspect-[16/9] overflow-hidden rounded-xl bg-[#F6F3EE] shadow-[0_8px_32px_rgba(11,29,61,0.12)]">
+          <div className="relative aspect-[16/9] overflow-hidden rounded-xl border border-[var(--ul-hair)] bg-[#F6F3EE]">
             <Image
               src={article.image}
               alt={article.title}
@@ -93,7 +93,7 @@ export default async function InsightArticlePage({
             ))}
           </div>
 
-          <div className="mt-12 flex flex-col gap-3 border-t border-[#e5e7eb] pt-8 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-12 flex flex-col gap-3 border-t border-[var(--ul-hair)] pt-8 sm:flex-row sm:items-center sm:justify-between">
             <Link
               href="/insights"
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0A1630] hover:text-[#008040]"
@@ -113,7 +113,7 @@ export default async function InsightArticlePage({
       </article>
 
       {related.length > 0 && (
-        <section className="border-t border-[#e5e7eb] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-16">
+        <section className="border-t border-[var(--ul-hair)] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-16">
           <div className="mx-auto max-w-[1280px]">
             <Reveal>
               <p className="ul-kicker">Keep reading</p>
@@ -125,7 +125,7 @@ export default async function InsightArticlePage({
                   key={item.slug}
                   href={`/insights/${item.slug}`}
                   prefetch
-                  className="group overflow-hidden rounded-xl border border-[#e5e7eb] bg-white transition-shadow hover:shadow-[0_8px_28px_rgba(11,29,61,0.08)]"
+                  className="group overflow-hidden rounded-xl border border-[var(--ul-hair)] bg-white"
                 >
                   <div className="relative aspect-[16/10] bg-[#F6F3EE]">
                     <Image
@@ -133,7 +133,7 @@ export default async function InsightArticlePage({
                       alt={item.title}
                       fill
                       sizes="(max-width: 768px) 100vw, 33vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="object-cover"
                     />
                   </div>
                   <div className="p-5">

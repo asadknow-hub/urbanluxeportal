@@ -77,7 +77,7 @@ export function ListingResultCard({ listing }: { listing: Listing }) {
   );
 
   return (
-    <article className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_1px_3px_rgba(11,29,61,0.04)] transition-shadow hover:shadow-[0_8px_28px_rgba(11,29,61,0.08)]">
+    <article className="overflow-hidden rounded-xl border border-[var(--ul-hair)] bg-white">
       <div className="grid md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         <Link
           href={`/properties/${listing.slug}`}
@@ -144,7 +144,7 @@ export function ListingResultCard({ listing }: { listing: Listing }) {
             </div>
           </Link>
 
-          <div className="mt-6 flex flex-col gap-4 border-t border-[#eee] pt-4 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:pt-5">
+          <div className="mt-6 flex flex-col gap-4 border-t border-[var(--ul-hair)] pt-4 sm:mt-8 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:pt-5">
             <div className="flex items-center gap-3">
               <div className="relative h-11 w-11 overflow-hidden rounded-full bg-[#F6F3EE]">
                 <Image src={agent.photo} alt="" fill sizes="44px" className="object-cover" />

@@ -139,7 +139,7 @@ export function MortgageCalculator() {
     "h-9 w-full rounded-md border border-[#d1d5db] bg-white px-2.5 text-sm font-medium text-[#0A1630] outline-none transition-colors hover:border-[#0A1630]/35 focus:border-[#0A1630]";
 
   return (
-    <div className="rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-[0_4px_20px_rgba(11,29,61,0.05)] md:p-5">
+    <div className="rounded-xl border border-[var(--ul-hair)] bg-white p-4 md:p-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <h2 className="text-base font-bold tracking-tight text-[#0A1630] md:text-lg">
           Calculate your mortgage repayments

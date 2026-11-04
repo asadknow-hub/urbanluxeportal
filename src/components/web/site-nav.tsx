@@ -46,13 +46,13 @@ export function SiteNav() {
 
   return (
     <>
-      {/* Fixed overlay — sits ON the hero at rest (not a white strip above it) */}
+      {/* Fixed overlay, sits ON the hero at rest (not a white strip above it) */}
       <header
         className={cn(
           "fixed inset-x-0 top-0 z-[100] pt-[var(--ul-safe-top,0px)] transition-[background-color,box-shadow,backdrop-filter] duration-300",
           overDarkHero
             ? "bg-transparent"
-            : "bg-[var(--ul-paper)]/95 shadow-[0_8px_28px_rgba(10,22,48,0.08)] backdrop-blur-md"
+            : "border-b border-[var(--ul-hair)] bg-[var(--ul-paper)]/95"
         )}
       >
         <div

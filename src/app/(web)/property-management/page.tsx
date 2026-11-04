@@ -44,9 +44,10 @@ export default function PropertyManagementPage() {
     <>
       <PageIntro
         tone="light"
+        layout="stack"
         eyebrow="Services"
         title="Property management that treats the house as a house."
-        lede="For landlords who want qualified occupants, orderly maintenance, and a desk that answers from a dedicated desk, not a portal ticket queue."
+        lede="For landlords who want qualified occupants, orderly maintenance, and a dedicated desk that picks up the phone."
         primaryCta={{ href: "#enquire", label: "Talk to management" }}
         secondaryCta={{ href: "/sell", label: "Also listing? Instruct us", prefetch: true }}
       />
@@ -71,14 +72,14 @@ export default function PropertyManagementPage() {
             </Link>
           </Reveal>
           <Reveal delay={60}>
-            <div className="rounded-xl border border-[#e5e7eb] bg-[#F6F3EE] p-6 md:p-8">
+            <div className="rounded-xl border border-[var(--ul-hair)] bg-[#F6F3EE] p-6 md:p-8">
               <EnquireForm compact />
             </div>
           </Reveal>
         </div>
       </section>
 
-      <section className="border-y border-[#e5e7eb] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-20">
+      <section className="border-y border-[var(--ul-hair)] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-20">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <p className="ul-kicker">What we cover</p>
@@ -90,7 +91,7 @@ export default function PropertyManagementPage() {
               excuses, clearer communication.
             </p>
           </Reveal>
-          <ul className="mt-10 divide-y divide-[#e5e7eb] rounded-xl border border-[#e5e7eb] bg-white">
+          <ul className="mt-10 divide-y divide-[var(--ul-hair)] rounded-xl border border-[var(--ul-hair)] bg-white">
             {SERVICES.map((item, i) => (
               <Reveal key={item.title} delay={i * 40}>
                 <li className="px-6 py-5 md:px-8 md:py-6">

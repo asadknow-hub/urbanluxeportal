@@ -84,6 +84,7 @@ export default function InsightsPage() {
     <>
       <PageIntro
         tone="light"
+        layout="stack"
         eyebrow="Insights"
         title="Notes from the desk: market, communities, and how to buy well."
         lede="Short briefs for clients who want signal over noise: launches worth a private look, pricing that moved, and guidance before you write an offer."
@@ -123,7 +124,7 @@ export default function InsightsPage() {
             <Link
               href={`/insights/${featured.slug}`}
               prefetch
-              className="group grid overflow-hidden rounded-2xl border border-[#e5e7eb] bg-[#F6F3EE] shadow-[0_4px_24px_rgba(11,29,61,0.05)] transition-shadow hover:shadow-[0_10px_36px_rgba(11,29,61,0.1)] lg:grid-cols-2"
+              className="group grid overflow-hidden rounded-2xl border border-[var(--ul-hair)] bg-[#F6F3EE] lg:grid-cols-2"
             >
               <div className="relative min-h-[240px] lg:min-h-[380px]">
                 <Image
@@ -131,7 +132,7 @@ export default function InsightsPage() {
                   alt={featured.title}
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                  className="object-cover"
                   priority
                 />
               </div>
@@ -156,7 +157,7 @@ export default function InsightsPage() {
         </div>
       </section>
 
-      <section id="snapshot" className="border-y border-[#e5e7eb] bg-[#F6F3EE] px-5 py-10 md:px-10 md:py-12">
+      <section id="snapshot" className="border-y border-[var(--ul-hair)] bg-[#F6F3EE] px-5 py-10 md:px-10 md:py-12">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <div className="mb-6 flex items-center gap-2">
@@ -168,7 +169,7 @@ export default function InsightsPage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {SNAPSHOT.map((item, i) => (
               <Reveal key={item.label} delay={i * 40}>
-                <div className="rounded-xl border border-[#e5e7eb] bg-white px-5 py-5">
+                <div className="rounded-xl border border-[var(--ul-hair)] bg-white px-5 py-5">
                   <p className="text-xs font-medium uppercase tracking-[0.12em] text-[#0A1630]/45">
                     {item.label}
                   </p>
@@ -198,7 +199,7 @@ export default function InsightsPage() {
                 <Link
                   href={`/insights/${item.slug}`}
                   prefetch
-                  className="group flex h-full flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-[0_2px_12px_rgba(11,29,61,0.04)] transition-shadow hover:shadow-[0_8px_28px_rgba(11,29,61,0.1)]"
+                  className="group flex h-full flex-col overflow-hidden rounded-xl border border-[var(--ul-hair)] bg-white"
                 >
                   <div className="relative aspect-[16/10] overflow-hidden bg-[#F6F3EE]">
                     <Image
@@ -206,7 +207,7 @@ export default function InsightsPage() {
                       alt={item.title}
                       fill
                       sizes="(max-width: 768px) 100vw, 33vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="object-cover"
                     />
                   </div>
                   <div className={cn("flex flex-1 flex-col px-5 py-5", item.panel)}>
@@ -236,7 +237,7 @@ export default function InsightsPage() {
         </div>
       </section>
 
-      <section id="guides" className="border-t border-[#e5e7eb] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-20">
+      <section id="guides" className="border-t border-[var(--ul-hair)] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-20">
         <div className="mx-auto grid max-w-[1280px] gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           <Reveal>
             <p className="ul-kicker">Guides</p>
@@ -244,7 +245,7 @@ export default function InsightsPage() {
               Practical papers for serious clients
             </h2>
             <p className="ul-section-lede mt-3">
-              Short frameworks we use on viewings and offer calls, not marketing decks.
+              Short frameworks we use on viewings and offer calls, the same notes we share with clients.
             </p>
             <Link
               href="/contact"
@@ -261,7 +262,7 @@ export default function InsightsPage() {
                 <Link
                   href={guide.href}
                   prefetch
-                  className="group flex items-start justify-between gap-4 rounded-xl border border-[#e5e7eb] bg-white px-5 py-5 transition-colors hover:border-[#0A1630]/25"
+                  className="group flex items-start justify-between gap-4 rounded-xl border border-[var(--ul-hair)] bg-white px-5 py-5 transition-colors hover:border-[#0A1630]/25"
                 >
                   <div>
                     <p className="font-semibold text-[#0A1630] group-hover:text-[#008040]">

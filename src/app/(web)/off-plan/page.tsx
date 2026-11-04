@@ -13,7 +13,7 @@ export default function OffPlanPage() {
 
   return (
     <div className="min-h-screen bg-[#f7f5f0] pb-16 pt-24">
-      <Suspense fallback={<p className="px-8 text-[#8a8178]">Loading off-plan…</p>}>
+      <Suspense fallback={<p className="px-8 text-[var(--ul-muted)]">Loading off-plan…</p>}>
         <OffPlanExplorer listings={listings} />
       </Suspense>
     </div>

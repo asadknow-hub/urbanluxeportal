@@ -1,15 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  EyeOff,
-  FileCheck2,
-  Home,
-  KeyRound,
-  Scale,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowRight, Home, KeyRound } from "lucide-react";
 import { IMAGES } from "@/lib/web/listings";
 import { ListPropertyForm } from "@/components/web/list-property-form";
 import { PageIntro } from "@/components/web/page-intro";
@@ -23,22 +15,18 @@ export const metadata: Metadata = {
 
 const REASONS = [
   {
-    icon: EyeOff,
     title: "Private placement",
     body: "Many of our sales never appear on public portals. We can list on portals or place through the private network.",
   },
   {
-    icon: Scale,
     title: "Honest valuation",
     body: "Light, plot, and what sold last season, discussed on site and backed by nearby trades.",
   },
   {
-    icon: ShieldCheck,
     title: "Qualified buyers & tenants",
     body: "We brief before we book. Viewings are intentional; handovers are photographed.",
   },
   {
-    icon: FileCheck2,
     title: "Paperwork that closes",
     body: "From offer to SPA and keys, with coordination that keeps you informed at each step.",
   },
@@ -53,7 +41,7 @@ const STEPS = [
   {
     n: "02",
     title: "Value",
-    body: "We walk the residence and compare it to what actually traded nearby, not portal asking prices.",
+    body: "We walk the residence and compare it to verified trades nearby, with portal asking prices kept in context.",
   },
   {
     n: "03",
@@ -89,6 +77,7 @@ export default function SellPage() {
     <>
       <PageIntro
         tone="light"
+        layout="stack"
         eyebrow="List your property"
         title="Sell without a board on the street."
         lede="We can list, or we can place. Tell us the address. A specialist will advise on sale, letting, or both."
@@ -120,9 +109,9 @@ export default function SellPage() {
             </h2>
             <p className="ul-section-lede mt-3">
               Share the address and your intent. We will reply with next steps for valuation and
-              strategy tailored to the residence, not a generic brochure pack.
+              strategy shaped to the residence, its light, and the buyers who will pay for it.
             </p>
-            <div className="mt-8 rounded-xl border border-[#e5e7eb] bg-white p-6 shadow-[0_4px_24px_rgba(11,29,61,0.05)] md:p-8">
+            <div className="mt-8 rounded-xl border border-[var(--ul-hair)] bg-white p-6 md:p-8">
               <ListPropertyForm />
             </div>
             <Link
@@ -136,7 +125,7 @@ export default function SellPage() {
         </div>
       </section>
 
-      <section className="border-y border-[#e5e7eb] bg-[#F6F3EE] px-4 py-12 sm:px-5 sm:py-14 md:px-10 md:py-20">
+      <section className="border-y border-[var(--ul-hair)] bg-[#F6F3EE] px-4 py-12 sm:px-5 sm:py-14 md:px-10 md:py-20">
         <div className="mx-auto max-w-[1280px]">
           <Reveal>
             <p className="ul-kicker">Why instruct Urban Luxe</p>
@@ -144,21 +133,23 @@ export default function SellPage() {
               Placement with the care of a private office
             </h2>
             <p className="ul-section-lede mt-3 max-w-xl">
-              If the residence is not ready for the market, we will say so. If it is, we will not
-              waste your time with unqualified viewings.
+              We will tell you plainly if the residence needs work before market. When it is ready,
+              viewings stay briefed and intentional.
             </p>
           </Reveal>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <ol className="mt-8 space-y-6 border-l-2 border-[#008040]/30 pl-5">
             {REASONS.map((item, i) => (
               <Reveal key={item.title} delay={i * 40}>
-                <div className="h-full rounded-xl border border-[#e5e7eb] bg-white p-4">
-                  <item.icon className="h-5 w-5 text-[#008040]" strokeWidth={2} />
-                  <p className="mt-3 text-sm font-semibold text-[#0A1630]">{item.title}</p>
-                  <p className="mt-1.5 text-xs leading-relaxed text-[#0A1630]/65">{item.body}</p>
-                </div>
+                <li>
+                  <p className="text-xs font-bold tracking-[0.16em] text-[#008040]">
+                    {String(i + 1).padStart(2, "0")}
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-[#0A1630]">{item.title}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-[#0A1630]/65">{item.body}</p>
+                </li>
               </Reveal>
             ))}
-          </div>
+          </ol>
         </div>
       </section>
 
@@ -171,7 +162,7 @@ export default function SellPage() {
           <div className="mt-8 grid gap-4 md:grid-cols-2">
             {PATHS.map((path, i) => (
               <Reveal key={path.title} delay={i * 50}>
-                <div className="flex h-full flex-col rounded-xl border border-[#e5e7eb] bg-white p-6 md:p-8">
+                <div className="flex h-full flex-col rounded-xl border border-[var(--ul-hair)] bg-white p-6 md:p-8">
                   <path.icon className="h-6 w-6 text-[#008040]" strokeWidth={2} />
                   <h3 className="mt-4 text-xl font-semibold text-[#0A1630]">{path.title}</h3>
                   <p className="mt-2 flex-1 text-sm leading-relaxed text-[#0A1630]/70">{path.body}</p>
@@ -194,13 +185,13 @@ export default function SellPage() {
             <p className="ul-kicker">Process</p>
             <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">How it works</h2>
             <p className="ul-section-lede mt-3 max-w-xl">
-              Four clear steps from first call to keys, without the noise of a high-street board.
+              Four clear steps from first call to keys, with one specialist on the thread throughout.
             </p>
           </Reveal>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {STEPS.map((step, i) => (
               <Reveal key={step.n} delay={i * 40}>
-                <div className="h-full rounded-xl border border-[#e5e7eb] bg-[#F6F3EE] p-5">
+                <div className="h-full rounded-xl border border-[var(--ul-hair)] bg-[#F6F3EE] p-5">
                   <p className="text-xs font-bold tracking-[0.16em] text-[#008040]">{step.n}</p>
                   <h3 className="mt-3 text-lg font-semibold text-[#0A1630]">{step.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-[#0A1630]/65">{step.body}</p>

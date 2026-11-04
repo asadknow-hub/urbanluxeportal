@@ -44,7 +44,7 @@ export function EnquireForm({
   }
 
   const field =
-    "h-12 w-full rounded border border-[#e5e7eb] bg-white px-4 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#008040]";
+    "h-12 w-full rounded border border-[var(--ul-hair)] bg-white px-4 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#008040]";
 
   return (
     <form onSubmit={onSubmit} className="space-y-3">
@@ -78,7 +78,7 @@ export function EnquireForm({
         name="message"
         rows={compact ? 3 : 4}
         placeholder="Tell us what you are looking for"
-        className="w-full rounded border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#008040]"
+        className="w-full rounded border border-[var(--ul-hair)] bg-white px-4 py-3 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#008040]"
         defaultValue={propertyTitle ? `Please share details for ${propertyTitle}.` : ""}
       />
       <button

@@ -5,7 +5,7 @@ export default function WebNotFound() {
     <section className="flex min-h-[70vh] flex-col items-center justify-center px-5 pt-28 text-center">
       <p className="ul-kicker">404</p>
       <h1 className="mt-4 text-4xl md:text-6xl">This address is not listed.</h1>
-      <p className="mt-4 max-w-md font-light text-[#8a8178]">
+      <p className="mt-4 max-w-md font-light text-[var(--ul-muted)]">
         The page has moved, or it was never on the brochure.
       </p>
       <Link

@@ -39,7 +39,7 @@ export function PropertyGallery({ listing }: { listing: Listing }) {
             )}
           </button>
           {listing.exclusive && (
-            <span className="pointer-events-none absolute right-4 top-4 rounded-full bg-[#1b2430] px-3 py-1.5 text-[0.62rem] font-semibold tracking-[0.14em] uppercase text-[#008040]">
+            <span className="pointer-events-none absolute right-4 top-4 rounded-full bg-[var(--ul-primary)] px-3 py-1.5 text-[0.62rem] font-semibold tracking-[0.14em] uppercase text-[#008040]">
               Exclusive listing
             </span>
           )}

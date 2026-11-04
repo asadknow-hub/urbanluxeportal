@@ -48,7 +48,7 @@ export function ListPropertyForm({ defaultIntent = "sell" }: { defaultIntent?: s
   }
 
   const field =
-    "h-12 w-full rounded-md border border-[#e5e7eb] bg-white px-4 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#008040]";
+    "h-12 w-full rounded-md border border-[var(--ul-hair)] bg-white px-4 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#008040]";
 
   return (
     <form onSubmit={onSubmit} className="space-y-3">
@@ -106,7 +106,7 @@ export function ListPropertyForm({ defaultIntent = "sell" }: { defaultIntent?: s
         name="message"
         rows={4}
         placeholder="Timing, asking expectations, or anything we should know"
-        className="w-full rounded-md border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#008040]"
+        className="w-full rounded-md border border-[var(--ul-hair)] bg-white px-4 py-3 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#008040]"
       />
       <button
         type="submit"

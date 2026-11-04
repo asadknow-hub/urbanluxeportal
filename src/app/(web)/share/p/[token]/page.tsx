@@ -51,13 +51,10 @@ export default async function SharedPropertyPage({
   return (
     <article className="min-h-screen bg-[#f6f3ee] pb-16 pt-6">
       <div className="mx-auto max-w-[920px] px-4 sm:px-6">
-        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#8a8178]">
+        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--ul-muted)]">
           Shared by {brand.name}
         </p>
-        <h1
-          className="mt-2 font-heading text-[2rem] leading-tight text-[#0A1630] sm:text-[2.4rem]"
-          style={{ fontFamily: "var(--font-display), serif" }}
-        >
+        <h1 className="ul-section-heading mt-2 text-[2rem] leading-tight text-[#0A1630] sm:text-[2.4rem]">
           {property.label}
         </h1>
         <p className="mt-2 text-sm text-[#5c534c]">
@@ -85,16 +82,14 @@ export default async function SharedPropertyPage({
             ))}
           </div>
         ) : (
-          <div className="mt-6 rounded-[14px] border border-dashed border-[#ddd2c2] bg-white/60 px-6 py-16 text-center text-sm text-[#8a8178]">
+          <div className="mt-6 rounded-[14px] border border-dashed border-[var(--ul-hair)] bg-white/60 px-6 py-16 text-center text-sm text-[var(--ul-muted)]">
             Photos coming soon
           </div>
         )}
 
         <div className="mt-8 grid gap-6 md:grid-cols-[1.2fr_0.8fr]">
           <section className="rounded-[14px] border border-[#e8dfd2] bg-white p-5">
-            <h2 className="font-heading text-lg text-[#0A1630]" style={{ fontFamily: "var(--font-display), serif" }}>
-              Details
-            </h2>
+            <h2 className="text-lg font-semibold text-[#0A1630]">Details</h2>
             <dl className="mt-3 space-y-2 text-sm">
               <Row label="Community" value={property.community} />
               <Row label="Building" value={property.building_name} />
@@ -124,9 +119,7 @@ export default async function SharedPropertyPage({
             <div className="rounded-[14px] border border-[#e8dfd2] bg-white p-5">
               <p className="text-sm text-[#5c534c]">Speak with {brand.name}</p>
               {price ? (
-                <p className="mt-2 font-heading text-2xl text-[#0A1630]" style={{ fontFamily: "var(--font-display), serif" }}>
-                  {price}
-                </p>
+                <p className="mt-2 text-2xl font-bold tracking-tight text-[#0A1630]">{price}</p>
               ) : null}
               <a
                 href={chatHref}
@@ -144,15 +137,13 @@ export default async function SharedPropertyPage({
               </a>
             </div>
             <div className="rounded-[14px] border border-[#e8dfd2] bg-white p-5">
-              <h2 className="mb-3 font-heading text-lg" style={{ fontFamily: "var(--font-display), serif" }}>
-                Enquire
-              </h2>
+              <h2 className="mb-3 text-lg font-semibold text-[#0A1630]">Enquire</h2>
               <EnquireForm propertyTitle={property.label} />
             </div>
           </aside>
         </div>
 
-        <p className="mt-8 text-center text-xs text-[#8a8178]">
+        <p className="mt-8 text-center text-xs text-[var(--ul-muted)]">
           <Link href="/" className="underline hover:text-[#0A1630]">
             {brand.name}
           </Link>
@@ -166,7 +157,7 @@ export default async function SharedPropertyPage({
 function Row({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div className="flex justify-between gap-4 border-b border-[#f0e8dc] py-1.5 last:border-0">
-      <dt className="text-[#8a8178]">{label}</dt>
+      <dt className="text-[var(--ul-muted)]">{label}</dt>
       <dd className="text-right font-medium capitalize text-[#0A1630]">
         {value?.toString().trim() ? value : "—"}
       </dd>

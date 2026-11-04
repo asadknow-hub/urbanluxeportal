@@ -37,7 +37,7 @@ export default function ValuationsPage() {
     <>
       <PageIntro
         tone="dark"
-        className="py-10 sm:py-12 md:py-14"
+        layout="compact"
         eyebrow="Services"
         title="A valuation built from the residence and the market."
         lede="We look at what sold last season, how your residence actually lives, and whether the market is ready for it. If timing is wrong, we will say so plainly."
@@ -71,14 +71,14 @@ export default function ValuationsPage() {
             </ol>
           </Reveal>
           <Reveal delay={60}>
-            <div className="rounded-xl border border-[#e5e7eb] bg-[#F6F3EE] p-6 md:p-8">
+            <div className="rounded-xl border border-[var(--ul-hair)] bg-[#F6F3EE] p-6 md:p-8">
               <ListPropertyForm defaultIntent="valuation" />
             </div>
           </Reveal>
         </div>
       </section>
 
-      <section className="border-y border-[#e5e7eb] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-16">
+      <section className="border-y border-[var(--ul-hair)] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-16">
         <div className="mx-auto grid max-w-[1280px] items-center gap-10 md:grid-cols-2 md:gap-16">
           <Reveal>
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-white">

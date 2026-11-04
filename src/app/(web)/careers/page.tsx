@@ -20,7 +20,7 @@ const VALUES = [
   },
   {
     title: "Hyper-local desks",
-    body: "Advisors own communities: Palm, Downtown, Hills, Marina. Briefs stay local, not city-wide lists.",
+    body: "Advisors own communities: Palm, Downtown, Hills, Marina. Briefs stay on the streets you know.",
   },
   {
     title: "A real house",
@@ -42,7 +42,7 @@ const OPEN_ROLES = [
   {
     title: "Leasing Advisor",
     type: "Full-time · Dubai",
-    blurb: "Annual lets in better buildings. Relationship-led, not portal spam.",
+    blurb: "Annual lets in better buildings, with tenants briefed before the viewing.",
     tags: ["Leasing"],
   },
   {
@@ -63,7 +63,7 @@ const PERKS = [
   "Competitive commission & base structures",
   "Training on communities, SPA process, and client care",
   "Modern DIFC-adjacent office culture",
-  "Clear progression and stable desks, not a revolving cold-call floor",
+  "Clear progression and stable desks on one brokerage team",
 ] as const;
 
 export default function CareersPage() {
@@ -71,9 +71,10 @@ export default function CareersPage() {
     <>
       <PageIntro
         tone="light"
+        layout="stack"
         eyebrow="Careers"
-        title="See what you're missing out on."
-        lede="We hire advisors, coordinators, and specialists who care about the brief as much as the close. Dubai awaits. Take the leap."
+        title="Build a career on a serious desk."
+        lede="We hire advisors, coordinators, and specialists who care about the brief as much as the close. If that sounds like you, tell us which role fits."
         primaryCta={{ href: "#roles", label: "View open roles" }}
         secondaryCta={{ href: "#apply", label: "Apply now" }}
       />
@@ -103,7 +104,7 @@ export default function CareersPage() {
               {OPEN_ROLES.map((role) => (
                 <div
                   key={role.title}
-                  className="flex flex-col gap-3 rounded-xl border border-[#e5e7eb] bg-[#F6F3EE] p-5 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-3 rounded-xl border border-[var(--ul-hair)] bg-[#F6F3EE] p-5 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -155,7 +156,7 @@ export default function CareersPage() {
             </h2>
             <p className="mt-5 max-w-md text-base leading-relaxed text-white/85">
               A private brokerage with public-city energy. You will work with serious clients,
-              serious stock, and a team that does not pad lists to look busy.
+              serious stock, and a team that keeps the inventory short on purpose.
             </p>
             <ul className="mt-6 space-y-2.5">
               {PERKS.map((perk) => (
@@ -169,7 +170,7 @@ export default function CareersPage() {
         </div>
       </section>
 
-      <section id="apply" className="border-t border-[#e5e7eb] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-20">
+      <section id="apply" className="border-t border-[var(--ul-hair)] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-20">
         <div className="mx-auto grid max-w-[1280px] gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           <Reveal>
             <p className="ul-kicker">Apply</p>
@@ -181,12 +182,12 @@ export default function CareersPage() {
               No buy/rent dropdowns required.
             </p>
             <p className="mt-6 text-sm text-[#0A1630]/65">
-              Hiring is handled by people, not a queue bot. Expect a reply within a few working
-              days if there is a fit.
+              A coordinator on the desk reads every application. Expect a reply within a few
+              working days when there is a fit.
             </p>
           </Reveal>
           <Reveal delay={60}>
-            <div className="rounded-xl border border-[#e5e7eb] bg-[#F6F3EE] p-6 md:p-8">
+            <div className="rounded-xl border border-[var(--ul-hair)] bg-[#F6F3EE] p-6 md:p-8">
               <CareersApplicationForm />
             </div>
           </Reveal>

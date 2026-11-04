@@ -15,7 +15,7 @@ export function PropertyMobileBar({
   const wa = useWaLink(`Interested in ${title} in ${community}.`);
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e4d9c8] bg-white/95 px-3 pb-[calc(0.65rem+var(--ul-safe-bottom,0px))] pt-2.5 backdrop-blur-md lg:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--ul-hair)] bg-[var(--ul-paper)]/95 px-3 pb-[calc(0.65rem+var(--ul-safe-bottom,0px))] pt-2.5 lg:hidden">
       <div className="mx-auto grid max-w-[1200px] grid-cols-3 gap-2">
         <a
           href={`tel:${brand.phoneTel}`}

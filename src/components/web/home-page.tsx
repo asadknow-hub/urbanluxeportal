@@ -108,18 +108,18 @@ export function HomePage() {
       <HeroSection />
 
       {/* LIGHT */}
-      <section className="ul-band-light py-10 md:py-14 lg:py-16">
+      <section className="ul-band-light py-11 md:py-[3.25rem] lg:py-[4.25rem]">
         <div className="ul-shell-wide">
           <Reveal>
             <div className="grid gap-8 md:grid-cols-[minmax(0,1.35fr)_auto] md:items-center md:gap-12">
               <div className="min-w-0 text-left">
                 <p className="ul-callout-kicker">Zero hidden fees</p>
                 <h2 className="ul-callout-title mt-3 text-[clamp(1.85rem,4.2vw,3.35rem)]">
-                  Your home journey starts and ends here, free.
+                  Buy, let, or sell with one desk on the thread.
                 </h2>
                 <p className="mt-4 max-w-xl text-[0.95rem] leading-relaxed text-[#333333] sm:text-base">
-                  From first viewing to final handover, UrbanLuxe guides every step with dedicated
-                  specialists and transparent advice.
+                  Viewings, offers, and handover run through the same specialists, with fees stated
+                  upfront before you instruct us.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3 md:justify-end">
@@ -302,16 +302,17 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* LIGHT — then footer (dark) */}
-      <section className="ul-band-light py-10 md:py-14 lg:py-16">
+      {/* LIGHT, then footer (dark) */}
+      <section className="ul-band-light py-9 md:py-12 lg:py-[3.75rem]">
         <Reveal className="ul-shell-wide flex flex-col items-start justify-between gap-8 md:flex-row md:items-center">
           <div>
             <p className="ul-kicker">Stay informed</p>
             <h2 className="ul-section-heading mt-3 text-2xl md:text-3xl">
-              Keep up with what&apos;s happening
+              Desk notes on pricing, launches, and communities
             </h2>
             <p className="ul-section-lede mt-3 max-w-md">
-              Market updates, new launches, and expert insights straight to your inbox.
+              Short briefs when a market moves or a launch is worth a private look. Ask us to add
+              you to the list.
             </p>
           </div>
           <div className="flex flex-wrap gap-3 md:justify-end">

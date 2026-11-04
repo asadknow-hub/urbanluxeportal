@@ -241,7 +241,7 @@ export function ListingsExplorer({
 
   return (
     <div>
-      <div className="rounded-lg border border-[#e5e7eb] bg-white p-3 shadow-[0_1px_2px_rgba(11,29,61,0.04)] md:p-3.5">
+      <div className="rounded-lg border border-[var(--ul-hair)] bg-white p-3 shadow-[0_1px_2px_rgba(11,29,61,0.04)] md:p-3.5">
         <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center">
           <FilterSelect
             aria-label="Transaction type"
@@ -300,7 +300,7 @@ export function ListingsExplorer({
         </div>
 
         {moreOpen && (
-          <div className="mt-3 hidden gap-2.5 border-t border-[#eee] pt-3 sm:grid-cols-2 lg:grid lg:grid-cols-3">
+          <div className="mt-3 hidden gap-2.5 border-t border-[var(--ul-hair)] pt-3 sm:grid-cols-2 lg:grid lg:grid-cols-3">
             <FilterSelect
               aria-label="Community"
               value={community}
@@ -375,7 +375,7 @@ export function ListingsExplorer({
         </div>
       )}
 
-      <div className="mt-5 flex flex-col gap-4 border-b border-[#e5e7eb] pb-4 sm:mt-6 sm:pb-5 lg:flex-row lg:items-center lg:justify-between lg:pb-6">
+      <div className="mt-5 flex flex-col gap-4 border-b border-[var(--ul-hair)] pb-4 sm:mt-6 sm:pb-5 lg:flex-row lg:items-center lg:justify-between lg:pb-6">
         <p className="text-sm text-[#0A1630]/70 md:text-[0.9375rem]">
           {title}{" "}
           <span className="font-bold text-[#0A1630]">| {filtered.length} results</span>

@@ -14,6 +14,7 @@ export default async function ContactPage() {
   return (
     <>
       <PageIntro
+        layout="stack"
         eyebrow="Contact"
         title="Write, call, or walk in."
         lede="Every enquiry goes to a specialist on the desk. If you already have a reference, put it in the message."
@@ -53,7 +54,7 @@ export default async function ContactPage() {
             </div>
           </dl>
         </div>
-        <div className="rounded-xl border border-[#e5e7eb] bg-[#F6F3EE] p-6 md:p-10">
+        <div className="rounded-xl border border-[var(--ul-hair)] bg-[#F6F3EE] p-6 md:p-10">
           <h2 className="mb-6 text-2xl font-semibold text-[#0A1630]">Enquiry</h2>
           <EnquireForm />
         </div>
