@@ -1,125 +1,82 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Mouse } from "lucide-react";
 import { HeroSearch } from "@/components/web/hero-search";
 import { cn } from "@/lib/utils";
 
-/** Lean Unsplash URLs — smaller than brochure assets so the first paint is fast. */
-const heroSrc = (id: string) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1400&q=65&fm=webp`;
-
+/** Local webp slides — no remote Unsplash hop on first paint. */
 const HERO_SLIDES = [
-  { image: heroSrc("photo-1616594039964-aac4c3eac7f4"), location: "Palm Jumeirah, Dubai" },
-  { image: heroSrc("photo-1613490493576-7fde63acd811"), location: "Emirates Hills, Dubai" },
-  { image: heroSrc("photo-1600607687644-c7171b42498f"), location: "Downtown Dubai" },
-  { image: heroSrc("photo-1486406146926-c627a92ad1ab"), location: "Dubai Marina" },
-  { image: heroSrc("photo-1600210492493-0946911123ea"), location: "Dubai Creek Harbour" },
+  "/hero/villa.webp",
+  "/hero/living.webp",
+  "/hero/penthouse.webp",
+  "/hero/marina.webp",
+  "/hero/terrace.webp",
 ] as const;
 
-const INTERVAL_MS = 6500;
+const INTERVAL_MS = 4500;
 
 export function HeroSection() {
   const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [ready, setReady] = useState(() => new Set([0]));
 
   const go = useCallback((dir: -1 | 1) => {
-    setIndex((i) => {
-      const next = (i + dir + HERO_SLIDES.length) % HERO_SLIDES.length;
-      setReady((prev) => {
-        if (prev.has(next)) return prev;
-        const copy = new Set(prev);
-        copy.add(next);
-        return copy;
-      });
-      return next;
-    });
+    setIndex((i) => (i + dir + HERO_SLIDES.length) % HERO_SLIDES.length);
   }, []);
 
   useEffect(() => {
-    if (paused) return;
     const id = window.setInterval(() => go(1), INTERVAL_MS);
     return () => window.clearInterval(id);
-  }, [go, paused, index]);
-
-  // Warm the next slide while the current one is showing.
-  useEffect(() => {
-    const next = (index + 1) % HERO_SLIDES.length;
-    setReady((prev) => {
-      if (prev.has(next)) return prev;
-      const copy = new Set(prev);
-      copy.add(next);
-      return copy;
-    });
-  }, [index]);
-
-  const slide = HERO_SLIDES[index]!;
-  const mounted = useMemo(() => [...ready].sort((a, b) => a - b), [ready]);
+  }, [go]);
 
   return (
-    <section
-      className="relative flex h-[100svh] min-h-[36rem] flex-col overflow-hidden bg-[var(--ul-primary)]"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
+    <section className="relative flex h-[100svh] min-h-[36rem] flex-col overflow-hidden bg-[var(--ul-primary)]">
       <div className="absolute inset-0">
-        {mounted.map((i) => {
-          const item = HERO_SLIDES[i]!;
-          return (
-            <div
-              key={item.image}
+        {HERO_SLIDES.map((src, i) => (
+          <div
+            key={src}
+            className={cn(
+              "absolute inset-0 transition-opacity duration-700 ease-out",
+              i === index ? "opacity-100" : "opacity-0"
+            )}
+            aria-hidden={i !== index}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- local static webp, skip optimizer lag */}
+            <img
+              src={src}
+              alt=""
+              decoding={i === 0 ? "sync" : "async"}
+              fetchPriority={i === 0 ? "high" : "low"}
               className={cn(
-                "absolute inset-0 transition-opacity duration-700 ease-out",
-                i === index ? "opacity-100" : "opacity-0"
+                "absolute inset-0 h-full w-full object-cover object-center transition-transform duration-[4500ms] ease-out will-change-transform",
+                i === index ? "scale-105" : "scale-100"
               )}
-              aria-hidden={i !== index}
-            >
-              <Image
-                src={item.image}
-                alt=""
-                fill
-                priority={i === 0}
-                loading={i === 0 ? "eager" : "lazy"}
-                quality={65}
-                sizes="(max-width: 768px) 100vw, 1400px"
-                className={cn(
-                  "object-cover object-center transition-transform duration-[6500ms] ease-out",
-                  i === index ? "scale-105" : "scale-100"
-                )}
-              />
-            </div>
-          );
-        })}
+            />
+          </div>
+        ))}
         <div className="absolute inset-0 bg-[var(--ul-primary)]/12" />
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--ul-primary)]/40 via-transparent to-[var(--ul-primary)]/18" />
       </div>
 
+      {/* Hidden preload of remaining slides so the carousel never stalls. */}
+      <div className="hidden" aria-hidden>
+        {HERO_SLIDES.slice(1).map((src) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={src} src={src} alt="" />
+        ))}
+      </div>
+
       <div className="ul-shell-wide relative flex min-h-0 flex-1 flex-col pt-[calc(5.5rem+var(--ul-safe-top,0px))] pb-8 sm:pb-10">
-        <div className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center sm:max-w-2xl">
+        <div className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center pt-[12vh] sm:max-w-2xl sm:pt-[14vh]">
           <HeroSearch />
         </div>
 
-        <div className="mt-auto grid grid-cols-[1fr_auto_1fr] items-end gap-4 pt-8">
-          <div className="min-w-0">
-            <h1
-              className="max-w-xl text-[clamp(2rem,5.5vw,3.75rem)] font-bold leading-[0.95] tracking-[-0.03em] text-white drop-shadow-[0_2px_18px_rgba(10,22,48,0.35)]"
-              style={{ fontFamily: "var(--font-headline), var(--font-poppins), system-ui, sans-serif" }}
-            >
-              Dubai&apos;s Finest Homes
-            </h1>
-            <p className="mt-4 inline-flex max-w-full items-center rounded-full bg-[var(--ul-primary)]/55 px-3.5 py-1.5 text-[0.7rem] font-medium tracking-[0.04em] text-white ring-1 ring-white/25 backdrop-blur-md sm:text-xs">
-              <span className="truncate">{slide.location}</span>
-            </p>
-          </div>
-
-          <div className="hidden flex-col items-center gap-1.5 pb-1 text-white/90 drop-shadow sm:flex">
+        <div className="mt-auto flex items-end justify-between gap-4 pt-6">
+          <div className="hidden flex-col items-center gap-1.5 pb-1 text-white/90 drop-shadow sm:flex sm:absolute sm:bottom-10 sm:left-1/2 sm:-translate-x-1/2">
             <Mouse className="h-5 w-5" strokeWidth={1.4} aria-hidden />
             <span className="text-[0.62rem] font-semibold tracking-[0.22em] uppercase">Scroll</span>
           </div>
 
-          <div className="flex justify-end gap-2">
+          <div className="ml-auto flex gap-2">
             <button
               type="button"
               onClick={() => go(-1)}
