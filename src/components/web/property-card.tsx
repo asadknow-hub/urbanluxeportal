@@ -24,7 +24,7 @@ export function PropertyCard({
     <Link href={`/properties/${listing.slug}`} className={cn("group block h-full", className)}>
       <div
         className={cn(
-          "relative h-full overflow-hidden bg-[var(--ul-primary)]",
+          "relative h-full overflow-hidden rounded-2xl bg-[var(--ul-primary)] shadow-[0_10px_28px_rgba(10,22,48,0.12)] transition-shadow duration-300 group-hover:shadow-[0_16px_36px_rgba(10,22,48,0.18)]",
           layout === "fill"
             ? "min-h-[18rem]"
             : compact
@@ -45,7 +45,14 @@ export function PropertyCard({
           }
           className="object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0A1630]/80 via-[#0A1630]/15 to-transparent transition-colors duration-500 group-hover:from-[#0A1630]/90" />
+        <div
+          className={cn(
+            "absolute inset-0 bg-gradient-to-t via-transparent to-transparent transition-colors duration-500",
+            compact
+              ? "from-[#0A1630]/65 via-[#0A1630]/10 group-hover:from-[#0A1630]/75"
+              : "from-[#0A1630]/80 via-[#0A1630]/15 group-hover:from-[#0A1630]/90"
+          )}
+        />
         <p
           className={cn(
             "absolute bg-[#f6f3ee]/92 font-medium tracking-[0.2em] uppercase text-[#0A1630]",

@@ -77,8 +77,8 @@ export function HeroSection() {
             />
           </div>
         ))}
-        <div className="absolute inset-0 bg-[var(--ul-primary)]/45" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[var(--ul-primary)]/70 via-transparent to-[var(--ul-primary)]/35" />
+        <div className="absolute inset-0 bg-[var(--ul-primary)]/12" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--ul-primary)]/40 via-transparent to-[var(--ul-primary)]/18" />
       </div>
 
       <div className="ul-shell-wide relative flex min-h-0 flex-1 flex-col pt-[calc(5.5rem+var(--ul-safe-top,0px))] pb-8 sm:pb-10">
@@ -89,17 +89,17 @@ export function HeroSection() {
         <div className="mt-auto grid grid-cols-[1fr_auto_1fr] items-end gap-4 pt-8">
           <div className="min-w-0">
             <h1
-              className="max-w-xl text-[clamp(2rem,5.5vw,3.75rem)] font-bold leading-[0.95] tracking-[-0.03em] text-[var(--ul-secondary)]"
+              className="max-w-xl text-[clamp(2rem,5.5vw,3.75rem)] font-bold leading-[0.95] tracking-[-0.03em] text-white drop-shadow-[0_2px_18px_rgba(10,22,48,0.35)]"
               style={{ fontFamily: "var(--font-headline), var(--font-poppins), system-ui, sans-serif" }}
             >
               Dubai&apos;s Finest Homes
             </h1>
-            <p className="mt-4 inline-flex max-w-full items-center rounded-full bg-[var(--ul-primary)]/75 px-3.5 py-1.5 text-[0.7rem] font-medium tracking-[0.04em] text-[var(--ul-secondary)] ring-1 ring-white/15 backdrop-blur-sm sm:text-xs">
+            <p className="mt-4 inline-flex max-w-full items-center rounded-full bg-[var(--ul-primary)]/55 px-3.5 py-1.5 text-[0.7rem] font-medium tracking-[0.04em] text-white ring-1 ring-white/25 backdrop-blur-md sm:text-xs">
               <span className="truncate">{slide.location}</span>
             </p>
           </div>
 
-          <div className="hidden flex-col items-center gap-1.5 pb-1 text-[var(--ul-secondary)]/80 sm:flex">
+          <div className="hidden flex-col items-center gap-1.5 pb-1 text-white/90 drop-shadow sm:flex">
             <Mouse className="h-5 w-5" strokeWidth={1.4} aria-hidden />
             <span className="text-[0.62rem] font-semibold tracking-[0.22em] uppercase">Scroll</span>
           </div>
@@ -108,7 +108,7 @@ export function HeroSection() {
             <button
               type="button"
               onClick={() => go(-1)}
-              className="inline-flex h-10 w-10 items-center justify-center bg-[var(--ul-primary)]/80 text-[var(--ul-secondary)] ring-1 ring-white/20 transition-colors hover:bg-[var(--ul-primary)]"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--ul-primary)]/55 text-white ring-1 ring-white/25 backdrop-blur-md transition-colors hover:bg-[var(--ul-primary)]/75"
               aria-label="Previous image"
             >
               <ChevronLeft className="h-5 w-5" strokeWidth={1.75} />
@@ -116,7 +116,7 @@ export function HeroSection() {
             <button
               type="button"
               onClick={() => go(1)}
-              className="inline-flex h-10 w-10 items-center justify-center bg-[var(--ul-primary)]/80 text-[var(--ul-secondary)] ring-1 ring-white/20 transition-colors hover:bg-[var(--ul-primary)]"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--ul-primary)]/55 text-white ring-1 ring-white/25 backdrop-blur-md transition-colors hover:bg-[var(--ul-primary)]/75"
               aria-label="Next image"
             >
               <ChevronRight className="h-5 w-5" strokeWidth={1.75} />

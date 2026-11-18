@@ -54,9 +54,9 @@ export function HomePage() {
                 <Link
                   href={card.href}
                   prefetch
-                  className="group flex h-full flex-col overflow-hidden border border-[var(--ul-hair)] bg-white"
+                  className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--ul-hair)] bg-white shadow-[0_10px_28px_rgba(10,22,48,0.1)] transition-shadow duration-300 hover:shadow-[0_16px_36px_rgba(10,22,48,0.14)]"
                 >
-                  <div className="relative aspect-[16/10] overflow-hidden bg-[var(--ul-tertiary)]">
+                  <div className="relative aspect-[16/10] overflow-hidden rounded-t-2xl bg-[var(--ul-tertiary)]">
                     <Image
                       src={card.image}
                       alt={card.kicker}
