@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Mouse } from "lucide-react";
 import { HeroSearch } from "@/components/web/hero-search";
-import { cn } from "@/lib/utils";
 
 /** Local webp slides — no remote Unsplash hop on first paint. */
 const HERO_SLIDES = [
@@ -26,43 +25,31 @@ export function HeroSection() {
   useEffect(() => {
     const id = window.setInterval(() => go(1), INTERVAL_MS);
     return () => window.clearInterval(id);
-  }, [go]);
+  }, [go, index]);
 
   return (
     <section className="relative flex h-[100svh] min-h-[36rem] flex-col overflow-hidden bg-[var(--ul-primary)]">
-      <div className="absolute inset-0">
-        {HERO_SLIDES.map((src, i) => (
-          <div
-            key={src}
-            className={cn(
-              "absolute inset-0 transition-opacity duration-700 ease-out",
-              i === index ? "opacity-100" : "opacity-0"
-            )}
-            aria-hidden={i !== index}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element -- local static webp, skip optimizer lag */}
-            <img
-              src={src}
-              alt=""
-              decoding={i === 0 ? "sync" : "async"}
-              fetchPriority={i === 0 ? "high" : "low"}
-              className={cn(
-                "absolute inset-0 h-full w-full object-cover object-center transition-transform duration-[4500ms] ease-out will-change-transform",
-                i === index ? "scale-105" : "scale-100"
-              )}
-            />
-          </div>
-        ))}
-        <div className="absolute inset-0 bg-[var(--ul-primary)]/12" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[var(--ul-primary)]/40 via-transparent to-[var(--ul-primary)]/18" />
-      </div>
-
-      {/* Hidden preload of remaining slides so the carousel never stalls. */}
-      <div className="hidden" aria-hidden>
-        {HERO_SLIDES.slice(1).map((src) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img key={src} src={src} alt="" />
-        ))}
+      <div className="absolute inset-0 overflow-hidden">
+        <div
+          className="flex h-full w-full transition-transform duration-700 ease-out will-change-transform"
+          style={{ transform: `translateX(-${index * 100}%)` }}
+        >
+          {HERO_SLIDES.map((src, i) => (
+            <div key={src} className="relative h-full w-full shrink-0 grow-0 basis-full">
+              {/* eslint-disable-next-line @next/next/no-img-element -- local static webp, skip optimizer lag */}
+              <img
+                src={src}
+                alt=""
+                decoding={i === 0 ? "sync" : "async"}
+                fetchPriority={i === 0 ? "high" : "low"}
+                className="absolute inset-0 h-full w-full object-cover object-center"
+                draggable={false}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="pointer-events-none absolute inset-0 bg-[var(--ul-primary)]/12" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--ul-primary)]/40 via-transparent to-[var(--ul-primary)]/18" />
       </div>
 
       <div className="ul-shell-wide relative flex min-h-0 flex-1 flex-col pt-[calc(5.5rem+var(--ul-safe-top,0px))] pb-8 sm:pb-10">
