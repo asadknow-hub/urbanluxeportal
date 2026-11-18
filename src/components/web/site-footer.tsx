@@ -38,12 +38,12 @@ export function SiteFooter() {
   }
 
   return (
-    <footer className="bg-[var(--ul-primary)] text-[#F6F3EE]">
+    <footer className="bg-[var(--ul-primary)] text-[#FFFFFF]">
       <div className="ul-shell-wide py-8 md:py-10">
         <div className="grid gap-8 lg:grid-cols-12 lg:gap-8">
           <div className="lg:col-span-4">
             <SiteLogo inverted />
-            <p className="mt-3 max-w-sm text-sm leading-relaxed text-[#F6F3EE]/55">
+            <p className="mt-3 max-w-sm text-sm leading-relaxed text-[#FFFFFF]/55">
               {brand.tagline} A Dubai brokerage for villas, apartments, and off-plan residences,
               placed with the care of a private office.
             </p>
@@ -73,7 +73,7 @@ export function SiteFooter() {
 
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-4 lg:col-span-8 lg:gap-5">
             <div>
-              <p className="text-[0.68rem] font-semibold tracking-[0.14em] uppercase text-[#F6F3EE]/45">
+              <p className="text-[0.68rem] font-semibold tracking-[0.14em] uppercase text-[#FFFFFF]/45">
                 Property
               </p>
               <ul className="mt-2.5 space-y-1.5">
@@ -82,7 +82,7 @@ export function SiteFooter() {
                     <Link
                       href={item.href}
                       prefetch
-                      className="text-sm text-[#F6F3EE]/70 transition-colors hover:text-white"
+                      className="text-sm text-[#FFFFFF]/70 transition-colors hover:text-white"
                     >
                       {item.label}
                     </Link>
@@ -91,7 +91,7 @@ export function SiteFooter() {
               </ul>
             </div>
             <div>
-              <p className="text-[0.68rem] font-semibold tracking-[0.14em] uppercase text-[#F6F3EE]/45">
+              <p className="text-[0.68rem] font-semibold tracking-[0.14em] uppercase text-[#FFFFFF]/45">
                 Services
               </p>
               <ul className="mt-2.5 space-y-1.5">
@@ -100,7 +100,7 @@ export function SiteFooter() {
                     <Link
                       href={item.href}
                       prefetch
-                      className="text-sm text-[#F6F3EE]/70 transition-colors hover:text-white"
+                      className="text-sm text-[#FFFFFF]/70 transition-colors hover:text-white"
                     >
                       {item.label}
                     </Link>
@@ -109,7 +109,7 @@ export function SiteFooter() {
               </ul>
             </div>
             <div>
-              <p className="text-[0.68rem] font-semibold tracking-[0.14em] uppercase text-[#F6F3EE]/45">
+              <p className="text-[0.68rem] font-semibold tracking-[0.14em] uppercase text-[#FFFFFF]/45">
                 Links
               </p>
               <ul className="mt-2.5 space-y-1.5">
@@ -118,7 +118,7 @@ export function SiteFooter() {
                     <Link
                       href={item.href}
                       prefetch
-                      className="text-sm text-[#F6F3EE]/70 transition-colors hover:text-white"
+                      className="text-sm text-[#FFFFFF]/70 transition-colors hover:text-white"
                     >
                       {item.label}
                     </Link>
@@ -127,10 +127,10 @@ export function SiteFooter() {
               </ul>
             </div>
             <div>
-              <p className="text-[0.68rem] font-semibold tracking-[0.14em] uppercase text-[#F6F3EE]/45">
+              <p className="text-[0.68rem] font-semibold tracking-[0.14em] uppercase text-[#FFFFFF]/45">
                 Contact Us
               </p>
-              <ul className="mt-2.5 space-y-1.5 text-sm text-[#F6F3EE]/70">
+              <ul className="mt-2.5 space-y-1.5 text-sm text-[#FFFFFF]/70">
                 <li>
                   <a href={`tel:${brand.phoneTel}`} className="transition-colors hover:text-white">
                     {brand.phoneDisplay}
@@ -142,14 +142,14 @@ export function SiteFooter() {
                   </a>
                 </li>
                 <li className="leading-snug">{brand.address}</li>
-                <li className="text-[#F6F3EE]/45">{brand.rera}</li>
+                <li className="text-[#FFFFFF]/45">{brand.rera}</li>
               </ul>
             </div>
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 border-t border-[#F6F3EE]/12 pt-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-[#F6F3EE]/40">
+        <div className="mt-6 flex flex-col gap-3 border-t border-[#FFFFFF]/12 pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-[#FFFFFF]/40">
             © {new Date().getFullYear()} {brand.name}. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center gap-4">
@@ -158,7 +158,7 @@ export function SiteFooter() {
                 href={brand.linkedinUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-semibold tracking-wide text-[#F6F3EE]/50 transition-colors hover:text-white"
+                className="text-xs font-semibold tracking-wide text-[#FFFFFF]/50 transition-colors hover:text-white"
               >
                 LinkedIn
               </a>
@@ -168,20 +168,20 @@ export function SiteFooter() {
                 href={brand.instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-semibold tracking-wide text-[#F6F3EE]/50 transition-colors hover:text-white"
+                className="text-xs font-semibold tracking-wide text-[#FFFFFF]/50 transition-colors hover:text-white"
               >
                 Instagram
               </a>
             ) : null}
             <Link
               href="/privacy"
-              className="text-xs font-semibold tracking-wide text-[#F6F3EE]/50 transition-colors hover:text-white"
+              className="text-xs font-semibold tracking-wide text-[#FFFFFF]/50 transition-colors hover:text-white"
             >
               Privacy
             </Link>
             <Link
               href="/terms"
-              className="text-xs font-semibold tracking-wide text-[#F6F3EE]/50 transition-colors hover:text-white"
+              className="text-xs font-semibold tracking-wide text-[#FFFFFF]/50 transition-colors hover:text-white"
             >
               Terms
             </Link>

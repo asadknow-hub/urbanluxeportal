@@ -101,7 +101,7 @@ export function CareersApplicationForm({ defaultRole }: { defaultRole?: string }
           name="cv"
           type="file"
           accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-          className="block w-full text-sm text-[#0A1630] file:mr-3 file:rounded-md file:border-0 file:bg-[#F6F3EE] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[#0A1630]"
+          className="block w-full text-sm text-[#0A1630] file:mr-3 file:rounded-md file:border-0 file:bg-[#FFFFFF] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-[#0A1630]"
         />
       </div>
       <textarea

@@ -88,22 +88,22 @@ export function PropertyGallery({ listing }: { listing: Listing }) {
         >
           <button
             type="button"
-            className="absolute right-5 top-5 text-[#f6f3ee]"
+            className="absolute right-5 top-5 text-[#ffffff]"
             aria-label="Close gallery"
             onClick={() => setOpen(false)}
           >
             <X className="h-6 w-6" />
           </button>
-          <button type="button" className="absolute left-4 text-[#f6f3ee] md:left-8" aria-label="Previous" onClick={prev}>
+          <button type="button" className="absolute left-4 text-[#ffffff] md:left-8" aria-label="Previous" onClick={prev}>
             <ChevronLeft className="h-8 w-8" />
           </button>
           <div className="relative h-[70vh] w-full max-w-5xl">
             <Image src={images[index] ?? listing.image} alt="" fill className="object-contain" sizes="90vw" />
           </div>
-          <button type="button" className="absolute right-4 text-[#f6f3ee] md:right-8" aria-label="Next" onClick={next}>
+          <button type="button" className="absolute right-4 text-[#ffffff] md:right-8" aria-label="Next" onClick={next}>
             <ChevronRight className="h-8 w-8" />
           </button>
-          <p className="absolute bottom-6 text-sm text-[#f6f3ee]/70">
+          <p className="absolute bottom-6 text-sm text-[#ffffff]/70">
             {index + 1} / {images.length}
           </p>
         </div>

@@ -71,7 +71,7 @@ export default async function InsightArticlePage({
         </section>
 
         <div className="relative mx-auto -mt-2 max-w-[960px] px-5 md:px-10">
-          <div className="relative aspect-[16/9] overflow-hidden rounded-xl border border-[var(--ul-hair)] bg-[#F6F3EE]">
+          <div className="relative aspect-[16/9] overflow-hidden rounded-xl border border-[var(--ul-hair)] bg-[#FFFFFF]">
             <Image
               src={article.image}
               alt={article.title}
@@ -113,7 +113,7 @@ export default async function InsightArticlePage({
       </article>
 
       {related.length > 0 && (
-        <section className="border-t border-[var(--ul-hair)] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-16">
+        <section className="border-t border-[var(--ul-hair)] bg-[#FFFFFF] px-5 py-14 md:px-10 md:py-16">
           <div className="mx-auto max-w-[1280px]">
             <Reveal>
               <p className="ul-kicker">Keep reading</p>
@@ -127,7 +127,7 @@ export default async function InsightArticlePage({
                   prefetch
                   className="group overflow-hidden rounded-xl border border-[var(--ul-hair)] bg-white"
                 >
-                  <div className="relative aspect-[16/10] bg-[#F6F3EE]">
+                  <div className="relative aspect-[16/10] bg-[#FFFFFF]">
                     <Image
                       src={item.image}
                       alt={item.title}

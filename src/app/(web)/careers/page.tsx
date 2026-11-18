@@ -104,7 +104,7 @@ export default function CareersPage() {
               {OPEN_ROLES.map((role) => (
                 <div
                   key={role.title}
-                  className="flex flex-col gap-3 rounded-xl border border-[var(--ul-hair)] bg-[#F6F3EE] p-5 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-col gap-3 rounded-xl border border-[var(--ul-hair)] bg-[#FFFFFF] p-5 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -170,7 +170,7 @@ export default function CareersPage() {
         </div>
       </section>
 
-      <section id="apply" className="border-t border-[var(--ul-hair)] bg-[#F6F3EE] px-5 py-14 md:px-10 md:py-20">
+      <section id="apply" className="border-t border-[var(--ul-hair)] bg-[#FFFFFF] px-5 py-14 md:px-10 md:py-20">
         <div className="mx-auto grid max-w-[1280px] gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           <Reveal>
             <p className="ul-kicker">Apply</p>
@@ -187,7 +187,7 @@ export default function CareersPage() {
             </p>
           </Reveal>
           <Reveal delay={60}>
-            <div className="rounded-xl border border-[var(--ul-hair)] bg-[#F6F3EE] p-6 md:p-8">
+            <div className="rounded-xl border border-[var(--ul-hair)] bg-[#FFFFFF] p-6 md:p-8">
               <CareersApplicationForm />
             </div>
           </Reveal>
@@ -207,7 +207,7 @@ export default function CareersPage() {
           <Link
             href="/contact"
             prefetch
-            className="inline-flex h-11 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-[#0A1630] transition-colors hover:bg-[#F6F3EE]"
+            className="inline-flex h-11 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-[#0A1630] transition-colors hover:bg-[#FFFFFF]"
           >
             Contact the team
           </Link>

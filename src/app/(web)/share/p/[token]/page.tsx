@@ -49,7 +49,7 @@ export default async function SharedPropertyPage({
   );
 
   return (
-    <article className="min-h-screen bg-[#f6f3ee] pb-16 pt-6">
+    <article className="min-h-screen bg-[#ffffff] pb-16 pt-6">
       <div className="mx-auto max-w-[920px] px-4 sm:px-6">
         <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[var(--ul-muted)]">
           Shared by {brand.name}
@@ -131,7 +131,7 @@ export default async function SharedPropertyPage({
               </a>
               <a
                 href={`tel:${brand.phoneTel}`}
-                className="mt-2 inline-flex h-11 w-full items-center justify-center rounded-[12px] border border-[#e8dfd2] text-sm font-semibold text-[#0A1630] hover:bg-[#f6f3ee]"
+                className="mt-2 inline-flex h-11 w-full items-center justify-center rounded-[12px] border border-[#e8dfd2] text-sm font-semibold text-[#0A1630] hover:bg-[#ffffff]"
               >
                 Call {brand.phoneDisplay}
               </a>

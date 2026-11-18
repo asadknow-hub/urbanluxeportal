@@ -40,8 +40,8 @@ export default async function CommunityPage({
         <div className="absolute inset-0 bg-gradient-to-t from-[#0A1630] via-[#0A1630]/30 to-transparent" />
         <div className="relative z-10 mx-auto w-full max-w-[1440px] px-5 pb-16 pt-32 md:px-10">
           <p className="ul-kicker">{community.region}</p>
-          <h1 className="mt-4 text-5xl text-[#f6f3ee] md:text-7xl">{community.name}</h1>
-          <p className="mt-5 max-w-xl text-lg font-light text-[#f6f3ee]/75">{community.blurb}</p>
+          <h1 className="mt-4 text-5xl text-[#ffffff] md:text-7xl">{community.name}</h1>
+          <p className="mt-5 max-w-xl text-lg font-light text-[#ffffff]/75">{community.blurb}</p>
         </div>
       </section>
       <section className="mx-auto max-w-[1440px] px-5 py-16 md:px-10">

@@ -54,7 +54,7 @@ export default async function PropertyPage({
     listing.kind === "rent" ? "Property to rent in Dubai" : listing.kind === "offplan" ? "Off-plan in Dubai" : "Property for sale in Dubai";
 
   return (
-    <article className="bg-[#f6f3ee] pb-8 pt-4 sm:pt-6 lg:pb-20 lg:pt-8">
+    <article className="bg-[#ffffff] pb-8 pt-4 sm:pt-6 lg:pb-20 lg:pt-8">
       <div className="mx-auto max-w-[1200px] px-4 sm:px-5 md:px-8">
         <nav className="ul-hide-scroll mb-4 flex items-center gap-x-2 overflow-x-auto whitespace-nowrap pb-1 text-[0.75rem] text-[var(--ul-muted)] sm:mb-5 sm:flex-wrap sm:gap-y-1 sm:overflow-visible sm:whitespace-normal sm:pb-0 sm:text-[0.8rem]" aria-label="Breadcrumb">
           <Link href={kindMeta.path} className="hover:text-[#0A1630]">

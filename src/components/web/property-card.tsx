@@ -55,7 +55,7 @@ export function PropertyCard({
         />
         <p
           className={cn(
-            "absolute bg-[#f6f3ee]/92 font-medium tracking-[0.2em] uppercase text-[#0A1630]",
+            "absolute bg-[#ffffff]/92 font-medium tracking-[0.2em] uppercase text-[#0A1630]",
             compact
               ? "left-3 top-3 px-2 py-0.5 text-[0.58rem]"
               : "left-4 top-4 px-3 py-1 text-[0.62rem]"
@@ -65,7 +65,7 @@ export function PropertyCard({
         </p>
         <span
           className={cn(
-            "absolute inline-flex items-center gap-1 font-medium tracking-[0.18em] uppercase text-[#f6f3ee] opacity-0 transition-opacity duration-300 group-hover:opacity-100",
+            "absolute inline-flex items-center gap-1 font-medium tracking-[0.18em] uppercase text-[#ffffff] opacity-0 transition-opacity duration-300 group-hover:opacity-100",
             compact ? "right-3 top-3 text-[0.58rem]" : "right-4 top-4 text-[0.62rem]"
           )}
         >
@@ -73,7 +73,7 @@ export function PropertyCard({
         </span>
         <div
           className={cn(
-            "absolute text-[#f6f3ee]",
+            "absolute text-[#ffffff]",
             compact ? "inset-x-3 bottom-3" : "inset-x-4 bottom-4 md:inset-x-6 md:bottom-6"
           )}
         >
@@ -90,9 +90,9 @@ export function PropertyCard({
           </h3>
           <p className={cn("font-light tracking-wide", compact ? "mt-1.5 text-xs" : "mt-3 text-sm")}>
             {format(listing.priceAed, { kind: listing.kind })}
-            <span className="mx-1.5 text-[#f6f3ee]/40">·</span>
+            <span className="mx-1.5 text-[#ffffff]/40">·</span>
             {listing.beds} bed
-            <span className="mx-1.5 text-[#f6f3ee]/40">·</span>
+            <span className="mx-1.5 text-[#ffffff]/40">·</span>
             {listing.sqft.toLocaleString()} sq.ft
           </p>
         </div>
