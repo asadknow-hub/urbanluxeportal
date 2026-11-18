@@ -24,31 +24,31 @@ const TESTIMONIALS = [
 
 export function TestimonialsSection() {
   return (
-    <section className="ul-band-light py-10 md:py-14 lg:py-16">
+    <section className="ul-band-light border-t border-[var(--ul-hair)] py-7 md:py-9">
       <div className="ul-shell-wide">
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end">
-          <Reveal className="justify-self-start">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <Reveal>
             <p className="ul-kicker">Testimonials</p>
-            <h2 className="ul-section-heading mt-3 text-3xl md:text-4xl">What our clients say</h2>
+            <h2 className="ul-section-heading mt-1.5 text-2xl md:text-3xl">What our clients say</h2>
           </Reveal>
-          <Reveal delay={50} className="lg:justify-self-end lg:text-right">
-            <p className="max-w-xl text-base leading-relaxed text-[var(--ul-muted)] lg:ml-auto">
+          <Reveal delay={40}>
+            <p className="max-w-md text-sm leading-relaxed text-[var(--ul-muted)]">
               Quiet recommendations from buyers, investors, and tenants who chose UrbanLuxe.
             </p>
           </Reveal>
         </div>
 
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
+        <div className="mt-5 grid gap-3 md:grid-cols-3 md:gap-4">
           {TESTIMONIALS.map((item, i) => (
-            <Reveal key={item.name} delay={i * 70}>
-              <blockquote className="flex h-full flex-col rounded-2xl border border-[var(--ul-hair)] bg-[var(--ul-tertiary)] p-6">
-                <Quote className="h-7 w-7 text-[var(--ul-primary)]" strokeWidth={1.5} aria-hidden />
-                <p className="mt-4 flex-1 text-base leading-relaxed text-[var(--ul-primary)]">
+            <Reveal key={item.name} delay={i * 50}>
+              <blockquote className="flex h-full flex-col border border-[var(--ul-hair)] bg-[var(--ul-tertiary)] p-4 sm:p-5">
+                <Quote className="h-5 w-5 text-[var(--ul-primary)]" strokeWidth={1.5} aria-hidden />
+                <p className="mt-3 flex-1 text-sm leading-relaxed text-[var(--ul-primary)]">
                   “{item.quote}”
                 </p>
-                <footer className="mt-6 border-t border-[var(--ul-hair)] pt-4">
+                <footer className="mt-4 border-t border-[var(--ul-hair)] pt-3">
                   <p className="text-sm font-bold text-[var(--ul-primary)]">{item.name}</p>
-                  <p className="mt-1 text-xs font-medium tracking-wide text-[var(--ul-muted)]">
+                  <p className="mt-0.5 text-xs font-medium tracking-wide text-[var(--ul-muted)]">
                     {item.role}
                   </p>
                 </footer>
