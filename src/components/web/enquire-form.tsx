@@ -44,7 +44,7 @@ export function EnquireForm({
   }
 
   const field =
-    "h-11 w-full rounded-md border border-[var(--ul-hair)] bg-white px-3.5 text-sm text-[var(--ul-primary)] outline-none placeholder:text-[var(--ul-muted)] focus:border-[var(--ul-secondary)]";
+    "h-11 w-full rounded-md border border-[var(--ul-hair)] bg-white px-3.5 text-sm text-[var(--ul-primary)] outline-none placeholder:text-[var(--ul-muted)] focus:border-[var(--ul-primary)]";
 
   return (
     <form onSubmit={onSubmit} className="space-y-2.5">
@@ -93,13 +93,13 @@ export function EnquireForm({
         name="message"
         rows={2}
         placeholder="Brief note (optional)"
-        className="w-full rounded-md border border-[var(--ul-hair)] bg-white px-3.5 py-2.5 text-sm text-[var(--ul-primary)] outline-none placeholder:text-[var(--ul-muted)] focus:border-[var(--ul-secondary)]"
+        className="w-full rounded-md border border-[var(--ul-hair)] bg-white px-3.5 py-2.5 text-sm text-[var(--ul-primary)] outline-none placeholder:text-[var(--ul-muted)] focus:border-[var(--ul-primary)]"
         defaultValue={propertyTitle ? `Please share details for ${propertyTitle}.` : ""}
       />
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex h-11 w-full items-center justify-center rounded-md bg-[var(--ul-secondary)] text-sm font-semibold text-white transition-colors hover:bg-[#006633] disabled:opacity-60"
+        className="inline-flex h-11 w-full items-center justify-center rounded-md bg-[var(--ul-primary)] text-sm font-semibold text-white transition-colors hover:bg-[var(--ul-accent-deep)] disabled:opacity-60"
       >
         {pending ? "Sending…" : "Send enquiry"}
       </button>

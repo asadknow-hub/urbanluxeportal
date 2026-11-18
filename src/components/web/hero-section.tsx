@@ -1,68 +1,126 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
+import { ChevronLeft, ChevronRight, Mouse } from "lucide-react";
 import { HeroSearch } from "@/components/web/hero-search";
 import { IMAGES } from "@/lib/web/listings";
+import { cn } from "@/lib/utils";
 
-const HERO_VIDEO = "/b57b94922dc9e0dcee448d0ac5381a4a.mp4";
+const HERO_SLIDES = [
+  {
+    image: IMAGES.bedroom,
+    location: "Palm Jumeirah, Dubai",
+  },
+  {
+    image: IMAGES.villa,
+    location: "Emirates Hills, Dubai",
+  },
+  {
+    image: IMAGES.penthouse,
+    location: "Downtown Dubai",
+  },
+  {
+    image: IMAGES.marina,
+    location: "Dubai Marina",
+  },
+  {
+    image: IMAGES.terrace,
+    location: "Dubai Creek Harbour",
+  },
+] as const;
+
+const INTERVAL_MS = 6500;
 
 export function HeroSection() {
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  const go = useCallback((dir: -1 | 1) => {
+    setIndex((i) => (i + dir + HERO_SLIDES.length) % HERO_SLIDES.length);
+  }, []);
+
+  useEffect(() => {
+    if (paused) return;
+    const id = window.setInterval(() => go(1), INTERVAL_MS);
+    return () => window.clearInterval(id);
+  }, [go, paused, index]);
+
+  const slide = HERO_SLIDES[index]!;
+
   return (
-    <section className="relative flex h-[100svh] min-h-[36rem] flex-col overflow-hidden bg-[var(--ul-primary)]">
+    <section
+      className="relative flex h-[100svh] min-h-[36rem] flex-col overflow-hidden bg-[var(--ul-primary)]"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
       <div className="absolute inset-0">
-        <video
-          className="absolute inset-0 h-full w-full object-cover object-center"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          poster={IMAGES.heroRefined}
-          aria-hidden
-        >
-          <source src={HERO_VIDEO} type="video/mp4" />
-        </video>
-        <div className="absolute inset-0 bg-gradient-to-r from-[var(--ul-primary)]/70 via-[var(--ul-primary)]/35 to-[var(--ul-primary)]/15" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[var(--ul-primary)]/75 via-transparent to-[var(--ul-primary)]/25" />
+        {HERO_SLIDES.map((item, i) => (
+          <div
+            key={item.image}
+            className={cn(
+              "absolute inset-0 transition-opacity duration-1000 ease-out",
+              i === index ? "opacity-100" : "opacity-0"
+            )}
+            aria-hidden={i !== index}
+          >
+            <Image
+              src={item.image}
+              alt=""
+              fill
+              priority={i === 0}
+              sizes="100vw"
+              className={cn(
+                "object-cover object-center transition-transform duration-[6500ms] ease-out",
+                i === index ? "scale-105" : "scale-100"
+              )}
+            />
+          </div>
+        ))}
+        <div className="absolute inset-0 bg-[var(--ul-primary)]/45" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--ul-primary)]/70 via-transparent to-[var(--ul-primary)]/35" />
       </div>
 
-      <div className="ul-shell-wide relative flex min-h-0 flex-1 flex-col justify-end gap-8 pb-10 pt-[calc(4.75rem+var(--ul-safe-top,0px))] sm:pb-12 lg:grid lg:grid-cols-[minmax(0,1.2fr)_minmax(20rem,27rem)] lg:items-end lg:gap-14 xl:grid-cols-[minmax(0,1.3fr)_minmax(22rem,28rem)] xl:gap-16">
-        <div className="max-w-none lg:max-w-[44rem] lg:justify-self-start">
-          <p className="text-[0.72rem] font-bold uppercase tracking-[0.18em] text-[var(--ul-secondary)]">
-            Private Dubai brokerage
-          </p>
-
-          <h1
-            className="mt-4 text-[clamp(2.75rem,8vw,6rem)] font-bold uppercase leading-[0.86] tracking-[-0.035em] text-[#F6F3EE]"
-            style={{ fontFamily: "var(--font-headline), var(--font-poppins), system-ui, sans-serif" }}
-          >
-            <span className="block">Find your</span>
-            <span className="mt-1 block text-[var(--ul-secondary)]">refined life.</span>
-          </h1>
-
-          <p className="mt-5 max-w-lg text-[0.95rem] leading-relaxed text-[#F6F3EE]/72 sm:text-base">
-            Villas, apartments, and off-plan residences. A short private shortlist and one advisor
-            through keys.
-          </p>
-
-          <div className="mt-7 flex flex-wrap gap-3">
-            <Link href="/buy" prefetch className="ul-btn-primary">
-              Browse homes <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link href="/sell" prefetch className="ul-btn-outline-light">
-              List your property
-            </Link>
-          </div>
+      <div className="ul-shell-wide relative flex min-h-0 flex-1 flex-col pt-[calc(5.5rem+var(--ul-safe-top,0px))] pb-8 sm:pb-10">
+        <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center">
+          <HeroSearch />
         </div>
 
-        <div className="w-full border border-[#F6F3EE]/15 bg-[#F6F3EE] p-4 sm:p-5 lg:justify-self-end">
-          <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--ul-secondary)]">
-            Search Dubai
-          </p>
-          <p className="mt-1 text-sm font-semibold text-[var(--ul-primary)]">
-            Buy, rent, or off-plan matched to your brief.
-          </p>
-          <div className="mt-3">
-            <HeroSearch />
+        <div className="mt-auto grid grid-cols-[1fr_auto_1fr] items-end gap-4 pt-8">
+          <div className="min-w-0">
+            <h1
+              className="max-w-xl text-[clamp(2rem,5.5vw,3.75rem)] font-bold leading-[0.95] tracking-[-0.03em] text-[var(--ul-secondary)]"
+              style={{ fontFamily: "var(--font-headline), var(--font-poppins), system-ui, sans-serif" }}
+            >
+              Dubai&apos;s Finest Homes
+            </h1>
+            <p className="mt-4 inline-flex max-w-full items-center rounded-full bg-[var(--ul-primary)]/75 px-3.5 py-1.5 text-[0.7rem] font-medium tracking-[0.04em] text-[var(--ul-secondary)] ring-1 ring-white/15 backdrop-blur-sm sm:text-xs">
+              <span className="truncate">{slide.location}</span>
+            </p>
+          </div>
+
+          <div className="hidden flex-col items-center gap-1.5 pb-1 text-[var(--ul-secondary)]/80 sm:flex">
+            <Mouse className="h-5 w-5" strokeWidth={1.4} aria-hidden />
+            <span className="text-[0.62rem] font-semibold tracking-[0.22em] uppercase">Scroll</span>
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => go(-1)}
+              className="inline-flex h-10 w-10 items-center justify-center bg-[var(--ul-primary)]/80 text-[var(--ul-secondary)] ring-1 ring-white/20 transition-colors hover:bg-[var(--ul-primary)]"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="h-5 w-5" strokeWidth={1.75} />
+            </button>
+            <button
+              type="button"
+              onClick={() => go(1)}
+              className="inline-flex h-10 w-10 items-center justify-center bg-[var(--ul-primary)]/80 text-[var(--ul-secondary)] ring-1 ring-white/20 transition-colors hover:bg-[var(--ul-primary)]"
+              aria-label="Next image"
+            >
+              <ChevronRight className="h-5 w-5" strokeWidth={1.75} />
+            </button>
           </div>
         </div>
       </div>

@@ -71,7 +71,7 @@ function FilterSelect({
     <div className={cn("relative min-w-0", className)}>
       <select
         aria-label={ariaLabel}
-        className="h-11 w-full appearance-none border border-[var(--ul-hair)] bg-white py-2 pl-3 pr-9 text-sm font-medium text-[var(--ul-primary)] outline-none transition-colors hover:border-[var(--ul-primary)]/40 focus:border-[var(--ul-secondary)]"
+        className="h-11 w-full appearance-none border border-[var(--ul-hair)] bg-white py-2 pl-3 pr-9 text-sm font-medium text-[var(--ul-primary)] outline-none transition-colors hover:border-[var(--ul-primary)]/40 focus:border-[var(--ul-primary)]"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >
@@ -260,7 +260,7 @@ export function ListingsExplorer({
                 syncUrl({ q: e.target.value });
               }}
               placeholder="Community or building"
-              className="h-11 w-full border border-[var(--ul-hair)] bg-white py-2 pl-10 pr-3 text-base text-[var(--ul-primary)] outline-none placeholder:text-[var(--ul-muted)] hover:border-[var(--ul-primary)]/40 focus:border-[var(--ul-secondary)] sm:text-sm"
+              className="h-11 w-full border border-[var(--ul-hair)] bg-white py-2 pl-10 pr-3 text-base text-[var(--ul-primary)] outline-none placeholder:text-[var(--ul-muted)] hover:border-[var(--ul-primary)]/40 focus:border-[var(--ul-primary)] sm:text-sm"
             />
           </div>
 
@@ -277,7 +277,7 @@ export function ListingsExplorer({
             <SlidersHorizontal className="h-4 w-4" strokeWidth={2} />
             Filters
             {activeFilterCount > 0 ? (
-              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--ul-secondary)] px-1.5 text-[0.7rem] text-white">
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--ul-primary)] px-1.5 text-[0.7rem] text-white">
                 {activeFilterCount}
               </span>
             ) : null}
@@ -331,7 +331,7 @@ export function ListingsExplorer({
               <h2 className="text-lg font-bold text-[var(--ul-primary)]">Filters</h2>
               <button
                 type="button"
-                className="text-sm font-semibold text-[var(--ul-secondary)]"
+                className="text-sm font-semibold text-[var(--ul-primary)]"
                 onClick={() => {
                   setType("");
                   setBeds("");
@@ -414,7 +414,7 @@ export function ListingsExplorer({
             <ArrowUpDown className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--ul-muted)]" />
             <select
               aria-label="Sort listings"
-              className="h-9 w-full appearance-none border border-[var(--ul-hair)] bg-white py-1.5 pl-8 pr-8 text-sm font-medium text-[var(--ul-primary)] outline-none hover:border-[var(--ul-primary)]/40 focus:border-[var(--ul-secondary)] sm:w-auto"
+              className="h-9 w-full appearance-none border border-[var(--ul-hair)] bg-white py-1.5 pl-8 pr-8 text-sm font-medium text-[var(--ul-primary)] outline-none hover:border-[var(--ul-primary)]/40 focus:border-[var(--ul-primary)] sm:w-auto"
               value={sort}
               onChange={(e) => {
                 const v = e.target.value as SortKey;

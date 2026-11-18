@@ -98,7 +98,7 @@ export function ListingResultCard({ listing }: { listing: Listing }) {
             <p className="text-xl font-bold tracking-tight text-[var(--ul-primary)] sm:text-2xl">
               {price}
             </p>
-            <h2 className="mt-2 text-sm font-bold leading-snug text-[var(--ul-primary)] transition-colors group-hover:text-[var(--ul-secondary)] sm:text-base">
+            <h2 className="mt-2 text-sm font-bold leading-snug text-[var(--ul-primary)] transition-colors group-hover:text-[var(--ul-primary)] sm:text-base">
               {headlineFor(listing)}
             </h2>
             <p className="mt-3 flex items-start gap-1.5 text-sm leading-relaxed text-[var(--ul-muted)]">

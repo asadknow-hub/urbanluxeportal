@@ -22,7 +22,7 @@ function fmtShort(n: number) {
 }
 
 const field =
-  "mt-2 h-11 w-full border border-[var(--ul-hair)] bg-white px-3 text-sm text-[var(--ul-primary)] outline-none focus:border-[var(--ul-secondary)]";
+  "mt-2 h-11 w-full border border-[var(--ul-hair)] bg-white px-3 text-sm text-[var(--ul-primary)] outline-none focus:border-[var(--ul-primary)]";
 
 export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
   const { format } = useCurrency();
@@ -83,7 +83,7 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
             className={cn(
               "border px-2 py-2.5 text-[0.7rem] font-medium",
               type === t.id
-                ? "border-[var(--ul-secondary)] text-[var(--ul-secondary)]"
+                ? "border-[var(--ul-primary)] text-[var(--ul-primary)]"
                 : "border-[var(--ul-hair)] text-[var(--ul-muted)]"
             )}
           >
@@ -201,7 +201,7 @@ export function OffPlanExplorer({ listings }: { listings: Listing[] }) {
             <p className="text-sm font-semibold">Filters</p>
             <button
               type="button"
-              className="text-sm font-semibold text-[var(--ul-secondary)]"
+              className="text-sm font-semibold text-[var(--ul-primary)]"
               onClick={() => setFiltersOpen(false)}
             >
               Done
@@ -264,7 +264,7 @@ function OffPlanCard({ listing, best }: { listing: Listing; best?: boolean }) {
           </span>
         ) : null}
         {best ? (
-          <span className="absolute right-3 top-3 bg-[var(--ul-secondary)] px-2 py-1 text-[0.62rem] font-semibold tracking-[0.08em] uppercase text-white">
+          <span className="absolute right-3 top-3 bg-[var(--ul-primary)] px-2 py-1 text-[0.62rem] font-semibold tracking-[0.08em] uppercase text-[var(--ul-primary)]">
             Best match
           </span>
         ) : null}
@@ -279,7 +279,7 @@ function OffPlanCard({ listing, best }: { listing: Listing; best?: boolean }) {
           From {format(listing.priceAed)}
         </p>
         {monthly != null ? (
-          <p className="text-sm text-[var(--ul-secondary)]">Est. monthly {format(monthly)}</p>
+          <p className="text-sm text-[var(--ul-primary)]">Est. monthly {format(monthly)}</p>
         ) : null}
         <div className="mt-4">
           <div className="flex h-1 overflow-hidden bg-[var(--ul-paper)]">
@@ -305,7 +305,7 @@ function OffPlanCard({ listing, best }: { listing: Listing; best?: boolean }) {
         </div>
         <Link
           href={`/properties/${listing.slug}`}
-          className="mt-4 inline-flex h-10 items-center justify-center bg-[var(--ul-secondary)] text-[0.7rem] font-semibold tracking-[0.14em] uppercase text-white transition-colors hover:bg-[#006633]"
+          className="mt-4 inline-flex h-10 items-center justify-center bg-[var(--ul-primary)] text-[0.7rem] font-semibold tracking-[0.14em] uppercase text-white transition-colors hover:bg-[var(--ul-accent-deep)]"
         >
           View details
         </Link>

@@ -46,7 +46,7 @@ function Meta({
 }) {
   return (
     <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-[var(--ul-muted)]">
-      <span className="text-[var(--ul-secondary)]">{category}</span>
+      <span className="text-[var(--ul-primary)]">{category}</span>
       <span aria-hidden>·</span>
       <span>{date}</span>
       <span aria-hidden>·</span>
@@ -85,7 +85,7 @@ export default function InsightsPage() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-sm font-semibold text-[var(--ul-primary)] transition-colors hover:text-[var(--ul-secondary)]"
+                className="text-sm font-semibold text-[var(--ul-primary)] transition-colors hover:text-[var(--ul-primary)]"
               >
                 {item.label}
               </Link>
@@ -107,7 +107,7 @@ export default function InsightsPage() {
               <Link
                 href="/buy"
                 prefetch
-                className="hidden text-sm font-semibold text-[var(--ul-secondary)] hover:text-[#006633] sm:inline-flex sm:items-center sm:gap-1.5"
+                className="hidden text-sm font-semibold text-[var(--ul-primary)] hover:text-[var(--ul-accent-deep)] sm:inline-flex sm:items-center sm:gap-1.5"
               >
                 Browse residences <ArrowRight className="h-4 w-4" />
               </Link>
@@ -136,14 +136,14 @@ export default function InsightsPage() {
                   date={featured.date}
                   readMins={featured.readMins}
                 />
-                <h3 className="mt-3 text-2xl font-bold leading-snug text-[var(--ul-primary)] transition-colors group-hover:text-[var(--ul-secondary)] md:text-[1.75rem]">
+                <h3 className="mt-3 text-2xl font-bold leading-snug text-[var(--ul-primary)] transition-colors group-hover:text-[var(--ul-primary)] md:text-[1.75rem]">
                   {featured.title}
                 </h3>
                 <p className="mt-3 text-sm leading-relaxed text-[var(--ul-muted)] md:text-[0.95rem]">
                   {featured.excerpt}
                 </p>
                 <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ul-primary)]">
-                  Read the brief <ArrowRight className="h-4 w-4 text-[var(--ul-secondary)]" />
+                  Read the brief <ArrowRight className="h-4 w-4 text-[var(--ul-primary)]" />
                 </span>
               </div>
             </Link>
@@ -187,14 +187,14 @@ export default function InsightsPage() {
                         date={item.date}
                         readMins={item.readMins}
                       />
-                      <h3 className="mt-2 text-base font-bold leading-snug text-[var(--ul-primary)] transition-colors group-hover:text-[var(--ul-secondary)] md:text-lg">
+                      <h3 className="mt-2 text-base font-bold leading-snug text-[var(--ul-primary)] transition-colors group-hover:text-[var(--ul-primary)] md:text-lg">
                         {item.title}
                       </h3>
                       <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-[var(--ul-muted)]">
                         {item.excerpt}
                       </p>
                     </div>
-                    <span className="hidden items-center gap-1.5 text-sm font-semibold text-[var(--ul-secondary)] md:inline-flex">
+                    <span className="hidden items-center gap-1.5 text-sm font-semibold text-[var(--ul-primary)] md:inline-flex">
                       Read <ArrowRight className="h-4 w-4" />
                     </span>
                   </Link>
@@ -220,7 +220,7 @@ export default function InsightsPage() {
               <Link
                 href="/contact"
                 prefetch
-                className="mt-6 inline-flex h-11 items-center justify-center bg-[var(--ul-secondary)] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#006633]"
+                className="mt-6 inline-flex h-11 items-center justify-center bg-[var(--ul-primary)] px-5 text-sm font-semibold text-white transition-colors hover:bg-[var(--ul-accent-deep)]"
               >
                 Request a briefing
               </Link>
@@ -235,18 +235,18 @@ export default function InsightsPage() {
                       prefetch
                       className="group grid gap-3 py-5 sm:grid-cols-[2.75rem_minmax(0,1fr)_auto] sm:items-start sm:gap-4"
                     >
-                      <span className="text-xs font-bold tracking-[0.16em] text-[var(--ul-secondary)]">
+                      <span className="text-xs font-bold tracking-[0.16em] text-[var(--ul-primary)]">
                         {String(i + 1).padStart(2, "0")}
                       </span>
                       <div className="min-w-0">
-                        <p className="font-semibold text-[var(--ul-primary)] transition-colors group-hover:text-[var(--ul-secondary)]">
+                        <p className="font-semibold text-[var(--ul-primary)] transition-colors group-hover:text-[var(--ul-primary)]">
                           {guide.title}
                         </p>
                         <p className="mt-1 text-sm leading-relaxed text-[var(--ul-muted)]">
                           {guide.body}
                         </p>
                       </div>
-                      <ArrowRight className="mt-1 hidden h-4 w-4 shrink-0 text-[var(--ul-muted)] transition-colors group-hover:text-[var(--ul-secondary)] sm:block" />
+                      <ArrowRight className="mt-1 hidden h-4 w-4 shrink-0 text-[var(--ul-muted)] transition-colors group-hover:text-[var(--ul-primary)] sm:block" />
                     </Link>
                   </Reveal>
                 </li>
@@ -271,7 +271,7 @@ export default function InsightsPage() {
             <Link
               href="/contact"
               prefetch
-              className="inline-flex h-11 items-center justify-center bg-[var(--ul-secondary)] px-5 text-sm font-semibold text-white hover:bg-[#006633]"
+              className="inline-flex h-11 items-center justify-center bg-[var(--ul-primary)] px-5 text-sm font-semibold text-white hover:bg-[var(--ul-accent-deep)]"
             >
               Get the briefing
             </Link>

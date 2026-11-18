@@ -1,12 +1,12 @@
 /**
- * UrbanLuxe public brand — warm paper light UI, deep forest green,
- * navy #0A1630 for hero / accent bands. Headlines use condensed Oswald.
+ * UrbanLuxe public brand — cream paper + deep navy only.
+ * Headlines use condensed Oswald.
  */
 export const BRAND = {
-  /** Deep navy ink / dark bands */
+  /** Deep navy ink / dark bands / primary CTAs */
   primary: "#0A1630",
-  /** Forest green — darker, cleaner on paper */
-  secondary: "#008040",
+  /** Cream — accents on dark bands */
+  secondary: "#F6F3EE",
   /** Soft warm surface (cards / nested) */
   tertiary: "#EFEAE3",
   /** Footer / deep canvas */

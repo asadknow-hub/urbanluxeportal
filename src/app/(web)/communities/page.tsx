@@ -29,7 +29,7 @@ export default function CommunitiesPage() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0A1630] via-transparent to-transparent" />
             <div className="absolute inset-x-5 bottom-6 text-[#f6f3ee]">
-              <p className="text-[0.65rem] tracking-[0.24em] uppercase text-[#008040]">{c.region}</p>
+              <p className="text-[0.65rem] tracking-[0.24em] uppercase text-[#0A1630]">{c.region}</p>
               <h2 className="mt-1 text-2xl">{c.name}</h2>
             </div>
           </Link>

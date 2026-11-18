@@ -42,7 +42,7 @@ export function TestimonialsSection() {
           {TESTIMONIALS.map((item, i) => (
             <Reveal key={item.name} delay={i * 70}>
               <blockquote className="flex h-full flex-col rounded-2xl border border-[var(--ul-hair)] bg-[var(--ul-tertiary)] p-6">
-                <Quote className="h-7 w-7 text-[var(--ul-secondary)]" strokeWidth={1.5} aria-hidden />
+                <Quote className="h-7 w-7 text-[var(--ul-primary)]" strokeWidth={1.5} aria-hidden />
                 <p className="mt-4 flex-1 text-base leading-relaxed text-[var(--ul-primary)]">
                   “{item.quote}”
                 </p>

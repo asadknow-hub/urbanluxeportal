@@ -48,7 +48,7 @@ export default function ValuationsPage() {
               <ol className="mt-8 space-y-4 border-t border-[var(--ul-hair)] pt-7">
                 {POINTS.map((item) => (
                   <li key={item.n} className="grid gap-1 sm:grid-cols-[2.75rem_minmax(0,1fr)] sm:gap-3">
-                    <span className="text-xs font-bold tracking-[0.16em] text-[var(--ul-secondary)]">
+                    <span className="text-xs font-bold tracking-[0.16em] text-[var(--ul-primary)]">
                       {item.n}
                     </span>
                     <div>
@@ -64,7 +64,7 @@ export default function ValuationsPage() {
               <Link
                 href="/sell"
                 prefetch
-                className="mt-8 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ul-secondary)] hover:text-[#006633]"
+                className="mt-8 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ul-primary)] hover:text-[var(--ul-accent-deep)]"
               >
                 Ready to instruct a sale? <ArrowRight className="h-4 w-4" />
               </Link>
@@ -75,7 +75,7 @@ export default function ValuationsPage() {
               className="min-w-0 w-full max-w-[22rem] justify-self-start lg:sticky lg:top-24 lg:justify-self-end"
             >
               <div id="request" className="border border-[var(--ul-hair)] bg-white p-4 sm:p-5">
-                <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--ul-secondary)]">
+                <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--ul-primary)]">
                   Request
                 </p>
                 <h2 className="mt-2 text-lg font-bold text-[var(--ul-primary)]">Book a valuation</h2>
@@ -104,7 +104,7 @@ export default function ValuationsPage() {
             <Link
               href="/mortgages"
               prefetch
-              className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ul-secondary)] hover:text-[#006633]"
+              className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ul-primary)] hover:text-[var(--ul-accent-deep)]"
             >
               Mortgage guidance <ArrowRight className="h-4 w-4" />
             </Link>

@@ -57,7 +57,7 @@ export const INSIGHT_ARTICLES: InsightArticle[] = [
     date: "Jul 2026",
     readMins: 5,
     image: IMAGES.creek,
-    panel: "bg-[var(--ul-secondary)] text-white",
+    panel: "bg-[var(--ul-primary)] text-white",
     body: [
       "Not every launch deserves a queue. We filter by developer track record, payment plan realism, and whether the community already has living infrastructure — or only a render.",
       "Creek Harbour and selected South launches are drawing investor attention; handover timing and service-charge assumptions matter more than the sales gallery coffee.",
@@ -105,7 +105,7 @@ export const INSIGHT_ARTICLES: InsightArticle[] = [
     date: "Jun 2026",
     readMins: 6,
     image: IMAGES.palm,
-    panel: "bg-[var(--ul-secondary)] text-white",
+    panel: "bg-[var(--ul-primary)] text-white",
     body: [
       "On the Palm, the photograph lies less about the water than about privacy and access. Walk the beach line. Check who shares your segment. Confirm service charge against comparable fronds.",
       "We also verify parking practicality, construction adjacency, and whether the seller’s timeline matches a clean SPA.",

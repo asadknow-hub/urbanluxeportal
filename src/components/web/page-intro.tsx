@@ -100,8 +100,8 @@ export function PageIntro({
                 className={cn(
                   "inline-flex h-12 items-center justify-center rounded-full px-6 text-sm font-semibold transition-colors sm:h-11",
                   dark
-                    ? "bg-[var(--ul-secondary)] text-white hover:bg-[#006633]"
-                    : "bg-[var(--ul-primary)] text-white hover:bg-[var(--ul-secondary)]"
+                    ? "bg-[var(--ul-secondary)] text-[var(--ul-primary)] hover:bg-white"
+                    : "bg-[var(--ul-primary)] text-white hover:bg-[var(--ul-accent-deep)]"
                 )}
               >
                 {primaryCta.label}

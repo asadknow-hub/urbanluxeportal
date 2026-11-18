@@ -32,7 +32,7 @@ export default function MortgagesPage() {
             <Link
               href="/buy"
               prefetch
-              className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ul-secondary)] hover:text-[#006633]"
+              className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ul-primary)] hover:text-[var(--ul-accent-deep)]"
             >
               Browse homes to finance <ArrowRight className="h-4 w-4" />
             </Link>
@@ -43,7 +43,7 @@ export default function MortgagesPage() {
             className="min-w-0 w-full max-w-[22rem] justify-self-center lg:sticky lg:top-24 lg:justify-self-stretch"
           >
             <div className="border border-[var(--ul-hair)] bg-white p-4 sm:p-5">
-              <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--ul-secondary)]">
+              <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--ul-primary)]">
                 Speak to us
               </p>
               <h2 className="mt-2 text-lg font-bold text-[var(--ul-primary)]">Mortgage enquiry</h2>

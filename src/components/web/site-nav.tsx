@@ -84,7 +84,7 @@ export function SiteNav() {
                         ? "text-[var(--ul-secondary)]"
                         : "text-white/85 hover:text-white"
                       : active
-                        ? "text-[var(--ul-secondary)]"
+                        ? "text-[var(--ul-primary)]"
                         : "text-[var(--ul-primary)]/70 hover:text-[var(--ul-primary)]"
                   )}
                 >
@@ -98,7 +98,7 @@ export function SiteNav() {
             <Link
               href="/sell"
               prefetch
-              className="hidden h-10 items-center rounded-full bg-[var(--ul-secondary)] px-4 text-[0.72rem] font-bold uppercase tracking-[0.06em] text-white transition-colors hover:bg-[var(--ul-accent-deep)] md:inline-flex"
+              className="hidden h-10 items-center rounded-full bg-[var(--ul-primary)] px-4 text-[0.72rem] font-bold uppercase tracking-[0.06em] text-[var(--ul-secondary)] transition-colors hover:bg-[var(--ul-accent-deep)] md:inline-flex"
             >
               List property
             </Link>
@@ -128,7 +128,7 @@ export function SiteNav() {
                       <span className="ml-2 opacity-55">{item.label}</span>
                     </span>
                     {currency === item.code ? (
-                      <Check className="h-3.5 w-3.5 text-[var(--ul-secondary)]" strokeWidth={2.5} />
+                      <Check className="h-3.5 w-3.5 text-[var(--ul-primary)]" strokeWidth={2.5} />
                     ) : null}
                   </DropdownMenuItem>
                 ))}
@@ -141,10 +141,10 @@ export function SiteNav() {
                 "hidden items-center gap-2 rounded-full border px-3 py-2 text-[0.72rem] font-bold no-underline transition-colors md:inline-flex",
                 overDarkHero
                   ? "border-white/30 text-white hover:border-[var(--ul-secondary)] hover:bg-white/5"
-                  : "border-[var(--ul-hair)] text-[var(--ul-primary)] hover:border-[var(--ul-secondary)]"
+                  : "border-[var(--ul-hair)] text-[var(--ul-primary)] hover:border-[var(--ul-primary)]"
               )}
             >
-              <Phone className="h-3.5 w-3.5 text-[var(--ul-secondary)]" />
+              <Phone className={cn("h-3.5 w-3.5", overDarkHero ? "text-[var(--ul-secondary)]" : "text-[var(--ul-primary)]")} />
               <span className="hidden lg:inline">{brand.phoneDisplay}</span>
               <span className="lg:hidden">Call</span>
             </a>
@@ -179,7 +179,7 @@ export function SiteNav() {
                     prefetch
                     className={cn(
                       "border-b border-[var(--ul-hair)] py-4 text-base font-bold uppercase tracking-[0.08em] text-[var(--ul-primary)]",
-                      active && "text-[var(--ul-secondary)]"
+                      active && "text-[var(--ul-primary)]"
                     )}
                   >
                     {item.label}
@@ -191,7 +191,7 @@ export function SiteNav() {
                   href={`tel:${brand.phoneTel}`}
                   className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-[var(--ul-hair)] text-sm font-semibold text-[var(--ul-primary)] no-underline"
                 >
-                  <Phone className="h-4 w-4 text-[var(--ul-secondary)]" />
+                  <Phone className="h-4 w-4 text-[var(--ul-primary)]" />
                   {brand.phoneDisplay}
                 </a>
                 <Link href="/sell" prefetch className="ul-btn-primary h-12 w-full">

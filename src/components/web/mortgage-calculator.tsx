@@ -146,7 +146,7 @@ export function MortgageCalculator() {
         </h2>
         <div className="sm:text-right">
           <p className="text-[0.65rem] text-[var(--ul-muted)]">Monthly repayment</p>
-          <p className="text-lg font-bold tracking-tight text-[var(--ul-secondary)] sm:text-xl">
+          <p className="text-lg font-bold tracking-tight text-[var(--ul-primary)] sm:text-xl">
             {format(Math.round(monthly))}
           </p>
         </div>

@@ -184,12 +184,12 @@
 }
 
 /* —— Public website brand (locked) ——
-   Light sections #F6F3EE · Accent #008040 · Dark bands #0A1630
+   Light sections #F6F3EE · Dark navy #0A1630 · Cream accents (no green)
    Source of truth also: src/lib/web/brand.ts
 */
 .ul-site {
   --ul-primary: #0a1630;
-  --ul-secondary: #008040;
+  --ul-secondary: #f6f3ee;
   --ul-tertiary: #efeae3;
   --ul-quaternary: #060d1c;
   /* aliases */
@@ -198,7 +198,7 @@
   --ul-paper: #f6f3ee;
   --ul-ink: #0a1630;
   --ul-gold: var(--ul-secondary);
-  --ul-accent-deep: #006633;
+  --ul-accent-deep: #060d1c;
   --ul-muted: #4b5563;
   --ul-hair: #e4dfd7;
   --ul-safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -210,7 +210,7 @@
   background: var(--ul-paper);
   color: var(--ul-ink);
   letter-spacing: 0;
-  accent-color: var(--ul-secondary);
+  accent-color: var(--ul-primary);
   overflow-x: clip;
   -webkit-tap-highlight-color: transparent;
 }
@@ -256,7 +256,7 @@
 .ul-panel-light .ul-section-heading,
 .ul-panel-light h2,
 .ul-panel-light h3 {
-  color: var(--ul-secondary);
+  color: var(--ul-primary);
   font-family: var(--font-headline), var(--font-poppins), system-ui, sans-serif;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -277,7 +277,7 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--ul-secondary);
+  color: var(--ul-primary);
 }
 
 .ul-callout-title {
@@ -286,7 +286,7 @@
   letter-spacing: -0.025em;
   line-height: 0.92;
   text-transform: uppercase;
-  color: var(--ul-secondary);
+  color: var(--ul-primary);
 }
 
 .ul-card-dark {
@@ -344,6 +344,10 @@
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+  color: var(--ul-primary);
+}
+
+.ul-band-dark .ul-kicker {
   color: var(--ul-secondary);
 }
 
@@ -360,7 +364,7 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #fff;
-  background: var(--ul-secondary);
+  background: var(--ul-primary);
   border-radius: 0.65rem;
   transition: background 0.2s ease, transform 0.2s ease;
 }
@@ -382,7 +386,7 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #fff;
-  background: var(--ul-secondary);
+  background: var(--ul-primary);
   border-radius: 0.65rem;
   transition: background 0.2s ease;
 }
@@ -437,9 +441,9 @@
 }
 
 .ul-btn-outline:hover {
-  border-color: var(--ul-secondary);
+  border-color: var(--ul-primary);
   color: var(--ul-primary);
-  background: color-mix(in srgb, var(--ul-secondary) 10%, transparent);
+  background: color-mix(in srgb, var(--ul-primary) 6%, transparent);
 }
 
 .ul-btn-outline-light {
@@ -471,7 +475,26 @@
   gap: 0.375rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--ul-secondary);
+  color: var(--ul-primary);
+}
+
+@keyframes ul-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.ul-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: ul-marquee 36s linear infinite;
+}
+
+.ul-marquee-track:hover {
+  animation-play-state: paused;
 }
 
 .ul-hero-title {

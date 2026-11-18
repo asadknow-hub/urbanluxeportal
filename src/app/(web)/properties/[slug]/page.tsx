@@ -57,19 +57,19 @@ export default async function PropertyPage({
     <article className="bg-[#f6f3ee] pb-8 pt-4 sm:pt-6 lg:pb-20 lg:pt-8">
       <div className="mx-auto max-w-[1200px] px-4 sm:px-5 md:px-8">
         <nav className="ul-hide-scroll mb-4 flex items-center gap-x-2 overflow-x-auto whitespace-nowrap pb-1 text-[0.75rem] text-[var(--ul-muted)] sm:mb-5 sm:flex-wrap sm:gap-y-1 sm:overflow-visible sm:whitespace-normal sm:pb-0 sm:text-[0.8rem]" aria-label="Breadcrumb">
-          <Link href={kindMeta.path} className="hover:text-[#008040]">
+          <Link href={kindMeta.path} className="hover:text-[#0A1630]">
             Back to search
           </Link>
           <span className="text-[var(--ul-hair)]">|</span>
-          <Link href="/" className="hover:text-[#008040]">
+          <Link href="/" className="hover:text-[#0A1630]">
             Home
           </Link>
           <ChevronRight className="h-3 w-3 shrink-0" />
-          <Link href={kindMeta.path} className="hover:text-[#008040]">
+          <Link href={kindMeta.path} className="hover:text-[#0A1630]">
             {kindLabel}
           </Link>
           <ChevronRight className="h-3 w-3 shrink-0" />
-          <Link href={`/communities/${listing.communitySlug}`} className="hover:text-[#008040]">
+          <Link href={`/communities/${listing.communitySlug}`} className="hover:text-[#0A1630]">
             {listing.community}
           </Link>
           <ChevronRight className="h-3 w-3 shrink-0" />
@@ -132,7 +132,7 @@ export default async function PropertyPage({
             </ul>
 
             <p className="mt-8 text-sm sm:mt-10">
-              <Link href={`/communities/${listing.communitySlug}`} className="text-[#008040] hover:underline">
+              <Link href={`/communities/${listing.communitySlug}`} className="text-[#0A1630] hover:underline">
                 More in {listing.community}
               </Link>
             </p>

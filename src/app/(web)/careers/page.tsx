@@ -84,7 +84,7 @@ export default function CareersPage() {
           <Reveal>
             <p className="ul-kicker">How we work</p>
             <h2 className="ul-section-heading mt-2 text-2xl md:text-3xl">What we look for</h2>
-            <div className="mt-8 space-y-6 border-l-2 border-[#008040]/30 pl-5">
+            <div className="mt-8 space-y-6 border-l-2 border-[#0A1630]/30 pl-5">
               {VALUES.map((item) => (
                 <div key={item.title}>
                   <p className="font-semibold text-[#0A1630]">{item.title}</p>
@@ -108,7 +108,7 @@ export default function CareersPage() {
                 >
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-[#008040]" strokeWidth={2} />
+                      <Briefcase className="h-4 w-4 text-[#0A1630]" strokeWidth={2} />
                       <h3 className="text-lg font-semibold text-[#0A1630]">{role.title}</h3>
                     </div>
                     <p className="mt-1 text-xs font-medium uppercase tracking-[0.12em] text-[#0A1630]/45">
@@ -127,7 +127,7 @@ export default function CareersPage() {
             </div>
             <Link
               href="#apply"
-              className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#008040] hover:text-[#006633]"
+              className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-[#0A1630] hover:text-[var(--ul-accent-deep)]"
             >
               Jump to application <ArrowRight className="h-4 w-4" />
             </Link>
@@ -135,7 +135,7 @@ export default function CareersPage() {
         </div>
       </section>
 
-      <section className="bg-[var(--ul-secondary)] px-4 py-12 sm:px-5 sm:py-14 md:px-10 md:py-20">
+      <section className="bg-[var(--ul-primary)] px-4 py-12 sm:px-5 sm:py-14 md:px-10 md:py-20">
         <div className="mx-auto grid max-w-[1280px] items-center gap-10 md:grid-cols-2 md:gap-16">
           <Reveal>
             <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[var(--ul-primary)]/20 md:aspect-[5/4]">
@@ -197,7 +197,7 @@ export default function CareersPage() {
       <section className="bg-[#0A1630] px-5 py-12 md:px-10 md:py-14">
         <Reveal className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-6 md:flex-row md:items-center">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#008040]">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#0A1630]">
               Not sure yet?
             </p>
             <h2 className="mt-2 text-xl font-semibold text-white md:text-2xl">

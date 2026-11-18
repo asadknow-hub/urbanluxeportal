@@ -31,7 +31,7 @@ export default async function ContactPage() {
                 <dd className="mt-1.5">
                   <a
                     href={`tel:${brand.phoneTel}`}
-                    className="text-base font-medium text-[var(--ul-primary)] hover:text-[var(--ul-secondary)]"
+                    className="text-base font-medium text-[var(--ul-primary)] hover:text-[var(--ul-primary)]"
                   >
                     {brand.phoneDisplay}
                   </a>
@@ -42,7 +42,7 @@ export default async function ContactPage() {
                 <dd className="mt-1.5">
                   <a
                     href={`mailto:${brand.email}`}
-                    className="text-base font-medium text-[var(--ul-primary)] hover:text-[var(--ul-secondary)]"
+                    className="text-base font-medium text-[var(--ul-primary)] hover:text-[var(--ul-primary)]"
                   >
                     {brand.email}
                   </a>
@@ -59,7 +59,7 @@ export default async function ContactPage() {
 
           <Reveal delay={60} className="min-w-0 lg:sticky lg:top-24">
             <div className="border border-[var(--ul-hair)] bg-white p-5 sm:p-6">
-              <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--ul-secondary)]">
+              <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--ul-primary)]">
                 Enquiry
               </p>
               <h2 className="mt-2 text-xl font-bold text-[var(--ul-primary)]">Send a message</h2>

@@ -42,7 +42,7 @@ export function CareersApplicationForm({ defaultRole }: { defaultRole?: string }
   }
 
   const field =
-    "h-12 w-full rounded-md border border-[var(--ul-hair)] bg-white px-4 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#008040]";
+    "h-12 w-full rounded-md border border-[var(--ul-hair)] bg-white px-4 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#0A1630]";
 
   return (
     <form onSubmit={onSubmit} className="space-y-3" encType="multipart/form-data">
@@ -109,7 +109,7 @@ export function CareersApplicationForm({ defaultRole }: { defaultRole?: string }
         rows={4}
         required
         placeholder="Why Urban Luxe, and what you bring to the desk"
-        className="w-full rounded-md border border-[var(--ul-hair)] bg-white px-4 py-3 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#008040]"
+        className="w-full rounded-md border border-[var(--ul-hair)] bg-white px-4 py-3 text-sm text-[#0A1630] outline-none placeholder:text-[#6b7280] focus:border-[#0A1630]"
       />
       <button
         type="submit"

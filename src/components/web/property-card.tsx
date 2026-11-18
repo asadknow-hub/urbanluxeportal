@@ -41,7 +41,7 @@ export function PropertyCard({
           View <ArrowUpRight className="h-3.5 w-3.5" />
         </span>
         <div className="absolute inset-x-4 bottom-4 text-[#f6f3ee] md:inset-x-6 md:bottom-6">
-          <p className="text-[0.65rem] tracking-[0.22em] uppercase text-[#008040]">{listing.community}</p>
+          <p className="text-[0.65rem] tracking-[0.22em] uppercase text-[var(--ul-secondary)]">{listing.community}</p>
           <h3 className="ul-display mt-1 text-2xl leading-tight md:text-[1.85rem]">{listing.title}</h3>
           <p className="mt-3 text-sm font-light tracking-wide">
             {format(listing.priceAed, { kind: listing.kind })}

@@ -13,27 +13,38 @@ const DEVELOPERS = [
   { name: "Danube Properties", src: "/developers/danube.png" },
 ] as const;
 
+function LogoRow() {
+  return (
+    <ul className="flex items-center gap-10 pr-10 sm:gap-14 sm:pr-14">
+      {DEVELOPERS.map((dev) => (
+        <li key={dev.name} className="flex h-12 shrink-0 items-center justify-center sm:h-14">
+          <Image
+            src={dev.src}
+            alt={`${dev.name} logo`}
+            width={140}
+            height={44}
+            unoptimized
+            className="h-8 w-auto max-w-[7rem] object-contain object-center opacity-75 sm:h-9 sm:max-w-[8rem]"
+          />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function DevelopersMarquee() {
   return (
-    <section className="ul-band-light py-10 md:py-14">
+    <section className="ul-band-light overflow-hidden py-10 md:py-14">
       <div className="ul-shell-wide">
-        <p className="ul-kicker">Developers</p>
-        <h2 className="ul-section-heading mt-3 text-2xl md:text-3xl">Projects we know well</h2>
+        <p className="ul-kicker">Partners</p>
+        <h2 className="ul-section-heading mt-3 text-2xl md:text-3xl">Developers we know well</h2>
+      </div>
 
-        <ul className="mt-10 grid grid-cols-2 gap-x-6 gap-y-8 border-t border-[var(--ul-hair)] pt-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {DEVELOPERS.map((dev) => (
-            <li key={dev.name} className="flex h-14 items-center justify-center sm:h-16">
-              <Image
-                src={dev.src}
-                alt={`${dev.name} logo`}
-                width={140}
-                height={44}
-                unoptimized
-                className="h-9 w-auto max-w-[7.5rem] object-contain object-center opacity-80 sm:h-10 sm:max-w-[8.5rem]"
-              />
-            </li>
-          ))}
-        </ul>
+      <div className="relative mt-8 border-y border-[var(--ul-hair)] py-6">
+        <div className="ul-marquee-track" aria-hidden={false}>
+          <LogoRow />
+          <LogoRow />
+        </div>
       </div>
     </section>
   );

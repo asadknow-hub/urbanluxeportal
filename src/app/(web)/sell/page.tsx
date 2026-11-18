@@ -45,7 +45,7 @@ export default function SellPage() {
             <ol className="mt-8 space-y-4 border-t border-[var(--ul-hair)] pt-7">
               {POINTS.map((item) => (
                 <li key={item.n} className="grid gap-1 sm:grid-cols-[2.75rem_minmax(0,1fr)] sm:gap-3">
-                  <span className="text-xs font-bold tracking-[0.16em] text-[var(--ul-secondary)]">
+                  <span className="text-xs font-bold tracking-[0.16em] text-[var(--ul-primary)]">
                     {item.n}
                   </span>
                   <div>
@@ -59,7 +59,7 @@ export default function SellPage() {
             <Link
               href="/contact"
               prefetch
-              className="mt-8 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ul-secondary)] hover:text-[#006633]"
+              className="mt-8 inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--ul-primary)] hover:text-[var(--ul-accent-deep)]"
             >
               Prefer to email or call? Contact us <ArrowRight className="h-4 w-4" />
             </Link>
@@ -70,7 +70,7 @@ export default function SellPage() {
               id="instruct"
               className="border border-[var(--ul-hair)] bg-white p-5 sm:p-6"
             >
-              <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--ul-secondary)]">
+              <p className="text-[0.72rem] font-bold uppercase tracking-[0.16em] text-[var(--ul-primary)]">
                 Instruct us
               </p>
               <h2 className="mt-2 text-xl font-bold text-[var(--ul-primary)]">
