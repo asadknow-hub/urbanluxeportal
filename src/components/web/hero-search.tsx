@@ -13,7 +13,7 @@ const TABS = [
 ] as const;
 
 const PROPERTY_TYPES = [
-  { value: "", label: "Property Type" },
+  { value: "", label: "Type" },
   { value: "apartment", label: "Apartment" },
   { value: "villa", label: "Villa" },
   { value: "penthouse", label: "Penthouse" },
@@ -31,10 +31,10 @@ const BEDS = [
 
 const PRICES = [
   { value: "", label: "Price" },
-  { value: "2000000", label: "Up to 2M" },
-  { value: "5000000", label: "Up to 5M" },
-  { value: "10000000", label: "Up to 10M" },
-  { value: "20000000", label: "Up to 20M" },
+  { value: "2000000", label: "≤ 2M" },
+  { value: "5000000", label: "≤ 5M" },
+  { value: "10000000", label: "≤ 10M" },
+  { value: "20000000", label: "≤ 20M" },
 ] as const;
 
 export function HeroSearch() {
@@ -64,9 +64,9 @@ export function HeroSearch() {
   }
 
   return (
-    <form onSubmit={submit} className="w-full">
+    <form onSubmit={submit} className="mx-auto w-full max-w-xl">
       <div className="flex justify-center">
-        <div className="inline-flex items-center gap-1 rounded-full bg-[var(--ul-primary)]/55 p-1 ring-1 ring-white/15 backdrop-blur-md">
+        <div className="inline-flex items-center gap-0.5 rounded-full bg-[var(--ul-primary)]/55 p-0.5 ring-1 ring-white/15 backdrop-blur-md">
           {TABS.map((item) => {
             const active = tab === item.id;
             return (
@@ -75,7 +75,7 @@ export function HeroSearch() {
                 type="button"
                 onClick={() => setTab(item.id)}
                 className={cn(
-                  "rounded-full px-4 py-2 text-[0.68rem] font-semibold tracking-[0.14em] uppercase transition-colors sm:px-5",
+                  "rounded-full px-3 py-1.5 text-[0.62rem] font-semibold tracking-[0.12em] uppercase transition-colors sm:px-3.5",
                   active
                     ? "bg-[var(--ul-secondary)] text-[var(--ul-primary)]"
                     : "text-[var(--ul-secondary)]/85 hover:text-[var(--ul-secondary)]"
@@ -88,28 +88,28 @@ export function HeroSearch() {
         </div>
       </div>
 
-      <div className="mt-4 flex flex-col overflow-hidden rounded-full bg-[var(--ul-secondary)] shadow-[0_16px_48px_rgba(10,22,48,0.28)] sm:flex-row sm:items-center">
+      <div className="mt-2.5 flex flex-col overflow-hidden rounded-full bg-[var(--ul-secondary)] shadow-[0_10px_28px_rgba(10,22,48,0.22)] sm:flex-row sm:items-center">
         <label className="sr-only" htmlFor="hero-location">
           Search by location
         </label>
-        <div className="flex min-w-0 flex-1 items-center gap-2 px-4 py-3 sm:px-5 sm:py-0">
-          <Search className="h-4 w-4 shrink-0 text-[var(--ul-primary)]/45" strokeWidth={2} aria-hidden />
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-0">
+          <Search className="h-3.5 w-3.5 shrink-0 text-[var(--ul-primary)]/45" strokeWidth={2} aria-hidden />
           <input
             id="hero-location"
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by location, community, or area"
-            className="h-11 min-w-0 flex-1 bg-transparent text-base text-[var(--ul-primary)] outline-none placeholder:text-[var(--ul-primary)]/40 sm:h-14 sm:text-sm"
+            placeholder="Location or community"
+            className="h-9 min-w-0 flex-1 bg-transparent text-sm text-[var(--ul-primary)] outline-none placeholder:text-[var(--ul-primary)]/40 sm:h-10 sm:text-[0.8125rem]"
           />
         </div>
 
-        <div className="hidden h-8 w-px shrink-0 bg-[var(--ul-primary)]/12 lg:block" />
+        <div className="hidden h-5 w-px shrink-0 bg-[var(--ul-primary)]/12 lg:block" />
 
         <select
           value={type}
           onChange={(e) => setType(e.target.value)}
-          className="hidden h-14 shrink-0 appearance-none bg-transparent px-4 text-sm font-medium text-[var(--ul-primary)]/80 outline-none lg:block"
+          className="hidden h-10 shrink-0 appearance-none bg-transparent px-2.5 text-[0.75rem] font-medium text-[var(--ul-primary)]/80 outline-none lg:block"
           aria-label="Property type"
         >
           {PROPERTY_TYPES.map((o) => (
@@ -119,12 +119,12 @@ export function HeroSearch() {
           ))}
         </select>
 
-        <div className="hidden h-8 w-px shrink-0 bg-[var(--ul-primary)]/12 lg:block" />
+        <div className="hidden h-5 w-px shrink-0 bg-[var(--ul-primary)]/12 md:block" />
 
         <select
           value={beds}
           onChange={(e) => setBeds(e.target.value)}
-          className="hidden h-14 shrink-0 appearance-none bg-transparent px-4 text-sm font-medium text-[var(--ul-primary)]/80 outline-none md:block"
+          className="hidden h-10 w-[4.25rem] shrink-0 appearance-none bg-transparent px-2 text-[0.75rem] font-medium text-[var(--ul-primary)]/80 outline-none md:block"
           aria-label="Bedrooms"
         >
           {BEDS.map((o) => (
@@ -134,12 +134,12 @@ export function HeroSearch() {
           ))}
         </select>
 
-        <div className="hidden h-8 w-px shrink-0 bg-[var(--ul-primary)]/12 md:block" />
+        <div className="hidden h-5 w-px shrink-0 bg-[var(--ul-primary)]/12 md:block" />
 
         <select
           value={price}
           onChange={(e) => setPrice(e.target.value)}
-          className="hidden h-14 shrink-0 appearance-none bg-transparent px-4 text-sm font-medium text-[var(--ul-primary)]/80 outline-none md:block"
+          className="hidden h-10 w-[4.75rem] shrink-0 appearance-none bg-transparent px-2 text-[0.75rem] font-medium text-[var(--ul-primary)]/80 outline-none md:block"
           aria-label="Price"
         >
           {PRICES.map((o) => (
@@ -149,12 +149,12 @@ export function HeroSearch() {
           ))}
         </select>
 
-        <div className="shrink-0 p-2 sm:pr-2 sm:pl-1">
+        <div className="shrink-0 p-1.5 sm:pr-1.5 sm:pl-0.5">
           <button
             type="submit"
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--ul-primary)] px-5 text-sm font-semibold text-[var(--ul-secondary)] transition-colors hover:bg-[var(--ul-accent-deep)] sm:h-12 sm:w-auto sm:px-6"
+            className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-full bg-[var(--ul-primary)] px-3.5 text-[0.75rem] font-semibold text-[var(--ul-secondary)] transition-colors hover:bg-[var(--ul-accent-deep)] sm:h-8 sm:w-auto sm:px-4"
           >
-            <Search className="h-4 w-4" strokeWidth={2.25} />
+            <Search className="h-3.5 w-3.5" strokeWidth={2.25} />
             Search
           </button>
         </div>

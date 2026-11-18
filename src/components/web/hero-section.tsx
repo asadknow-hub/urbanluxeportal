@@ -1,33 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Mouse } from "lucide-react";
 import { HeroSearch } from "@/components/web/hero-search";
-import { IMAGES } from "@/lib/web/listings";
 import { cn } from "@/lib/utils";
 
+/** Lean Unsplash URLs — smaller than brochure assets so the first paint is fast. */
+const heroSrc = (id: string) =>
+  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1400&q=65&fm=webp`;
+
 const HERO_SLIDES = [
-  {
-    image: IMAGES.bedroom,
-    location: "Palm Jumeirah, Dubai",
-  },
-  {
-    image: IMAGES.villa,
-    location: "Emirates Hills, Dubai",
-  },
-  {
-    image: IMAGES.penthouse,
-    location: "Downtown Dubai",
-  },
-  {
-    image: IMAGES.marina,
-    location: "Dubai Marina",
-  },
-  {
-    image: IMAGES.terrace,
-    location: "Dubai Creek Harbour",
-  },
+  { image: heroSrc("photo-1616594039964-aac4c3eac7f4"), location: "Palm Jumeirah, Dubai" },
+  { image: heroSrc("photo-1613490493576-7fde63acd811"), location: "Emirates Hills, Dubai" },
+  { image: heroSrc("photo-1600607687644-c7171b42498f"), location: "Downtown Dubai" },
+  { image: heroSrc("photo-1486406146926-c627a92ad1ab"), location: "Dubai Marina" },
+  { image: heroSrc("photo-1600210492493-0946911123ea"), location: "Dubai Creek Harbour" },
 ] as const;
 
 const INTERVAL_MS = 6500;
@@ -35,9 +23,19 @@ const INTERVAL_MS = 6500;
 export function HeroSection() {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [ready, setReady] = useState(() => new Set([0]));
 
   const go = useCallback((dir: -1 | 1) => {
-    setIndex((i) => (i + dir + HERO_SLIDES.length) % HERO_SLIDES.length);
+    setIndex((i) => {
+      const next = (i + dir + HERO_SLIDES.length) % HERO_SLIDES.length;
+      setReady((prev) => {
+        if (prev.has(next)) return prev;
+        const copy = new Set(prev);
+        copy.add(next);
+        return copy;
+      });
+      return next;
+    });
   }, []);
 
   useEffect(() => {
@@ -46,7 +44,19 @@ export function HeroSection() {
     return () => window.clearInterval(id);
   }, [go, paused, index]);
 
+  // Warm the next slide while the current one is showing.
+  useEffect(() => {
+    const next = (index + 1) % HERO_SLIDES.length;
+    setReady((prev) => {
+      if (prev.has(next)) return prev;
+      const copy = new Set(prev);
+      copy.add(next);
+      return copy;
+    });
+  }, [index]);
+
   const slide = HERO_SLIDES[index]!;
+  const mounted = useMemo(() => [...ready].sort((a, b) => a - b), [ready]);
 
   return (
     <section
@@ -55,34 +65,39 @@ export function HeroSection() {
       onMouseLeave={() => setPaused(false)}
     >
       <div className="absolute inset-0">
-        {HERO_SLIDES.map((item, i) => (
-          <div
-            key={item.image}
-            className={cn(
-              "absolute inset-0 transition-opacity duration-1000 ease-out",
-              i === index ? "opacity-100" : "opacity-0"
-            )}
-            aria-hidden={i !== index}
-          >
-            <Image
-              src={item.image}
-              alt=""
-              fill
-              priority={i === 0}
-              sizes="100vw"
+        {mounted.map((i) => {
+          const item = HERO_SLIDES[i]!;
+          return (
+            <div
+              key={item.image}
               className={cn(
-                "object-cover object-center transition-transform duration-[6500ms] ease-out",
-                i === index ? "scale-105" : "scale-100"
+                "absolute inset-0 transition-opacity duration-700 ease-out",
+                i === index ? "opacity-100" : "opacity-0"
               )}
-            />
-          </div>
-        ))}
+              aria-hidden={i !== index}
+            >
+              <Image
+                src={item.image}
+                alt=""
+                fill
+                priority={i === 0}
+                loading={i === 0 ? "eager" : "lazy"}
+                quality={65}
+                sizes="(max-width: 768px) 100vw, 1400px"
+                className={cn(
+                  "object-cover object-center transition-transform duration-[6500ms] ease-out",
+                  i === index ? "scale-105" : "scale-100"
+                )}
+              />
+            </div>
+          );
+        })}
         <div className="absolute inset-0 bg-[var(--ul-primary)]/12" />
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--ul-primary)]/40 via-transparent to-[var(--ul-primary)]/18" />
       </div>
 
       <div className="ul-shell-wide relative flex min-h-0 flex-1 flex-col pt-[calc(5.5rem+var(--ul-safe-top,0px))] pb-8 sm:pb-10">
-        <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center">
+        <div className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center sm:max-w-2xl">
           <HeroSearch />
         </div>
 
